@@ -1,0 +1,34 @@
+#############################################
+# create results file
+# results.txt : dats
+	# python testzipf.py abyss.dat isles.dat last.dat > results.txt
+# $@ means 'the target of the current rule' "results.txt"
+# $^ means 'all the dependencies of the current rule'
+# 	they need to be explicit (make looks for dats)
+results.txt : isles.dat abyss.dat last.dat
+	python testzipf.py $^ > $@
+
+#############################################
+# create .dat files
+.PHONY : dats
+dats : isles.dat abyss.dat last.dat
+
+#############################################
+# count words
+# $< means 'the first dependency of the current rule'
+# python countwords.py books/isles.txt isles.dat
+# if we change the script that generates the .dat, rerun
+isles.dat : books/isles.txt countwords.py
+	python countwords.py $< $@
+
+abyss.dat : books/abyss.txt countwords.py
+		python countwords.py $< $@
+
+last.dat : books/last.txt countwords.py
+	python countwords.py $< $@
+
+#############################################
+.PHONY : clean
+clean : 
+	rm -f *.dat
+	rm -f results.txt
