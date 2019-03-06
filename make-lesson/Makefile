@@ -9,19 +9,31 @@
 
 include config.mk
 
+BOOKS_TXT=$(wildcard books/*.txt)
+DAT_FILES=$(patsubst books/%.txt, %.dat, $(BOOKS_TXT))
+
 # create results file
-results.txt : isles.dat abyss.dat last.dat
+results.txt : $(DAT_FILES)
 	$(ZIPF_EXE) $^ > $@
 
 # create .dat files
 .PHONY : dats
-dats : isles.dat abyss.dat last.dat
+dats : $(DAT_FILES)
 
-%.dat : books/%.txt $(COUNT_SRC)
-	$(COUNT_EXE) $< $*.dat
+%.dat : $(BOOKS_TXT) $(COUNT_SRC)
+	$(COUNT_EXE) $< $@
 
 # clean up
 .PHONY : clean
 clean : 
-	rm -f *.dat
+	rm -f $(DAT_FILES)
 	rm -f results.txt
+
+# show variables used
+.PHONY : variables
+variables :
+	@echo BOOKS: $(BOOKS_TXT)
+	@echo DAT: $(DAT_FILES)
+	@echo LANGUAGE: $(LANGUAGE)
+	@echo COUNT_SRC: $(COUNT_SRC)
+	@echo ZIPF_SRC: $(ZIPF_SRC)
