@@ -4,17 +4,21 @@
 # $< means 'the first dependency of the current rule'
 # % is a Make wildcard
 # $* is a special variable which gets replaced by the stem with which the rule matched
+# $(...) is a variable reference
+# use include to load files
+
+include config.mk
 
 # create results file
-results.txt : testzipf.py isles.dat abyss.dat last.dat
-	python $< *.dat > $@
+results.txt : isles.dat abyss.dat last.dat
+	$(ZIPF_EXE) $^ > $@
 
 # create .dat files
 .PHONY : dats
 dats : isles.dat abyss.dat last.dat
 
-%.dat : books/%.txt countwords.py
-	python countwords.py $< $*.dat
+%.dat : books/%.txt $(COUNT_SRC)
+	$(COUNT_EXE) $< $*.dat
 
 # clean up
 .PHONY : clean

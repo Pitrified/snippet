@@ -1,0 +1,5 @@
+LANGUAGE=python
+COUNT_SRC=countwords.py
+COUNT_EXE=$(LANGUAGE) $(COUNT_SRC)
+ZIPF_SRC=testzipf.py
+ZIPF_EXE=$(LANGUAGE) $(ZIPF_SRC)
