@@ -19,3 +19,4 @@ Basic makefile, made following [this guide](https://swcarpentry.github.io/make-n
 * `@` before a command suppresses printing
 * `@sed -n 's/^##//p' $<` prints docstring starting with `##`
 * `.PHONY : all` as first command
+* `$(name:string1=string2)` For each word in 'name' replace 'string1' with 'string2'
