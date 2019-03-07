@@ -14,3 +14,6 @@ Basic makefile, made following [this guide](https://swcarpentry.github.io/make-n
 * `$*` is a special variable which gets replaced by the stem with which the rule matched
 * `$(...)` is a variable reference
 * use `include` to load files
+* `wildcard` returns the list of files that matches a pattern
+* `patsubst` takes a pattern, a replacement string and a list of names
+* `@` before a command suppresses printing
