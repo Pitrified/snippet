@@ -12,24 +12,24 @@ include config.mk
 BOOKS_TXT=$(wildcard books/*.txt)
 DAT_FILES=$(patsubst books/%.txt, %.dat, $(BOOKS_TXT))
 
-# create results file
+## results.txt : generate Zipf summary table
 results.txt : $(DAT_FILES)
 	$(ZIPF_EXE) $^ > $@
 
-# create .dat files
+## dats : count words in text files
 .PHONY : dats
 dats : $(DAT_FILES)
 
 %.dat : $(BOOKS_TXT) $(COUNT_SRC)
 	$(COUNT_EXE) $< $@
 
-# clean up
+## clean : remove auto-generated files
 .PHONY : clean
 clean : 
 	rm -f $(DAT_FILES)
 	rm -f results.txt
 
-# show variables used
+## variables : print variables used
 .PHONY : variables
 variables :
 	@echo BOOKS: $(BOOKS_TXT)
@@ -37,3 +37,7 @@ variables :
 	@echo LANGUAGE: $(LANGUAGE)
 	@echo COUNT_SRC: $(COUNT_SRC)
 	@echo ZIPF_SRC: $(ZIPF_SRC)
+
+.PHONY : help
+help : Makefile
+	@sed -n 's/^##//p' $<

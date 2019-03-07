@@ -17,3 +17,4 @@ Basic makefile, made following [this guide](https://swcarpentry.github.io/make-n
 * `wildcard` returns the list of files that matches a pattern
 * `patsubst` takes a pattern, a replacement string and a list of names
 * `@` before a command suppresses printing
+* `@sed -n 's/^##//p' $<` prints docstring starting with `##`
