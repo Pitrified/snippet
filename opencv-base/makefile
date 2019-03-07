@@ -10,25 +10,28 @@ CFLAGS = -Wall -g
 
 OPENCVLIBS = `pkg-config --cflags --libs opencv`
 
-MAIN = img-display
+SNIP_CPP=$(wildcard *.cpp)
+SNIP_OUT=$(patsubst %.cpp, %.out, $(SNIP_CPP))
+
+# MAIN = pointer-reference
 
 .PHONY : all
-all : $(MAIN)
-	@echo Compiled successfully opencv project
+all : $(SNIP_OUT)
+	@echo Compiled successfully all snippets
 
-$(MAIN) : $(MAIN).cpp
-	$(CC) $< -o $(MAIN) $(OPENCVLIBS)
-
+%.out : %.cpp
+	$(CC) $< -o $@ $(OPENCVLIBS)
 
 ## clean : remove auto-generated files
 .PHONY : clean
 clean : 
-	rm -f $(MAIN)
+	rm -f *.out
 
 ## variables : print variables used
 .PHONY : variables
 variables :
-	@echo MAIN: $(MAIN)
+	@echo SNIP_CPP: $(SNIP_CPP)
+	@echo SNIP_OUT: $(SNIP_OUT)
 
 .PHONY : help
 help : makefile
