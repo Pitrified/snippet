@@ -1,5 +1,7 @@
 LANGUAGE=python
 COUNT_SRC=countwords.py
 COUNT_EXE=$(LANGUAGE) $(COUNT_SRC)
+GEN_PNG_SRC=plotcounts.py
+GEN_PNG_EXE=$(LANGUAGE) $(GEN_PNG_SRC)
 ZIPF_SRC=testzipf.py
 ZIPF_EXE=$(LANGUAGE) $(ZIPF_SRC)
