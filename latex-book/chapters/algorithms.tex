@@ -1,0 +1,21 @@
+Ecco un bellissimo esempio di algoritmo.
+
+Il \textit{merge}, cuore dell'algoritmo \ref{alg:mergesort}, avviene alla riga \ref{alg:mergeline}, quindi guarda a \algref{alg:mergesort}{alg:mergeline} per saperne di più.
+
+\begin{algorithm}[h]
+\caption{MergeSort}\label{alg:mergesort}
+\begin{algorithmic}[1]
+    \Procedure{MergeSort}{$A,p,r$}
+    \If{$p<r$}
+        \State $ q \gets \left\lfloor \frac{p+r}{2} \right\rfloor $ 
+        \State \Call{MergeSort}{$A,p,q$} \Comment{Ordina prima}
+        \State \Call{MergeSort}{$A,q+1,r$} \Comment{Ordina dopo}
+        \State
+            \Call{Merge}{$A,p,q,r$}
+            \label{alg:mergeline}
+            \Comment{Merge in $\Theta(n)$}
+    \EndIf
+    \EndProcedure
+\end{algorithmic}
+\end{algorithm}
+

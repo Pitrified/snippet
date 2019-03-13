@@ -1,0 +1,37 @@
+% guida overleaf.com/learn/latex/Management_in_a_large_project
+\documentclass[a4paper,11pt]{book}
+\usepackage{import}
+\usepackage{preamble}
+ 
+\usepackage{makeidx}
+\makeindex
+ 
+\addbibresource{thebiblio.bib}
+
+\begin{document}
+ 
+\frontmatter
+\import{./}{title.tex}
+ 
+\clearpage
+\thispagestyle{empty}
+ 
+\tableofcontents
+ 
+\mainmatter
+\chapter{On bibliography}
+\import{chapters/}{bibliography-guide.tex}
+% \import{sections/}{section1-2.tex}
+ 
+\chapter{On algorithms}
+\import{chapters/}{algorithms.tex}
+ 
+\chapter{Last chapter}
+% \import{sections/}{section3-1.tex}
+ 
+\backmatter
+ 
+\import{./}{bibliography.tex}
+ 
+\end{document}
+

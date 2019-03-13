@@ -1,0 +1,29 @@
+\ProvidesPackage{example}
+
+\usepackage[
+    backend=biber
+]{biblatex}
+
+\usepackage[utf8]{inputenc}
+\usepackage[italian]{babel}
+\usepackage{marginnote}
+
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage[top=3cm, bottom=3cm, heightrounded, marginparwidth=2.5cm, marginparsep=1.5cm]{geometry}
+\usepackage{graphicx}
+\graphicspath{ {images/} }
+\usepackage[nottoc]{tocbibind}	% to generate Bibliography entry in toc
+\usepackage{lipsum}
+\usepackage{bm}
+\usepackage{fancyhdr}
+\usepackage{hyperref}	% enable hyperlinks to referenced elements
+\hypersetup{
+	colorlinks=true,
+	linkcolor=cyan,
+	citecolor=cyan,
+	linkcolor=cyan
+}
+\usepackage{enumitem} % more control over lists: stackoverflow.com/a/4974583
+\usepackage{indentfirst} % YES indent after section/chapter heading
+\usepackage[Algoritmo]{algorithm}
+\usepackage[noend]{algpseudocode} % algoritmi decenti, senza end
