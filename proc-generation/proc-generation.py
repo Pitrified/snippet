@@ -16,8 +16,14 @@ def out(color, char):
     #  system("tput setab " + str(color) + "; echo -n " + ('"% 0s"' % char))
     #  system("tput sgr0")
     #  s = f'tput setab {color}; echo -n "{char}"; tput sgr 0 0'
-    s = f'tput setaf {color}; echo -n "{char}"; tput sgr 0 0'
-    system(s)
+
+    #  s = f'tput setaf {color}; echo -n "{char}"; tput sgr 0 0'
+    #  s = f'echo -n "\\033[{color+30}m{char}\\033[0m"'
+    # martin-thoma.com/colorize-your-scripts-output/
+    # this is a LOT faster
+    # mewbies.com/motd_console_codes_color_chart_in_color_black_background.htm
+    #  system(s)
+    print(f"\033[{color+30}m{char}\033[0m", end='')
 
 def pmc(mappa, width, heigth, tiles):
     for i, c in enumerate(mappa):
@@ -91,9 +97,9 @@ def evolve(mappa, width, heigth, tiles):
         u, d, l, r = find_neigh(cella, width, heigth)
         #  all_neigh = [x for x in [mp[u], mp[d], mp[l], mp[r]] if x is not None]
         all_neigh = [x for x in [u, d, l, r] if x is not None]
-        print(f'numero celle vicini {all_neigh}')
+        #  print(f'numero celle vicini {all_neigh}')
         type_neigh = [mappa[x] for x in all_neigh if mappa[x] is not 'e']
-        print(f'tipo celle vicini {type_neigh}')
+        #  print(f'tipo celle vicini {type_neigh}')
         cumulative_weights = list(accumulate( [tiles[x][1] for x in type_neigh] ) )
         #  tiles_letter = [t for t in tiles]
         #  new_t = choices(tiles_letter, cum_weights=cumulative_weights)[0]
@@ -110,7 +116,8 @@ def main():
     width = 30
     heigth = 10
     width, heigth = 4,3
-    width, heigth = 60, 50
+    width, heigth = 27,9
+    #  width, heigth = 60, 50
     
     mappa = ['e'] * (width*heigth)
     print()
@@ -118,7 +125,8 @@ def main():
     print()
 
     tiles = {
-            'l' : [1, 5, 1],
+            #  'l' : [1, 5, 1],
+            'l' : [2, 5, 1],
             'x' : [8, 30, 4],
             'm' : [5, 25, 3],
             }
@@ -129,22 +137,22 @@ def main():
 
     print('Randomizzo')
     randomize(mappa, width, heigth, tiles, fraction)
-    #  pmc(mappa, width, heigth, tiles)
-    pm(mappa, width, heigth)
+    pmc(mappa, width, heigth, tiles)
+    #  pm(mappa, width, heigth)
     print()
 
     #  print(Counter(mappa))
 
     print('Evolvo')
-    num_iter = 3
+    num_iter = 4
     for i in range(num_iter):
-        print(f'Round {i}')
+        print(f'Round {i+1}')
         evolve(mappa, width, heigth, tiles)
-        pm(mappa, width, heigth)
-        #  pmc(mappa, width, heigth, tiles)
+        #  pm(mappa, width, heigth)
+        pmc(mappa, width, heigth, tiles)
         print()
 
-    pmc(mappa, width, heigth, tiles)
+    #  pmc(mappa, width, heigth, tiles)
 
 
 if __name__ == '__main__':
