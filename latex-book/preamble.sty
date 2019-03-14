@@ -40,14 +40,21 @@
 
 % magic headers
 \usepackage{fancyhdr}
-\pagestyle{fancy}
-\fancyhead{}
 \makeatletter 
-\fancyhead[LE,RO]{\@title}
-\fancyfoot{}
-\fancyfoot[LE,RO]{\thepage}
-\fancyfoot[LO,RE]{Chapter \thechapter}
-\fancyfoot[CO,CE]{\@author}
+\pagestyle{fancy}
+% using even and odd with oneside is kinda useless
+% \fancyhead{}
+% \fancyhead[LE,RO]{\@title}
+% \fancyfoot{}
+% \fancyfoot[LE,RO]{\thepage}
+% \fancyfoot[LO,RE]{Chapter \thechapter}
+% \fancyfoot[CO,CE]{\@author}
+\lhead{\@title}
+\chead{}
+\rhead{}
+\lfoot{Chapter \thechapter}
+\cfoot{\@author}
+\rfoot{\thepage}
 \makeatother 
 
 
