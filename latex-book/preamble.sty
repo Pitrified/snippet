@@ -15,7 +15,6 @@
 \usepackage[nottoc]{tocbibind}	% to generate Bibliography entry in toc
 \usepackage{lipsum}
 \usepackage{bm}
-\usepackage{fancyhdr}
 \usepackage{hyperref}	% enable hyperlinks to referenced elements
 \hypersetup{
 	colorlinks=true,
@@ -27,3 +26,31 @@
 \usepackage{indentfirst} % YES indent after section/chapter heading
 \usepackage[Algoritmo]{algorithm}
 \usepackage[noend]{algpseudocode} % algoritmi decenti, senza end
+
+
+%%   CUSTOM THEOREM/DEF  %%
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definizione}[section]
+
+\theoremstyle{theorem}
+\newtheorem{theorem}{Teorema}[section]
+
+%%         END           %%
+
+% magic headers
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead{}
+\makeatletter 
+\fancyhead[LE,RO]{\@title}
+\fancyfoot{}
+\fancyfoot[LE,RO]{\thepage}
+\fancyfoot[LO,RE]{Chapter \thechapter}
+\fancyfoot[CO,CE]{\@author}
+\makeatother 
+
+
+
+
+

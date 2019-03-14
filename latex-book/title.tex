@@ -1,1 +1,50 @@
-Yo get a title
+% https://en.wikibooks.org/wiki/LaTeX/Title_Creation
+% you need empty lines before {\Large} (or after \vspace I don't know)
+
+\title{Book of examples}
+\author{Pitrified}
+\date{\today}
+
+\makeatletter
+\begin{titlepage}
+	
+	% \includegraphics[width=3.5cm]{logo}
+	\begin{center}
+		\vspace*{1cm}
+
+		{\Large My \LaTeX\ book of examples }
+		\vspace*{0.75cm}
+
+		{\Large First version}
+		\vspace*{0.75cm}
+
+        {\small Also known as}
+		\vspace*{0.75cm}
+
+		{\LARGE\bfseries \@title} % write it by hand if you want fancy new lines
+		\vspace*{0.75cm}
+
+        {\small Best by \today }
+        % e quindi a cosa serve definirlo sopra?
+
+    \end{center}
+	
+	\vfill 
+
+	\noindent\textbf{Lectures by}\\
+	Ch. Prof. The Professor
+
+	\vspace*{0.25cm}
+
+	\noindent\textbf{Student}\\
+    \@author\\% \thanks{No procrastination}\\
+
+	\vspace*{0.25cm}
+
+	\noindent\textbf{Academic Year}\\
+	2018-19
+
+\end{titlepage}
+\makeatother
+
+% \maketitle
