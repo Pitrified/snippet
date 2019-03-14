@@ -9,6 +9,8 @@ def pm(mappa, width, heigth):
         if (i+1) % width == 0: print()
 
 def cell2xy(cella, width, heigth):
+    if cella is None: return None, None
+
     y = cella - (cella % width) 
     x = cella - y
     y = int( y / width )
@@ -53,7 +55,7 @@ def find_neigh(cella, width, heigth):
     u = xy2cell(x, y-1, width, heigth)
     d = xy2cell(x, y+1, width, heigth)
     l = xy2cell(x-1, y, width, heigth)
-    r = xy2cell(x, y, width, heigth)
+    r = xy2cell(x+1, y, width, heigth)
     #  print(f'{cella} ({x}, {y}): u{u} d{d} l{l} r{r}')
 
     return u, d, l, r
@@ -68,6 +70,24 @@ def evolve(mappa, width, heigth, tiles):
         #  print(f'cella {cella}: ({x}, {y})')
         u, d, l, r = find_neigh(cella, width, heigth)
     return newmappa
+
+def test_neigh(mappa, width, heigth):
+    newmappa = mappa
+    cella = 6
+    x, y = cell2xy(cella, width, heigth)
+    ritorno = xy2cell(x, y, width, heigth)
+    print(f'cella {cella}: ({x}, {y}) -> {ritorno}')
+    u, d, l, r = find_neigh(cella, width, heigth)
+    print(f'u {u}: {cell2xy(u, width, heigth)}')
+    print(f'd {d}: {cell2xy(d, width, heigth)}')
+    print(f'l {l}: {cell2xy(l, width, heigth)}')
+    print(f'r {r}: {cell2xy(r, width, heigth)}')
+    newmappa[cella] = 'x'
+    newmappa[u] = 'u'
+    newmappa[d] = 'd'
+    newmappa[l] = 'l'
+    newmappa[r] = 'r'
+    pm(newmappa, width, heigth)
 
 def main():
     width = 30
@@ -87,21 +107,19 @@ def main():
 
     fraction = 0.05
 
-    print('Randomizzo')
-    mappa = randomize(mappa, width, heigth, tiles, fraction)
-    pm(mappa, width, heigth)
-    print()
+    #  print('Randomizzo')
+    #  mappa = randomize(mappa, width, heigth, tiles, fraction)
+    #  pm(mappa, width, heigth)
+    #  print()
 
-    print('Evolvo')
-    num_iter = 1
-    for i in range(num_iter):
-        mappa = evolve(mappa, width, heigth, tiles)
-        pm(mappa, width, heigth)
-        print()
+    #  print('Evolvo')
+    #  num_iter = 1
+    #  for i in range(num_iter):
+        #  mappa = evolve(mappa, width, heigth, tiles)
+        #  pm(mappa, width, heigth)
+        #  print()
 
-
-
-
+    test_neigh(mappa, width, heigth)
 
 if __name__ == '__main__':
     main()
