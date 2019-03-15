@@ -1,4 +1,5 @@
 from itertools import accumulate
+from itertools import groupby
 from math import ceil
 from os import system
 from os import popen
@@ -161,18 +162,19 @@ class MapGenerator:
                 }
 
         str_map = ''
-        for i, c in enumerate(self.mappa):
-            if c == self.empty_char:
-                color = self.empty_char_color
-            else:
-                color = self.tiles[c][2]
-            color = html_colors[color]
-
-            #  str_map += cs.format(color=color, char=c)
-            str_map += spanstring.format(color=color, char=c)
-            
-            if (i+1) % self.width == 0:
-                str_map += '\n'
+        for r in range(self.heigth):
+            riga = self.mappa[ r*self.width : (r+1)*self.width ]
+            str_riga = ''
+            for k, g in groupby(riga):
+                #  print(k, len(list(g)))
+                if k == self.empty_char:
+                    color = self.empty_char_color
+                else:
+                    color = self.tiles[k][2]
+                color = html_colors[color]
+                rk = k * len(list(g))
+                str_riga += spanstring.format(color=color, char=rk)
+            str_map += str_riga + '\n'
 
         html_page = htmlstring.format(titolo=title, immagine=str_map)
         with open(full_filename, 'w') as f:
@@ -196,10 +198,11 @@ class MapGenerator:
 
 def main():
     width, heigth = 27,9
+    width, heigth = 60,30
     #  width, heigth = 270,70
-    width, heigth = 4,3
+    #  width, heigth = 4,3
     rows, columns = popen('stty size', 'r').read().split()
-    width, heigth = int(columns), int(rows)
+    #  width, heigth = int(columns), int(rows)
 
     # tiles: prob di spawnare random
     #        prob di replicarsi
