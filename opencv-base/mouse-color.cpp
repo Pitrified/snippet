@@ -24,7 +24,7 @@ void OnMouseChangeColor(int event, int x, int y, int flags, void *userdata) {
 int main( int argc, char** argv ) {
     string imgName;
     if( argc != 2) {
-        imgName = "linuxconfig_logo.png";
+        imgName = "sample.png";
         cout <<"Usage: ./mouse-color.out ImageToLoadAndDisplay" << endl;
         cout <<"imgName set as " << imgName << endl;
     }
