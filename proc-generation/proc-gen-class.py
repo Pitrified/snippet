@@ -23,11 +23,12 @@ class MapGenerator:
         # default impostabili dopo se vuoi
         self.empty_char_color = 30
 
+        # inizializza
         self.erase()
 
     def erase(self):
-        # inizializza
         self.mappa = [self.empty_char] * (self.width*self.heigth)
+        self.empty_left = self.width * self.heigth
 
     def __repr__(self):
         repr_map = self.__str__()
@@ -83,6 +84,9 @@ class MapGenerator:
         new_tiles = ceil(tot_tiles * self.fraction)
         for i in range(new_tiles):
             cella = randint(0, tot_tiles-1)
+            if self.mappa[cella] == self.empty_char:
+                self.empty_left -= 1
+
             x,y = self.cell2xy(cella)
             new_t = choices(tiles_letter, cum_weights=cum_weights)[0]
             self.mappa[cella] = new_t
@@ -109,6 +113,8 @@ class MapGenerator:
         for c in new_cells:
             self.mappa[c] = new_cells[c]
 
+        self.empty_left -= len(new_cells)
+
     def film(self, max_iter=None, erase=True):
         if erase:
             self.erase()
@@ -120,15 +126,17 @@ class MapGenerator:
         sleep(0.5)
 
         if max_iter is None:
-            max_iter = 15
+            max_iter = 25
         for i in range(max_iter):
             self.evolve()
             print(self.__str__())
             sleep(0.5)
+            if self.empty_left == 0:
+                break
 
 
 def main():
-    width, heigth = 27,9
+    #  width, heigth = 27,9
     #  width, heigth = 270,70
     #  width, heigth = 4,3
     rows, columns = popen('stty size', 'r').read().split()
@@ -154,3 +162,4 @@ if __name__ == '__main__':
 #     evolve e randomize aggiornano il conteggio
 # mini dizionario per i colori piu` sani
 # i parametri passati da argv
+# print to HTML and markdown, ottimizza lettere simili in fila
