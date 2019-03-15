@@ -134,11 +134,70 @@ class MapGenerator:
             if self.empty_left == 0:
                 break
 
+    def map2html(self, full_filename, title=None):
+        htmlstring = ''
+        htmlstring += '<html>\n'
+        htmlstring += '<head>\n'
+        htmlstring += '<title>{titolo}</title>\n'
+        htmlstring += '</head>\n'
+        htmlstring += '<body style="background:#000000">\n'
+        htmlstring += '<div style="background:#000000; letter-spacing:3px; font-family: monospace, fixed;">\n'
+        htmlstring += '<pre>\n'
+        htmlstring += '{immagine}'
+        htmlstring += '</pre>\n'
+        htmlstring += '</div>\n'
+        htmlstring += '</body>\n'
+        htmlstring += '</html>\n'
+
+        spanstring = '<span style="color:{color}">{char}</span>'
+
+        if title is None: title = 'A beautiful map'
+
+        html_colors = {
+                30 : '2d2d2d',      # grigio
+                31 : 'da2323',      # rosso
+                34 : '194084',      # blu
+                33 : 'ffcc00',      # giallo
+                }
+
+        str_map = ''
+        for i, c in enumerate(self.mappa):
+            if c == self.empty_char:
+                color = self.empty_char_color
+            else:
+                color = self.tiles[c][2]
+            color = html_colors[color]
+
+            #  str_map += cs.format(color=color, char=c)
+            str_map += spanstring.format(color=color, char=c)
+            
+            if (i+1) % self.width == 0:
+                str_map += '\n'
+
+        html_page = htmlstring.format(titolo=title, immagine=str_map)
+        with open(full_filename, 'w') as f:
+            f.write(html_page)
+
+    def full_evolve(self, max_iter=None, erase=False):
+        if erase:
+            self.erase()
+            self.randomize()
+
+        if self.empty_left == self.width*self.heigth:
+            self.randomize()
+
+        if max_iter is None:
+            max_iter = 25
+
+        for i in range(max_iter):
+            self.evolve()
+            if self.empty_left == 0:
+                break
 
 def main():
-    #  width, heigth = 27,9
+    width, heigth = 27,9
     #  width, heigth = 270,70
-    #  width, heigth = 4,3
+    width, heigth = 4,3
     rows, columns = popen('stty size', 'r').read().split()
     width, heigth = int(columns), int(rows)
 
@@ -152,7 +211,12 @@ def main():
             }
     mymap = MapGenerator(width, heigth, tiles, fraction=0.03)
 
-    mymap.film()
+    #  mymap.film()
+    mymap.full_evolve()
+    print(mymap)
+
+    img_name = 'lamappa.html'
+    mymap.map2html(img_name)
 
 if __name__ == '__main__':
     main()
