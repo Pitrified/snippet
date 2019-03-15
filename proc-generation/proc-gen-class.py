@@ -1,8 +1,10 @@
-from random import randint
-from random import choices
 from itertools import accumulate
 from math import ceil
 from os import system
+from os import popen
+from random import choices
+from random import randint
+from time import sleep
 
 class MapGenerator:
     def __init__(self, width, heigth, tiles,
@@ -21,6 +23,9 @@ class MapGenerator:
         # default impostabili dopo se vuoi
         self.empty_char_color = 30
 
+        self.erase()
+
+    def erase(self):
         # inizializza
         self.mappa = [self.empty_char] * (self.width*self.heigth)
 
@@ -104,9 +109,30 @@ class MapGenerator:
         for c in new_cells:
             self.mappa[c] = new_cells[c]
 
+    def film(self, max_iter=None, erase=True):
+        if erase:
+            self.erase()
+            print(self.__str__())
+            sleep(0.5)
+
+        self.randomize()
+        print(self.__str__())
+        sleep(0.5)
+
+        if max_iter is None:
+            max_iter = 15
+        for i in range(max_iter):
+            self.evolve()
+            print(self.__str__())
+            sleep(0.5)
+
+
 def main():
     width, heigth = 27,9
+    #  width, heigth = 270,70
     #  width, heigth = 4,3
+    rows, columns = popen('stty size', 'r').read().split()
+    width, heigth = int(columns), int(rows)
 
     # tiles: prob di spawnare random
     #        prob di replicarsi
@@ -116,17 +142,9 @@ def main():
             'x' : [8, 30, 34],
             'm' : [5, 25, 33],
             }
-    mymap = MapGenerator(width, heigth, tiles)
+    mymap = MapGenerator(width, heigth, tiles, fraction=0.03)
 
-    print(mymap)
-
-    mymap.randomize()
-    print(mymap)
-
-    max_iter = 4
-    for i in range(max_iter):
-        mymap.evolve()
-        print(mymap)
+    mymap.film()
 
 if __name__ == '__main__':
     main()
@@ -135,3 +153,4 @@ if __name__ == '__main__':
 # self.empty_cells = numero di celle ancora vuote
 #     evolve e randomize aggiornano il conteggio
 # mini dizionario per i colori piu` sani
+# i parametri passati da argv
