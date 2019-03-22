@@ -6,6 +6,7 @@ from os import popen
 from random import choices
 from random import randint
 from time import sleep
+import argparse
 
 class MapGenerator:
     def __init__(self, width, heigth, tiles,
@@ -189,7 +190,7 @@ class MapGenerator:
             self.randomize()
 
         if max_iter is None:
-            max_iter = 25
+            max_iter = 50
 
         for i in range(max_iter):
             self.evolve()
@@ -197,12 +198,18 @@ class MapGenerator:
                 break
 
 def main():
+    #  parser = argparse.ArgumentParser()
+    #  parser.add_argument('--fill', help='Genera una mappa grande come l\'intero terminale')
+
+    #  if parser.fill:
+        #  print('Riempio il terminale')
+
     width, heigth = 27,9
     width, heigth = 60,30
     #  width, heigth = 270,70
     #  width, heigth = 4,3
     rows, columns = popen('stty size', 'r').read().split()
-    #  width, heigth = int(columns), int(rows)
+    width, heigth = int(columns), int(rows)
 
     # tiles: prob di spawnare random
     #        prob di replicarsi
@@ -212,14 +219,15 @@ def main():
             'x' : [8, 30, 34],
             'm' : [5, 25, 33],
             }
-    mymap = MapGenerator(width, heigth, tiles, fraction=0.03)
+    #  mymap = MapGenerator(width, heigth, tiles, fraction=0.03)
+    mymap = MapGenerator(width, heigth, tiles, fraction=0.008)
 
-    #  mymap.film()
-    mymap.full_evolve()
-    print(mymap)
+    mymap.film()
+    #  mymap.full_evolve()
+    #  print(mymap)
 
-    img_name = 'lamappa.html'
-    mymap.map2html(img_name)
+    img_name = 'lamappagrande.html'
+    #  mymap.map2html(img_name)
 
 if __name__ == '__main__':
     main()
