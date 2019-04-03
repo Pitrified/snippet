@@ -94,13 +94,16 @@ class MapGenerator:
             return None
         return x + y*self.width
 
-    def find_neigh(self, cella):
+    def find_neigh(self, cella, return_none=False):
         x,y = self.cell2xy(cella)
         u = self.xy2cell(x, y-1)
         d = self.xy2cell(x, y+1)
         l = self.xy2cell(x-1, y)
         r = self.xy2cell(x+1, y)
-        return u, d, l, r
+        if return_none:
+            return u, d, l, r
+        else:
+            return (n for n in (u, d, l, r) if n is not None)
 
     def randomize(self):
         cum_weights = list(accumulate( [self.tiles[x][0] for x in self.tiles] ) )
@@ -125,8 +128,7 @@ class MapGenerator:
                 continue
 
             neigh_cells = self.find_neigh(cella)
-            good_neigh_cells = [x for x in neigh_cells if x is not None]
-            type_neigh = [self.mappa[x] for x in good_neigh_cells]
+            type_neigh = [self.mappa[x] for x in neigh_cells]
             good_type_neigh = [x for x in type_neigh if x != self.empty_char]
 
             cum_weights = list(accumulate( [self.tiles[x][1] for x in good_type_neigh] ) )
@@ -241,13 +243,11 @@ class MapGenerator:
             # TODO might be a set, check performance of pop and in
 
             all_neigh = self.find_neigh(i)
-            all_neigh = [n for n in all_neigh if n is not None]
-            # TODO this is silly, just return a list that doesnt include them
-            new_neigh = [n for n in all_neigh
-                    if self.components[n] == -1   # non devono essere gia' in componenti
-                    and n not in to_process       # non deve essere gia' nella coda da processare
-                    and self.mappa[n] == cur_char # deve essere del carattere corrispondente
-                    ]
+            new_neigh = (n for n in all_neigh
+                if self.components[n] == -1   # non devono essere gia' in componenti
+                and n not in to_process       # non deve essere gia' nella coda da processare
+                and self.mappa[n] == cur_char # deve essere del carattere corrispondente
+                )
             to_process.extend(new_neigh)
 
             #  proc = i
@@ -255,13 +255,11 @@ class MapGenerator:
             while len(to_process) > 0:
                 proc = to_process.pop(0)
                 all_neigh = self.find_neigh(proc)
-                all_neigh = [n for n in all_neigh if n is not None]
-                # TODO this is silly, just return a list that doesnt include them
-                new_neigh = [n for n in all_neigh
+                new_neigh = (n for n in all_neigh
                         if self.components[n] == -1   # non devono essere gia' in componenti
                         and n not in to_process       # non deve essere gia' nella coda da processare
                         and self.mappa[n] == cur_char # deve essere del carattere corrispondente
-                        ]
+                        )
                 to_process.extend(new_neigh)
                 #  print(f'proc {proc} an {all_neigh} nn {new_neigh} tp {to_process}')
                 #  print(f'proc {proc}')
