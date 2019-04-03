@@ -247,14 +247,15 @@ class MapGenerator:
             cur_char = self.mappa[i]
             #  print(f'Analizzo i {i} carattere {cur_char}')
             # TODO might be a set, check performance of pop and in
+            # TODO even better a collections.deque
 
-            all_neigh = self.find_neigh(i)
-            new_neigh = (n for n in all_neigh
-                if self.components[n] == -1   # non devono essere gia' in componenti
-                and n not in to_process       # non deve essere gia' nella coda da processare
-                and self.mappa[n] == cur_char # deve essere del carattere corrispondente
-                )
-            to_process.extend(new_neigh)
+            #  all_neigh = self.find_neigh(i)
+            #  new_neigh = (n for n in all_neigh
+                #  if self.components[n] == -1   # non devono essere gia' in componenti
+                #  and n not in to_process       # non deve essere gia' nella coda da processare
+                #  and self.mappa[n] == cur_char # deve essere del carattere corrispondente
+                #  )
+            #  to_process.extend(new_neigh)
 
             #  proc = i
             #  proc = to_process.pop(0)
@@ -299,6 +300,29 @@ class MapGenerator:
                 str_riga += cs.format(color=color, char=rk)
             str_map += str_riga + '\n'
         return str_map
+
+    def find_path(self, ce_start, ce_end):
+        '''Use A* to find best path
+        water costs more than land'''
+        # basic A* implementation
+        # open: squares that are being considered to find the path
+        # closed: already considered, don't add again
+        # G: cost from start to current square
+        # H: estimated cost from current square to end
+        # F = G + H
+        # get S from open list with lowest score
+        # remove S from open and put it in closed
+        # for each neighbour T reachable from S
+        #   if T in closed: ignore it
+        #   if T NOT in open: add it and compute score
+        #   if T in open: check if new path has lower score
+        #       update score and parent if needed
+        path = []
+        return path
+
+    def print_path(self, path):
+        '''Print map overlay the path'''
+        # TODO might be multiple paths
 
 def parse_arguments():
     # setup parser
@@ -432,12 +456,14 @@ def main():
         print(mymap.fast_print())
         #  print(mymap)
 
+    # TODO show components or not from cli
     mymap.find_components()
     print(mymap.print_components())
-
     #  print(mymap.components)
 
     #  test_comp_perf()
+    path = mymap.find_path(1, 2)
+    mymap.print_path(path)
 
     #  img_name = 'lamappagrande.html'
     #  mymap.map2html(img_name)
@@ -446,13 +472,17 @@ if __name__ == '__main__':
     main()
 
 ### TODO ###
+# mini dizionario per i colori piu` sani
+# edge detection
+#     union set - trova molestamente le componenti
+#     con gradiente?
+# componenti trovate con blob tempo lineare
+# con pygame fai una cosa simile www.redblobgames.com/maps/mapgen4/
+
+### DONE ###
 # self.empty_cells = numero di celle ancora vuote
 #     evolve e randomize aggiornano il conteggio
-# mini dizionario per i colori piu` sani
 # i parametri passati da argv
 # print to HTML and markdown, ottimizza lettere simili in fila
 # ottimizza anche stringa da stampare
 # anche se i vicini sono popolati puo' a volte restare vuota
-# edge detection
-#     union set - trova molestamente le componenti
-#     con gradiente?
