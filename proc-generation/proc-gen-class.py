@@ -12,6 +12,7 @@ from time import sleep
 from queue import Queue
 import sys
 import argparse
+from timeit import default_timer as timer
 
 class MapGenerator:
     def __init__(self, width, heigth, tiles,
@@ -237,10 +238,7 @@ class MapGenerator:
             to_process = [i]
             cur_char = self.mappa[i]
             #  print(f'Analizzo i {i} carattere {cur_char}')
-            # TODO might be a set
-            #  to_process.put(i)
-
-                # TODO the first iteration is redundant
+            # TODO might be a set, check performance of pop and in
 
             all_neigh = self.find_neigh(i)
             all_neigh = [n for n in all_neigh if n is not None]
@@ -266,16 +264,11 @@ class MapGenerator:
                         ]
                 to_process.extend(new_neigh)
                 #  print(f'proc {proc} an {all_neigh} nn {new_neigh} tp {to_process}')
-                #  proc = to_process.pop(0)
                 #  print(f'proc {proc}')
                 self.components[proc] = comp
 
-            #  print('a')
-
             comp += 1
-
             i += 1
-            #  print(to_process)
 
     def print_components(self):
         str_map = ''
@@ -295,7 +288,9 @@ class MapGenerator:
             str_riga = ''
             for k, g in groupby(riga):
                 color = colors[k % len(colors) ]
-                pad_k = f'{k:0>2}'
+                #  pad_k = f'{k:0>2}'  # full comp numbers
+                pad_k = f'{str(k):0>1.1}' # compact view
+                #  pad_k = f'{str(k):1.1}' # compact view
                 rk = pad_k * len(list(g))
                 str_riga += cs.format(color=color, char=rk)
             str_map += str_riga + '\n'
@@ -354,6 +349,36 @@ def parse_arguments():
     args_parsed = { a : v for a, v in args._get_kwargs() }
     return args_parsed
 
+def test_film_run():
+    pass
+
+def test_film(width, heigth, tiles, fraction):
+    mymap = MapGenerator(width, heigth, tiles, fraction=fraction)
+    mymap.film()
+
+def test_comp_perf_run(width, heigth, tiles, fraction):
+    mymap = MapGenerator(width, heigth, tiles, fraction)
+    t1 = timer()
+    mymap.full_evolve()
+    t2 = timer()
+    mymap.find_components()
+    t3 = timer()
+
+    return t2-t1, t3-t2
+
+def test_comp_perf():
+    width = 10#00
+    heigth = 10#00
+    tiles = {
+            'l' : [2, 5, 31],
+            'x' : [8, 30, 34],
+            'm' : [5, 25, 33],
+            }
+    fraction = 0.1
+
+    t_evolve, t_find = test_comp_perf_run(width, heigth, tiles, fraction)
+    print(f'evolve: {t_evolve:.6f} find: {t_find:.6f}')
+
 def main():
     args = parse_arguments()
 
@@ -384,12 +409,12 @@ def main():
 
     #  seed = randrange(sys.maxsize)
     myseed = 1
+    myseed = int( timer() * 10000000 )
     #  Random(seed)
     seed(myseed)
     print(f'Seed used: {myseed}')
     # bad seeds
     # h 50 w 20 seed 4801403895470927478 f 0.03
-
 
     #  mymap = MapGenerator(width, heigth, tiles, fraction=0.03)
     mymap = MapGenerator(width, heigth, tiles, fraction=fraction)
@@ -406,7 +431,9 @@ def main():
 
     #  print(mymap.components)
 
-    img_name = 'lamappagrande.html'
+    #  test_comp_perf()
+
+    #  img_name = 'lamappagrande.html'
     #  mymap.map2html(img_name)
 
 if __name__ == '__main__':
