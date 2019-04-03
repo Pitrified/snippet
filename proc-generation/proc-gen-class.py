@@ -5,7 +5,12 @@ from os import system
 from os import popen
 from random import choices
 from random import randint
+from random import randrange
+#  from random import Random
+from random import seed
 from time import sleep
+from queue import Queue
+import sys
 import argparse
 
 class MapGenerator:
@@ -54,6 +59,23 @@ class MapGenerator:
                 str_map += '\n'
         return str_map
         # print(mymap)
+
+    def fast_print(self):
+        str_map = ''
+        cs = '\033[{color}m{char}\033[0m'
+
+        for r in range(self.heigth):
+            riga = self.mappa[ r*self.width : (r+1)*self.width ]
+            str_riga = ''
+            for k, g in groupby(riga):
+                if k == self.empty_char:
+                    color = self.empty_char_color
+                else:
+                    color = self.tiles[k][2]
+                rk = k * len(list(g))
+                str_riga += cs.format(color=color, char=rk)
+            str_map += str_riga + '\n'
+        return str_map
 
     def cell2xy(self, cella):
         if cella is None: return None, None
@@ -197,19 +219,159 @@ class MapGenerator:
             if self.empty_left == 0:
                 break
 
+    def find_components(self):
+        # componente : [celle, della, comp, ... ]
+        # TODO add this way of saving them
+        self.components_set = {}
+        # lista delle componenti
+        self.components = [-1] * (self.width * self.heigth)
+        i = 0
+        comp = 0
+        while i < self.width * self.heigth -1: #print(f'i {i}')
+            # se i e' gia' in una componente, saltalo
+            if self.components[i] != -1:
+                i += 1
+                continue
+
+            #  to_process = Queue()
+            to_process = [i]
+            cur_char = self.mappa[i]
+            #  print(f'Analizzo i {i} carattere {cur_char}')
+            # TODO might be a set
+            #  to_process.put(i)
+
+                # TODO the first iteration is redundant
+
+            all_neigh = self.find_neigh(i)
+            all_neigh = [n for n in all_neigh if n is not None]
+            # TODO this is silly, just return a list that doesnt include them
+            new_neigh = [n for n in all_neigh
+                    if self.components[n] == -1   # non devono essere gia' in componenti
+                    and n not in to_process       # non deve essere gia' nella coda da processare
+                    and self.mappa[n] == cur_char # deve essere del carattere corrispondente
+                    ]
+            to_process.extend(new_neigh)
+
+            #  proc = i
+            #  proc = to_process.pop(0)
+            while len(to_process) > 0:
+                proc = to_process.pop(0)
+                all_neigh = self.find_neigh(proc)
+                all_neigh = [n for n in all_neigh if n is not None]
+                # TODO this is silly, just return a list that doesnt include them
+                new_neigh = [n for n in all_neigh
+                        if self.components[n] == -1   # non devono essere gia' in componenti
+                        and n not in to_process       # non deve essere gia' nella coda da processare
+                        and self.mappa[n] == cur_char # deve essere del carattere corrispondente
+                        ]
+                to_process.extend(new_neigh)
+                #  print(f'proc {proc} an {all_neigh} nn {new_neigh} tp {to_process}')
+                #  proc = to_process.pop(0)
+                #  print(f'proc {proc}')
+                self.components[proc] = comp
+
+            #  print('a')
+
+            comp += 1
+
+            i += 1
+            #  print(to_process)
+
+    def print_components(self):
+        str_map = ''
+        #  cs = '\033[{color}m{char:0>2}\033[0m'
+        cs = '\033[{color}m{char}\033[0m'
+
+        #  colors = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        #  colors = [1, 2, 3, 4, 6, 7, 8, 9, 10]
+        colors = [
+                30, 31, 32, 33, 34, 35, 36, 37,
+                40, 41, 42, 43, 44, 45, 46, 47,
+                90, 91, 92, 93, 94, 95, 96, 97,
+                100, 101, 102, 103, 104, 105, 106, 107,
+                ]
+        for r in range(self.heigth):
+            riga = self.components[ r*self.width : (r+1)*self.width ]
+            str_riga = ''
+            for k, g in groupby(riga):
+                color = colors[k % len(colors) ]
+                pad_k = f'{k:0>2}'
+                rk = pad_k * len(list(g))
+                str_riga += cs.format(color=color, char=rk)
+            str_map += str_riga + '\n'
+        return str_map
+
+def parse_arguments():
+    # setup parser
+    parser = argparse.ArgumentParser(
+            description='Procedurally generate a map',
+            )
+
+    # positional args (mandatory)
+    #  parser.add_argument('echo', help='echo this string')
+
+    parser.add_argument('-w', "--width",
+            type=int,
+            default=-1,
+            help="width of the map")
+
+    parser.add_argument('-e', "--heigth",
+            type=int,
+            default=-1,
+            help="heigth of the map")
+
+    parser.add_argument('-f', "--fraction",
+            type=float,
+            default=-1,
+            help="fraction of cells to randomize")
+
+    #  parser.add_argument("-v", "--verbose",
+            #  action="store_true",                # store only true or false value
+            #  help="increase output verbosity")
+
+    parser.add_argument("-m", "--movie",
+            action="store_true",                # store only true or false value
+            help="visualize the evolution")
+
+    # limit possible values
+    #  parser.add_argument('-n', '--number',
+            #  type=int,
+            #  choices=[0,1,2],
+            #  help='number can only be 0,1,2',
+            #  )
+
+    # fancy option with count
+    #  parser.add_argument('-r', '--repeat',
+            #  action='count',
+            #  default=0,
+            #  help='you can repeat this option and it will be counted',
+            #  )
+
+    # last line to parse them
+    args = parser.parse_args()
+
+    #  parse the args even more if needed
+    args_parsed = { a : v for a, v in args._get_kwargs() }
+    return args_parsed
+
 def main():
-    #  parser = argparse.ArgumentParser()
-    #  parser.add_argument('--fill', help='Genera una mappa grande come l\'intero terminale')
+    args = parse_arguments()
 
-    #  if parser.fill:
-        #  print('Riempio il terminale')
+    print(args)
 
-    width, heigth = 27,9
-    width, heigth = 60,30
+    rows, columns = popen('stty size', 'r').read().split()
+    #  mywidth, myheigth = 27,9
+    if args['width'] == -1: width = int(columns)
+    else: width = args['width']
+    if args['heigth'] == -1: heigth = int(rows)
+    else: heigth = args['heigth']
+    #  width, heigth = 60,30
     #  width, heigth = 270,70
     #  width, heigth = 4,3
-    rows, columns = popen('stty size', 'r').read().split()
-    width, heigth = int(columns), int(rows)
+    #  width, heigth = int(columns), int(rows)
+
+    if args['fraction'] == -1: fraction = 0.08
+    else: fraction = args['fraction']
 
     # tiles: prob di spawnare random
     #        prob di replicarsi
@@ -219,12 +381,30 @@ def main():
             'x' : [8, 30, 34],
             'm' : [5, 25, 33],
             }
-    #  mymap = MapGenerator(width, heigth, tiles, fraction=0.03)
-    mymap = MapGenerator(width, heigth, tiles, fraction=0.008)
 
-    mymap.film()
-    #  mymap.full_evolve()
-    #  print(mymap)
+    #  seed = randrange(sys.maxsize)
+    myseed = 1
+    #  Random(seed)
+    seed(myseed)
+    print(f'Seed used: {myseed}')
+    # bad seeds
+    # h 50 w 20 seed 4801403895470927478 f 0.03
+
+
+    #  mymap = MapGenerator(width, heigth, tiles, fraction=0.03)
+    mymap = MapGenerator(width, heigth, tiles, fraction=fraction)
+
+    if args['movie']:
+        mymap.film()
+    else:
+        mymap.full_evolve()
+        print(mymap.fast_print())
+        #  print(mymap)
+
+    mymap.find_components()
+    print(mymap.print_components())
+
+    #  print(mymap.components)
 
     img_name = 'lamappagrande.html'
     #  mymap.map2html(img_name)
@@ -238,3 +418,8 @@ if __name__ == '__main__':
 # mini dizionario per i colori piu` sani
 # i parametri passati da argv
 # print to HTML and markdown, ottimizza lettere simili in fila
+# ottimizza anche stringa da stampare
+# anche se i vicini sono popolati puo' a volte restare vuota
+# edge detection
+#     union set - trova molestamente le componenti
+#     con gradiente?
