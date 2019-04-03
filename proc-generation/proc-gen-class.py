@@ -7,6 +7,7 @@ from random import choices
 from random import randint
 from random import randrange
 #  from random import Random
+from random import random
 from random import seed
 from time import sleep
 from queue import Queue
@@ -18,6 +19,8 @@ class MapGenerator:
     def __init__(self, width, heigth, tiles,
                  empty_char='e',
                  fraction = 0.1,
+                 #  discard = 0.5,
+                 discard = 0.3,
                  ):
         # obbligatori
         self.width = width
@@ -27,6 +30,7 @@ class MapGenerator:
         # default impostabili dal costruttore
         self.empty_char = empty_char
         self.fraction = fraction
+        self.discard = discard
 
         # default impostabili dopo se vuoi
         self.empty_char_color = 30
@@ -126,6 +130,8 @@ class MapGenerator:
         for cella in range(tot_tiles):
             if self.mappa[cella] != self.empty_char:
                 continue
+            if random() < self.discard: # only assign this some of the times
+                continue
 
             neigh_cells = self.find_neigh(cella)
             type_neigh = [self.mappa[x] for x in neigh_cells]
@@ -215,7 +221,7 @@ class MapGenerator:
             self.randomize()
 
         if max_iter is None:
-            max_iter = 50
+            max_iter = 5000
 
         for i in range(max_iter):
             self.evolve()
@@ -306,12 +312,12 @@ def parse_arguments():
     parser.add_argument('-w', "--width",
             type=int,
             default=-1,
-            help="width of the map")
+            help="width of the map, -1 or empty for auto")
 
     parser.add_argument('-e', "--heigth",
             type=int,
             default=-1,
-            help="heigth of the map")
+            help="heigth of the map, -1 or empty for auto")
 
     parser.add_argument('-f', "--fraction",
             type=float,
@@ -407,7 +413,9 @@ def main():
 
     #  seed = randrange(sys.maxsize)
     myseed = 1
+    #  myseed = 5
     myseed = int( timer() * 10000000 )
+    # TODO seed from cli
     #  Random(seed)
     seed(myseed)
     print(f'Seed used: {myseed}')
