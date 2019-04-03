@@ -1,19 +1,17 @@
 from itertools import accumulate
 from itertools import groupby
 from math import ceil
-from os import system
-from os import popen
+#  from os import system
+#  from os import popen
 from random import choices
 from random import randint
-from random import randrange
+#  from random import randrange
 #  from random import Random
 from random import random
-from random import seed
-from time import sleep
-from queue import Queue
-import sys
-import argparse
-from timeit import default_timer as timer
+#  from random import seed
+#  from time import sleep
+#  from queue import Queue
+from collections import deque
 
 class MapGenerator:
     def __init__(self, width, heigth, tiles,
@@ -243,7 +241,8 @@ class MapGenerator:
                 continue
 
             #  to_process = Queue()
-            to_process = [i]
+            #  to_process = [i]
+            to_process = deque( (i,) )
             cur_char = self.mappa[i]
             #  print(f'Analizzo i {i} carattere {cur_char}')
             # TODO might be a set, check performance of pop and in
@@ -260,7 +259,8 @@ class MapGenerator:
             #  proc = i
             #  proc = to_process.pop(0)
             while len(to_process) > 0:
-                proc = to_process.pop(0)
+                #  proc = to_process.pop(0)
+                proc = to_process.popleft()
                 all_neigh = self.find_neigh(proc)
                 new_neigh = (n for n in all_neigh
                         if self.components[n] == -1   # non devono essere gia' in componenti
@@ -316,160 +316,11 @@ class MapGenerator:
         #   if T in closed: ignore it
         #   if T NOT in open: add it and compute score
         #   if T in open: check if new path has lower score
-        #       update score and parent if needed
-        path = []
-        return path
+
 
     def print_path(self, path):
         '''Print map overlay the path'''
         # TODO might be multiple paths
-
-def parse_arguments():
-    # setup parser
-    parser = argparse.ArgumentParser(
-            description='Procedurally generate a map',
-            )
-
-    # positional args (mandatory)
-    #  parser.add_argument('echo', help='echo this string')
-
-    parser.add_argument('-w', "--width",
-            type=int,
-            default=-1,
-            help="width of the map, -1 or empty for auto")
-
-    parser.add_argument('-e', "--heigth",
-            type=int,
-            default=-1,
-            help="heigth of the map, -1 or empty for auto")
-
-    parser.add_argument('-f', "--fraction",
-            type=float,
-            default=-1,
-            help="fraction of cells to randomize")
-
-    #  parser.add_argument("-v", "--verbose",
-            #  action="store_true",                # store only true or false value
-            #  help="increase output verbosity")
-
-    parser.add_argument("-m", "--movie",
-            action="store_true",                # store only true or false value
-            help="visualize the evolution")
-
-    # limit possible values
-    #  parser.add_argument('-n', '--number',
-            #  type=int,
-            #  choices=[0,1,2],
-            #  help='number can only be 0,1,2',
-            #  )
-
-    # fancy option with count
-    #  parser.add_argument('-r', '--repeat',
-            #  action='count',
-            #  default=0,
-            #  help='you can repeat this option and it will be counted',
-            #  )
-
-    # last line to parse them
-    args = parser.parse_args()
-
-    #  parse the args even more if needed
-    args_parsed = { a : v for a, v in args._get_kwargs() }
-    return args_parsed
-
-def test_film_run():
-    pass
-
-def test_film(width, heigth, tiles, fraction):
-    mymap = MapGenerator(width, heigth, tiles, fraction=fraction)
-    mymap.film()
-
-def test_comp_perf_run(width, heigth, tiles, fraction):
-    mymap = MapGenerator(width, heigth, tiles, fraction)
-    t1 = timer()
-    mymap.full_evolve()
-    t2 = timer()
-    mymap.find_components()
-    t3 = timer()
-
-    return t2-t1, t3-t2
-
-def test_comp_perf():
-    width = 10#00
-    heigth = 10#00
-    tiles = {
-            'l' : [2, 5, 31],
-            'x' : [8, 30, 34],
-            'm' : [5, 25, 33],
-            }
-    fraction = 0.1
-
-    t_evolve, t_find = test_comp_perf_run(width, heigth, tiles, fraction)
-    print(f'evolve: {t_evolve:.6f} find: {t_find:.6f}')
-
-def main():
-    args = parse_arguments()
-
-    print(args)
-
-    rows, columns = popen('stty size', 'r').read().split()
-    #  mywidth, myheigth = 27,9
-    if args['width'] == -1: width = int(columns)
-    else: width = args['width']
-    if args['heigth'] == -1: heigth = int(rows)
-    else: heigth = args['heigth']
-    #  width, heigth = 60,30
-    #  width, heigth = 270,70
-    #  width, heigth = 4,3
-    #  width, heigth = int(columns), int(rows)
-
-    if args['fraction'] == -1: fraction = 0.08
-    else: fraction = args['fraction']
-
-    # tiles: prob di spawnare random
-    #        prob di replicarsi
-    #        colore
-    tiles = {
-            'l' : [2, 5, 31],
-            'x' : [8, 30, 34],
-            'm' : [5, 25, 33],
-            }
-
-    #  seed = randrange(sys.maxsize)
-    myseed = 1
-    #  myseed = 5
-    myseed = int( timer() * 10000000 )
-    # TODO seed from cli
-    #  Random(seed)
-    seed(myseed)
-    print(f'Seed used: {myseed}')
-    # bad seeds
-    # h 50 w 20 seed 4801403895470927478 f 0.03
-
-    #  mymap = MapGenerator(width, heigth, tiles, fraction=0.03)
-    mymap = MapGenerator(width, heigth, tiles, fraction=fraction)
-
-    if args['movie']:
-        mymap.film()
-    else:
-        mymap.full_evolve()
-        print(mymap.fast_print())
-        #  print(mymap)
-
-    # TODO show components or not from cli
-    mymap.find_components()
-    print(mymap.print_components())
-    #  print(mymap.components)
-
-    #  test_comp_perf()
-    path = mymap.find_path(1, 2)
-    mymap.print_path(path)
-
-    #  img_name = 'lamappagrande.html'
-    #  mymap.map2html(img_name)
-
-if __name__ == '__main__':
-    main()
 
 ### TODO ###
 # mini dizionario per i colori piu` sani
