@@ -318,7 +318,8 @@ class MapGenerator:
             for k, g in groupby(riga):
                 color = colors[k % len(colors) ]
                 #  pad_k = f'{k:0>2}'  # full comp numbers
-                pad_k = f'{str(k):0>1.1}' # compact view
+                #  pad_k = f'{str(k):0>1.1}' # compact view
+                pad_k = f'{str(k)[-1:]}' # compact view
                 #  pad_k = f'{str(k):1.1}' # compact view
                 rk = pad_k * len(list(g))
                 str_riga += cs.format(color=color, char=rk)
