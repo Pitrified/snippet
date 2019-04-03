@@ -13,6 +13,21 @@ from random import random
 #  from queue import Queue
 from collections import deque
 
+class Tile:
+    def __init__(self, letter,
+            prob_spawn=5,
+            prob_repl=5,
+            color=33,
+            travel_cost=5,
+            is_traversable=True,
+            ):
+        self.letter = letter
+        self.prob_spawn = prob_spawn
+        self.prob_repl = prob_repl
+        self.color = color
+        self.travel_cost = travel_cost
+        self.is_traversable = is_traversable
+
 class MapGenerator:
     def __init__(self, width, heigth, tiles,
                  empty_char='e',
@@ -54,7 +69,8 @@ class MapGenerator:
             if c == self.empty_char:
                 color = self.empty_char_color
             else:
-                color = self.tiles[c][2]
+                #  color = self.tiles[c][2]
+                color = self.tiles[c].color
 
             str_map += cs.format(color=color, char=c)
             
@@ -74,7 +90,8 @@ class MapGenerator:
                 if k == self.empty_char:
                     color = self.empty_char_color
                 else:
-                    color = self.tiles[k][2]
+                    #  color = self.tiles[k][2]
+                    color = self.tiles[k].color
                 rk = k * len(list(g))
                 str_riga += cs.format(color=color, char=rk)
             str_map += str_riga + '\n'
@@ -108,7 +125,10 @@ class MapGenerator:
             return (n for n in (u, d, l, r) if n is not None)
 
     def randomize(self):
-        cum_weights = list(accumulate( [self.tiles[x][0] for x in self.tiles] ) )
+        #  cum_weights = list(accumulate( [self.tiles[x][0] for x in self.tiles] ) )
+        cum_weights = list(accumulate( [self.tiles[x].prob_spawn for x in self.tiles] ) )
+        #  cum_weights = list(accumulate( [ x.prob_spawn for x in self.tiles] ) )
+        #  tiles_letter = [t for t in self.tiles]
         tiles_letter = [t for t in self.tiles]
         tot_tiles = self.width*self.heigth
         new_tiles = ceil(tot_tiles * self.fraction)
@@ -135,9 +155,12 @@ class MapGenerator:
             type_neigh = [self.mappa[x] for x in neigh_cells]
             good_type_neigh = [x for x in type_neigh if x != self.empty_char]
 
-            cum_weights = list(accumulate( [self.tiles[x][1] for x in good_type_neigh] ) )
+            #  cum_weights = list(accumulate( [self.tiles[x][1] for x in good_type_neigh] ) )
+            cum_weights = list(accumulate([self.tiles[x].prob_repl for x in good_type_neigh]) )
+            #  cum_weights = list(accumulate( [ x.prob_repl for x in good_type_neigh] ) )
 
             if len(cum_weights) > 0:
+                print(f'gtn {good_type_neigh} cw {cum_weights}')
                 new_t = choices(good_type_neigh, cum_weights=cum_weights)[0]
                 new_cells[cella] = new_t
 
@@ -200,7 +223,8 @@ class MapGenerator:
                 if k == self.empty_char:
                     color = self.empty_char_color
                 else:
-                    color = self.tiles[k][2]
+                    #  color = self.tiles[k][2]
+                    color = self.tiles[k].color
                 color = html_colors[color]
                 rk = k * len(list(g))
                 str_riga += spanstring.format(color=color, char=rk)
@@ -317,20 +341,21 @@ class MapGenerator:
         #   if T NOT in open: add it and compute score
         #   if T in open: check if new path has lower score
 
-
     def print_path(self, path):
         '''Print map overlay the path'''
         # TODO might be multiple paths
 
 ### TODO ###
-# mini dizionario per i colori piu` sani
+# rifare l'intera baracca con numpy e gli array seri?
+# classe tile piu' astuta, campi seri sono necessari
+# poi viene salvata solo la lettera nella stringa
+# mini dizionario per i colori piu` sani # in Tile
 # edge detection
 #     union set - trova molestamente le componenti
 #     con gradiente?
-# componenti trovate con blob tempo lineare
-# con pygame fai una cosa simile www.redblobgames.com/maps/mapgen4/
 
 ### DONE ###
+# componenti trovate con blob tempo lineare
 # self.empty_cells = numero di celle ancora vuote
 #     evolve e randomize aggiornano il conteggio
 # i parametri passati da argv

@@ -10,6 +10,7 @@ from random import seed
 from os import popen
 
 from proc_gen_class import MapGenerator
+from proc_gen_class import Tile
 
 def parse_arguments():
     # setup parser
@@ -116,10 +117,15 @@ def main():
     # tiles: prob di spawnare random
     #        prob di replicarsi
     #        colore
+    #  tiles = {
+            #  'l' : [2, 5, 31],
+            #  'x' : [8, 30, 34],
+            #  'm' : [5, 25, 33],
+            #  }
     tiles = {
-            'l' : [2, 5, 31],
-            'x' : [8, 30, 34],
-            'm' : [5, 25, 33],
+            'l' : Tile(letter='l', prob_spawn=2, prob_repl=5, color=31),
+            'x' : Tile(letter='x', prob_spawn=8, prob_repl=30, color=34),
+            'm' : Tile(letter='m', prob_spawn=5, prob_repl=25, color=33),
             }
 
     #  seed = randrange(sys.maxsize)
@@ -162,4 +168,6 @@ def main():
 if __name__ == '__main__':
     main()
 
-
+# TODO
+# con pygame fai una cosa simile www.redblobgames.com/maps/mapgen4/
+# o anche con tkinter: slider cambiano parametri, pulsanti randomize, evolve, film
