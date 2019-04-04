@@ -7,9 +7,11 @@ from math import ceil
 from math import floor 
 from math import pi
 from math import sin
+from math import sqrt
 from os import popen
 from sys import maxsize
 from time import sleep
+from numpy import arctan2
 
 class Waver:
     def __init__(self, width, heigth, 
@@ -21,7 +23,10 @@ class Waver:
         self.function = function
         self.base_char = base_char
 
-        self.hue = 40
+        #  self.hue = 40
+        #  self.hue = 0
+        self.hue = 0.33333 # this is a green that will kill your eyes
+        self.hue = 0.66666
 
         self.find_extremes()
 
@@ -30,7 +35,8 @@ class Waver:
         sadly you can't do this for all time'''
         self.func_min = maxsize
         self.func_max = - maxsize
-        max_t = 1000
+        #  max_t = 1000
+        max_t = 100
         for x in range(self.width):
             for y in range(self.heigth):
                 for t in range(max_t):
@@ -48,15 +54,17 @@ class Waver:
     def print_at_color(self, t):
         #  form_char = '\x1b[38;2;{};{};{}m{:02d}'
         form_char = '\x1b[38;2;{};{};{}m{:0>2}'
+        #  form_char = '\x1b[38;2;{};{};{}m{:0>1}'
         #  form_char = '\x1b[38;2;{};{};{}m{:02.0f}'
         evstr = ''
-        for i in range(self.width):
-            for j in range(self.heigth):
+        for i in range(self.heigth):
+            for j in range(self.width):
                 val = self.evaluate(i, j, t) 
                 #  val = str(self.evaluate(i, j, t) )
                 r, g, b = self.evaluate_rgb(val)
                 i_val = int(val)
                 f_val = f'{i_val:03d}'[-2:]
+                #  f_val = f'{i_val:03d}'[-1:]
                 evstr += form_char.format(r, g, b, f_val)
             evstr += '\n'
         return evstr
@@ -99,18 +107,32 @@ class Waver:
     def format_rgb(self, string, r, g, b):
         return f'\x1b[38;2;{r};{g};{b}m{string}'
 
+def sinc(x):
+    if x == 0:
+        return 1
+    else:
+        return sin(x) / x
+
 def myfunc(x, y, t):
     #  return x+y+ (t%5)
     #  return x+y+ sin(t * pi / 12)
     #  return 20* sin(x+y+ t * pi / 12)
-    return 20 * sin(x/4+y/4+ t * pi / 12) + 5 * sin(x/4+y/4+ t * pi / 6)
+    #  return 20 * sin(x/4+y/4+ t * pi / 12) + 5 * sin(x/4+y/4+ t * pi / 6)
+    rho = sqrt( x**2 + y**2 )
+    theta = arctan2(x, y)
+    return 10 * sin( rho - t * pi / 12 ) * sin (t* theta * 4) # cool
+    #  return 10 * sin( - rho * t * pi / 12 ) # weird effects
+    #  return 10 * sin(t * pi / 16) * sinc(0.4 * (x-30) ) * sinc(0.4 * (y-30) )
+    #  return 70 * sin(t * pi / 16) * sinc(0.4 * (x-30) ) * sinc(0.4 * (y-30) )
 
 def test_print():
     width, heigth  = 10, 10
     #  width, heigth  = 3, 3
     rows, columns = popen('stty size', 'r').read().split()
-    width = int(columns)
-    heigth = int( int(rows) / 3)
+    #  width = int(columns)
+    width = int( int(columns) / 2)
+    #  heigth = int( int(rows) / 3)
+    heigth = int(rows) -3
     base_char = 'o'
     waving = Waver(width, heigth, myfunc, base_char)
 
@@ -121,11 +143,13 @@ def test_print():
     #  print(waving.evaluate(1,2,3) )
     #  print(waving.print_at(4) )
 
+    #  print(waving.print_at(t) )
     for t in range(100):
-        #  print(waving.print_at(t) )
         sleep(0.1)
         print(waving.print_at_color(t))
 
+    #  print(waving.print_at_color(1))
+    #  print(f'rows {rows} cols {columns} width {width}')
 
 def main():
     test_print()
