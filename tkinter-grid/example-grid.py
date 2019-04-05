@@ -68,8 +68,6 @@ class ResizableGrid(tk.Frame):
         # and column 1 will fill 1/4
         #  self.grid_columnconfigure(1, weight=1)
 
-
-
 class Application():
     def __init__(self):
         self.root = tk.Tk()
@@ -105,9 +103,48 @@ class Application():
     def exit(self, e=None):
         self.root.destroy()
 
+class ApplicationDouble():
+    def __init__(self):
+        self.root = tk.Tk()
+
+        self.root.bind('<Escape>', self.exit)
+
+        self.width = 900
+        self.height = 600
+        self.xpos = 10
+        self.ypos = 10
+        #  self.root.geometry("900x600-5+5")
+        # dimensiona e posiziona la finestra, - parte dal bordo destro
+        self.root.geometry(f'{self.width}x{self.height}-{self.xpos}+{self.ypos}')
+
+        # tell the grid in root to grow with the window
+        # I don't know if there is any difference with the two ways
+        #  self.root.columnconfigure(0, weight=1)
+        #  self.root.rowconfigure(0, weight=1)
+        self.root.grid_rowconfigure(0, weight=1)
+        self.root.grid_columnconfigure(0, weight=1)
+        self.root.grid_columnconfigure(1, weight=1)
+
+        # create a ResizableGrid which is a Frame
+        # kwargs are sent to the Frame constructor
+        #  self.gridexample = ResizableGrid(self.root, bg='cyan', padx=10) # no pad why?
+        self.gridexample1 = ResizableGrid(self.root, bg='cyan')
+        self.gridexample2 = ResizableGrid(self.root, bg='DarkOrange2')
+
+        # pack the ResizableGrid and tell it to grow
+        self.gridexample1.grid(row=0, column=0, sticky='nsew', padx=10, pady=10)
+        self.gridexample2.grid(row=0, column=1, sticky='nsew', padx=10, pady=10)
+
+    def start(self):
+        self.root.mainloop()
+
+    def exit(self, e=None):
+        self.root.destroy()
+
 if __name__ == "__main__":
     #  srcdir = 'Selezione'
-    app = Application()
+    #  app = Application()
+    app = ApplicationDouble()
     app.start()
 
 
