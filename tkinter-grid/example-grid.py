@@ -7,6 +7,23 @@
 
 import tkinter as tk
 
+class InfoLabel(tk.Label):
+    def __init__(self, parent, **kwargs):
+        # init Label, standard constructor
+        self.var = tk.StringVar()
+        self.var.set('Some text you should never see!')
+
+        tk.Label.__init__(self, parent, textvariable=self.var, **kwargs)
+
+        self.parent = parent
+
+        # binding to the parent feels weird, bit it works
+        self.parent.bind('<Configure>', self.update)
+
+    def update(self, event):
+        #  print(event)
+        self.var.set(f'Width {event.width} height {event.height}')
+
 class ResizableGrid(tk.Frame):
     def __init__(self, parent, **kwargs):
         # init Frame, standard constructor
@@ -64,9 +81,14 @@ class ResizableGrid(tk.Frame):
         # the *column* grows, the label doesn't
         self.ctr_right.grid(row=0, column=2, sticky="ns")
 
-        # tell column 0 to expand 3/4 of the way
-        # and column 1 will fill 1/4
-        #  self.grid_columnconfigure(1, weight=1)
+
+        # center label on ctr_mid
+        self.ctr_mid.grid_columnconfigure(0, weight=1)
+        self.ctr_mid.grid_rowconfigure(0, weight=1)
+
+        #  self.lab1 = InfoLabel(self.ctr_mid, textvariable=var1)
+        self.lab1 = InfoLabel(self.ctr_mid)
+        self.lab1.grid(row=0, column=0)
 
 class Application():
     def __init__(self):
