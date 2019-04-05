@@ -2,6 +2,8 @@
 # other clear tutorials:
 # http://stor.altervista.org/python/tk/tkinter.html
 # https://python-forum.io/Thread-Tkinter-Getting-Tkinter-Grid-Sizing-Right-the-first-time
+# more colors that you could ever use 
+# http://www.science.smith.edu/dftwiki/index.php/Color_Charts_for_TKinter
 
 import tkinter as tk
 
