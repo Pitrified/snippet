@@ -1,4 +1,4 @@
-#!python2
+#!/usr/bin/env python3
 
 from os import listdir
 from os.path import isfile
@@ -7,10 +7,16 @@ from os.path import getsize
 
 class Folder():
     def __init__(self, path):
-        self.size = 0
-        self.children = []
         self.path = path
         self.ty = 'fol'
+        #  self.size = 0
+        #  self.children = []
+        #  self.esplora()
+
+    def esplora(self):
+        self.children = []
+        for e in listdir(path):
+            self.children.append(join(path, e))
 
     def __str__(self):
         schi = ''
@@ -21,9 +27,10 @@ class Folder():
     def __repr__(self):
         #    schi = '['
         schi = ''
+        schi += 'sp '+self.path + '@  '
         for f in self.children:
-            schi += 'sp '+self.path + '@\n'
-            schi += 're '+repr(f)+'$\n'
+            #  schi += 're '+repr(f)+'$\n'
+            schi += 're '+repr(f)+'$  '
         #    schi += ']'
         return schi
         # return self.path

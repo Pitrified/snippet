@@ -9,7 +9,7 @@ from random import randint
 #  from random import Random
 from random import random
 #  from random import seed
-#  from time import sleep
+from time import sleep
 #  from queue import Queue
 from collections import deque
 
@@ -160,7 +160,7 @@ class MapGenerator:
             #  cum_weights = list(accumulate( [ x.prob_repl for x in good_type_neigh] ) )
 
             if len(cum_weights) > 0:
-                print(f'gtn {good_type_neigh} cw {cum_weights}')
+                #  print(f'gtn {good_type_neigh} cw {cum_weights}')
                 new_t = choices(good_type_neigh, cum_weights=cum_weights)[0]
                 new_cells[cella] = new_t
 
@@ -180,7 +180,7 @@ class MapGenerator:
         sleep(0.5)
 
         if max_iter is None:
-            max_iter = 25
+            max_iter = 250
         for i in range(max_iter):
             self.evolve()
             print(self.__str__())
@@ -253,7 +253,7 @@ class MapGenerator:
     def find_components(self):
         # componente : [celle, della, comp, ... ]
         # TODO add this way of saving them
-        self.components_set = {}
+        self.components_dict = {}
         # lista delle componenti
         self.components = [-1] * (self.width * self.heigth)
         i = 0
@@ -264,24 +264,14 @@ class MapGenerator:
                 i += 1
                 continue
 
+            # might be a set, check performance of pop and in
+            # even better a collections.deque
             #  to_process = Queue()
             #  to_process = [i]
             to_process = deque( (i,) )
             cur_char = self.mappa[i]
             #  print(f'Analizzo i {i} carattere {cur_char}')
-            # TODO might be a set, check performance of pop and in
-            # TODO even better a collections.deque
 
-            #  all_neigh = self.find_neigh(i)
-            #  new_neigh = (n for n in all_neigh
-                #  if self.components[n] == -1   # non devono essere gia' in componenti
-                #  and n not in to_process       # non deve essere gia' nella coda da processare
-                #  and self.mappa[n] == cur_char # deve essere del carattere corrispondente
-                #  )
-            #  to_process.extend(new_neigh)
-
-            #  proc = i
-            #  proc = to_process.pop(0)
             while len(to_process) > 0:
                 #  proc = to_process.pop(0)
                 proc = to_process.popleft()
@@ -293,8 +283,9 @@ class MapGenerator:
                         )
                 to_process.extend(new_neigh)
                 #  print(f'proc {proc} an {all_neigh} nn {new_neigh} tp {to_process}')
-                #  print(f'proc {proc}')
                 self.components[proc] = comp
+                #  if proc in self.components_dict[comp]:
+                    #  pass
 
             comp += 1
             i += 1
