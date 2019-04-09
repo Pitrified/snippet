@@ -32,7 +32,8 @@ Waver::Waver(int _width, int _heigth)
 void Waver::calcMinMax() {
     funcMin = INT_MAX;
     funcMax = INT_MIN;
-    int max_t = 100;
+    // int max_t = 100;
+    int max_t = film_end;
     for (int x=0; x < width; x++) {
         for (int y=0; y < heigth; y++) {
             for (int t=0; t < max_t; t++) {
@@ -70,13 +71,35 @@ void Waver::showFrame(int t) {
     waitKey(1);
 }
 
+double sinc(double x) {
+    if (x==0)
+        return 1;
+    return sin(x)/x;
+}
+
 double Waver::wave1(int x, int y, int t) {
     double theta = atan2(x, y);
-    double rho = sqrt(x^2 + y^2);
+    double rho = sqrt(pow(x,2) + pow(y,2));
+    double rho_c = sqrt( pow((x-width/2),2) + pow((y-heigth/2),2));
+    double rho_l = sqrt( pow((x+width/2),2) + pow((y-heigth/2),2));
 
-    double z = ( x + y)  * sin(t * M_PI / 12);
+    // double z = ( x + y)  * sin(t * M_PI / 12);
+
+    // double z = 10 * sin(t * M_PI / 16) * sinc(0.1 * (x-width/2) ) * sinc(0.1 * (y-heigth/2) ); // sinc translated
+
     // double z = 10 * sin( - rho * t * M_PI / 12 ); // weird effects
-    // return 10 * sin( - rho * t * pi / 12 ) # weird effects
+    
+    double z =  10;
+    z *= sin(rho_l/16 - t * M_PI / 12);
+    z *= sin(rho_l/24 - t * M_PI / 10);
+    z *= sin(rho_l/40 - t * M_PI / 8); // # decent waves !!!
+
+    // double z =  10 * sin( rho_c/9);
+    // z *= sin( - t * M_PI / 12 );
+    // z *= sin( - t * M_PI / 18 );
+
+    // #  return 10 * sin( rho/3 - t * pi / 12 ) * sin ( rho/8 - t * pi / 8 ) # decent waves !!!
+    
     // cout << "z " << z << endl;
     return z;
 }
