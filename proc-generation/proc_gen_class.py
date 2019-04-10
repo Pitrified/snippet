@@ -20,6 +20,7 @@ class Tile:
             prob_spawn=5,
             prob_repl=5,
             color=33,
+            hue=4/6,
             travel_cost=5,
             is_traversable=True,
             ):
@@ -27,6 +28,7 @@ class Tile:
         self.prob_spawn = prob_spawn
         self.prob_repl = prob_repl
         self.color = color
+        self.hue = hue
         self.travel_cost = travel_cost
         self.is_traversable = is_traversable
 
@@ -98,6 +100,24 @@ class MapGenerator:
                 str_riga += cs.format(color=color, char=rk)
             str_map += str_riga + '\n'
         return str_map
+
+    def hstack_string(self, a, b):
+        '''print a and b side by side'''
+        sa = a.split('\n')
+        sb = b.split('\n')
+        
+        if len(sa) != len(sb):
+            return 'different number of rows my dude'
+
+        hstacked = ''
+        for ri in range(len(sa)):
+            hstacked += sa[ri]
+            hstacked += ' '
+            hstacked += sb[ri]
+            hstacked += '\n'
+
+        return hstacked
+
 
     def cell2xy(self, cella):
         if cella is None: return None, None
@@ -356,9 +376,17 @@ class MapGenerator:
 
         return str_depth
 
-    def evaluate_rgb_depth(self, z, d_min, d_max):
-        hue = 4/6 # somewhat decent blue
+    def evaluate_rgb_depth(self, z, d_min, d_max, cell):
+        cell_type = self.mappa[cell]
+        cell_hue = self.tiles[cell_type].hue
+        #  print(cell_type)
+        #  hue = 4/6 # somewhat decent blue
+        hue = cell_hue
         saturation = (z-d_min) / (d_max-d_min)
+        d_wid = d_max-d_min # width of the interval
+        #  saturation = ( (z-d_min)*0.5 - d_min) / d_wid # decrease max saturation
+        frac = 0.3
+        #  saturation = ( ( z - d_min) / d_wid) * frac + frac
         value = 1
         r, g, b = hsv_to_rgb(hue, saturation, value)
         r = floor(r * 255)
@@ -369,18 +397,21 @@ class MapGenerator:
 
     def print_depth_rgb(self):
         cs = '\033[{color}m{char}\033[0m'
-        form_char = '\x1b[38;2;{};{};{}m{:0>2}'
-        form_char = '\x1b[38;2;{};{};{}m{}'
+        form_char = '\x1b[38;2;{};{};{}m{:_>2}'
+        #  form_char = '\x1b[38;2;{};{};{}m{}'
 
         d_min = min(self.depth)
         d_max = max(self.depth)
-
+        #  d_min = {}
+        #  d_max = {}
+        #  for cell_type in self.tiles:
 
         str_depth = ''
         for i, c in enumerate(self.depth):
-            r, g, b = self.evaluate_rgb_depth(c, d_min, d_max)
+            r, g, b = self.evaluate_rgb_depth(c, d_min, d_max, i)
             #  str_depth += f'{str(c)[-1:]}'
-            f_c = f'{str(c)[-1:]}'
+            #  f_c = f'{str(c)[-1:]}'
+            f_c = f'{str(c)[-2:]}'
             str_depth += form_char.format(r, g, b, f_c)
             
             if (i+1) % self.width == 0:
@@ -411,36 +442,40 @@ class MapGenerator:
                         self.depth[cell] = 1
                         break
 
+            #  print(self.print_depth_basic_color())
+
+            # to_process now contains the border
             #  print(to_process)
             while len(to_process) > 0:
                 proc = to_process.popleft()
                 #  print(f'proc {proc}')
                 all_neigh = self.find_neigh(proc)
-                neigh_cells = (n for n in all_neigh
-                    if self.depth[n] == 'e')
+                neigh_cells = (n for n in all_neigh # if a neigh
+                    if self.depth[n] == 'e'         # is empty
+                    and self.components[n] == comp) # and is in the same component
                 # here you could check wether n has different depth near him
                 # and the min depth is NOT the one in proc TODO
                 for n in neigh_cells:
                     self.depth[n] = self.depth[proc] + 1
                     to_process.append(n)
 
-                # tutto sbagliato
-                # iteri su quelli che hanno GIA' depth definita
-                # e definisci quella dei vicini
-                # va fatto in modo astuto per trovare quella minima
-                # devi distinguere tra celle nuove e vecchie
-                # anche se forse sono sempre uguali, BOH
-                #  all_neigh = self.find_neigh(proc)
-                #  neigh_depth = tuple(self.depth[n] for n in all_neigh
-                    #  if self.components[n] == comp   # in the same comp
-                    #  and self.depth[n] != 'e')       # depth defined for that neigh
-                #  print(f'neigh_depth {neigh_depth}')
-                #  if len(neigh_depth) > 0 and self.depth[proc] == 'e':
-                    #  # if at least a neigh has depth defined
-                    #  # and the cell has depth undefined
-                    #  print(f'aggiorno depth di {cell} a {min(neigh_depth)+1}')
-                    #  self.depth[proc] = min(neigh_depth) + 1
-                    #  to_process.append(proc)
+            # tutto sbagliato
+            # iteri su quelli che hanno GIA' depth definita
+            # e definisci quella dei vicini
+            # va fatto in modo astuto per trovare quella minima
+            # devi distinguere tra celle nuove e vecchie
+            # anche se forse sono sempre uguali, BOH
+            #  all_neigh = self.find_neigh(proc)
+            #  neigh_depth = tuple(self.depth[n] for n in all_neigh
+                #  if self.components[n] == comp   # in the same comp
+                #  and self.depth[n] != 'e')       # depth defined for that neigh
+            #  print(f'neigh_depth {neigh_depth}')
+            #  if len(neigh_depth) > 0 and self.depth[proc] == 'e':
+                #  # if at least a neigh has depth defined
+                #  # and the cell has depth undefined
+                #  print(f'aggiorno depth di {cell} a {min(neigh_depth)+1}')
+                #  self.depth[proc] = min(neigh_depth) + 1
+                #  to_process.append(proc)
 
     def find_path(self, ce_start, ce_end):
         '''Use A* to find best path
@@ -461,6 +496,9 @@ class MapGenerator:
     def print_path(self, path):
         '''Print map overlay the path'''
         # TODO might be multiple paths
+        # should take as input a map as list of char
+        # a standard color as list of color as long as the map
+        # overrides as dict of {cell : (char, color)}
 
 ### TODO ###
 # salva i parametri in un file, opzione per ripeterli
