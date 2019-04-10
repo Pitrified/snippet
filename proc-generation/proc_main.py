@@ -36,6 +36,11 @@ def parse_arguments():
             default=-1,
             help="fraction of cells to randomize")
 
+    parser.add_argument('-s', "--seed",
+            type=int,
+            default=-1,
+            help="random seed to use")
+
     #  parser.add_argument("-v", "--verbose",
             #  action="store_true",                # store only true or false value
             #  help="increase output verbosity")
@@ -128,19 +133,21 @@ def main():
             'm' : Tile(letter='m', prob_spawn=5, prob_repl=25, color=33),
             }
 
-    #  seed = randrange(sys.maxsize)
-    myseed = 1
-    #  myseed = 5
-    myseed = int( timer() * 10000000 )
-    #  myseed = 649567331430
-    # TODO seed from cli
-    #  Random(seed)
+    if args['seed'] == -1:
+        #  seed = randrange(sys.maxsize)
+        myseed = 1
+        #  myseed = 5
+        myseed = int( timer() * 10000000 )
+        #  myseed = 649567331430
+        #  Random(seed)
+    else:
+        myseed = args['seed']
     seed(myseed)
-    print(f'Seed used: {myseed} fraction {fraction} w {width} e {heigth}')
     # bad seeds
     # good seeds
     # seed 649567331430 f 0.08 w 158 e 87 discard 0.3
 
+    print(f'Seed used: {myseed} fraction {fraction} w {width} e {heigth}')
 
     #  mymap = MapGenerator(width, heigth, tiles, fraction=0.03)
     mymap = MapGenerator(width, heigth, tiles, fraction=fraction)
@@ -156,11 +163,17 @@ def main():
     mymap.find_components()
     print(mymap.print_components())
     #  print(mymap.components)
+    #  print(mymap.components_dict)
 
     #  test_comp_perf()
 
     path = mymap.find_path(1, 2)
     mymap.print_path(path)
+
+    mymap.calc_depth()
+    print(mymap.print_depth_basic())
+    print(mymap.print_depth_basic_color())
+    print(mymap.print_depth_rgb())
 
     #  img_name = 'lamappagrande.html'
     #  mymap.map2html(img_name)

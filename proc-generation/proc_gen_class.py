@@ -1,6 +1,8 @@
 from itertools import accumulate
 from itertools import groupby
 from math import ceil
+from math import floor 
+from colorsys import hsv_to_rgb
 #  from os import system
 #  from os import popen
 from random import choices
@@ -30,11 +32,11 @@ class Tile:
 
 class MapGenerator:
     def __init__(self, width, heigth, tiles,
-                 empty_char='e',
-                 fraction = 0.1,
-                 #  discard = 0.5,
-                 discard = 0.3,
-                 ):
+             empty_char='e',
+             fraction = 0.1,
+             #  discard = 0.5,
+             discard = 0.3,
+             ):
         # obbligatori
         self.width = width
         self.heigth = heigth
@@ -264,7 +266,7 @@ class MapGenerator:
                 i += 1
                 continue
 
-            # might be a set, check performance of pop and in
+            # might be a set, TODO check performance of pop and in
             # even better a collections.deque
             #  to_process = Queue()
             #  to_process = [i]
@@ -274,18 +276,21 @@ class MapGenerator:
 
             while len(to_process) > 0:
                 #  proc = to_process.pop(0)
-                proc = to_process.popleft()
+                proc = to_process.popleft() # cella da processare
                 all_neigh = self.find_neigh(proc)
-                new_neigh = (n for n in all_neigh
+                new_neigh = (n for n in all_neigh     # i vicini trovati
                         if self.components[n] == -1   # non devono essere gia' in componenti
                         and n not in to_process       # non deve essere gia' nella coda da processare
                         and self.mappa[n] == cur_char # deve essere del carattere corrispondente
                         )
-                to_process.extend(new_neigh)
+                to_process.extend(new_neigh)          # aggiungili alla coda da processare
                 #  print(f'proc {proc} an {all_neigh} nn {new_neigh} tp {to_process}')
+
                 self.components[proc] = comp
-                #  if proc in self.components_dict[comp]:
-                    #  pass
+                if comp in self.components_dict:
+                    self.components_dict[comp].append(proc)
+                else:
+                    self.components_dict[comp] = [proc]
 
             comp += 1
             i += 1
@@ -317,6 +322,126 @@ class MapGenerator:
             str_map += str_riga + '\n'
         return str_map
 
+    def print_depth_basic(self):
+        str_depth = ''
+        for i, c in enumerate(self.depth):
+            #  str_depth += f'{str(c)[-1:]}'
+            str_depth += f'{str(c)[-2:]: >2}'
+            
+            if (i+1) % self.width == 0:
+                str_depth += '\n'
+        return str_depth
+
+    def print_depth_basic_color(self):
+        cs = '\033[{color}m{char}\033[0m'
+        colors = [
+                30, 31, 32, 33, 34, 35, 36, 37,
+                40, 41, 42, 43, 44, 45, 46, 47,
+                90, 91, 92, 93, 94, 95, 96, 97,
+                100, 101, 102, 103, 104, 105, 106, 107,
+                ]
+
+        str_depth = ''
+        for i, c in enumerate(self.depth):
+            #  str_depth += f'{str(c)[-1:]}'
+            #  str_depth += f'{str(c)[-2:]: >2}'
+            #  f_c = f'{str(c)[-2:]: >2}'
+            f_c = f'{str(c)[-2:]:_>2}'
+            comp = self.components[i]
+            col = colors[comp % len(colors)]
+            str_depth += cs.format(color=col, char=f_c)
+            
+            if (i+1) % self.width == 0:
+                str_depth += '\n'
+
+        return str_depth
+
+    def evaluate_rgb_depth(self, z, d_min, d_max):
+        hue = 4/6 # somewhat decent blue
+        saturation = (z-d_min) / (d_max-d_min)
+        value = 1
+        r, g, b = hsv_to_rgb(hue, saturation, value)
+        r = floor(r * 255)
+        g = floor(g * 255)
+        b = floor(b * 255)
+        #  print(f'val {val} r {r} g {g} b {b}')
+        return r, g, b
+
+    def print_depth_rgb(self):
+        cs = '\033[{color}m{char}\033[0m'
+        form_char = '\x1b[38;2;{};{};{}m{:0>2}'
+        form_char = '\x1b[38;2;{};{};{}m{}'
+
+        d_min = min(self.depth)
+        d_max = max(self.depth)
+
+
+        str_depth = ''
+        for i, c in enumerate(self.depth):
+            r, g, b = self.evaluate_rgb_depth(c, d_min, d_max)
+            #  str_depth += f'{str(c)[-1:]}'
+            f_c = f'{str(c)[-1:]}'
+            str_depth += form_char.format(r, g, b, f_c)
+            
+            if (i+1) % self.width == 0:
+                str_depth += '\n'
+
+        return str_depth
+
+    def calc_depth(self):
+        '''find the distance to the border of a component'''
+        # NOTE if only one component exists, the depth is undefined
+        # find cells on the border, put them in to_process
+        # linear scan, find_neigh and check for which components
+        # go around to_process, distance is 1+ min dist of neigh_cells
+        #  self.depth = [-1] * (self.width * self.heigth)
+        self.depth = ['e'] * (self.width * self.heigth)
+        for comp in self.components_dict:
+            #  print(f'doing comp {comp}')
+            to_process = deque()
+
+            for cell in self.components_dict[comp]:
+                #  print(f'in cell {cell}')
+                all_neigh = self.find_neigh(cell)
+                for n in all_neigh:                 # if a neigh
+                                                    # is in a different component
+                                                    # and is not in to_process already
+                    if self.components[n] != comp and n not in to_process:
+                        to_process.append(cell)     # the cell is on the border
+                        self.depth[cell] = 1
+                        break
+
+            #  print(to_process)
+            while len(to_process) > 0:
+                proc = to_process.popleft()
+                #  print(f'proc {proc}')
+                all_neigh = self.find_neigh(proc)
+                neigh_cells = (n for n in all_neigh
+                    if self.depth[n] == 'e')
+                # here you could check wether n has different depth near him
+                # and the min depth is NOT the one in proc TODO
+                for n in neigh_cells:
+                    self.depth[n] = self.depth[proc] + 1
+                    to_process.append(n)
+
+                # tutto sbagliato
+                # iteri su quelli che hanno GIA' depth definita
+                # e definisci quella dei vicini
+                # va fatto in modo astuto per trovare quella minima
+                # devi distinguere tra celle nuove e vecchie
+                # anche se forse sono sempre uguali, BOH
+                #  all_neigh = self.find_neigh(proc)
+                #  neigh_depth = tuple(self.depth[n] for n in all_neigh
+                    #  if self.components[n] == comp   # in the same comp
+                    #  and self.depth[n] != 'e')       # depth defined for that neigh
+                #  print(f'neigh_depth {neigh_depth}')
+                #  if len(neigh_depth) > 0 and self.depth[proc] == 'e':
+                    #  # if at least a neigh has depth defined
+                    #  # and the cell has depth undefined
+                    #  print(f'aggiorno depth di {cell} a {min(neigh_depth)+1}')
+                    #  self.depth[proc] = min(neigh_depth) + 1
+                    #  to_process.append(proc)
+
     def find_path(self, ce_start, ce_end):
         '''Use A* to find best path
         water costs more than land'''
@@ -338,8 +463,8 @@ class MapGenerator:
         # TODO might be multiple paths
 
 ### TODO ###
+# salva i parametri in un file, opzione per ripeterli
 # rifare l'intera baracca con numpy e gli array seri?
-# classe tile piu' astuta, campi seri sono necessari
 # poi viene salvata solo la lettera nella stringa
 # mini dizionario per i colori piu` sani # in Tile
 # edge detection
@@ -347,6 +472,7 @@ class MapGenerator:
 #     con gradiente?
 
 ### DONE ###
+# classe tile piu' astuta, campi seri sono necessari
 # componenti trovate con blob tempo lineare
 # self.empty_cells = numero di celle ancora vuote
 #     evolve e randomize aggiornano il conteggio
