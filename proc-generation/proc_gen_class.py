@@ -14,6 +14,7 @@ from random import random
 from time import sleep
 #  from queue import Queue
 from collections import deque
+from math import sqrt
 
 class Tile:
     def __init__(self, letter,
@@ -223,11 +224,8 @@ class MapGenerator:
         htmlstring += '</div>\n'
         htmlstring += '</body>\n'
         htmlstring += '</html>\n'
-
         spanstring = '<span style="color:{color}">{char}</span>'
-
         if title is None: title = 'A beautiful map'
-
         html_colors = {
                 30 : '2d2d2d',      # grigio
                 31 : 'da2323',      # rosso
@@ -376,7 +374,7 @@ class MapGenerator:
         return str_depth
 
     def evaluate_rgb_depth(self, z, d_min, d_max, cell):
-    #  def evaluate_rgb_depth(self, z, cell):
+        #  def evaluate_rgb_depth(self, z, cell):
         cell_type = self.mappa[cell]
 
         cell_hue = self.tiles[cell_type].hue
@@ -384,12 +382,23 @@ class MapGenerator:
         #  hue = 4/6 # somewhat decent blue
         hue = cell_hue
 
-        frac = 0.4
-        if d_max == d_min:
-            saturation = frac
+        if cell_type in 'x':
+            frac = 0.4
+            if d_max == d_min:
+                saturation = frac
+            else:
+                # linear mapping z to saturation
+                saturation = (z-d_min) / (d_max-d_min)
+
+                # rescale it from frac to 1
+                #  saturation = saturation * (1-frac) + frac
+
+                # reshape it with sqrt
+                #  saturation = sqrt(saturation)
+                sq_fr = frac
+                saturation = sqrt( (saturation+sq_fr) / (1+sq_fr) )
         else:
-            saturation = (z-d_min) / (d_max-d_min)
-            saturation = saturation * (1-frac) + frac
+            saturation = 1
 
         value = 1
 
@@ -406,7 +415,9 @@ class MapGenerator:
 
     def print_depth_rgb(self):
         cs = '\033[{color}m{char}\033[0m'
-        form_char = '\x1b[38;2;{};{};{}m{:_>2}'
+        #  form_char = '\x1b[38;2;{};{};{}m{:_>2}'
+        char_width = 1
+        form_char = f'\x1b[38;2;{{}};{{}};{{}}m{{:_>{char_width}}}'
         #  form_char = '\x1b[38;2;{};{};{}m{}'
 
         #  d_min = min(self.depth)
@@ -431,7 +442,9 @@ class MapGenerator:
             #  r, g, b = self.evaluate_rgb_depth(c, i)
             #  str_depth += f'{str(c)[-1:]}'
             #  f_c = f'{str(c)[-1:]}'
-            f_c = f'{str(c)[-2:]}'
+            #  f_c = f'{str(c)[-2:]}'
+            c = self.mappa[i] # print mapchar instead of depth
+            f_c = f'{str(c)[-char_width:]}'
             str_depth += form_char.format(r, g, b, f_c)
             
             if (i+1) % self.width == 0:
@@ -518,6 +531,7 @@ class MapGenerator:
         # should take as input a map as list of char
         # a standard color as list of color as long as the map
         # overrides as dict of {cell : (char, color)}
+        # char can be left the same
 
 ### TODO ###
 # salva i parametri in un file, opzione per ripeterli

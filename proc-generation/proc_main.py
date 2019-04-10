@@ -88,17 +88,80 @@ def test_comp_perf_run(width, heigth, tiles, fraction):
     return t2-t1, t3-t2
 
 def test_comp_perf():
-    width = 1000
-    heigth = 1000
+    width = 100
+    heigth = 100
     tiles = {
-            'l' : [2, 5, 31],
-            'x' : [8, 30, 34],
-            'm' : [5, 25, 33],
+            'l' : Tile(letter='l',
+                prob_spawn=2,
+                prob_repl=5,
+                color=31,
+                #  hue=0,
+                hue=14/255, # rosso fiappo
+                ),
+            'x' : Tile(letter='x',
+                prob_spawn=8,
+                prob_repl=30,
+                color=34,
+                hue=4/6,
+                ),
+            'm' : Tile(letter='m',
+                prob_spawn=5,
+                prob_repl=25,
+                color=33,
+                #  hue=1/6,
+                #  hue=45/255,
+                hue=34/255, # ocra
+                ),
             }
     fraction = 0.1
 
+    print(f'Running test_comp_perf with fraction {fraction} width {width} heigth {heigth}')
     t_evolve, t_find = test_comp_perf_run(width, heigth, tiles, fraction)
-    print(f'evolve: {t_evolve:.6f} find: {t_find:.6f}')
+    print(f'Evolve: {t_evolve:.6f} find: {t_find:.6f}')
+
+def test_depth_perf_run(width, heigth, tiles, fraction):
+    mymap = MapGenerator(width, heigth, tiles, fraction)
+    mymap.full_evolve()
+    mymap.find_components()
+    t1 = timer()
+    mymap.calc_depth()
+    t2 = timer()
+    #  print(mymap.print_depth_rgb())
+    rgb_depth = mymap.print_depth_rgb()
+    t3 = timer()
+    return t2-t1, t3-t2
+
+def test_depth_perf():
+    width = 100
+    heigth = 100
+    tiles = {
+            'l' : Tile(letter='l',
+                prob_spawn=2,
+                prob_repl=5,
+                color=31,
+                #  hue=0,
+                hue=14/255, # rosso fiappo
+                ),
+            'x' : Tile(letter='x',
+                prob_spawn=8,
+                prob_repl=30,
+                color=34,
+                hue=4/6,
+                ),
+            'm' : Tile(letter='m',
+                prob_spawn=5,
+                prob_repl=25,
+                color=33,
+                #  hue=1/6,
+                #  hue=45/255,
+                hue=34/255, # ocra
+                ),
+            }
+    fraction = 0.1
+
+    print(f'Running test_depth_perf with fraction {fraction} width {width} heigth {heigth}')
+    t_calc_depth, t_print_depth = test_depth_perf_run(width, heigth, tiles, fraction)
+    print(f'Calc depth: {t_calc_depth:.6f} print: {t_print_depth:.6f}')
 
 def main():
     args = parse_arguments()
@@ -132,7 +195,8 @@ def main():
                 prob_spawn=2,
                 prob_repl=5,
                 color=31,
-                hue=0,
+                #  hue=0,
+                hue=14/255, # rosso fiappo
                 ),
             'x' : Tile(letter='x',
                 prob_spawn=8,
@@ -144,7 +208,9 @@ def main():
                 prob_spawn=5,
                 prob_repl=25,
                 color=33,
-                hue=1/6,
+                #  hue=1/6,
+                #  hue=45/255,
+                hue=34/255, # ocra
                 ),
             }
 
@@ -166,7 +232,7 @@ def main():
     # python3 proc_main.py -f 0.1 -w 20 -e 10 -s 883120637480
     # python3 proc_main.py -f 0.1 -w 6 -e 4 -s 965760627122
     # python3 proc_main.py -f 0.05 -w 30 -e 15 -s 1001739204752
-
+    # python3 proc_main.py -f 0.01 -s 1045999185199 -w 238 -e 58
 
     print(f'Seed used: {myseed} fraction {fraction} w {width} e {heigth}')
 
@@ -186,17 +252,20 @@ def main():
     #  print(mymap.components)
     #  print(mymap.components_dict)
 
-    print(mymap.hstack_string( mymap.fast_print(), mymap.print_components() ) )
+    #  print(mymap.fast_print())
+    #  print(mymap.print_components())
+    #  print(mymap.hstack_string( mymap.fast_print(), mymap.print_components() ) )
 
     #  test_comp_perf()
-
-    path = mymap.find_path(1, 2)
-    mymap.print_path(path)
+    #  test_depth_perf()
 
     mymap.calc_depth()
     #  print(mymap.print_depth_basic())
-    print(mymap.print_depth_basic_color())
+    #  print(mymap.print_depth_basic_color())
     print(mymap.print_depth_rgb())
+
+    path = mymap.find_path(1, 2)
+    mymap.print_path(path)
 
     #  img_name = 'lamappagrande.html'
     #  mymap.map2html(img_name)
