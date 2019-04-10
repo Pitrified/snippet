@@ -118,7 +118,6 @@ class MapGenerator:
 
         return hstacked
 
-
     def cell2xy(self, cella):
         if cella is None: return None, None
         y = cella - (cella % self.width) 
@@ -377,22 +376,32 @@ class MapGenerator:
         return str_depth
 
     def evaluate_rgb_depth(self, z, d_min, d_max, cell):
+    #  def evaluate_rgb_depth(self, z, cell):
         cell_type = self.mappa[cell]
+
         cell_hue = self.tiles[cell_type].hue
         #  print(cell_type)
         #  hue = 4/6 # somewhat decent blue
         hue = cell_hue
-        saturation = (z-d_min) / (d_max-d_min)
-        d_wid = d_max-d_min # width of the interval
-        #  saturation = ( (z-d_min)*0.5 - d_min) / d_wid # decrease max saturation
-        frac = 0.3
-        #  saturation = ( ( z - d_min) / d_wid) * frac + frac
+
+        frac = 0.4
+        if d_max == d_min:
+            saturation = frac
+        else:
+            saturation = (z-d_min) / (d_max-d_min)
+            saturation = saturation * (1-frac) + frac
+
         value = 1
+
         r, g, b = hsv_to_rgb(hue, saturation, value)
         r = floor(r * 255)
         g = floor(g * 255)
         b = floor(b * 255)
-        #  print(f'val {val} r {r} g {g} b {b}')
+
+        #  print(f'val {z:2d} d_min {d_min:4d} d_max {d_max:4d} sat {saturation}')
+        #  form_char = '\x1b[38;2;{};{};{}m{:_>2}\033[0m'
+        #  f_c = f'{str(z)[-2:]}'
+        #  print(f'val {z} r {r:4d} g {g:4d} b {b:4d} : {form_char.format(r, g, b, f_c)}')
         return r, g, b
 
     def print_depth_rgb(self):
@@ -400,15 +409,26 @@ class MapGenerator:
         form_char = '\x1b[38;2;{};{};{}m{:_>2}'
         #  form_char = '\x1b[38;2;{};{};{}m{}'
 
-        d_min = min(self.depth)
-        d_max = max(self.depth)
-        #  d_min = {}
-        #  d_max = {}
+        #  d_min = min(self.depth)
+        #  d_max = max(self.depth)
+        d_min = {}
+        d_max = {}
+        #  d_min = []
+        #  d_max = []
         #  for cell_type in self.tiles:
+
+        # per ogni componente trovo il minimo e massimo
+        for comp in self.components_dict:
+            depths = [self.depth[c] for c in self.components_dict[comp] ]
+            d_min[comp] = min(depths)
+            d_max[comp] = max(depths)
 
         str_depth = ''
         for i, c in enumerate(self.depth):
-            r, g, b = self.evaluate_rgb_depth(c, d_min, d_max, i)
+            comp = self.components[i]
+            #  print(f'cell {i:3d} in component {comp} has depth {c}')
+            r, g, b = self.evaluate_rgb_depth(c, d_min[comp], d_max[comp], i)
+            #  r, g, b = self.evaluate_rgb_depth(c, i)
             #  str_depth += f'{str(c)[-1:]}'
             #  f_c = f'{str(c)[-1:]}'
             f_c = f'{str(c)[-2:]}'
@@ -430,7 +450,6 @@ class MapGenerator:
         for comp in self.components_dict:
             #  print(f'doing comp {comp}')
             to_process = deque()
-
             for cell in self.components_dict[comp]:
                 #  print(f'in cell {cell}')
                 all_neigh = self.find_neigh(cell)
