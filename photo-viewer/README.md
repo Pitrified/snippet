@@ -7,9 +7,15 @@ Non credo proprio, l'app deve poter aggiungere cartelle di input, e impostarsi l
 
 Qua magari fai test di performance, ma deve fare pochissimo di funzionalità effettive.
 
+Se vuoi gli input da argparse li parsi qui dentro.
+
 #### photo_viewer_app.py
 
 Gestisce i layout, ti mostra solo la foto, due foto affiancate (la stessa o diverse), foto e metadata, doppia foto e metadata...
+
+Mostra un help con tutti i millemila comandi da tastiera.
+
+I comandi devono cambiare in funzione del layout, elif dentro al callback direi.
 
 #### photo_frame.py
 
