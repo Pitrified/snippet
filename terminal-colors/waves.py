@@ -139,8 +139,8 @@ def myfunc(x, y, t, x_t=0, y_t=0):
     #  return 20 * sin(x/4+y/4+ t * pi / 12) + 5 * sin(x/4+y/4+ t * pi / 6)
     #  return 10 * sin( rho - t * pi / 12 ) * sin (t* theta * 4) # cool
     #  return 10 * sin( rho/3 - t * pi / 12 ) * sin ( rho/8 - t * pi / 8 ) # decent waves
-    #  return 10 * sin( rho/3 - t * pi / 12 ) * sin ( rho/8 - t * pi / 8 ) # decent waves !!!
-    return 10 * sin( - rho * t * pi / 12 ) # weird effects
+    return 10 * sin( rho/3 - t * pi / 12 ) * sin ( rho/8 - t * pi / 8 ) # decent waves !!!
+    #  return 10 * sin( - rho * t * pi / 12 ) # weird effects
     #  return 10 * sin(t * pi / 16) * sinc(0.4 * (x-30) ) * sinc(0.4 * (y-30) ) # translated
     #  return 70 * sin(t * pi / 16) * sinc(0.4 * (x-30) ) * sinc(0.4 * (y-30) ) # nice sinc
     #  return 70 * sin(t * pi / 16) * sinc(0.4 * x)  * sinc(0.4 * y)  # nice sinc

@@ -32,8 +32,8 @@ Waver::Waver(int _width, int _heigth)
 void Waver::calcMinMax() {
     funcMin = INT_MAX;
     funcMax = INT_MIN;
-    // int max_t = 100;
-    int max_t = film_end;
+    int max_t = 30;
+    // int max_t = film_end;
     for (int x=0; x < width; x++) {
         for (int y=0; y < heigth; y++) {
             for (int t=0; t < max_t; t++) {
@@ -90,9 +90,10 @@ double Waver::wave1(int x, int y, int t) {
     // double z = 10 * sin( - rho * t * M_PI / 12 ); // weird effects
     
     double z =  10;
-    z *= sin(rho_l/16 - t * M_PI / 12);
-    z *= sin(rho_l/24 - t * M_PI / 10);
-    z *= sin(rho_l/40 - t * M_PI / 8); // # decent waves !!!
+    // z *= sin(rho_l/16 - t * M_PI / 12);
+    z *= sin(rho_l/16 - t * M_PI / 36);
+    z *= sin(rho_l/24 - t * M_PI / 42);
+    // z *= sin(rho_l/40 - t * M_PI / 8); // # decent waves !!!
 
     // double z =  10 * sin( rho_c/9);
     // z *= sin( - t * M_PI / 12 );
@@ -144,7 +145,8 @@ void Waver::evaluate(int t) {
 }
 
 void Waver::film() {
-    int x = 100;
+    // int x = 100;
+    int x = 30;
     for (int i=0; i<film_end; i++) {
         showFrame(i);
         std::this_thread::sleep_for(std::chrono::milliseconds(x));

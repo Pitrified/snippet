@@ -233,8 +233,10 @@ def main():
     # python3 proc_main.py -f 0.1 -w 6 -e 4 -s 965760627122
     # python3 proc_main.py -f 0.05 -w 30 -e 15 -s 1001739204752
     # python3 proc_main.py -f 0.01 -s 1045999185199 -w 238 -e 58
+    # python3 proc_main.py -s 1193594266865 -f 0.01 -w 94 -e 28
 
-    print(f'Seed used: {myseed} fraction {fraction} w {width} e {heigth}')
+    #  print(f'Seed used: {myseed} fraction {fraction} w {width} e {heigth}')
+    print(f'python3 proc_main.py -s {myseed} -f {fraction} -w {width} -e {heigth}')
 
     #  mymap = MapGenerator(width, heigth, tiles, fraction=0.03)
     mymap = MapGenerator(width, heigth, tiles, fraction=fraction)
@@ -264,7 +266,7 @@ def main():
     #  print(mymap.print_depth_basic_color())
     print(mymap.print_depth_rgb())
 
-    path = mymap.find_path(1, 2)
+    path = mymap.find_path(1, 15)
     mymap.print_path(path)
 
     #  img_name = 'lamappagrande.html'
