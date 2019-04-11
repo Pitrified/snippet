@@ -1,4 +1,42 @@
+# Photo Viewer
+
 ## TODO
+
+### photo_main.py
+* test performance of resize/zoom
+* some cli interface might be useful
+
+### photo_viewer_app.py
+
+##### Layout selection
+* cycle through them, put code to build a layout in a function
+* widgets already need to exist to be packed, the second photo_frame has to be created immediately?
+
+##### Photo selection
+* select input folder(s) at runtime, add all the complete paths to the list of pic to cycle through
+* select output folder at runtime
+* create (and backup existing) default output folder 
+* how are changes in the input list sent to photo_frame(s)?
+
+#### UI
+
+##### settings
+* how are settings visualized? the list of input photos, selected photos, saved?
+* are settings saved? config file?
+
+##### metadata
+* just list them
+* filter with them... is it useful?
+* what about sorting the list according to them? date modified, resolution
+
+##### personalized tag
+* mantain a file with a list of tag for each photo... absolute paths can change too easily, how do you track that?
+* tag in the metadata might be easier
+
+### photo_frame.py
+* just fix the damn zoom
+
+## Description
 
 #### photo_main.py
 

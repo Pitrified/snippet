@@ -11,6 +11,7 @@ class PhotoViewerApp():
         self.height = 600
         self.root.geometry(f'{self.width}x{self.height}')
 
+        # this will be done in layout_set
         # tell the grid in root to grow with the window
         self.root.grid_rowconfigure(0, weight=1)
         self.root.grid_columnconfigure(0, weight=1)
