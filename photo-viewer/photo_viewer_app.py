@@ -4,7 +4,7 @@ from os.path import isfile
 from os.path import join
 from os.path import splitext
 from os.path import basename # Returns the final component of a pathname
-import re
+#  import re
 
 from photo_frame import PhotoFrame
 
@@ -120,8 +120,10 @@ class PhotoViewerApp():
         self.metadata_frame = tk.Frame(self.root, width=250, height=100, bg='dark orange')
         self.options_frame = tk.Frame(self.root, width=250, height=100, bg='SeaGreen1')
 
-    def set_layout(self, lay_num):
         self.layout_tot = 5
+        self.layout_is_double = (1, )
+
+    def set_layout(self, lay_num):
         if lay_num == 0:
             self.layout_i()
         elif lay_num == 1:
@@ -132,6 +134,16 @@ class PhotoViewerApp():
             self.layout_io()
         elif lay_num == 4:
             self.layout_imo()
+
+        self.root.event_generate('<Configure>')
+
+        self.root.update()
+        self.root.update_idletasks()
+
+        self.photo_frame.do_resize()
+        if lay_num in self.layout_is_double:
+            self.photo_frame_bis.do_resize()
+
 
     def layout_i(self):
         # tell the grid in root to grow with the window

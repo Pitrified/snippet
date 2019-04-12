@@ -11,6 +11,7 @@ DONE
 ### photo_viewer_app.py
 
 ##### Layout selection
+* force redraw on layout change
 * layouts are boring and error prone, some nested grid might help, but you need intermediate frames
 DONE
 * widgets already need to exist to be packed, the second photo_frame has to be created immediately? At the moment, yes
@@ -19,6 +20,7 @@ DONE
 ##### Photo selection
 * select input folder(s) at runtime, add all the complete paths to the list of pic to cycle through
 * select output folder at runtime
+* `tkFileDialog.askdirectory()` to select folders
 * create (and backup existing) default output folder
 * somewhere a dot to show wether or not the photo is in the selection
 DONE
@@ -42,9 +44,13 @@ DONE
 
 ### photo_frame.py
 * just fix the damn zoom
-* `set_new_list` method where the current photo name is searched in the new list and the pointer moved
-DONE
+* x, y, widget are event attributes you can use to find the relative mouse pos [effbot](https://effbot.org/tkinterbook/tkinter-events-and-bindings.htm)
+* `is_hidden` filed that stops everything but pointer to be changed?
+* how are values shared? zoom, move...
 * `set_sort_key` method where you set the way to sort the photo list
+* zoom is in a log scale, change the base to adjust the speed
+DONE
+* `set_new_list` method where the current photo name is searched in the new list and the pointer moved
 
 ## Description
 
