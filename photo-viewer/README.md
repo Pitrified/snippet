@@ -5,20 +5,24 @@
 ### photo_main.py
 * test performance of resize/zoom
 * some cli interface might be useful
+DONE
 * at least a base_path has to be passed to pwa
 
 ### photo_viewer_app.py
 
 ##### Layout selection
+* layouts are boring and error prone, some nested grid might help, but you need intermediate frames
+DONE
+* widgets already need to exist to be packed, the second photo_frame has to be created immediately? At the moment, yes
 * cycle through them, put code to build a layout in a function
-* widgets already need to exist to be packed, the second photo_frame has to be created immediately?
 
 ##### Photo selection
 * select input folder(s) at runtime, add all the complete paths to the list of pic to cycle through
 * select output folder at runtime
-* create (and backup existing) default output folder 
-* how are changes in the input list sent to photo_frame(s)?
+* create (and backup existing) default output folder
 * somewhere a dot to show wether or not the photo is in the selection
+DONE
+* how are changes in the input list sent to photo_frame(s)? quite easily, send just a list and update pointer
 
 #### UI
 
@@ -39,6 +43,7 @@
 ### photo_frame.py
 * just fix the damn zoom
 * `set_new_list` method where the current photo name is searched in the new list and the pointer moved
+DONE
 * `set_sort_key` method where you set the way to sort the photo list
 
 ## Description

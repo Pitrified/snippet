@@ -83,6 +83,28 @@ class PhotoViewerApp():
         if e.keysym == 'F11': self.toggle_fullscreen()
         if e.keysym == 'F5': self.cycle_layout()
 
+        if e.keysym == 'e': self.change_photo(0)  # forward
+        if e.keysym == '2': self.change_photo(0)  # forward
+        if e.keysym == 'q': self.change_photo(1)  # backward
+        if e.keysym == '1': self.change_photo(1)  # backward
+
+        if e.char == 'd': self.move_photo(0)      #dx
+        if e.char == 'a': self.move_photo(1)      #sx
+        if e.char == 'w': self.move_photo(2)      #su
+        if e.char == 's': self.move_photo(3)      #giu
+        if e.char == 'x': self.move_photo(4)      #reset
+
+        if e.char == "c": self.debug()            # debug
+
+    def move_photo(self, direction):
+        print(f'muovo {direction}')
+
+    def change_photo(self, direction):
+        print(f'cambio {direction}')
+
+    def debug(self):
+        print(f'debugging')
+
     def cycle_layout(self):
         self.layout_num = (self.layout_num + 1) % self.layout_tot
         self.set_layout(self.layout_num)
@@ -91,6 +113,7 @@ class PhotoViewerApp():
         '''create the widgets'''
         # NOTE all of them? even the hidden ones?
         self.photo_frame = PhotoFrame(self.root, self.photo_list)
+        self.photo_frame_bis = PhotoFrame(self.root, self.photo_list)
 
         # you DO need width and height here (at least width)
         # they will be fixed size
@@ -98,14 +121,16 @@ class PhotoViewerApp():
         self.options_frame = tk.Frame(self.root, width=250, height=100, bg='SeaGreen1')
 
     def set_layout(self, lay_num):
-        self.layout_tot = 4
+        self.layout_tot = 5
         if lay_num == 0:
             self.layout_i()
         elif lay_num == 1:
-            self.layout_im()
+            self.layout_ii()
         elif lay_num == 2:
-            self.layout_io()
+            self.layout_im()
         elif lay_num == 3:
+            self.layout_io()
+        elif lay_num == 4:
             self.layout_imo()
 
     def layout_i(self):
@@ -118,6 +143,7 @@ class PhotoViewerApp():
         # pack the widgets
         self.photo_frame.grid(row=0, column=0, sticky='nsew')
         # remove from the grid the unused widgets
+        self.photo_frame_bis.grid_remove()
         self.metadata_frame.grid_remove()
         self.options_frame.grid_remove()
 
@@ -131,6 +157,7 @@ class PhotoViewerApp():
         # pack the widgets
         # remove from the grid the unused widgets
         self.photo_frame.grid(row=0, column=0, sticky='nsew')
+        self.photo_frame_bis.grid_remove()
         #  self.metadata_frame.grid_remove()
         #  self.metadata_frame.grid(row=0, column=1, sticky='nsew')
         self.metadata_frame.grid(row=0, column=1, sticky='ns')
@@ -147,6 +174,7 @@ class PhotoViewerApp():
         # pack the widgets
         # remove from the grid the unused widgets
         self.photo_frame.grid(row=0, column=0, sticky='nsew')
+        self.photo_frame_bis.grid_remove()
         self.metadata_frame.grid_remove()
         #  self.metadata_frame.grid(row=0, column=1, sticky='nsew')
         #  self.metadata_frame.grid(row=0, column=1, sticky='ns')
@@ -164,12 +192,27 @@ class PhotoViewerApp():
         # pack the widgets
         # remove from the grid the unused widgets
         self.photo_frame.grid(row=0, column=0, rowspan=2, sticky='nsew')
+        self.photo_frame_bis.grid_remove()
         #  self.metadata_frame.grid_remove()
         #  self.metadata_frame.grid(row=0, column=1, sticky='nsew')
         self.metadata_frame.grid(row=0, column=1, sticky='ns')
         #  self.options_frame.grid_remove()
         #  self.options_frame.grid(row=1, column=1, sticky='nsew')
         self.options_frame.grid(row=1, column=1, sticky='ns')
+
+    def layout_ii(self):
+        # tell the grid in root to grow with the window
+        # reset rows and columns you dont use
+        self.root.grid_rowconfigure(0, weight=1)
+        self.root.grid_rowconfigure(1, weight=0)
+        self.root.grid_columnconfigure(0, weight=1)
+        self.root.grid_columnconfigure(1, weight=1)
+        # pack the widgets
+        self.photo_frame.grid(row=0, column=0, sticky='nsew')
+        self.photo_frame_bis.grid(row=0, column=1, sticky='nsew')
+        # remove from the grid the unused widgets
+        self.metadata_frame.grid_remove()
+        self.options_frame.grid_remove()
 
     def start(self):
         self.root.mainloop()
