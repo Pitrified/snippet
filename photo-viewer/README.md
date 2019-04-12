@@ -5,6 +5,7 @@
 ### photo_main.py
 * test performance of resize/zoom
 * some cli interface might be useful
+* at least a base_path has to be passed to pwa
 
 ### photo_viewer_app.py
 
@@ -17,6 +18,7 @@
 * select output folder at runtime
 * create (and backup existing) default output folder 
 * how are changes in the input list sent to photo_frame(s)?
+* somewhere a dot to show wether or not the photo is in the selection
 
 #### UI
 
@@ -28,6 +30,7 @@
 * just list them
 * filter with them... is it useful?
 * what about sorting the list according to them? date modified, resolution
+* a Photo class might be easier to mantain
 
 ##### personalized tag
 * mantain a file with a list of tag for each photo... absolute paths can change too easily, how do you track that?
@@ -35,6 +38,8 @@
 
 ### photo_frame.py
 * just fix the damn zoom
+* `set_new_list` method where the current photo name is searched in the new list and the pointer moved
+* `set_sort_key` method where you set the way to sort the photo list
 
 ## Description
 
