@@ -152,12 +152,12 @@ class PhotoViewerApp():
 
         #  self.root.event_generate('<Configure>')
 
-        self.photo_frame.do_resize()
-        if lay_num in self.layout_is_double:
-            self.photo_frame_bis.do_resize()
+        #  self.photo_frame.do_resize()
+        #  if lay_num in self.layout_is_double:
+            #  self.photo_frame_bis.do_resize()
 
-        self.root.update()
-        self.root.update_idletasks()
+        #  self.root.update()
+        #  self.root.update_idletasks()
 
     def layout_i(self):
         # tell the grid in root to grow with the window

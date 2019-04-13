@@ -1,6 +1,8 @@
 import tkinter as tk
 from PIL import ImageTk, Image
 from math import sqrt
+from math import floor
+from math import log
 from os.path import basename
 
 class PhotoFrame(tk.Frame):
@@ -19,17 +21,22 @@ class PhotoFrame(tk.Frame):
         self.grid_columnconfigure(0, weight=1)
 
         # create child widgets
-        # self.top_frame = tk.Frame(self,bg='light cyan',width=450,height=50)
+        self.top_frame = tk.Frame(self,bg='light cyan',width=450,height=50)
+        self.top_frame.grid(row=0, column=0, sticky="nsew")
+
         #  self.image_frame = tk.Frame(self, bg='light cyan')
         self.image_label = tk.Label(self)
 
         # position them in the grid
         # not really, it will be manually placed
-        self.image_label.grid(row=0, column=0, sticky="nsew")
+        #  self.image_label.grid(row=0, column=0, sticky="nsew")
 
+        print('update_idletasks now')
+        self.update_idletasks()
         # log scale, actual zoom: zoom_base**zoom_level
-        self.zoom_level = 0
+        #  self.zoom_level = 0
         self.zoom_base = sqrt(2)
+        self.calc_zoom_level()
 
         self.mov_x = 0
         self.mov_y = 0
@@ -39,7 +46,7 @@ class PhotoFrame(tk.Frame):
 
         self.bind('<Configure>', self.do_resize)
 
-        self.show_photo()
+        #  self.show_photo()
 
     def change_photo(self, direction):
         if direction == 'forward':
@@ -50,13 +57,35 @@ class PhotoFrame(tk.Frame):
             print(f'unrecognized direction {direction}')
             return 0 
 
-        # TODO calculate zoom_level to show entire photo
+        self.calc_zoom_level()
 
         # reset the position
         self.mov_x = 0
         self.mov_y = 0
 
         self.show_photo()
+
+    def calc_zoom_level(self):
+        current_photo = self.photo_list[self.photo_index]
+        cur_image = Image.open(current_photo)
+        cur_wid, cur_hei = cur_image.size
+
+        widget_wid = self.winfo_width()
+        widget_hei = self.winfo_height()
+
+        ratio = min( widget_wid/cur_wid, widget_hei/cur_hei)
+        self.zoom_level = log(ratio, self.zoom_base)
+
+        #  print(f'zooming ', end='')
+        #  self.print_color(f'{basename(current_photo)}')
+        print(f'zooming photo {self.format_color(f"{basename(current_photo)}", "blue")}')
+        print(f'widget width {self.winfo_width()} height {self.winfo_height()}')
+        print(f'current width {cur_wid} height {cur_hei}')
+        print(f'zoom_level is now {self.format_color(self.zoom_level, "blue")}')
+
+        # find zoom_level so that
+        # cur_wid * ( zoom_base ** zoom_level ) = widget_wid
+        # and analogously for hei
 
     def move_photo(self, direction):
         '''slide a region as big as the widget around the *zoomed* photo'''
@@ -123,46 +152,65 @@ class PhotoFrame(tk.Frame):
         print(f'current width {cur_wid} height {cur_hei}')
 
         zoom = self.zoom_base ** self.zoom_level
-        zoom_wid = cur_wid * zoom
-        zoom_hei = cur_hei * zoom
+        #  zoom_wid = cur_wid * zoom
+        #  zoom_hei = cur_hei * zoom
+        zoom_wid = floor(cur_wid * zoom)
+        zoom_hei = floor(cur_hei * zoom)
         print(f'zoom_level {self.zoom_level} zoom {zoom:.4f} zoom_wid {zoom_wid:.4f} zoom_hei {zoom_hei:.4f}')
 
         widget_wid = self.winfo_width()
         widget_hei = self.winfo_height()
 
         if zoom_wid < widget_wid and zoom_hei < widget_hei:
-            print(f'photo {self.format_color("smaller", "green")} than frame')
+            print(f'zoomed photo {self.format_color("smaller", "green")} than frame')
             # center it, disregard mov_x and mov_y
             x_pos = ( widget_wid - zoom_wid ) / 2
             y_pos = ( widget_hei - zoom_hei ) / 2
-            # no resizing needed
+            # resize the pic, don't cut it
+            resized_dim = (zoom_wid, zoom_hei)
+            region = (0, 0, cur_wid, cur_hei)
+            cur_image = cur_image.resize(resized_dim, 0, region)
 
-        elif zoom_wid > widget_wid and zoom_hei < widget_hei:
-            print(f'photo wider than frame')
+        elif zoom_wid >= widget_wid and zoom_hei < widget_hei:
+            print(f'zoomed photo wider than frame')
             x_pos = 0
             y_pos = ( widget_hei - zoom_hei ) / 2
-            resized_dim = (widget_wid, cur_hei)
-            region = (self.mov_x, 0, self.mov_x+widget_wid, cur_hei)
+            #  resized_dim = (widget_wid, cur_hei)
+            #  resized_dim = (zoom_wid, zoom_hei)
+            resized_dim = (widget_wid, zoom_hei)
+            # region width should REDUCE with higher zoom
+            #  region = (self.mov_x, 0, self.mov_x+widget_wid, cur_hei)
+            #  region = (self.mov_x, 0, self.mov_x+widget_wid/zoom, cur_hei)
+            region = (self.mov_x/zoom, 0, (self.mov_x+widget_wid)/zoom, cur_hei)
+            #  region = (0, self.mov_y, cur_wid, self.mov_y+widget_hei)
             cur_image = cur_image.resize(resized_dim, 0, region)
 
-        elif zoom_wid < widget_wid and zoom_hei > widget_hei:
-            print(f'photo taller than frame')
+        elif zoom_wid < widget_wid and zoom_hei >= widget_hei:
+            print(f'zoomed photo taller than frame')
             x_pos = ( widget_wid - zoom_wid ) / 2
             y_pos = 0
-            resized_dim = (cur_wid, widget_hei)
-            region = (0, self.mov_y, cur_wid, self.mov_y+widget_hei)
+            #  resized_dim = (cur_wid, widget_hei)
+            resized_dim = (zoom_wid, widget_hei)
+            #  region = (0, self.mov_y, cur_wid, self.mov_y+widget_hei)
+            #  region = (0, self.mov_y, cur_wid, self.mov_y+widget_hei/zoom)
+            region = (0, self.mov_y/zoom, cur_wid, (self.mov_y+widget_hei)/zoom)
+            #  region = (self.mov_x, 0, self.mov_x+widget_wid, cur_hei)
             cur_image = cur_image.resize(resized_dim, 0, region)
 
-        elif zoom_wid > widget_wid and zoom_hei > widget_hei:
-            print(f'photo larger than frame')
+        elif zoom_wid >= widget_wid and zoom_hei >= widget_hei:
+            print(f'zoomed photo larger than frame')
             # display it at (0,0)
             x_pos = 0
             y_pos = 0
             # resize it: pick only the region that will be shown
             resized_dim = (widget_wid, widget_hei)
+            #  resized_dim = (zoom_wid, zoom_hei)
             region = (self.mov_x, self.mov_y, self.mov_x+widget_wid, self.mov_y+widget_hei)
+            region = tuple(d/zoom for d in region)
             cur_image = cur_image.resize(resized_dim, 0, region)
 
+        print(f'resized_dim {resized_dim}')
+        print(f'region {region}')
         # convert the photo for tkinter
         cur_image = ImageTk.PhotoImage(cur_image)
         # keep a reference to it to avoid garbage collection
@@ -210,7 +258,7 @@ class PhotoFrame(tk.Frame):
         elif color == 'green':
             r, g, b = 0, 255, 0
         elif color == 'blue':
-            r, g, b = 0, 0, 255
+            r, g, b = 50, 50, 255
 
         return cs.format(r, g, b, string)
 
@@ -218,6 +266,8 @@ class PhotoFrame(tk.Frame):
         current_photo = self.photo_list[self.photo_index]
         cur_image = Image.open(current_photo)
         cur_wid, cur_hei = cur_image.size
+
+        self.calc_zoom_level()
 
         zoom = self.zoom_base ** self.zoom_level
         zoom_wid = cur_wid * zoom
