@@ -83,27 +83,39 @@ class PhotoViewerApp():
         if e.keysym == 'F11': self.toggle_fullscreen()
         if e.keysym == 'F5': self.cycle_layout()
 
-        if e.keysym == 'e': self.change_photo(0)  # forward
-        if e.keysym == '2': self.change_photo(0)  # forward
-        if e.keysym == 'q': self.change_photo(1)  # backward
-        if e.keysym == '1': self.change_photo(1)  # backward
+        if e.keysym == 'e': self.change_photo('forward') 
+        if e.keysym == '2': self.change_photo('forward') 
+        if e.keysym == 'q': self.change_photo('backward')
+        if e.keysym == '1': self.change_photo('backward')
 
-        if e.char == 'd': self.move_photo(0)      #dx
-        if e.char == 'a': self.move_photo(1)      #sx
-        if e.char == 'w': self.move_photo(2)      #su
-        if e.char == 's': self.move_photo(3)      #giu
-        if e.char == 'x': self.move_photo(4)      #reset
+        if e.char == 'd': self.move_photo('right')
+        if e.char == 'a': self.move_photo('left')
+        if e.char == 'w': self.move_photo('up')  
+        if e.char == 's': self.move_photo('down')
+        if e.char == 'x': self.move_photo('reset')
 
         if e.char == "c": self.debug()            # debug
 
     def move_photo(self, direction):
         print(f'muovo {direction}')
+        self.photo_frame.move_photo(direction)
+        if self.layout_num in self.layout_is_double:
+            self.photo_frame_bis.move_photo(direction)
 
     def change_photo(self, direction):
         print(f'cambio {direction}')
+        self.photo_frame.change_photo(direction)
+        if self.layout_num in self.layout_is_double:
+            self.photo_frame_bis.change_photo(direction)
 
     def debug(self):
         print(f'debugging')
+
+    def clone_frames(self):
+        self.photo_frame_bis.zoom_level = self.photo_frame.zoom_level
+        self.photo_frame_bis.photo_index = self.photo_frame.photo_index
+        self.photo_frame_bis.mov_x = self.photo_frame.mov_x
+        self.photo_frame_bis.mov_y = self.photo_frame.mov_y
 
     def cycle_layout(self):
         self.layout_num = (self.layout_num + 1) % self.layout_tot
@@ -112,8 +124,8 @@ class PhotoViewerApp():
     def setup_layout(self):
         '''create the widgets'''
         # NOTE all of them? even the hidden ones?
-        self.photo_frame = PhotoFrame(self.root, self.photo_list)
-        self.photo_frame_bis = PhotoFrame(self.root, self.photo_list)
+        self.photo_frame = PhotoFrame(self.root, self.photo_list, 'primary')
+        self.photo_frame_bis = PhotoFrame(self.root, self.photo_list, 'secondary')
 
         # you DO need width and height here (at least width)
         # they will be fixed size
@@ -135,15 +147,17 @@ class PhotoViewerApp():
         elif lay_num == 4:
             self.layout_imo()
 
-        self.root.event_generate('<Configure>')
+        if lay_num in self.layout_is_double:
+            self.clone_frames()
 
-        self.root.update()
-        self.root.update_idletasks()
+        #  self.root.event_generate('<Configure>')
 
         self.photo_frame.do_resize()
         if lay_num in self.layout_is_double:
             self.photo_frame_bis.do_resize()
 
+        self.root.update()
+        self.root.update_idletasks()
 
     def layout_i(self):
         # tell the grid in root to grow with the window
@@ -155,9 +169,9 @@ class PhotoViewerApp():
         # pack the widgets
         self.photo_frame.grid(row=0, column=0, sticky='nsew')
         # remove from the grid the unused widgets
-        self.photo_frame_bis.grid_remove()
-        self.metadata_frame.grid_remove()
-        self.options_frame.grid_remove()
+        self.photo_frame_bis.grid_forget()
+        self.metadata_frame.grid_forget()
+        self.options_frame.grid_forget()
 
     def layout_im(self):
         # tell the grid in root to grow with the window
@@ -169,11 +183,11 @@ class PhotoViewerApp():
         # pack the widgets
         # remove from the grid the unused widgets
         self.photo_frame.grid(row=0, column=0, sticky='nsew')
-        self.photo_frame_bis.grid_remove()
-        #  self.metadata_frame.grid_remove()
+        self.photo_frame_bis.grid_forget()
+        #  self.metadata_frame.grid_forget()
         #  self.metadata_frame.grid(row=0, column=1, sticky='nsew')
         self.metadata_frame.grid(row=0, column=1, sticky='ns')
-        self.options_frame.grid_remove()
+        self.options_frame.grid_forget()
         #  self.options_frame.grid(row=1, column=1, sticky='nsew')
 
     def layout_io(self):
@@ -186,11 +200,11 @@ class PhotoViewerApp():
         # pack the widgets
         # remove from the grid the unused widgets
         self.photo_frame.grid(row=0, column=0, sticky='nsew')
-        self.photo_frame_bis.grid_remove()
-        self.metadata_frame.grid_remove()
+        self.photo_frame_bis.grid_forget()
+        self.metadata_frame.grid_forget()
         #  self.metadata_frame.grid(row=0, column=1, sticky='nsew')
         #  self.metadata_frame.grid(row=0, column=1, sticky='ns')
-        #  self.options_frame.grid_remove()
+        #  self.options_frame.grid_forget()
         #  self.options_frame.grid(row=1, column=1, sticky='nsew')
         self.options_frame.grid(row=0, column=1, sticky='ns')
 
@@ -204,11 +218,11 @@ class PhotoViewerApp():
         # pack the widgets
         # remove from the grid the unused widgets
         self.photo_frame.grid(row=0, column=0, rowspan=2, sticky='nsew')
-        self.photo_frame_bis.grid_remove()
-        #  self.metadata_frame.grid_remove()
+        self.photo_frame_bis.grid_forget()
+        #  self.metadata_frame.grid_forget()
         #  self.metadata_frame.grid(row=0, column=1, sticky='nsew')
         self.metadata_frame.grid(row=0, column=1, sticky='ns')
-        #  self.options_frame.grid_remove()
+        #  self.options_frame.grid_forget()
         #  self.options_frame.grid(row=1, column=1, sticky='nsew')
         self.options_frame.grid(row=1, column=1, sticky='ns')
 
@@ -223,8 +237,8 @@ class PhotoViewerApp():
         self.photo_frame.grid(row=0, column=0, sticky='nsew')
         self.photo_frame_bis.grid(row=0, column=1, sticky='nsew')
         # remove from the grid the unused widgets
-        self.metadata_frame.grid_remove()
-        self.options_frame.grid_remove()
+        self.metadata_frame.grid_forget()
+        self.options_frame.grid_forget()
 
     def start(self):
         self.root.mainloop()

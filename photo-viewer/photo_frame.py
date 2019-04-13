@@ -4,12 +4,14 @@ from math import sqrt
 from os.path import basename
 
 class PhotoFrame(tk.Frame):
-    def __init__(self, parent, photo_list, **kwargs):
+    def __init__(self, parent, photo_list, frame_name, **kwargs):
         # init Frame, standard constructor
         tk.Frame.__init__(self, parent, **kwargs)
 
         self.photo_index = 0
         self.photo_list = photo_list.copy()
+
+        self.frame_name = frame_name
 
         # setup grid for this widget
         #  self.grid_rowconfigure(0, weight=1, minsize=60)
@@ -23,7 +25,7 @@ class PhotoFrame(tk.Frame):
 
         # position them in the grid
         # not really, it will be manually placed
-        #  self.image_label.grid(row=0, column=0, sticky="nsew")
+        self.image_label.grid(row=0, column=0, sticky="nsew")
 
         # log scale, actual zoom: zoom_base**zoom_level
         self.zoom_level = 0
@@ -39,27 +41,136 @@ class PhotoFrame(tk.Frame):
 
         self.show_photo()
 
+    def change_photo(self, direction):
+        if direction == 'forward':
+            self.photo_index = (self.photo_index + 1 ) % len(self.photo_list)
+        elif direction == 'backward':
+            self.photo_index = (self.photo_index - 1 ) % len(self.photo_list)
+        else:
+            print(f'unrecognized direction {direction}')
+            return 0 
+
+        # TODO calculate zoom_level to show entire photo
+
+        # reset the position
+        self.mov_x = 0
+        self.mov_y = 0
+
+        self.show_photo()
+
+    def move_photo(self, direction):
+        '''slide a region as big as the widget around the *zoomed* photo'''
+        current_photo = self.photo_list[self.photo_index]
+        cur_image = Image.open(current_photo)
+        cur_wid, cur_hei = cur_image.size
+
+        zoom = self.zoom_base ** self.zoom_level
+        zoom_wid = cur_wid * zoom
+        zoom_hei = cur_hei * zoom
+
+        widget_wid = self.winfo_width()
+        widget_hei = self.winfo_height()
+
+        # NOTE some of these values will not be legal (a small photo in a large
+        # widget will get on right a negative amount in mov_x)
+        # do_resize will set mov_x to the highest possible legal value
+        if direction == 'right':
+            self.mov_x += self.mov_delta
+            if self.mov_x + widget_wid > cur_wid:
+                print('\a', end='') # bell
+                self.mov_x = cur_wid - widget_wid
+
+        elif direction == 'left':
+            self.mov_x -= self.mov_delta
+            if self.mov_x < 0:
+                print('\a', end='')
+                self.mov_x = 0
+
+        elif direction == 'up':
+            self.mov_y -= self.mov_delta
+            if self.mov_y < 0:
+                print('\a', end='')
+                self.mov_y = 0
+
+        elif direction == 'down':
+            self.mov_y += self.mov_delta
+            if self.mov_y + widget_hei > cur_hei:
+                print('\a', end='')
+                self.mov_y = cur_hei - widget_hei
+
+        elif direction == 'reset':
+            self.mov_x = 0
+            self.mov_y = 0
+        else:
+            print(f'unrecognized direction {direction}')
+            return 0 
+        self.show_photo()
+
     def show_photo(self):
-        print(f'frame {id(self)}')
-        print(f'widget width {self.winfo_width()} height {self.winfo_height()}')
-        print(f'widget x {self.winfo_x()} y {self.winfo_y()}')
-        print(f'widget rootx {self.winfo_rootx()} rooty {self.winfo_rooty()}')
+        #  print(f'frame {id(self)}')
+        #  self.print_color(f'frame {self.frame_name}')
+        #  print(f'widget x {self.winfo_x()} y {self.winfo_y()}')
+        #  print(f'widget rootx {self.winfo_rootx()} rooty {self.winfo_rooty()}')
+        #  print(f'widget reqwidth {self.winfo_reqwidth()} reqheight {self.winfo_reqheight()}')
         current_photo = self.photo_list[self.photo_index]
         #  self.cur_image = Image.open(current_photo)
         #  cur_wid, cur_hei = self.cur_image.size
         cur_image = Image.open(current_photo)
         cur_wid, cur_hei = cur_image.size
-        print(f'Current {basename(current_photo)} width {cur_wid} height {cur_hei}')
+        print(f'current photo ', end='')
+        self.print_color(f'{basename(current_photo)}')
+        print(f'widget width {self.winfo_width()} height {self.winfo_height()}')
+        print(f'current width {cur_wid} height {cur_hei}')
 
         zoom = self.zoom_base ** self.zoom_level
         zoom_wid = cur_wid * zoom
         zoom_hei = cur_hei * zoom
         print(f'zoom_level {self.zoom_level} zoom {zoom:.4f} zoom_wid {zoom_wid:.4f} zoom_hei {zoom_hei:.4f}')
 
+        widget_wid = self.winfo_width()
+        widget_hei = self.winfo_height()
+
+        if zoom_wid < widget_wid and zoom_hei < widget_hei:
+            print(f'photo {self.format_color("smaller", "green")} than frame')
+            # center it, disregard mov_x and mov_y
+            x_pos = ( widget_wid - zoom_wid ) / 2
+            y_pos = ( widget_hei - zoom_hei ) / 2
+            # no resizing needed
+
+        elif zoom_wid > widget_wid and zoom_hei < widget_hei:
+            print(f'photo wider than frame')
+            x_pos = 0
+            y_pos = ( widget_hei - zoom_hei ) / 2
+            resized_dim = (widget_wid, cur_hei)
+            region = (self.mov_x, 0, self.mov_x+widget_wid, cur_hei)
+            cur_image = cur_image.resize(resized_dim, 0, region)
+
+        elif zoom_wid < widget_wid and zoom_hei > widget_hei:
+            print(f'photo taller than frame')
+            x_pos = ( widget_wid - zoom_wid ) / 2
+            y_pos = 0
+            resized_dim = (cur_wid, widget_hei)
+            region = (0, self.mov_y, cur_wid, self.mov_y+widget_hei)
+            cur_image = cur_image.resize(resized_dim, 0, region)
+
+        elif zoom_wid > widget_wid and zoom_hei > widget_hei:
+            print(f'photo larger than frame')
+            # display it at (0,0)
+            x_pos = 0
+            y_pos = 0
+            # resize it: pick only the region that will be shown
+            resized_dim = (widget_wid, widget_hei)
+            region = (self.mov_x, self.mov_y, self.mov_x+widget_wid, self.mov_y+widget_hei)
+            cur_image = cur_image.resize(resized_dim, 0, region)
+
+        # convert the photo for tkinter
         cur_image = ImageTk.PhotoImage(cur_image)
+        # keep a reference to it to avoid garbage collection
         self.image_label.image = cur_image
+        # display it
         self.image_label.configure(image=cur_image)
-        self.image_label.place(x=-1, y=-1)
+        self.image_label.place(x=x_pos, y=y_pos)
+
         # NOTE
         #  self.foto_aperte[nome_foto] = Image.open(path_name)
         #  self.pic_wid, self.pic_hei = self.foto_aperte[nome_foto].size
@@ -85,7 +196,48 @@ class PhotoFrame(tk.Frame):
             # tagliala
             # la posizione e' (0,0)
 
+    def print_color(self, string):
+        if self.frame_name == 'primary':
+            color = 'red'
+        else:
+            color = 'green'
+        print(self.format_color(string, color))
+
+    def format_color(self, string, color):
+        cs = '\x1b[38;2;{};{};{}m{}\x1b[0m'
+        if color == 'red':
+            r, g, b = 255, 0, 0
+        elif color == 'green':
+            r, g, b = 0, 255, 0
+        elif color == 'blue':
+            r, g, b = 0, 0, 255
+
+        return cs.format(r, g, b, string)
+
     def do_resize(self, e=None):
+        current_photo = self.photo_list[self.photo_index]
+        cur_image = Image.open(current_photo)
+        cur_wid, cur_hei = cur_image.size
+
+        zoom = self.zoom_base ** self.zoom_level
+        zoom_wid = cur_wid * zoom
+        zoom_hei = cur_hei * zoom
+
+        widget_wid = self.winfo_width()
+        widget_hei = self.winfo_height()
+
+        if self.mov_x + widget_wid > cur_wid:
+            self.mov_x = cur_wid - widget_wid
+
+        if self.mov_x < 0:
+            self.mov_x = 0
+
+        if self.mov_y < 0:
+            self.mov_y = 0
+
+        if self.mov_y + widget_hei > cur_hei:
+            self.mov_y = cur_hei - widget_hei
+
         self.show_photo()
 
     def change_photo_list(self, new_list):
