@@ -21,10 +21,17 @@ class PhotoFrame(tk.Frame):
         self.grid_columnconfigure(0, weight=1)
 
         # create child widgets
+        # background frame to fill the grid
         self.top_frame = tk.Frame(self,bg='light cyan',width=450,height=50)
         self.top_frame.grid(row=0, column=0, sticky="nsew")
 
+        # image label
         self.image_label = tk.Label(self)
+
+        self.resampling_mode = Image.NEAREST
+        #  self.resampling_mode = Image.BILINEAR
+        #  self.resampling_mode = Image.BICUBIC
+        #  self.resampling_mode = Image.LANCZOS
 
         # log scale, actual zoom: zoom_base**zoom_level
         self.zoom_base = sqrt(2)
@@ -48,7 +55,7 @@ class PhotoFrame(tk.Frame):
 
     def change_photo(self, direction):
 
-        print(f'change photo {self.format_color(direction, "blue")}')
+        print(f'change photo {self.format_color(direction, "blue1")}')
 
         if direction == 'forward':
             self.photo_index = (self.photo_index + 1 ) % len(self.photo_list)
@@ -58,9 +65,8 @@ class PhotoFrame(tk.Frame):
             print(f'unrecognized changing direction {direction}')
             return 0 
 
+        # reset the zoom_level and the position
         self.calc_zoom_level()
-
-        # reset the position
         self.mov_x = 0
         self.mov_y = 0
 
@@ -74,16 +80,20 @@ class PhotoFrame(tk.Frame):
         widget_wid = self.winfo_width()
         widget_hei = self.winfo_height()
 
-        ratio = min( widget_wid/cur_wid, widget_hei/cur_hei)
-        self.zoom_level = log(ratio, self.zoom_base)
+        if cur_wid < widget_wid and cur_hei < widget_hei:
+            # the original photo is smaller than the widget
+            self.zoom_level = 0
+        else:
+            ratio = min( widget_wid/cur_wid, widget_hei/cur_hei)
+            self.zoom_level = log(ratio, self.zoom_base)
 
         #  print(f'zooming ', end='')
         #  self.print_color(f'{basename(current_photo)}')
         print()
-        print(f'calc_zoom_level photo {self.format_color(f"{basename(current_photo)}", "blue")}')
+        print(f'calc_zoom_level photo {self.format_color(f"{basename(current_photo)}", "blue1")}')
         print(f'widget width {self.winfo_width()} height {self.winfo_height()}')
         print(f'current width {cur_wid} height {cur_hei}')
-        print(f'zoom_level is now {self.format_color(self.zoom_level, "blue")}')
+        print(f'zoom_level is now {self.format_color(self.zoom_level, "blue1")}')
 
         # find zoom_level so that
         # cur_wid * ( zoom_base ** zoom_level ) = widget_wid
@@ -102,33 +112,48 @@ class PhotoFrame(tk.Frame):
         widget_wid = self.winfo_width()
         widget_hei = self.winfo_height()
 
+        print()
+        print(f'move_photo {self.format_color(direction, "dark turquoise")}')
+        print(f'widget width {self.winfo_width()} height {self.winfo_height()}')
+        print(f'current width {cur_wid} height {cur_hei}')
+        print(f'zoom_level {self.zoom_level} zoom {zoom:.4f} zoom_wid {zoom_wid:.4f} zoom_hei {zoom_hei:.4f}')
+        print(f'self.mov_x + widget_wid {self.mov_x + widget_wid} self.mov_y + widget_hei {self.mov_y + widget_hei}')
+
         # NOTE some of these values will not be legal (a small photo in a large
         # widget will get on right a negative amount in mov_x)
         # do_resize will set mov_x to the highest possible legal value
         # FIXME the boundaries should be on the *zoomed* photo
         if direction == 'right':
             self.mov_x += self.mov_delta
-            if self.mov_x + widget_wid > cur_wid:
-                print('\a', end='') # bell
-                self.mov_x = cur_wid - widget_wid
+            #  if self.mov_x + widget_wid > cur_wid:
+            if self.mov_x + widget_wid > zoom_wid:
+                #  print('\a', end='') # bell
+                #  self.mov_x = cur_wid - widget_wid
+                self.mov_x = zoom_wid - widget_wid
+                print(f'hit {self.format_color(direction, "sandy brown")} border, mov_x = {self.mov_x}')
 
         elif direction == 'left':
             self.mov_x -= self.mov_delta
             if self.mov_x < 0:
                 print('\a', end='')
                 self.mov_x = 0
+                print(f'hit {self.format_color(direction, "sandy brown")} border, mov_x = {self.mov_x}')
 
         elif direction == 'up':
             self.mov_y -= self.mov_delta
             if self.mov_y < 0:
                 print('\a', end='')
                 self.mov_y = 0
+                print(f'hit {self.format_color(direction, "sandy brown")} border, mov_y = {self.mov_y}')
 
         elif direction == 'down':
             self.mov_y += self.mov_delta
-            if self.mov_y + widget_hei > cur_hei:
+            #  if self.mov_y + widget_hei > cur_hei:
+            if self.mov_y + widget_hei > zoom_hei:
                 print('\a', end='')
-                self.mov_y = cur_hei - widget_hei
+                #  self.mov_y = cur_hei - widget_hei
+                self.mov_y = zoom_hei - widget_hei
+                print(f'hit {self.format_color(direction, "sandy brown")} border, mov_y = {self.mov_y}')
 
         elif direction == 'reset':
             self.mov_x = 0
@@ -137,9 +162,10 @@ class PhotoFrame(tk.Frame):
         else:
             print(f'unrecognized moving direction {direction}')
             return 0 
+
         self.show_photo()
 
-    def zoom_photo(self, direction):
+    def zoom_photo(self, direction, rel_x=-1, rel_y=-1):
         '''change zoom level, recalculate mov_x mov_y so that a point stands still'''
         if direction == 'in':
             self.zoom_level += 1
@@ -171,13 +197,14 @@ class PhotoFrame(tk.Frame):
         widget_hei = self.winfo_height()
 
         print()
-        print(f'do_resize {self.format_color(f"{basename(current_photo)}", "blue")} generated by {e}')
+        print(f'do_resize {self.format_color(f"{basename(current_photo)}", "blue1")} generated by {e}')
         print(f'widget width {self.winfo_width()} height {self.winfo_height()}')
         print(f'current width {cur_wid} height {cur_hei}')
 
         # FIXME all wrong
         # checks should be on *zoomed* photo
-        if self.mov_x + widget_wid > cur_wid:
+        #  if self.mov_x + widget_wid > cur_wid:
+        if self.mov_x + widget_wid > zoom_wid:
             self.mov_x = cur_wid - widget_wid
 
         if self.mov_x < 0:
@@ -186,7 +213,8 @@ class PhotoFrame(tk.Frame):
         if self.mov_y < 0:
             self.mov_y = 0
 
-        if self.mov_y + widget_hei > cur_hei:
+        #  if self.mov_y + widget_hei > cur_hei:
+        if self.mov_y + widget_hei > zoom_hei:
             self.mov_y = cur_hei - widget_hei
 
         self.show_photo()
@@ -208,7 +236,7 @@ class PhotoFrame(tk.Frame):
         self.print_color(f'{basename(current_photo)}')
         print(f'widget width {self.winfo_width()} height {self.winfo_height()}')
         print(f'current width {cur_wid} height {cur_hei}')
-        print(f'widget reqwidth {self.winfo_reqwidth()} reqheight {self.winfo_reqheight()}')
+        #  print(f'widget reqwidth {self.winfo_reqwidth()} reqheight {self.winfo_reqheight()}')
 
         zoom = self.zoom_base ** self.zoom_level
         #  zoom_wid = cur_wid * zoom
@@ -229,7 +257,7 @@ class PhotoFrame(tk.Frame):
             # resize the pic, don't cut it
             resized_dim = (zoom_wid, zoom_hei)
             region = (0, 0, cur_wid, cur_hei)
-            cur_image = cur_image.resize(resized_dim, 0, region)
+            cur_image = cur_image.resize(resized_dim, self.resampling_mode, region)
 
         elif zoom_wid >= widget_wid and zoom_hei < widget_hei:
             print(f'zoomed photo {self.format_color("wider", "green")} than frame')
@@ -243,7 +271,7 @@ class PhotoFrame(tk.Frame):
             #  region = (self.mov_x, 0, self.mov_x+widget_wid/zoom, cur_hei)
             region = (self.mov_x/zoom, 0, (self.mov_x+widget_wid)/zoom, cur_hei)
             #  region = (0, self.mov_y, cur_wid, self.mov_y+widget_hei)
-            cur_image = cur_image.resize(resized_dim, 0, region)
+            cur_image = cur_image.resize(resized_dim, self.resampling_mode, region)
 
         elif zoom_wid < widget_wid and zoom_hei >= widget_hei:
             print(f'zoomed photo {self.format_color("taller", "green")} than frame')
@@ -255,7 +283,7 @@ class PhotoFrame(tk.Frame):
             #  region = (0, self.mov_y, cur_wid, self.mov_y+widget_hei/zoom)
             region = (0, self.mov_y/zoom, cur_wid, (self.mov_y+widget_hei)/zoom)
             #  region = (self.mov_x, 0, self.mov_x+widget_wid, cur_hei)
-            cur_image = cur_image.resize(resized_dim, 0, region)
+            cur_image = cur_image.resize(resized_dim, self.resampling_mode, region)
 
         elif zoom_wid >= widget_wid and zoom_hei >= widget_hei:
             print(f'zoomed photo {self.format_color("larger", "green")} than frame')
@@ -267,7 +295,7 @@ class PhotoFrame(tk.Frame):
             #  resized_dim = (zoom_wid, zoom_hei)
             region = (self.mov_x, self.mov_y, self.mov_x+widget_wid, self.mov_y+widget_hei)
             region = tuple(d/zoom for d in region)
-            cur_image = cur_image.resize(resized_dim, 0, region)
+            cur_image = cur_image.resize(resized_dim, self.resampling_mode, region)
 
         print(f'resized_dim {resized_dim}')
         print(f'region {region}')
@@ -317,7 +345,7 @@ class PhotoFrame(tk.Frame):
         self.photo_list = new_list.copy()
 
     def debug(self):
-        print(f'debugging PhotoFrame')
+        print(f'\n{self.format_color("debugging PhotoFrame", "yellow")}')
 
     def print_color(self, string):
         if self.frame_name == 'primary':
@@ -329,10 +357,12 @@ class PhotoFrame(tk.Frame):
     def format_color(self, string, color):
         cs = '\x1b[38;2;{};{};{}m{}\x1b[0m'
 
-        if color == 'red': r, g, b = 255, 0, 0
-        elif color == 'green': r, g, b = 0, 255, 0
-        elif color == 'blue': r, g, b = 50, 50, 255
+        # my colors
+        if color == 'red1': r, g, b = 215, 0, 0
+        elif color == 'green1': r, g, b = 0, 255, 0
+        elif color == 'blue1': r, g, b = 50, 50, 255
 
+        # list from https://www.rapidtables.com/web/color/RGB_Color.html
         elif color == 'Black': r, g, b = 0,0,0
         elif color == 'White': r, g, b = 255,255,255
         elif color == 'Red': r, g, b = 255,0,0
@@ -481,7 +511,7 @@ class PhotoFrame(tk.Frame):
         elif color == 'snow': r, g, b = 255,250,250
         elif color == 'black': r, g, b = 0,0,0
         elif color == 'dim gray': r, g, b = 105,105,105
-        elif color == 'gray / grey': r, g, b = 128,128,128
+        elif color == 'gray': r, g, b = 128,128,128
         elif color == 'dark gray': r, g, b = 169,169,169
         elif color == 'silver': r, g, b = 192,192,192
         elif color == 'light gray': r, g, b = 211,211,211

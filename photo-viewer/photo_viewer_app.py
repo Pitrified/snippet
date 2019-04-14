@@ -101,7 +101,7 @@ class PhotoViewerApp():
         if e.char == "c": self.debug()            # debug
 
     def move_photo(self, direction):
-        print(f'muovo {direction}')
+        #  print(f'muovo {direction}')
         self.photo_frame.move_photo(direction)
         if self.layout_num in self.layout_is_double:
             self.photo_frame_bis.move_photo(direction)
@@ -119,7 +119,8 @@ class PhotoViewerApp():
             self.photo_frame_bis.zoom_photo(direction)
 
     def debug(self):
-        print(f'debugging')
+        #  print(f'debugging')
+        self.photo_frame.debug()
 
     def clone_frames(self):
         self.photo_frame_bis.zoom_level = self.photo_frame.zoom_level
