@@ -160,8 +160,12 @@ class PhotoViewerApp():
 
         if e.num == 4 or e.delta == 120 or e.delta == 1:
             self.photo_frame.zoom_photo('in', e.x, e.y)
+            if self.layout_num in self.layout_is_double:
+                self.photo_frame_bis.zoom_photo('in')
         elif e.num == 5 or e.delta == -120 or e.delta == -1:
             self.photo_frame.zoom_photo('out', e.x, e.y)
+            if self.layout_num in self.layout_is_double:
+                self.photo_frame_bis.zoom_photo('out')
 
     def photo_enter(self, e):
         print('\nENTERING')
@@ -177,6 +181,9 @@ class PhotoViewerApp():
         self.photo_frame_bis.photo_index = self.photo_frame.photo_index
         self.photo_frame_bis.mov_x = self.photo_frame.mov_x
         self.photo_frame_bis.mov_y = self.photo_frame.mov_y
+
+        self.photo_frame_bis.load_photo()
+        self.photo_frame_bis.show_photo()
 
     def cycle_layout(self):
         self.layout_num = (self.layout_num + 1) % self.layout_tot
