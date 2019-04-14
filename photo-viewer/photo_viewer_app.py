@@ -94,6 +94,10 @@ class PhotoViewerApp():
         if e.char == 's': self.move_photo('down')
         if e.char == 'x': self.move_photo('reset')
 
+        if e.char == 'r': self.zoom_photo('in')
+        if e.char == 'f': self.zoom_photo('out')
+        if e.char == 'v': self.zoom_photo('reset')
+
         if e.char == "c": self.debug()            # debug
 
     def move_photo(self, direction):
@@ -107,6 +111,12 @@ class PhotoViewerApp():
         self.photo_frame.change_photo(direction)
         if self.layout_num in self.layout_is_double:
             self.photo_frame_bis.change_photo(direction)
+
+    def zoom_photo(self, direction):
+        print(f'zooming {direction}')
+        self.photo_frame.zoom_photo(direction)
+        if self.layout_num in self.layout_is_double:
+            self.photo_frame_bis.zoom_photo(direction)
 
     def debug(self):
         print(f'debugging')
@@ -123,6 +133,11 @@ class PhotoViewerApp():
 
     def setup_layout(self):
         '''create the widgets'''
+        #  print('update_idletasks now')
+        #  self.root.update_idletasks()
+        #  self.root.update()
+        #  self.update_idletasks()
+
         # NOTE all of them? even the hidden ones?
         self.photo_frame = PhotoFrame(self.root, self.photo_list, 'primary')
         self.photo_frame_bis = PhotoFrame(self.root, self.photo_list, 'secondary')
@@ -241,7 +256,19 @@ class PhotoViewerApp():
         self.options_frame.grid_forget()
 
     def start(self):
+        self.root.update()
+        #  self.root.after(0, self.finish_setup())
+        self.finish_setup()
+        print('\nSTARTING MAINLOOP\n')
         self.root.mainloop()
+
+    def finish_setup(self):
+        print('\nfihishing setup\n')
+        self.photo_frame.calc_zoom_level()
+        self.photo_frame.show_photo()
+        if self.layout_num in self.layout_is_double:
+            self.photo_frame_bis.calc_zoom_level()
+            self.photo_frame_bis.show_photo()
 
     def exit(self, e=None):
         self.root.destroy()
