@@ -12,8 +12,8 @@ class PhotoViewerApp():
     def __init__(self, base_dir):
         self.setup_dirs(base_dir)
         self.setup_window()
-        self.setup_bind()
         self.setup_layout()
+        self.setup_bind()
 
         self.layout_num = 0
         self.set_layout(self.layout_num)
@@ -77,6 +77,34 @@ class PhotoViewerApp():
         #  self.root.bind("<F11>", self.toggle_fullscreen)
         self.root.bind("<KeyRelease>", self.keyup)
 
+        # linux
+        #  self.root.bind_all('<4>', self._on_mousewheel,  add='+') # scroll UP
+        #  self.root.bind_all('<5>', self._on_mousewheel,  add='+')
+        # windows/macos
+        #  self.root.bind_all("<MouseWheel>", self._on_mousewheel,  add='+') # 120 up
+
+        # this works but you have to check which widget fired
+        #  self.root.bind('<4>', self.zoom_photo_mouse)
+        #  self.root.bind('<5>', self.zoom_photo_mouse)
+        #  self.root.bind('<MouseWheel>', self.zoom_photo_mouse)
+
+        # for misterious reasons this deosn't work
+        #  self.photo_frame.bind('<4>', self.zoom_photo_mouse)
+        #  self.photo_frame.bind('<5>', self.zoom_photo_mouse)
+        #  self.photo_frame.bind('<MouseWheel>', self.zoom_photo_mouse)
+        #  self.photo_frame_bis.bind('<4>', self.zoom_photo_mouse)
+        #  self.photo_frame_bis.bind('<5>', self.zoom_photo_mouse)
+        #  self.photo_frame_bis.bind('<MouseWheel>', self.zoom_photo_mouse)
+        #  self.photo_frame.bind('<Enter>', self.photo_enter)
+        #  self.photo_frame.bind('<Leave>', self.photo_enter)
+
+        self.photo_frame.image_label.bind('<4>', self.zoom_photo_mouse)
+        self.photo_frame.image_label.bind('<5>', self.zoom_photo_mouse)
+        self.photo_frame.image_label.bind('<MouseWheel>', self.zoom_photo_mouse)
+        self.photo_frame_bis.image_label.bind('<4>', self.zoom_photo_mouse)
+        self.photo_frame_bis.image_label.bind('<5>', self.zoom_photo_mouse)
+        self.photo_frame_bis.image_label.bind('<MouseWheel>', self.zoom_photo_mouse)
+
     def keyup(self, e):
         #  print(f'key released {e}')
         if e.keysym == 'Escape': self.exit()
@@ -117,6 +145,28 @@ class PhotoViewerApp():
         self.photo_frame.zoom_photo(direction)
         if self.layout_num in self.layout_is_double:
             self.photo_frame_bis.zoom_photo(direction)
+
+    def zoom_photo_mouse(self, e):
+        #  print('\nMOUSE')
+        #  print(e)
+        #  print(type(e))
+        #  print(e.widget)
+        #  print(type(e.widget))
+        #  print(e.widget.master)
+        #  print(type(e.widget.master))
+        #  print(e.widget.winfo_parent())
+        #  print(type(e.widget.winfo_parent()))
+        #  if isinstance(e.widget.master, PhotoFrame): #  print(e)
+
+        if e.num == 4 or e.delta == 120 or e.delta == 1:
+            self.photo_frame.zoom_photo('in', e.x, e.y)
+        elif e.num == 5 or e.delta == -120 or e.delta == -1:
+            self.photo_frame.zoom_photo('out', e.x, e.y)
+
+    def photo_enter(self, e):
+        print('\nENTERING')
+        print(e)
+        print(e.widget)
 
     def debug(self):
         #  print(f'debugging')

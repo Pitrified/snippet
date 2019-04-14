@@ -53,6 +53,9 @@ class PhotoFrame(tk.Frame):
         print(f'\nfinished init for ', end='')
         self.print_color(f'{self.frame_name}')
 
+    def load_photo(self):
+        '''load a photo and relatives attributes (wid, hei)'''
+
     def change_photo(self, direction):
 
         print(f'change photo {self.format_color(direction, "blue1")}')
@@ -167,6 +170,7 @@ class PhotoFrame(tk.Frame):
 
     def zoom_photo(self, direction, rel_x=-1, rel_y=-1):
         '''change zoom level, recalculate mov_x mov_y so that a point stands still'''
+
         if direction == 'in':
             self.zoom_level += 1
 
@@ -179,6 +183,22 @@ class PhotoFrame(tk.Frame):
         else:
             print(f'unrecognized zooming direction {direction}')
             return 0 
+
+        current_photo = self.photo_list[self.photo_index]
+        cur_image = Image.open(current_photo)
+        cur_wid, cur_hei = cur_image.size
+
+        zoom = self.zoom_base ** self.zoom_level
+        zoom_wid = cur_wid * zoom
+        zoom_hei = cur_hei * zoom
+
+        widget_wid = self.winfo_width()
+        widget_hei = self.winfo_height()
+
+        if rel_x == -1 or rel_y == -1:
+            rel_x = widget_wid / 2
+            rel_y = widget_hei / 2
+
 
         self.show_photo()
 
