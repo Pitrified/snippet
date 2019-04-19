@@ -376,10 +376,12 @@ class PhotoFrame(tk.Frame):
         '''look for the current_photo name in the new_list
         and let photo_index point there'''
 
-        if current_photo in new_list:
+        if self.current_photo in new_list:
             self.photo_index = new_list.index(self.current_photo)
+            print(f'Found {self.current_photo} at index {self.photo_index}')
         else:
             self.photo_index = 0
+            self.load_photo()
 
         self.photo_list = new_list.copy()
 

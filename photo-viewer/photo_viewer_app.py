@@ -1,6 +1,9 @@
 import tkinter as tk
+from tkinter import filedialog
+
 from os import listdir
 from os.path import isfile
+from os.path import isdir
 from os.path import join
 from os.path import splitext
 from os.path import basename # Returns the final component of a pathname
@@ -10,9 +13,12 @@ from photo_frame import PhotoFrame
 
 class PhotoViewerApp():
     def __init__(self, base_dir):
-        self.setup_dirs(base_dir)
         self.setup_window()
+        self.setup_dirs(base_dir)
         self.setup_layout()
+
+        self.setup_options()
+
         self.setup_bind()
 
         self.layout_num = 0
@@ -27,7 +33,9 @@ class PhotoViewerApp():
         self.base_dir = base_dir    
 
         # list of dir to check for photos
-        self.dirs = [self.base_dir]
+        self.all_dirs = [self.base_dir]
+        # list of toggled dirs
+        self.active_dirs = [self.base_dir]
 
         #  self.is_photo_reg = re.compile('.jpe?g|.png', re.IGNORECASE)
         self.is_photo_ext = set( ('.jpg', '.jpeg', '.png') )
@@ -38,19 +46,19 @@ class PhotoViewerApp():
     def populate_photo_list(self):
         '''go through the directories and add the photos that are
         of supported formats'''
-        # NO! this is done in frame
-        #  if the photo_index is defined, search through the new list
-        #  and change its value to point at the same pic'''
+        # the index is moved when the new list is sent to the frame
+        # if the photo_index is defined, search through the new list
+        # and change its value to point at the same pic'''
 
         self.photo_list = []
-        for directory in self.dirs:
+        for directory in self.active_dirs:
             #  print(f'inside {directory}')
             for photo in listdir(directory):
                 photo = join(directory, photo)
                 #  print(f'checking {photo}')
                 if self.is_photo(photo):
                     self.photo_list.append(photo)
-        #  print(f'{self.photo_list}')
+        #  print(f'Photo list {self.photo_list}')
 
     def is_photo(self, photo):
         '''photo is the FULL path to the pic'''
@@ -185,6 +193,84 @@ class PhotoViewerApp():
         self.photo_frame_bis.load_photo()
         self.photo_frame_bis.show_photo()
 
+    def setup_options(self):
+        # don't shrink when packing
+        self.options_frame.pack_propagate(False)
+
+        self.btn_add_folder = tk.Button(self.options_frame, text='Add directory to list', command=self.add_folder)
+        self.btn_add_folder.pack()
+
+        self.checkbtn_dir = {}
+        self.checkbtn_state = {}
+
+        self.draw_options()
+
+    def add_folder(self, new_dir=''):
+        #  new_dir = tkFileDialog.askdirectory()
+        if new_dir == '':
+            new_dir = tk.filedialog.askdirectory()
+        print()
+        print(f'{PhotoFrame.format_color(None, "New", "spring green")} folder to add to the list: {new_dir}')
+
+        # pressing ESC in the dialog returns a tuple
+        # this also closes the program
+        if isinstance(new_dir, tuple) or not isdir(new_dir):
+            print(f'Not a folder {new_dir}')
+            return -1
+
+        if not new_dir in self.all_dirs:
+            self.all_dirs.append(new_dir)
+            #  self.populate_photo_list()
+
+            # send changes to frames, both of them
+
+            #  self.photo_frame.change_photo_list(self.photo_list)
+            #  self.photo_frame_bis.change_photo_list(self.photo_list)
+
+        self.draw_options()
+        self.toggle_folder()
+
+    def draw_options(self):
+        # remove all widgets from options_frame
+        # this doesn't destroy them
+        for folder in self.checkbtn_dir:
+            self.checkbtn_dir[folder].pack_forget()
+
+        # repack them in order
+        for folder in sorted(self.all_dirs):
+            folder_name = basename(folder)
+            # create the Checkbutton
+            if not folder in self.checkbtn_dir:
+                self.checkbtn_state[folder] = tk.IntVar(value=1)
+                self.checkbtn_dir[folder] = tk.Checkbutton(self.options_frame,
+                    text=folder_name,
+                    command=self.toggle_folder,
+                    background=self.options_frame.cget('background'),
+                    variable=self.checkbtn_state[folder],
+                    )
+            # pack it
+            #  print(f'Packing {folder}')
+            self.checkbtn_dir[folder].pack()
+
+        # destroy unused Checkbutton if you want
+        #  for folder in self.checkbtn_dir:
+            #  if not folder in self.all_dirs:
+                #  self.checkbtn_dir[folder].destroy
+
+    def toggle_folder(self):
+        #  print(f'Toggling something')
+        # untoggling every folder is a bad idea
+        self.active_dirs = []
+        for folder in self.checkbtn_dir:
+            #  print(f'Folder {folder} has value {self.checkbtn_state[folder].get()}')
+            if self.checkbtn_state[folder].get() == 1:
+                self.active_dirs.append(folder)
+        #  print(f'Active dirs {self.active_dirs}')
+        self.populate_photo_list()
+
+        self.photo_frame.change_photo_list(self.photo_list)
+        self.photo_frame_bis.change_photo_list(self.photo_list)
+
     def cycle_layout(self):
         self.layout_num = (self.layout_num + 1) % self.layout_tot
         self.set_layout(self.layout_num)
@@ -199,6 +285,8 @@ class PhotoViewerApp():
         # NOTE all of them? even the hidden ones?
         self.photo_frame = PhotoFrame(self.root, self.photo_list, 'primary')
         self.photo_frame_bis = PhotoFrame(self.root, self.photo_list, 'secondary')
+        #  self.photo_frame = PhotoFrame(self.root, frame_name='primary')
+        #  self.photo_frame_bis = PhotoFrame(self.root, frame_name='secondary')
 
         # you DO need width and height here (at least width)
         # they will be fixed size
