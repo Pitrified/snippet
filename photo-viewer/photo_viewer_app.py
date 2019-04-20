@@ -199,11 +199,23 @@ class PhotoViewerApp():
         # don't shrink when packing
         self.options_frame.pack_propagate(False)
 
-        self.btn_add_folder = ttk.Button(self.options_frame, text='Add directory to list', command=self.add_folder)
-        self.btn_add_folder.pack()
+        # set output folder
+        self.btn_set_output_folder = ttk.Button(self.options_frame, text='Set output folder', command=self.set_output_folder)
+        self.output_folder_var = tk.StringVar(self.btn_set_output_folder, value='Not set')
+        self.text_output_folder = tk.Label(self.options_frame,
+                textvariable=self.output_folder_var,
+                background=self.options_frame.cget('background'),
+                )
 
+        # add input folders
+        self.btn_add_folder = ttk.Button(self.options_frame, text='Add directory to list', command=self.add_folder)
         self.checkbtn_dir = {}
         self.checkbtn_state = {}
+
+        # pack static options
+        self.btn_set_output_folder.pack()
+        self.text_output_folder.pack()
+        self.btn_add_folder.pack()
 
         self.draw_options()
 
@@ -217,14 +229,9 @@ class PhotoViewerApp():
         # pressing ESC in the dialog returns a tuple
         # this also closes the program
         #  if isinstance(new_dir, tuple) or not isdir(new_dir):
-        if isinstance(new_dir, tuple):
-            print('Exiting filedialog')
+        if isinstance(new_dir, tuple) or not isdir(new_dir):
+            print(f'Not a folder {new_dir}')
             return -1
-
-        # create the folder if it doesn't exist
-        if not isdir(new_dir):
-            print(f'Not a folder {new_dir}, creating it')
-            makedirs(new_dir)
 
         if not new_dir in self.all_dirs:
             self.all_dirs.append(new_dir)
@@ -278,6 +285,24 @@ class PhotoViewerApp():
 
         self.photo_frame.change_photo_list(self.photo_list)
         self.photo_frame_bis.change_photo_list(self.photo_list)
+
+    def set_output_folder(self, out_dir=''):
+        if out_dir == '':
+            out_dir = tk.filedialog.askdirectory()
+
+        if isinstance(out_dir, tuple):
+            print(f'Selection cancelled')
+            return -1
+
+        print()
+        print(f'{PhotoFrame.format_color(None, "Output", "spring green")} folder: {out_dir}')
+
+        # create the folder if it doesn't exist
+        if not isdir(out_dir):
+            print(f'Not a folder {out_dir}, creating it')
+            makedirs(out_dir)
+
+        self.output_folder_var.set(basename(out_dir))
 
     def cycle_layout(self):
         self.layout_num = (self.layout_num + 1) % self.layout_tot
