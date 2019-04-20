@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter import filedialog
 
 from os import listdir
+from os import makedirs
 from os.path import isfile
 from os.path import isdir
 from os.path import join
@@ -215,9 +216,15 @@ class PhotoViewerApp():
 
         # pressing ESC in the dialog returns a tuple
         # this also closes the program
-        if isinstance(new_dir, tuple) or not isdir(new_dir):
-            print(f'Not a folder {new_dir}')
+        #  if isinstance(new_dir, tuple) or not isdir(new_dir):
+        if isinstance(new_dir, tuple):
+            print('Exiting filedialog')
             return -1
+
+        # create the folder if it doesn't exist
+        if not isdir(new_dir):
+            print(f'Not a folder {new_dir}, creating it')
+            makedirs(new_dir)
 
         if not new_dir in self.all_dirs:
             self.all_dirs.append(new_dir)
