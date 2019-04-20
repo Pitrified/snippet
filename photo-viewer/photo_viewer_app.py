@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 from tkinter import filedialog
 
 from os import listdir
@@ -197,7 +198,7 @@ class PhotoViewerApp():
         # don't shrink when packing
         self.options_frame.pack_propagate(False)
 
-        self.btn_add_folder = tk.Button(self.options_frame, text='Add directory to list', command=self.add_folder)
+        self.btn_add_folder = ttk.Button(self.options_frame, text='Add directory to list', command=self.add_folder)
         self.btn_add_folder.pack()
 
         self.checkbtn_dir = {}

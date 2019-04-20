@@ -127,27 +127,28 @@ class PhotoFrame(tk.Frame):
             self.mov_x += self.mov_delta
             if self.mov_x + widget_wid > zoom_wid:
                 self.mov_x = zoom_wid - widget_wid
+                print('\a', end='')
                 print(f'hit {self.format_color(direction, "sandy brown")} border, mov_x = {self.mov_x}')
 
         elif direction == 'left':
             self.mov_x -= self.mov_delta
             if self.mov_x < 0:
-                print('\a', end='')
                 self.mov_x = 0
+                print('\a', end='')
                 print(f'hit {self.format_color(direction, "sandy brown")} border, mov_x = {self.mov_x}')
 
         elif direction == 'up':
             self.mov_y -= self.mov_delta
             if self.mov_y < 0:
-                print('\a', end='')
                 self.mov_y = 0
+                print('\a', end='')
                 print(f'hit {self.format_color(direction, "sandy brown")} border, mov_y = {self.mov_y}')
 
         elif direction == 'down':
             self.mov_y += self.mov_delta
             if self.mov_y + widget_hei > zoom_hei:
-                print('\a', end='')
                 self.mov_y = zoom_hei - widget_hei
+                print('\a', end='')
                 print(f'hit {self.format_color(direction, "sandy brown")} border, mov_y = {self.mov_y}')
 
         elif direction == 'reset':
