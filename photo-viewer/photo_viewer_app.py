@@ -38,6 +38,8 @@ class PhotoViewerApp():
         self.all_dirs = [self.base_dir]
         # list of toggled dirs
         self.active_dirs = [self.base_dir]
+        # remember last toggled folder
+        self.last_input_folder = self.base_dir
 
         #  self.is_photo_reg = re.compile('.jpe?g|.png', re.IGNORECASE)
         self.is_photo_ext = set( ('.jpg', '.jpeg', '.png') )
@@ -198,17 +200,35 @@ class PhotoViewerApp():
     def setup_options(self):
         # don't shrink when packing
         self.options_frame.pack_propagate(False)
+        self.options_frame.grid_propagate(False)
+
+        # setup grid for options_frame
+        self.options_frame.grid_rowconfigure(0, weight=0)
+        self.options_frame.grid_rowconfigure(1, weight=0)
+        self.options_frame.grid_rowconfigure(2, weight=1)
+        self.options_frame.grid_columnconfigure(0, weight=1)
+
+        # create children frames
+        # the height parameter is happily ignored, you might set grid_propagate in each frame
+        self.output_frame = tk.Frame(self.options_frame, height=120, bg='turquoise')
+        self.input_frame = tk.Frame(self.options_frame, height=200, bg='dark green')
+        self.selection_frame = tk.Frame(self.options_frame, height=200, bg='SkyBlue1')
+
+        # grid childrens
+        self.output_frame.grid(row=0, column=0, sticky='ew')
+        self.input_frame.grid(row=1, column=0, sticky='ew')
+        self.selection_frame.grid(row=2, column=0, sticky='nsew')
 
         # set output folder
-        self.btn_set_output_folder = ttk.Button(self.options_frame, text='Set output folder', command=self.set_output_folder)
+        self.btn_set_output_folder = ttk.Button(self.output_frame, text='Set output folder', command=self.set_output_folder)
         self.output_folder_var = tk.StringVar(self.btn_set_output_folder, value='Not set')
-        self.text_output_folder = tk.Label(self.options_frame,
+        self.text_output_folder = tk.Label(self.output_frame,
                 textvariable=self.output_folder_var,
                 background=self.options_frame.cget('background'),
                 )
 
         # add input folders
-        self.btn_add_folder = ttk.Button(self.options_frame, text='Add directory to list', command=self.add_folder)
+        self.btn_add_folder = ttk.Button(self.input_frame, text='Add directory to list', command=self.add_folder)
         self.checkbtn_dir = {}
         self.checkbtn_state = {}
 
@@ -217,7 +237,7 @@ class PhotoViewerApp():
         self.text_output_folder.pack()
         self.btn_add_folder.pack()
 
-        self.draw_options()
+        self.draw_input_folders()
 
     def add_folder(self, new_dir=''):
         #  new_dir = tkFileDialog.askdirectory()
@@ -242,10 +262,10 @@ class PhotoViewerApp():
             #  self.photo_frame.change_photo_list(self.photo_list)
             #  self.photo_frame_bis.change_photo_list(self.photo_list)
 
-        self.draw_options()
-        self.toggle_folder()
+        self.draw_input_folders()
+        self.toggle_input_folders()
 
-    def draw_options(self):
+    def draw_input_folders(self):
         # remove all widgets from options_frame
         # this doesn't destroy them
         for folder in self.checkbtn_dir:
@@ -254,15 +274,17 @@ class PhotoViewerApp():
         # repack them in order
         for folder in sorted(self.all_dirs):
             folder_name = basename(folder)
+
             # create the Checkbutton
             if not folder in self.checkbtn_dir:
                 self.checkbtn_state[folder] = tk.IntVar(value=1)
-                self.checkbtn_dir[folder] = tk.Checkbutton(self.options_frame,
+                self.checkbtn_dir[folder] = tk.Checkbutton(self.input_frame,
                     text=folder_name,
-                    command=self.toggle_folder,
+                    command=self.toggle_input_folders,
                     background=self.options_frame.cget('background'),
                     variable=self.checkbtn_state[folder],
                     )
+
             # pack it
             #  print(f'Packing {folder}')
             self.checkbtn_dir[folder].pack()
@@ -272,14 +294,23 @@ class PhotoViewerApp():
             #  if not folder in self.all_dirs:
                 #  self.checkbtn_dir[folder].destroy
 
-    def toggle_folder(self):
+    def toggle_input_folders(self):
         #  print(f'Toggling something')
         # untoggling every folder is a bad idea
         self.active_dirs = []
+
         for folder in self.checkbtn_dir:
             #  print(f'Folder {folder} has value {self.checkbtn_state[folder].get()}')
             if self.checkbtn_state[folder].get() == 1:
                 self.active_dirs.append(folder)
+                self.last_input_folder = folder
+
+        # if no folder is toggled, reactivate the last toggled one
+        if len(self.active_dirs) == 0:
+            self.active_dirs = [self.last_input_folder]
+            self.checkbtn_state[self.last_input_folder].set(1)
+            print(f'Retoggling {self.last_input_folder}')
+
         #  print(f'Active dirs {self.active_dirs}')
         self.populate_photo_list()
 
