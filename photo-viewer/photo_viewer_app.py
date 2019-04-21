@@ -118,7 +118,7 @@ class PhotoViewerApp():
         self.photo_frame_bis.image_label.bind('<MouseWheel>', self.zoom_photo_mouse)
 
     def keyup(self, e):
-        #  print(f'key released {e}')
+        print(f'key released {e}')
         if e.keysym == 'Escape': self.exit()
         if e.keysym == 'F11': self.toggle_fullscreen()
         if e.keysym == 'F5': self.cycle_layout()
@@ -128,17 +128,18 @@ class PhotoViewerApp():
         if e.keysym == 'q': self.change_photo('backward')
         if e.keysym == '1': self.change_photo('backward')
 
-        if e.char == 'd': self.move_photo('right')
-        if e.char == 'a': self.move_photo('left')
-        if e.char == 'w': self.move_photo('up')  
-        if e.char == 's': self.move_photo('down')
-        if e.char == 'x': self.move_photo('reset')
+        if e.keysym == 'd': self.move_photo('right')
+        if e.keysym == 'a': self.move_photo('left')
+        if e.keysym == 'w': self.move_photo('up')  
+        if e.keysym == 's': self.move_photo('down')
+        if e.keysym == 'x': self.move_photo('reset')
 
-        if e.char == 'r': self.zoom_photo('in')
-        if e.char == 'f': self.zoom_photo('out')
-        if e.char == 'v': self.zoom_photo('reset')
+        if e.keysym == 'r': self.zoom_photo('in')
+        if e.keysym == 'f': self.zoom_photo('out')
+        if e.keysym == 'v': self.zoom_photo('reset')
 
-        if e.char == "c": self.debug()            # debug
+        #  if e.char == "c": self.debug()            # debug
+        if e.keysym == "c": self.debug()            # debug
 
     def move_photo(self, direction):
         #  print(f'muovo {direction}')
@@ -287,7 +288,7 @@ class PhotoViewerApp():
 
             # pack it
             #  print(f'Packing {folder}')
-            self.checkbtn_dir[folder].pack()
+            self.checkbtn_dir[folder].pack(fill='x')
 
         # destroy unused Checkbutton if you want
         #  for folder in self.checkbtn_dir:
