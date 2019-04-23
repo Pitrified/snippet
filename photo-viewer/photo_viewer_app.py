@@ -18,6 +18,7 @@ class PhotoViewerApp():
     def __init__(self, base_dir):
         self.setup_window()
         self.setup_dirs(base_dir)
+
         self.setup_layout()
 
         self.setup_options()
@@ -137,9 +138,11 @@ class PhotoViewerApp():
         if e.keysym == 'F8': self.save_selection()
 
         if e.keysym == 'e': self.change_photo('forward') 
-        if e.keysym == '2': self.change_photo('forward') 
+        if e.keysym == '3': self.change_photo('forward', 'secondary') 
+        if e.keysym == 'KP_Down': self.change_photo('forward')      # numpad 2
         if e.keysym == 'q': self.change_photo('backward')
-        if e.keysym == '1': self.change_photo('backward')
+        if e.keysym == '1': self.change_photo('backward', 'secondary')
+        if e.keysym == 'KP_End': self.change_photo('backward')      # numpad 1
 
         if e.keysym == 'd': self.move_photo('right')
         if e.keysym == 'a': self.move_photo('left')
@@ -163,11 +166,25 @@ class PhotoViewerApp():
         if self.layout_num in self.layout_is_double:
             self.photo_frame_bis.move_photo(direction)
 
-    def change_photo(self, direction):
-        #  print(f'cambio {direction}')
-        self.photo_frame.change_photo(direction)
-        if self.layout_num in self.layout_is_double:
+    def change_photo(self, direction, photo_frame_which='primary'):
+        print(f'cambio {direction} in {photo_frame_which}')
+
+        if photo_frame_which == 'primary':
+            #  if self.layout_num in self.layout_is_double:
+                # in a double layout, don't reset the zoom
+                #  self.photo_frame.change_photo(direction, reset_pos=False)
+            #  else:
+            self.photo_frame.change_photo(direction)
+
+        elif photo_frame_which == 'secondary' and self.layout_num in self.layout_is_double:
             self.photo_frame_bis.change_photo(direction)
+
+        # keep zoom and position in sync
+        self.photo_frame_bis.zoom_level = self.photo_frame.zoom_level
+        self.photo_frame_bis.mov_x = self.photo_frame.mov_x
+        self.photo_frame_bis.mov_y = self.photo_frame.mov_y
+        self.photo_frame_bis.load_photo()
+        self.photo_frame_bis.show_photo()
 
     def zoom_photo(self, direction):
         print(f'zooming {direction}')
