@@ -87,6 +87,14 @@ class PhotoViewerApp():
         self.width = 900
         self.height = 600
         self.root.geometry(f'{self.width}x{self.height}')
+        #  self.root.wm_iconbitmap('LogoPV.png')
+        #  self.root.wm_iconbitmap('LogoPV.ico')
+        #  self.root.wm_iconwindow('LogoPV.ico')
+        #  self.root.iconphoto(True, tk.PhotoImage(file='Logo.png') )
+        #  self.root.iconphoto(True, tk.PhotoImage(file='Logo.gif') )
+        #  icon_img = tk.PhotoImage(file='./LogoPV64.gif')
+        icon_img = tk.PhotoImage(file='./LogoPV64_2-2.gif')
+        self.root.iconphoto(True, icon_img)
 
     def setup_bind(self):
         #  self.root.bind('<Escape>', self.exit)
@@ -126,7 +134,7 @@ class PhotoViewerApp():
         if e.keysym == 'Escape': self.exit()
         if e.keysym == 'F11': self.toggle_fullscreen()
         if e.keysym == 'F5': self.cycle_layout()
-        if e.keysym == 'F1': self.save_selection()
+        if e.keysym == 'F8': self.save_selection()
 
         if e.keysym == 'e': self.change_photo('forward') 
         if e.keysym == '2': self.change_photo('forward') 
@@ -526,11 +534,11 @@ class PhotoViewerApp():
         self.root.update()
         #  self.root.after(0, self.finish_setup())
         self.finish_setup()
-        print('\nSTARTING MAINLOOP\n')
+        #  print('\nSTARTING MAINLOOP\n')
         self.root.mainloop()
 
     def finish_setup(self):
-        print('\nfihishing setup\n')
+        #  print('\nfinishing setup\n')
         self.photo_frame.calc_zoom_level()
         self.photo_frame.show_photo()
         if self.layout_num in self.layout_is_double:

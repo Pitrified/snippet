@@ -36,6 +36,7 @@ DONE
 
 ##### settings
 * how are settings visualized? the list of input photos, selected photos, saved?
+* thumbail to preview selected pictures
 * are settings saved? config file?
 
 ##### metadata
@@ -43,6 +44,7 @@ DONE
 * filter with them... is it useful?
 * what about sorting the list according to them? date modified, resolution
 * a Photo class might be easier to mantain
+* two columns for metadata side by side
 
 ##### personalized tag
 * mantain a file with a list of tag for each photo... absolute paths can change too easily, how do you track that?
