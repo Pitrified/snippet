@@ -460,6 +460,7 @@ class MapGenerator:
         # go around to_process, distance is 1+ min dist of neigh_cells
         #  self.depth = [-1] * (self.width * self.heigth)
         self.depth = ['e'] * (self.width * self.heigth)
+        cell_add_count = 0
         for comp in self.components_dict:
             #  print(f'doing comp {comp}')
             to_process = deque()
@@ -471,6 +472,7 @@ class MapGenerator:
                                                     # and is not in to_process already
                     if self.components[n] != comp and n not in to_process:
                         to_process.append(cell)     # the cell is on the border
+                        cell_add_count += 1
                         self.depth[cell] = 1
                         break
 
@@ -490,6 +492,7 @@ class MapGenerator:
                 for n in neigh_cells:
                     self.depth[n] = self.depth[proc] + 1
                     to_process.append(n)
+                    cell_add_count += 1
 
             # tutto sbagliato
             # iteri su quelli che hanno GIA' depth definita
@@ -508,6 +511,7 @@ class MapGenerator:
                 #  print(f'aggiorno depth di {cell} a {min(neigh_depth)+1}')
                 #  self.depth[proc] = min(neigh_depth) + 1
                 #  to_process.append(proc)
+        print(f'Added {cell_add_count}')
 
     def find_path(self, ce_start, ce_end):
         '''Use A* to find best path
