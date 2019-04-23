@@ -9,6 +9,7 @@ from os.path import isdir
 from os.path import join
 from os.path import splitext
 from os.path import basename # Returns the final component of a pathname
+from shutil import copy2
 #  import re
 
 from photo_frame import PhotoFrame
@@ -42,7 +43,7 @@ class PhotoViewerApp():
         self.last_input_folder = self.base_dir
 
         #  self.is_photo_reg = re.compile('.jpe?g|.png', re.IGNORECASE)
-        self.is_photo_ext = set( ('.jpg', '.jpeg', '.png') )
+        self.is_photo_ext = set( ('.jpg', '.jpeg', '.JPG', '.png', ) )
 
         #  self.photo_index = None
         self.populate_photo_list()
@@ -62,6 +63,9 @@ class PhotoViewerApp():
                 #  print(f'checking {photo}')
                 if self.is_photo(photo):
                     self.photo_list.append(photo)
+
+        # sort the list in place
+        self.photo_list.sort()
         #  print(f'Photo list {self.photo_list}')
 
     def is_photo(self, photo):
@@ -118,10 +122,11 @@ class PhotoViewerApp():
         self.photo_frame_bis.image_label.bind('<MouseWheel>', self.zoom_photo_mouse)
 
     def keyup(self, e):
-        print(f'key released {e}')
+        #  print(f'key released {e}')
         if e.keysym == 'Escape': self.exit()
         if e.keysym == 'F11': self.toggle_fullscreen()
         if e.keysym == 'F5': self.cycle_layout()
+        if e.keysym == 'F1': self.save_selection()
 
         if e.keysym == 'e': self.change_photo('forward') 
         if e.keysym == '2': self.change_photo('forward') 
@@ -138,6 +143,9 @@ class PhotoViewerApp():
         if e.keysym == 'f': self.zoom_photo('out')
         if e.keysym == 'v': self.zoom_photo('reset')
 
+        if e.keysym == 'k': self.add_to_selection('primary')
+        if e.keysym == 'l': self.add_to_selection('secondary')
+
         #  if e.char == "c": self.debug()            # debug
         if e.keysym == "c": self.debug()            # debug
 
@@ -148,7 +156,7 @@ class PhotoViewerApp():
             self.photo_frame_bis.move_photo(direction)
 
     def change_photo(self, direction):
-        print(f'cambio {direction}')
+        #  print(f'cambio {direction}')
         self.photo_frame.change_photo(direction)
         if self.layout_num in self.layout_is_double:
             self.photo_frame_bis.change_photo(direction)
@@ -227,11 +235,12 @@ class PhotoViewerApp():
                 textvariable=self.output_folder_var,
                 background=self.options_frame.cget('background'),
                 )
+        self.output_folder = 'Not set'
 
         # add input folders
         self.btn_add_folder = ttk.Button(self.input_frame, text='Add directory to list', command=self.add_folder)
-        self.checkbtn_dir = {}
-        self.checkbtn_state = {}
+        self.checkbtn_input_dirs = {}
+        self.checkbtn_input_state = {}
 
         # pack static options
         self.btn_set_output_folder.pack()
@@ -269,47 +278,47 @@ class PhotoViewerApp():
     def draw_input_folders(self):
         # remove all widgets from options_frame
         # this doesn't destroy them
-        for folder in self.checkbtn_dir:
-            self.checkbtn_dir[folder].pack_forget()
+        for folder in self.checkbtn_input_dirs:
+            self.checkbtn_input_dirs[folder].pack_forget()
 
         # repack them in order
         for folder in sorted(self.all_dirs):
             folder_name = basename(folder)
 
             # create the Checkbutton
-            if not folder in self.checkbtn_dir:
-                self.checkbtn_state[folder] = tk.IntVar(value=1)
-                self.checkbtn_dir[folder] = tk.Checkbutton(self.input_frame,
+            if not folder in self.checkbtn_input_dirs:
+                self.checkbtn_input_state[folder] = tk.IntVar(value=1)
+                self.checkbtn_input_dirs[folder] = tk.Checkbutton(self.input_frame,
                     text=folder_name,
                     command=self.toggle_input_folders,
                     background=self.options_frame.cget('background'),
-                    variable=self.checkbtn_state[folder],
+                    variable=self.checkbtn_input_state[folder],
                     )
 
             # pack it
             #  print(f'Packing {folder}')
-            self.checkbtn_dir[folder].pack(fill='x')
+            self.checkbtn_input_dirs[folder].pack(fill='x')
 
         # destroy unused Checkbutton if you want
-        #  for folder in self.checkbtn_dir:
+        #  for folder in self.checkbtn_input_dirs:
             #  if not folder in self.all_dirs:
-                #  self.checkbtn_dir[folder].destroy
+                #  self.checkbtn_input_dirs[folder].destroy
 
     def toggle_input_folders(self):
         #  print(f'Toggling something')
         # untoggling every folder is a bad idea
         self.active_dirs = []
 
-        for folder in self.checkbtn_dir:
-            #  print(f'Folder {folder} has value {self.checkbtn_state[folder].get()}')
-            if self.checkbtn_state[folder].get() == 1:
+        for folder in self.checkbtn_input_dirs:
+            #  print(f'Folder {folder} has value {self.checkbtn_input_state[folder].get()}')
+            if self.checkbtn_input_state[folder].get() == 1:
                 self.active_dirs.append(folder)
                 self.last_input_folder = folder
 
         # if no folder is toggled, reactivate the last toggled one
         if len(self.active_dirs) == 0:
             self.active_dirs = [self.last_input_folder]
-            self.checkbtn_state[self.last_input_folder].set(1)
+            self.checkbtn_input_state[self.last_input_folder].set(1)
             print(f'Retoggling {self.last_input_folder}')
 
         #  print(f'Active dirs {self.active_dirs}')
@@ -335,6 +344,53 @@ class PhotoViewerApp():
             makedirs(out_dir)
 
         self.output_folder_var.set(basename(out_dir))
+        self.output_folder = out_dir
+
+    def add_to_selection(self, photo_frame_which):
+        print()
+
+        # if the layout only shows the primary frame, add the pic from that
+        if photo_frame_which == 'secondary' and not self.layout_num in self.layout_is_double:
+            print(f'Adding from primary')
+            photo_frame_which = 'primary'
+        
+        if photo_frame_which == 'primary':
+            pic_name = self.photo_frame.photo_list[self.photo_frame.photo_index]
+        elif photo_frame_which == 'secondary':
+            pic_name = self.photo_frame_bis.photo_list[self.photo_frame_bis.photo_index]
+        else:
+            print(f'Unrecognized frame {photo_frame_which}')
+            return -1
+
+        if pic_name in self.selection_list:
+            self.selection_list.remove(pic_name)
+            print(f'{PhotoFrame.format_color(None, "De-selected", "tomato")} {basename(pic_name)}, selection_list is now {len(self.selection_list)} long')
+        else:
+            self.selection_list.append(pic_name)
+            print(f'{PhotoFrame.format_color(None, "Selected", "lawn green")} {basename(pic_name)}, selection_list is now {len(self.selection_list)} long')
+
+    def save_selection(self):
+        #  out_dir = self.output_folder_var.get()
+        out_dir = self.output_folder
+        print()
+
+        if out_dir == 'Not set':
+            print(f'{PhotoFrame.format_color(None, "Set", "indian red")} the output folder before saving the selection_list')
+            return -1
+
+        if len(self.selection_list) == 0:
+            print(f'{PhotoFrame.format_color(None, "Add", "indian red")} pictures to the selection_list before saving it')
+            return -1
+
+        out_dir_content = set(listdir(out_dir))
+
+        #  print(f'Saving {len(self.selection_list)} pics in {out_dir}')
+        print(f'{PhotoFrame.format_color(None, "Saving", "spring green")} {len(self.selection_list)} pics in folder: {out_dir}')
+        for pic in self.selection_list:
+            if basename(pic) in out_dir_content:
+                print(f'{basename(pic)} is already in out_dir, ignoring it')
+            else:
+                copy2(pic, out_dir)
 
     def cycle_layout(self):
         self.layout_num = (self.layout_num + 1) % self.layout_tot
