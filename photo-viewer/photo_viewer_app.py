@@ -140,6 +140,7 @@ class ThumbButton(tk.Frame):
         self.photo_text = tk.Label(self,
             text=basename(self.photo_info.photo),
             bg='wheat2',
+            activebackground='wheat1',
             )
 
         tkimg = ImageTk.PhotoImage(self.photo_info.thumb)
@@ -457,6 +458,7 @@ class PhotoViewerApp():
         self.photo_list_frame_header = tk.Label(self.photo_list_frame,
             text='Photo list:',
             bg='wheat3',
+            activebackground='red',
             )
 
         # pack photo_list_frame
@@ -531,8 +533,23 @@ class PhotoViewerApp():
                     self.photo_info[pic],
                     bg='powder blue',
                     )
+                self.thumbbtn_photo_list[pic].photo_text.bind('<Enter>',
+                    self.photo_list_highlight)
+                self.thumbbtn_photo_list[pic].photo_text.bind('<Leave>',
+                    self.photo_list_highlight)
 
             self.thumbbtn_photo_list[pic].pack(fill='x')
+
+    def photo_list_highlight(self, e):
+        #  print(f'Event type {e.type}')
+        #  print(f'Event widget {e.widget}')
+        if e.type == '7': # 'Enter'
+            e.widget.config(state=tk.ACTIVE)
+        elif e.type == '8': # 'Leave'
+            e.widget.config(state=tk.NORMAL)
+        else:
+            print(f'Unrecognized event {e}')
+
 
     def toggle_input_folders(self):
         #  print(f'Toggling something')
@@ -553,6 +570,7 @@ class PhotoViewerApp():
 
         #  print(f'Active dirs {self.active_dirs}')
         self.populate_photo_list()
+
         self.populate_info()
         self.draw_photo_list_frame()
 
