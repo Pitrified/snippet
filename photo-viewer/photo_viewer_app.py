@@ -430,11 +430,12 @@ class PhotoViewerApp():
 
         # set output folder, packed in output_frame
         self.btn_set_output_folder = tk.Button(self.output_frame, text='Set output folder', command=self.set_output_folder)
-        self.output_folder_var = tk.StringVar(self.btn_set_output_folder, value='Not set')
+        self.output_folder_var = tk.StringVar(self.btn_set_output_folder,
+            value='Not set')
         self.text_output_folder = tk.Label(self.output_frame,
-                textvariable=self.output_folder_var,
-                background=self.options_frame.cget('background'),
-                )
+            textvariable=self.output_folder_var,
+            background=self.options_frame.cget('background'),
+            )
         self.output_folder = 'Not set'
 
         # pack static options about output folder
@@ -552,6 +553,8 @@ class PhotoViewerApp():
 
         #  print(f'Active dirs {self.active_dirs}')
         self.populate_photo_list()
+        self.populate_info()
+        self.draw_photo_list_frame()
 
         self.photo_frame.change_photo_list(self.photo_list)
         self.photo_frame_bis.change_photo_list(self.photo_list)
