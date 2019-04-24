@@ -164,6 +164,55 @@ class PhotoFrame(tk.Frame):
 
         self.show_photo()
 
+    def click_photo_mouse(self, x, y):
+        self.old_mouse_x = x
+        self.old_mouse_y = y
+
+        #  print()
+        #  print(f'click_photo_{self.format_color("mouse", "dark turquoise")} x {x} y {y}')
+
+    def move_photo_mouse(self, mouse_x, mouse_y):
+        delta_x = self.old_mouse_x - mouse_x
+        delta_y = self.old_mouse_y - mouse_y
+
+        self.old_mouse_x = mouse_x
+        self.old_mouse_y = mouse_y
+
+        zoom = self.zoom_base ** self.zoom_level
+        zoom_wid = self.cur_wid * zoom
+        zoom_hei = self.cur_hei * zoom
+
+        widget_wid = self.winfo_width()
+        widget_hei = self.winfo_height()
+
+        #  print()
+        #  print(f'move_photo_{self.format_color("mouse", "dark turquoise")} dx {delta_x} dy {delta_y}')
+
+        self.mov_x += delta_x
+        self.mov_y += delta_y
+
+        if self.mov_x + widget_wid > zoom_wid:
+            self.mov_x = zoom_wid - widget_wid
+            #  print('\a', end='')
+            print(f'hit {self.format_color("right", "sandy brown")} border, mov_x = {self.mov_x}')
+
+        if self.mov_x < 0:
+            self.mov_x = 0
+            #  print('\a', end='')
+            print(f'hit {self.format_color("left", "sandy brown")} border, mov_x = {self.mov_x}')
+
+        if self.mov_y < 0:
+            self.mov_y = 0
+            #  print('\a', end='')
+            print(f'hit {self.format_color("top", "sandy brown")} border, mov_y = {self.mov_y}')
+
+        if self.mov_y + widget_hei > zoom_hei:
+            self.mov_y = zoom_hei - widget_hei
+            #  print('\a', end='')
+            print(f'hit {self.format_color("down", "sandy brown")} border, mov_y = {self.mov_y}')
+
+        self.show_photo()
+
     def zoom_photo(self, direction, rel_x=-1, rel_y=-1):
         '''change zoom level, recalculate mov_x mov_y so that a point stands still'''
 

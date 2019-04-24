@@ -130,6 +130,11 @@ class PhotoViewerApp():
         self.photo_frame_bis.image_label.bind('<5>', self.zoom_photo_mouse)
         self.photo_frame_bis.image_label.bind('<MouseWheel>', self.zoom_photo_mouse)
 
+        self.photo_frame.image_label.bind('<Button-1>', self.click_photo_mouse)
+        self.photo_frame_bis.image_label.bind('<Button-1>', self.click_photo_mouse)
+        self.photo_frame.image_label.bind('<B1-Motion>', self.move_photo_mouse)
+        self.photo_frame_bis.image_label.bind('<B1-Motion>', self.move_photo_mouse)
+
     def keyup(self, e):
         #  print(f'key released {e}')
         if e.keysym == 'Escape': self.exit()
@@ -166,8 +171,19 @@ class PhotoViewerApp():
         if self.layout_num in self.layout_is_double:
             self.photo_frame_bis.move_photo(direction)
 
+    def click_photo_mouse(self, e):
+        #  print(f'Clicked: {e}')
+        self.photo_frame.click_photo_mouse(e.x, e.y)
+
+    def move_photo_mouse(self, e):
+        #  print(f'Moved: {e}')
+        self.photo_frame.move_photo_mouse(e.x, e.y)
+
+        if self.layout_num in self.layout_is_double:
+            self.clone_frames(reset_index=False)
+
     def change_photo(self, direction, photo_frame_which='primary'):
-        print(f'cambio {direction} in {photo_frame_which}')
+        #  print(f'cambio {direction} in {photo_frame_which}')
 
         if photo_frame_which == 'primary':
             #  if self.layout_num in self.layout_is_double:
@@ -180,14 +196,15 @@ class PhotoViewerApp():
             self.photo_frame_bis.change_photo(direction)
 
         # keep zoom and position in sync
-        self.photo_frame_bis.zoom_level = self.photo_frame.zoom_level
-        self.photo_frame_bis.mov_x = self.photo_frame.mov_x
-        self.photo_frame_bis.mov_y = self.photo_frame.mov_y
-        self.photo_frame_bis.load_photo()
-        self.photo_frame_bis.show_photo()
+        self.clone_frames(reset_index=False)
+        #  self.photo_frame_bis.zoom_level = self.photo_frame.zoom_level
+        #  self.photo_frame_bis.mov_x = self.photo_frame.mov_x
+        #  self.photo_frame_bis.mov_y = self.photo_frame.mov_y
+        #  self.photo_frame_bis.load_photo()
+        #  self.photo_frame_bis.show_photo()
 
     def zoom_photo(self, direction):
-        print(f'zooming {direction}')
+        #  print(f'zooming {direction}')
         self.photo_frame.zoom_photo(direction)
         if self.layout_num in self.layout_is_double:
             self.photo_frame_bis.zoom_photo(direction)
@@ -222,11 +239,12 @@ class PhotoViewerApp():
         #  print(f'debugging')
         self.photo_frame.debug()
 
-    def clone_frames(self):
+    def clone_frames(self, reset_index=True):
         self.photo_frame_bis.zoom_level = self.photo_frame.zoom_level
-        self.photo_frame_bis.photo_index = self.photo_frame.photo_index
         self.photo_frame_bis.mov_x = self.photo_frame.mov_x
         self.photo_frame_bis.mov_y = self.photo_frame.mov_y
+        if reset_index:
+            self.photo_frame_bis.photo_index = self.photo_frame.photo_index
 
         self.photo_frame_bis.load_photo()
         self.photo_frame_bis.show_photo()
