@@ -14,6 +14,10 @@ from shutil import copy2
 
 from photo_frame import PhotoFrame
 
+class ThumbButton(tk.Frame):
+    def __init__(self, parent, **kwargs):
+        tk.Frame.__init__(self, parent, **kwargs)
+
 class PhotoViewerApp():
     def __init__(self, base_dir):
         self.setup_window()
@@ -148,6 +152,7 @@ class PhotoViewerApp():
         if e.keysym == 'q': self.change_photo('backward')
         if e.keysym == '1': self.change_photo('backward', 'secondary')
         if e.keysym == 'KP_End': self.change_photo('backward')      # numpad 1
+        if e.keysym == '2': self.change_photo('sync')
 
         if e.keysym == 'd': self.move_photo('right')
         if e.keysym == 'a': self.move_photo('left')
@@ -184,6 +189,10 @@ class PhotoViewerApp():
 
     def change_photo(self, direction, photo_frame_which='primary'):
         #  print(f'cambio {direction} in {photo_frame_which}')
+
+        if direction == 'sync':
+            self.clone_frames(reset_index=True)
+            return 1
 
         if photo_frame_which == 'primary':
             #  if self.layout_num in self.layout_is_double:
@@ -530,8 +539,8 @@ class PhotoViewerApp():
         #  self.metadata_frame.grid(row=0, column=1, sticky='nsew')
         #  self.metadata_frame.grid(row=0, column=1, sticky='ns')
         #  self.options_frame.grid_forget()
-        #  self.options_frame.grid(row=1, column=1, sticky='nsew')
-        self.options_frame.grid(row=0, column=1, sticky='ns')
+        self.options_frame.grid(row=0, column=1, sticky='nsew')
+        #  self.options_frame.grid(row=0, column=1, sticky='ns')
 
     def layout_imo(self):
         # tell the grid in root to grow with the window
@@ -548,8 +557,8 @@ class PhotoViewerApp():
         #  self.metadata_frame.grid(row=0, column=1, sticky='nsew')
         self.metadata_frame.grid(row=0, column=1, sticky='ns')
         #  self.options_frame.grid_forget()
-        #  self.options_frame.grid(row=1, column=1, sticky='nsew')
-        self.options_frame.grid(row=1, column=1, sticky='ns')
+        self.options_frame.grid(row=1, column=1, sticky='nsew')
+        #  self.options_frame.grid(row=1, column=1, sticky='ns')
 
     def layout_ii(self):
         # tell the grid in root to grow with the window
