@@ -2,6 +2,9 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 
+from PIL import ImageTk, Image
+import exifread
+
 from os import listdir
 from os import makedirs
 from os.path import isfile
@@ -14,9 +17,129 @@ from shutil import copy2
 
 from photo_frame import PhotoFrame
 
+class PhotoInfo:
+    def __init__(self, photo, thumb_size=50):
+        self.photo = photo
+        self.thumb_size = (thumb_size, thumb_size)
+
+        self.define_useful_tags()
+        self.get_metadata()
+
+        self.load_thumbnail()
+
+    def define_useful_tags(self):
+        '''Populate set of useful tags'''
+        self.useful_tags = set([
+            'JPEGThumbnail',
+            'TIFFThumbnail',
+            'Filename',
+            #  'EXIF MakerNote',
+            # 'Image Tag 0x000B',
+            # 'Image ImageDescription',
+            'Image Make',
+            'Image Model',
+            'Image Orientation',
+            # 'Image XResolution',
+            # 'Image YResolution',
+            # 'Image ResolutionUnit',
+            'Image Software',
+            'Image DateTime',
+            # 'Image YCbCrPositioning',
+            # 'Image ExifOffset',
+            # 'Image PrintIM',
+            # 'Image Padding',
+            'GPS GPSLatitudeRef',
+            'GPS GPSLatitude',
+            'GPS GPSLongitudeRef',
+            'GPS GPSLongitude',
+            # 'GPS GPSAltitudeRef',
+            # 'GPS GPSTimeStamp',
+            # 'GPS GPSSatellites',
+            # 'GPS GPSImgDirectionRef',
+            # 'GPS GPSMapDatum',
+            # 'GPS GPSDate',
+            # 'Image GPSInfo',
+            # 'Thumbnail Compression',
+            # 'Thumbnail XResolution',
+            # 'Thumbnail YResolution',
+            # 'Thumbnail ResolutionUnit',
+            # 'Thumbnail JPEGInterchangeFormat',
+            # 'Thumbnail JPEGInterchangeFormatLength',
+            'EXIF ExposureTime',
+            'EXIF FNumber',
+            'EXIF ExposureProgram',
+            'EXIF ISOSpeedRatings',
+            # 'EXIF ExifVersion',
+            'EXIF DateTimeOriginal',
+            'EXIF DateTimeDigitized',
+            # 'EXIF ComponentsConfiguration',
+            # 'EXIF CompressedBitsPerPixel',
+            # 'EXIF BrightnessValue',
+            'EXIF ExposureBiasValue',
+            # 'EXIF MaxApertureValue',
+            # 'EXIF MeteringMode',
+            # 'EXIF LightSource',
+            'EXIF Flash',
+            'EXIF FocalLength',
+            # 'EXIF UserComment',
+            # 'EXIF FlashPixVersion',
+            # 'EXIF ColorSpace',
+            'EXIF ExifImageWidth',
+            'EXIF ExifImageLength',
+            # 'Interoperability InteroperabilityVersion',
+            # 'EXIF InteroperabilityOffset',
+            # 'EXIF FileSource',
+            # 'EXIF SceneType',
+            # 'EXIF CustomRendered',
+            'EXIF ExposureMode',
+            'EXIF WhiteBalance',
+            'EXIF DigitalZoomRatio',
+            'EXIF FocalLengthIn35mmFilm',
+            ])
+
+    def get_metadata(self):
+        '''Load metadata for Photo, according to useful list'''
+        with open(self.photo, 'rb') as f:
+            tags = exifread.process_file(f)
+
+        #  print(f'type tags {type(tags)}')
+        #  print(f'for {self.photo} len tags {len(tags.keys())}')
+
+        for tag in tags.keys():
+            if tag not in ('JPEGThumbnail', 'TIFFThumbnail', 'Filename', 'EXIF MakerNote'):
+                print(f'Key: {tag}, value: {tags[tag]}')
+
+    def load_thumbnail(self):
+        '''resize the pic'''
+        #  img = Image.open(self.photo)
+        self.thumb = Image.open(self.photo)
+        self.thumb.thumbnail(self.thumb_size, Image.BICUBIC)
+        #  self.thumb.thumbnail(self.thumb_size, Image.LANCZOS)
+
 class ThumbButton(tk.Frame):
-    def __init__(self, parent, **kwargs):
+    def __init__(self, parent, photo_info, **kwargs):
         tk.Frame.__init__(self, parent, **kwargs)
+        self.photo_info = photo_info
+
+        # setup grid for this widget
+        #  self.grid_rowconfigure(0, weight=1, minsize=60)
+        self.grid_rowconfigure(0, weight=0)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+
+        # create child widgets
+        #  # background frame to fill the grid
+        #  self.top_frame = tk.Frame(self,bg='chartreuse3',width=200,height=50)
+        #  self.top_frame.grid(row=0, column=0, sticky="nsew")
+        self.thumb_label = tk.Label(self)
+        self.photo_text = tk.Label(self, text=basename(self.photo_info.photo))
+
+        tkimg = ImageTk.PhotoImage(self.photo_info.thumb)
+        self.thumb_label.image = tkimg
+        self.thumb_label.configure(image=tkimg)
+
+        self.thumb_label.grid(row=0, column=0)
+        self.photo_text.grid(row=0, column=1, sticky='ew')
 
 class PhotoViewerApp():
     def __init__(self, base_dir):
@@ -53,6 +176,10 @@ class PhotoViewerApp():
         #  self.photo_index = None
         self.populate_photo_list()
 
+        # update info
+        self.photo_info = {}
+        self.populate_info()
+
     def populate_photo_list(self):
         '''go through the directories and add the photos that are
         of supported formats'''
@@ -72,6 +199,13 @@ class PhotoViewerApp():
         # sort the list in place
         self.photo_list.sort()
         #  print(f'Photo list {self.photo_list}')
+
+    def populate_info(self):
+        for pic in self.photo_list:
+            if pic in self.photo_info:
+                continue
+
+            self.photo_info[pic] = PhotoInfo(pic)
 
     def is_photo(self, photo):
         '''photo is the FULL path to the pic'''
@@ -267,21 +401,26 @@ class PhotoViewerApp():
         self.options_frame.grid_rowconfigure(0, weight=0)
         self.options_frame.grid_rowconfigure(1, weight=0)
         self.options_frame.grid_rowconfigure(2, weight=1)
+        self.options_frame.grid_rowconfigure(3, weight=1)
         self.options_frame.grid_columnconfigure(0, weight=1)
 
-        # create children frames
+        # CREATE children frames
         # the height parameter is happily ignored, you might set grid_propagate in each frame
         self.output_frame = tk.Frame(self.options_frame, height=120, bg='turquoise')
         self.input_frame = tk.Frame(self.options_frame, height=200, bg='dark green')
-        self.selection_frame = tk.Frame(self.options_frame, height=200, bg='SkyBlue1')
+        #  self.selection_frame = tk.Frame(self.options_frame, height=200, bg='SkyBlue1')
+        #  self.photo_list_frame = tk.Frame(self.options_frame, height=200, bg='SkyBlue3')
+        self.selection_frame = tk.Frame(self.options_frame, bg='SkyBlue1')
+        self.photo_list_frame = tk.Frame(self.options_frame, bg='SkyBlue3')
 
-        # grid childrens
+        # GRID childrens
         self.output_frame.grid(row=0, column=0, sticky='ew')
         self.input_frame.grid(row=1, column=0, sticky='ew')
         self.selection_frame.grid(row=2, column=0, sticky='nsew')
+        self.photo_list_frame.grid(row=3, column=0, sticky='nsew')
 
-        # set output folder
-        self.btn_set_output_folder = ttk.Button(self.output_frame, text='Set output folder', command=self.set_output_folder)
+        # set output folder, packed in output_frame
+        self.btn_set_output_folder = tk.Button(self.output_frame, text='Set output folder', command=self.set_output_folder)
         self.output_folder_var = tk.StringVar(self.btn_set_output_folder, value='Not set')
         self.text_output_folder = tk.Label(self.output_frame,
                 textvariable=self.output_folder_var,
@@ -289,17 +428,22 @@ class PhotoViewerApp():
                 )
         self.output_folder = 'Not set'
 
+        # pack static options about output folder
+        self.btn_set_output_folder.pack()
+        self.text_output_folder.pack()
+
         # add input folders
-        self.btn_add_folder = ttk.Button(self.input_frame, text='Add directory to list', command=self.add_folder)
+        self.btn_add_folder = tk.Button(self.input_frame, text='Add directory to list', command=self.add_folder)
         self.checkbtn_input_dirs = {}
         self.checkbtn_input_state = {}
 
-        # pack static options
-        self.btn_set_output_folder.pack()
-        self.text_output_folder.pack()
+        # pack input folders
         self.btn_add_folder.pack()
-
         self.draw_input_folders()
+
+        # pack photo_list_frame
+        self.thumbbtn_photo_list = {}
+        self.draw_photo_list_frame()
 
     def add_folder(self, new_dir=''):
         #  new_dir = tkFileDialog.askdirectory()
@@ -355,6 +499,17 @@ class PhotoViewerApp():
         #  for folder in self.checkbtn_input_dirs:
             #  if not folder in self.all_dirs:
                 #  self.checkbtn_input_dirs[folder].destroy
+
+    def draw_photo_list_frame(self):
+        '''pack all acvite ThumbButton'''
+        for pic in self.thumbbtn_photo_list:
+            self.thumbbtn_photo_list[pic].pack_forget()
+
+        for pic in self.photo_list:
+            if not pic in self.thumbbtn_photo_list:
+                self.thumbbtn_photo_list[pic] = ThumbButton(self.photo_list_frame, self.photo_info[pic])
+
+            self.thumbbtn_photo_list[pic].pack(fill='x')
 
     def toggle_input_folders(self):
         #  print(f'Toggling something')

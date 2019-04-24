@@ -38,6 +38,7 @@ DONE
 
 #### UI
 * show list of input photos and enable jumping around, (double)clickable labels
+* visualizing thumbnails on a map
 
 ##### settings
 * how are settings visualized? the list of input photos, selected photos, saved?

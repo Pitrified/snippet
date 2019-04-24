@@ -61,7 +61,6 @@ class PhotoFrame(tk.Frame):
         self.cur_image = Image.open(self.current_photo)
         self.cur_wid, self.cur_hei = self.cur_image.size
 
-    #  def change_photo(self, direction, reset_pos=True):
     def change_photo(self, direction):
         #  print(f'change photo {self.format_color(direction, "blue1")}')
 
