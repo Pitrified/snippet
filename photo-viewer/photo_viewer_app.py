@@ -20,7 +20,8 @@ from photo_frame import PhotoFrame
 class PhotoInfo:
     def __init__(self, photo, thumb_size=50):
         self.photo = photo
-        self.thumb_size = (thumb_size, thumb_size)
+        #  self.thumb_size = (thumb_size, thumb_size)
+        self.thumb_size = thumb_size
 
         self.define_useful_tags()
         self.get_metadata()
@@ -113,7 +114,7 @@ class PhotoInfo:
         '''resize the pic'''
         #  img = Image.open(self.photo)
         self.thumb = Image.open(self.photo)
-        self.thumb.thumbnail(self.thumb_size, Image.BICUBIC)
+        self.thumb.thumbnail((self.thumb_size, self.thumb_size) , Image.BICUBIC)
         #  self.thumb.thumbnail(self.thumb_size, Image.LANCZOS)
 
 class ThumbButton(tk.Frame):
@@ -124,22 +125,30 @@ class ThumbButton(tk.Frame):
         # setup grid for this widget
         #  self.grid_rowconfigure(0, weight=1, minsize=60)
         self.grid_rowconfigure(0, weight=0)
-        self.grid_columnconfigure(0, weight=1)
+        #  self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
 
         # create child widgets
         #  # background frame to fill the grid
         #  self.top_frame = tk.Frame(self,bg='chartreuse3',width=200,height=50)
         #  self.top_frame.grid(row=0, column=0, sticky="nsew")
-        self.thumb_label = tk.Label(self)
-        self.photo_text = tk.Label(self, text=basename(self.photo_info.photo))
+        self.thumb_label = tk.Label(self,
+            width=self.photo_info.thumb_size,
+            bg='powder blue',
+            )
+        self.photo_text = tk.Label(self,
+            text=basename(self.photo_info.photo),
+            bg='wheat2',
+            )
 
         tkimg = ImageTk.PhotoImage(self.photo_info.thumb)
         self.thumb_label.image = tkimg
         self.thumb_label.configure(image=tkimg)
 
         self.thumb_label.grid(row=0, column=0)
-        self.photo_text.grid(row=0, column=1, sticky='ew')
+        #  self.photo_text.grid(row=0, column=1, sticky='ew')
+        self.photo_text.grid(row=0, column=1, sticky='nsew')
 
 class PhotoViewerApp():
     def __init__(self, base_dir):
@@ -433,7 +442,9 @@ class PhotoViewerApp():
         self.text_output_folder.pack()
 
         # add input folders
-        self.btn_add_folder = tk.Button(self.input_frame, text='Add directory to list', command=self.add_folder)
+        self.btn_add_folder = tk.Button(self.input_frame,
+            text='Add directory to list',
+            command=self.add_folder)
         self.checkbtn_input_dirs = {}
         self.checkbtn_input_state = {}
 
@@ -441,7 +452,14 @@ class PhotoViewerApp():
         self.btn_add_folder.pack()
         self.draw_input_folders()
 
+        # add photo_list_frame header
+        self.photo_list_frame_header = tk.Label(self.photo_list_frame,
+            text='Photo list:',
+            bg='wheat3',
+            )
+
         # pack photo_list_frame
+        self.photo_list_frame_header.pack(fill='x')
         self.thumbbtn_photo_list = {}
         self.draw_photo_list_frame()
 
@@ -507,7 +525,11 @@ class PhotoViewerApp():
 
         for pic in self.photo_list:
             if not pic in self.thumbbtn_photo_list:
-                self.thumbbtn_photo_list[pic] = ThumbButton(self.photo_list_frame, self.photo_info[pic])
+                self.thumbbtn_photo_list[pic] = ThumbButton(
+                    self.photo_list_frame,
+                    self.photo_info[pic],
+                    bg='powder blue',
+                    )
 
             self.thumbbtn_photo_list[pic].pack(fill='x')
 
