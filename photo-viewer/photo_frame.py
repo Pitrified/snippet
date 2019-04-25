@@ -80,6 +80,9 @@ class PhotoFrame(tk.Frame):
         self.mov_x = 0
         self.mov_y = 0
 
+        print(f'current index {self.photo_index} photo ', end='')
+        self.print_color(f'{basename(self.current_photo)}')
+
         self.show_photo()
 
     def calc_zoom_level(self):
@@ -315,9 +318,9 @@ class PhotoFrame(tk.Frame):
         self.show_photo()
 
     def show_photo(self):
-        print()
-        print(f'current index {self.photo_index} photo ', end='')
-        self.print_color(f'{basename(self.current_photo)}')
+        #  print()
+        #  print(f'current index {self.photo_index} photo ', end='')
+        #  self.print_color(f'{basename(self.current_photo)}')
         #  print(f'widget width {self.winfo_width()} height {self.winfo_height()}')
         #  print(f'current width {self.cur_wid} height {self.cur_hei}')
         #  print(f'widget reqwidth {self.winfo_reqwidth()} reqheight {self.winfo_reqheight()}')

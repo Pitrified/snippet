@@ -283,6 +283,16 @@ class PhotoViewerApp():
         self.photo_frame.image_label.bind('<B1-Motion>', self.move_photo_mouse)
         self.photo_frame_bis.image_label.bind('<B1-Motion>', self.move_photo_mouse)
 
+        self.photo_list_canvas.bind('<4>', self.on_photo_list_scroll)
+        self.photo_list_canvas.bind('<5>', self.on_photo_list_scroll)
+        self.photo_list_canvas.bind('<MouseWheel>', self.on_photo_list_scroll)
+        #  self.photo_list_frame.bind('<4>', self.on_photo_list_scroll, add='+')
+        #  self.photo_list_frame.bind('<5>', self.on_photo_list_scroll, add='+')
+        #  self.photo_list_frame.bind('<MouseWheel>', self.on_photo_list_scroll, add='+')
+        self.photo_list_frame.bind('<4>', self.on_photo_list_scroll)
+        self.photo_list_frame.bind('<5>', self.on_photo_list_scroll)
+        self.photo_list_frame.bind('<MouseWheel>', self.on_photo_list_scroll)
+
     def keyup(self, e):
         #  print(f'key released {e}')
         if e.keysym == 'Escape': self.exit()
@@ -382,6 +392,8 @@ class PhotoViewerApp():
             self.photo_frame.zoom_photo('out', e.x, e.y)
             if self.layout_num in self.layout_is_double:
                 self.photo_frame_bis.zoom_photo('out', e.x, e.y)
+        else:
+            print(f'Errors when zooming {e}')
 
     def photo_enter(self, e):
         print('\nENTERING')
@@ -403,7 +415,7 @@ class PhotoViewerApp():
         self.photo_frame_bis.show_photo()
 
     def setup_options(self):
-        # don't shrink when packing
+        # don't shrink when packing, this is shaky af
         self.options_frame.pack_propagate(False)
         self.options_frame.grid_propagate(False)
 
@@ -418,8 +430,6 @@ class PhotoViewerApp():
         # the height parameter is happily ignored, you might set grid_propagate in each frame
         self.output_frame = tk.Frame(self.options_frame, height=120, bg='turquoise')
         self.input_frame = tk.Frame(self.options_frame, height=200, bg='dark green')
-        #  self.selection_frame = tk.Frame(self.options_frame, height=200, bg='SkyBlue1')
-        #  self.photo_list_frame = tk.Frame(self.options_frame, height=200, bg='SkyBlue3')
         self.selection_frame = tk.Frame(self.options_frame, bg='SkyBlue1')
         self.photo_list_frame = tk.Frame(self.options_frame, bg='SkyBlue3')
 
@@ -429,8 +439,12 @@ class PhotoViewerApp():
         self.selection_frame.grid(row=2, column=0, sticky='nsew')
         self.photo_list_frame.grid(row=3, column=0, sticky='nsew')
 
+        ### SETUP OUTPUT FOLDERS ###
+
         # set output folder, packed in output_frame
-        self.btn_set_output_folder = tk.Button(self.output_frame, text='Set output folder', command=self.set_output_folder)
+        self.btn_set_output_folder = tk.Button(self.output_frame,
+            text='Set output folder',
+            command=self.set_output_folder)
         self.output_folder_var = tk.StringVar(self.btn_set_output_folder,
             value='Not set')
         self.text_output_folder = tk.Label(self.output_frame,
@@ -443,6 +457,8 @@ class PhotoViewerApp():
         self.btn_set_output_folder.pack()
         self.text_output_folder.pack()
 
+        ### SETUP INPUT FOLDERS ###
+
         # add input folders
         self.btn_add_folder = tk.Button(self.input_frame,
             text='Add directory to list',
@@ -454,17 +470,69 @@ class PhotoViewerApp():
         self.btn_add_folder.pack()
         self.draw_input_folders()
 
+        ### SETUP PHOTO_LIST_FRAME ###
+
         # add photo_list_frame header
         self.photo_list_frame_header = tk.Label(self.photo_list_frame,
             text='Photo list:',
             bg='wheat3',
-            activebackground='red',
+            )
+        # create scrollbar for canvas
+        self.photo_list_scrollbar = tk.Scrollbar(self.photo_list_frame)
+        # create the canvas and bind it to Scrollbar
+        self.photo_list_canvas = tk.Canvas(self.photo_list_frame,
+            bg='cornflower blue',
+            yscrollcommand=self.photo_list_scrollbar.set,
+            )
+        # bind Scrollbar to Canvas
+        self.photo_list_scrollbar.config(command=self.photo_list_canvas.yview)
+        # create the Frame to put inside the Canvas
+        # thanks to the wizard BO https://stackoverflow.com/a/3092341
+        self.photo_list_holder = tk.Frame(self.photo_list_canvas,
+            bg='red',
             )
 
         # pack photo_list_frame
-        self.photo_list_frame_header.pack(fill='x')
+        #  self.photo_list_frame_header.pack(fill='x')
+
+        # grid configure the photo_list_frame
+        self.photo_list_frame.rowconfigure(0, weight=0)
+        self.photo_list_frame.rowconfigure(1, weight=1)
+        self.photo_list_frame.columnconfigure(0, weight=1)
+        self.photo_list_frame.columnconfigure(1, weight=0)
+
+        # grid photo list pieces
+        self.photo_list_frame_header.grid(row=0, column=0, columnspan=2, sticky='nsew')
+        self.photo_list_canvas.grid(row=1, column=0, sticky='nsew')
+        self.photo_list_scrollbar.grid(row=1, column=1, sticky='ns')
+
+        # place the Frame on the Canvas
+        self.photo_list_canvas.create_window(
+            (0,0),
+            window=self.photo_list_holder,
+            anchor='nw',
+            tags='self.photo_list_holder',
+            )
+
+        # bind resizing of canvas scrollregion
+        self.photo_list_holder.bind('<Configure>', self.on_photo_list_holder_configure)
+
         self.thumbbtn_photo_list = {}
         self.draw_photo_list_frame()
+
+    def on_photo_list_holder_configure(self, e):
+        self.photo_list_canvas.configure(scrollregion=self.photo_list_canvas.bbox('all'))
+
+    def on_photo_list_scroll(self, e):
+        if e.num == 4 or e.delta == 120 or e.delta == 1:
+            number = -1
+        elif e.num == 5 or e.delta == -120 or e.delta == -1:
+            number = 1
+        else:
+            print(f'Errors when scrolling photo_list {e}')
+
+        #  print(f'Scrolling list {number} units, event {e} from {e.widget}')
+        self.photo_list_canvas.yview_scroll(number, 'units')
 
     def add_folder(self, new_dir=''):
         #  new_dir = tkFileDialog.askdirectory()
@@ -529,14 +597,32 @@ class PhotoViewerApp():
         for pic in self.photo_list:
             if not pic in self.thumbbtn_photo_list:
                 self.thumbbtn_photo_list[pic] = ThumbButton(
-                    self.photo_list_frame,
+                    #  self.photo_list_frame,
+                    #  self.photo_list_canvas,
+                    self.photo_list_holder,
                     self.photo_info[pic],
                     bg='powder blue',
+                    width=200,
                     )
+
                 self.thumbbtn_photo_list[pic].photo_text.bind('<Enter>',
                     self.photo_list_highlight)
                 self.thumbbtn_photo_list[pic].photo_text.bind('<Leave>',
                     self.photo_list_highlight)
+
+                self.thumbbtn_photo_list[pic].thumb_label.bind('<4>',
+                    self.on_photo_list_scroll)
+                self.thumbbtn_photo_list[pic].thumb_label.bind('<5>',
+                    self.on_photo_list_scroll)
+                self.thumbbtn_photo_list[pic].thumb_label.bind('<MouseWheel>',
+                    self.on_photo_list_scroll)
+
+                self.thumbbtn_photo_list[pic].photo_text.bind('<4>',
+                    self.on_photo_list_scroll)
+                self.thumbbtn_photo_list[pic].photo_text.bind('<5>',
+                    self.on_photo_list_scroll)
+                self.thumbbtn_photo_list[pic].photo_text.bind('<MouseWheel>',
+                    self.on_photo_list_scroll)
 
             self.thumbbtn_photo_list[pic].pack(fill='x')
 
