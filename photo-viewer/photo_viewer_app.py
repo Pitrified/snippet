@@ -192,8 +192,8 @@ class PhotoViewerApp():
 
         # update info
         self.photo_info = {}
-        #  self.populate_info()
-        self.populate_info_ray()
+        self.populate_info()
+        #  self.populate_info_ray()
 
     def populate_photo_list(self):
         '''go through the directories and add the photos that are
@@ -714,8 +714,8 @@ class PhotoViewerApp():
         #  print(f'Active dirs {self.active_dirs}')
         self.populate_photo_list()
 
-        #  self.populate_info()
-        self.populate_info_ray()
+        self.populate_info()
+        #  self.populate_info_ray()
         self.draw_photo_list_frame()
 
         self.photo_frame.change_photo_list(self.photo_list)

@@ -12,7 +12,7 @@ def main():
     path_main = dirname(abspath(__file__) )
     base_dir = join(path_main, base_dir_name) 
 
-    ray.init()
+    #  ray.init()
 
     app = PhotoViewerApp(base_dir)
     app.start()
