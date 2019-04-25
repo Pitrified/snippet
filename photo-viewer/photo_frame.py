@@ -85,6 +85,26 @@ class PhotoFrame(tk.Frame):
 
         self.show_photo()
 
+    def seek_photo(self, name):
+        if name in self.photo_list:
+            self.photo_index = self.photo_list.index(name)
+
+            self.load_photo()
+
+            #  if reset_pos:
+            # reset the zoom_level and the position
+            self.calc_zoom_level()
+            self.mov_x = 0
+            self.mov_y = 0
+
+            print(f'Found at index {self.photo_index} photo ', end='')
+            self.print_color(f'{basename(self.current_photo)}')
+
+            self.show_photo()
+        else:
+            print(f'Not found {name} in photo_list')
+
+
     def calc_zoom_level(self):
         widget_wid = self.winfo_width()
         widget_hei = self.winfo_height()
