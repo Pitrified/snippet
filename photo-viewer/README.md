@@ -16,6 +16,9 @@ DONE
 
 ### photo\_viewer\_app.py
 
+* create thumbnail in [parallel](www.toptal.com/python/beginners-guide-to-concurrency-and-parallelism-in-python) with ProcessPoolExecutor
+* or with Ray
+
 ##### Layout selection
 * layouts are boring and error prone, some nested grid might help, but you need intermediate frames
 

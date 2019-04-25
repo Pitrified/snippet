@@ -17,6 +17,8 @@ from math import ceil
 from math import floor
 #  import re
 
+import ray
+
 from photo_frame import PhotoFrame
 
 class PhotoInfo:
@@ -190,7 +192,8 @@ class PhotoViewerApp():
 
         # update info
         self.photo_info = {}
-        self.populate_info()
+        #  self.populate_info()
+        self.populate_info_ray()
 
     def populate_photo_list(self):
         '''go through the directories and add the photos that are
@@ -241,6 +244,27 @@ class PhotoViewerApp():
             #  print(progress)
             print(f'\b\b\b\b{progress: 3d}%', end='', flush=True)
         print('\b\b\b\bDone')
+
+    def populate_info_ray(self):
+        # www.toptal.com/python/beginners-guide-to-concurrency-and-parallelism-in-python
+        # https://towardsdatascience.com/modern-parallel-and-distributed-python-a-quick-tutorial-on-ray-99f8d70369b8
+
+        new_pics_pair_ray = []
+        for pic in self.photo_list:
+            if pic in self.photo_info:
+                continue
+
+            #  self.photo_info[pic] = self.new_photo_info.remote(pic)
+            new_pics_pair_ray.append(self.new_photo_info.remote(pic))
+
+        new_pics_pair = ray.get(new_pics_pair_ray)
+
+        for which_pic, info in new_pics_pair:
+            self.photo_info[which_pic] = info
+
+    @ray.remote
+    def new_photo_info(pic):
+        return (pic, PhotoInfo(pic))
 
     def is_photo(self, photo):
         '''photo is the FULL path to the pic'''
@@ -690,7 +714,8 @@ class PhotoViewerApp():
         #  print(f'Active dirs {self.active_dirs}')
         self.populate_photo_list()
 
-        self.populate_info()
+        #  self.populate_info()
+        self.populate_info_ray()
         self.draw_photo_list_frame()
 
         self.photo_frame.change_photo_list(self.photo_list)
