@@ -13,6 +13,8 @@ from os.path import join
 from os.path import splitext
 from os.path import basename # Returns the final component of a pathname
 from shutil import copy2
+from math import ceil
+from math import floor
 #  import re
 
 from photo_frame import PhotoFrame
@@ -106,9 +108,9 @@ class PhotoInfo:
         #  print(f'type tags {type(tags)}')
         #  print(f'for {self.photo} len tags {len(tags.keys())}')
 
-        for tag in tags.keys():
-            if tag not in ('JPEGThumbnail', 'TIFFThumbnail', 'Filename', 'EXIF MakerNote'):
-                print(f'Key: {tag}, value: {tags[tag]}')
+        #  for tag in tags.keys():
+            #  if tag not in ('JPEGThumbnail', 'TIFFThumbnail', 'Filename', 'EXIF MakerNote'):
+                #  print(f'Key: {tag}, value: {tags[tag]}')
 
     def load_thumbnail(self):
         '''resize the pic'''
@@ -211,11 +213,34 @@ class PhotoViewerApp():
         #  print(f'Photo list {self.photo_list}')
 
     def populate_info(self):
+        new_pics = 0
+        for pic in self.photo_list:
+            if not pic in self.photo_info:
+                new_pics += 1
+
+        if new_pics == 0:
+            return 1
+
+        bar_width = 80
+
+        # 100/80 = 1,... -> 2   avanzo di 50 volte ogni 2
+        # 10/80 = 0,... -> 1    avanzo di 10 volte ogni 1
+        step = ceil(new_pics / bar_width)
+
+        print('Loading thumbnails:   0%', end='', flush=True)
+        pic_count = 0
         for pic in self.photo_list:
             if pic in self.photo_info:
                 continue
 
             self.photo_info[pic] = PhotoInfo(pic)
+
+            pic_count += 1
+            #  if pic_count % step == 0: print('.', end='', flush=True)
+            progress = floor(pic_count / new_pics * 100)
+            #  print(progress)
+            print(f'\b\b\b\b{progress: 3d}%', end='', flush=True)
+        print('\b\b\b\bDone')
 
     def is_photo(self, photo):
         '''photo is the FULL path to the pic'''
@@ -634,7 +659,6 @@ class PhotoViewerApp():
         #  print(f'Parent {e.widget.master}')
         #  print(f'PhotoInfo.photo {e.widget.master.photo_info.photo}')
         self.photo_frame.seek_photo(e.widget.master.photo_info.photo)
-
 
     def photo_list_highlight(self, e):
         #  print(f'Event type {e.type}')

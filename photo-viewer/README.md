@@ -37,6 +37,10 @@ DONE
 * create (and backup existing) default output folder, no backup is needed, if the files exist they are not copied
 
 #### UI
+* all the `if layout is double` should just call `clone_frames` and do no redundant calculations
+
+DONE
+
 * show list of input photos and enable jumping around, (double)clickable labels
 * visualizing thumbnails on a map
 
