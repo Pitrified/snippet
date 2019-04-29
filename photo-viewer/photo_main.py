@@ -3,7 +3,7 @@ from os.path import abspath
 from os.path import dirname
 from os.path import join
 
-import ray
+#  import ray
 
 from photo_viewer_app import PhotoViewerApp
 

@@ -104,7 +104,6 @@ class PhotoFrame(tk.Frame):
         else:
             print(f'Not found {name} in photo_list')
 
-
     def calc_zoom_level(self):
         widget_wid = self.winfo_width()
         widget_hei = self.winfo_height()

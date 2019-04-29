@@ -16,6 +16,7 @@ from shutil import copy2
 from math import ceil
 from math import floor
 #  import re
+from queue import Queue
 
 import ray
 
@@ -35,72 +36,72 @@ class PhotoInfo:
     def define_useful_tags(self):
         '''Populate set of useful tags'''
         self.useful_tags = set([
-            'JPEGThumbnail',
-            'TIFFThumbnail',
-            'Filename',
-            #  'EXIF MakerNote',
-            # 'Image Tag 0x000B',
-            # 'Image ImageDescription',
-            'Image Make',
-            'Image Model',
-            'Image Orientation',
-            # 'Image XResolution',
-            # 'Image YResolution',
-            # 'Image ResolutionUnit',
-            'Image Software',
-            'Image DateTime',
-            # 'Image YCbCrPositioning',
-            # 'Image ExifOffset',
-            # 'Image PrintIM',
-            # 'Image Padding',
-            'GPS GPSLatitudeRef',
-            'GPS GPSLatitude',
-            'GPS GPSLongitudeRef',
-            'GPS GPSLongitude',
-            # 'GPS GPSAltitudeRef',
-            # 'GPS GPSTimeStamp',
-            # 'GPS GPSSatellites',
-            # 'GPS GPSImgDirectionRef',
-            # 'GPS GPSMapDatum',
-            # 'GPS GPSDate',
-            # 'Image GPSInfo',
-            # 'Thumbnail Compression',
-            # 'Thumbnail XResolution',
-            # 'Thumbnail YResolution',
-            # 'Thumbnail ResolutionUnit',
-            # 'Thumbnail JPEGInterchangeFormat',
-            # 'Thumbnail JPEGInterchangeFormatLength',
-            'EXIF ExposureTime',
-            'EXIF FNumber',
-            'EXIF ExposureProgram',
-            'EXIF ISOSpeedRatings',
-            # 'EXIF ExifVersion',
-            'EXIF DateTimeOriginal',
-            'EXIF DateTimeDigitized',
-            # 'EXIF ComponentsConfiguration',
-            # 'EXIF CompressedBitsPerPixel',
-            # 'EXIF BrightnessValue',
-            'EXIF ExposureBiasValue',
-            # 'EXIF MaxApertureValue',
-            # 'EXIF MeteringMode',
-            # 'EXIF LightSource',
-            'EXIF Flash',
-            'EXIF FocalLength',
-            # 'EXIF UserComment',
-            # 'EXIF FlashPixVersion',
-            # 'EXIF ColorSpace',
-            'EXIF ExifImageWidth',
-            'EXIF ExifImageLength',
-            # 'Interoperability InteroperabilityVersion',
-            # 'EXIF InteroperabilityOffset',
-            # 'EXIF FileSource',
-            # 'EXIF SceneType',
-            # 'EXIF CustomRendered',
-            'EXIF ExposureMode',
-            'EXIF WhiteBalance',
-            'EXIF DigitalZoomRatio',
-            'EXIF FocalLengthIn35mmFilm',
-            ])
+                'JPEGThumbnail',
+                'TIFFThumbnail',
+                'Filename',
+                #  'EXIF MakerNote',
+                # 'Image Tag 0x000B',
+                # 'Image ImageDescription',
+                'Image Make',
+                'Image Model',
+                'Image Orientation',
+                # 'Image XResolution',
+                # 'Image YResolution',
+                # 'Image ResolutionUnit',
+                'Image Software',
+                'Image DateTime',
+                # 'Image YCbCrPositioning',
+                # 'Image ExifOffset',
+                # 'Image PrintIM',
+                # 'Image Padding',
+                'GPS GPSLatitudeRef',
+                'GPS GPSLatitude',
+                'GPS GPSLongitudeRef',
+                'GPS GPSLongitude',
+                # 'GPS GPSAltitudeRef',
+                # 'GPS GPSTimeStamp',
+                # 'GPS GPSSatellites',
+                # 'GPS GPSImgDirectionRef',
+                # 'GPS GPSMapDatum',
+                # 'GPS GPSDate',
+                # 'Image GPSInfo',
+                # 'Thumbnail Compression',
+                # 'Thumbnail XResolution',
+                # 'Thumbnail YResolution',
+                # 'Thumbnail ResolutionUnit',
+                # 'Thumbnail JPEGInterchangeFormat',
+                # 'Thumbnail JPEGInterchangeFormatLength',
+                'EXIF ExposureTime',
+                'EXIF FNumber',
+                'EXIF ExposureProgram',
+                'EXIF ISOSpeedRatings',
+                # 'EXIF ExifVersion',
+                'EXIF DateTimeOriginal',
+                'EXIF DateTimeDigitized',
+                # 'EXIF ComponentsConfiguration',
+                # 'EXIF CompressedBitsPerPixel',
+                # 'EXIF BrightnessValue',
+                'EXIF ExposureBiasValue',
+                # 'EXIF MaxApertureValue',
+                # 'EXIF MeteringMode',
+                # 'EXIF LightSource',
+                'EXIF Flash',
+                'EXIF FocalLength',
+                # 'EXIF UserComment',
+                # 'EXIF FlashPixVersion',
+                # 'EXIF ColorSpace',
+                'EXIF ExifImageWidth',
+                'EXIF ExifImageLength',
+                # 'Interoperability InteroperabilityVersion',
+                # 'EXIF InteroperabilityOffset',
+                # 'EXIF FileSource',
+                # 'EXIF SceneType',
+                # 'EXIF CustomRendered',
+                'EXIF ExposureMode',
+                'EXIF WhiteBalance',
+                'EXIF DigitalZoomRatio',
+                'EXIF FocalLengthIn35mmFilm',
+                ])
 
     def get_metadata(self):
         '''Load metadata for Photo, according to useful list'''
@@ -122,38 +123,48 @@ class PhotoInfo:
         #  self.thumb.thumbnail(self.thumb_size, Image.LANCZOS)
 
 class ThumbButton(tk.Frame):
-    def __init__(self, parent, photo_info, **kwargs):
-        tk.Frame.__init__(self, parent, **kwargs)
+    def __init__(self, parent, photo_info, thumb_btn_width, **kwargs):
+        tk.Frame.__init__(self, parent, width=thumb_btn_width, **kwargs)
         self.photo_info = photo_info
+        self.thumb_btn_width = thumb_btn_width
 
         # setup grid for this widget
         #  self.grid_rowconfigure(0, weight=1, minsize=60)
-        self.grid_rowconfigure(0, weight=0)
+        #  self.grid_rowconfigure(0, weight=0)
+        self.grid_rowconfigure(0, weight=1)
+
         #  self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=0)
-        self.grid_columnconfigure(1, weight=1)
+        #  self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(1, weight=0)
 
         # create child widgets
         #  # background frame to fill the grid
         #  self.top_frame = tk.Frame(self,bg='chartreuse3',width=200,height=50)
         #  self.top_frame.grid(row=0, column=0, sticky="nsew")
         self.thumb_label = tk.Label(self,
-            width=self.photo_info.thumb_size,
-            bg='powder blue',
-            )
+                width=self.photo_info.thumb_size,
+                bg='powder blue',
+                )
         self.photo_text = tk.Label(self,
-            text=basename(self.photo_info.photo),
-            bg='wheat2',
-            activebackground='wheat1',
-            )
-
+                text=basename(self.photo_info.photo),
+                bg='wheat2',
+                activebackground='wheat1',
+                #  justify=tk.LEFT,
+                #  width=self.thumb_btn_width-self.photo_info.thumb_size,
+                #  width=200,
+                #  relief=tk.RAISED,
+                )
+        #  print(f'what {self.thumb_btn_width-self.photo_info.thumb_size}')
         tkimg = ImageTk.PhotoImage(self.photo_info.thumb)
         self.thumb_label.image = tkimg
         self.thumb_label.configure(image=tkimg)
 
         self.thumb_label.grid(row=0, column=0)
+        #  self.photo_text.grid(row=0, column=1)
         #  self.photo_text.grid(row=0, column=1, sticky='ew')
-        self.photo_text.grid(row=0, column=1, sticky='nsew')
+        self.photo_text.grid(row=0, column=1, sticky='ns')
+        #  self.photo_text.grid(row=0, column=1, sticky='nsew')
 
 class PhotoViewerApp():
     def __init__(self, base_dir):
@@ -245,26 +256,26 @@ class PhotoViewerApp():
             print(f'\b\b\b\b{progress: 3d}%', end='', flush=True)
         print('\b\b\b\bDone')
 
-    def populate_info_ray(self):
-        # www.toptal.com/python/beginners-guide-to-concurrency-and-parallelism-in-python
-        # https://towardsdatascience.com/modern-parallel-and-distributed-python-a-quick-tutorial-on-ray-99f8d70369b8
+    #  def populate_info_ray(self):
+        #  # www.toptal.com/python/beginners-guide-to-concurrency-and-parallelism-in-python
+        #  # https://towardsdatascience.com/modern-parallel-and-distributed-python-a-quick-tutorial-on-ray-99f8d70369b8
 
-        new_pics_pair_ray = []
-        for pic in self.photo_list:
-            if pic in self.photo_info:
-                continue
+        #  new_pics_pair_ray = []
+        #  for pic in self.photo_list:
+            #  if pic in self.photo_info:
+                #  continue
 
-            #  self.photo_info[pic] = self.new_photo_info.remote(pic)
-            new_pics_pair_ray.append(self.new_photo_info.remote(pic))
+            #  #  self.photo_info[pic] = self.new_photo_info.remote(pic)
+            #  new_pics_pair_ray.append(self.new_photo_info.remote(pic))
 
-        new_pics_pair = ray.get(new_pics_pair_ray)
+        #  new_pics_pair = ray.get(new_pics_pair_ray)
 
-        for which_pic, info in new_pics_pair:
-            self.photo_info[which_pic] = info
+        #  for which_pic, info in new_pics_pair:
+            #  self.photo_info[which_pic] = info
 
-    @ray.remote
-    def new_photo_info(pic):
-        return (pic, PhotoInfo(pic))
+    #  def new_photo_info(pic):
+        #  @ray.remote
+        #  return (pic, PhotoInfo(pic))
 
     def is_photo(self, photo):
         '''photo is the FULL path to the pic'''
@@ -449,10 +460,6 @@ class PhotoViewerApp():
         print(e)
         print(e.widget)
 
-    def debug(self):
-        #  print(f'debugging')
-        self.photo_frame.debug()
-
     def clone_frames(self, reset_index=True):
         self.photo_frame_bis.zoom_level = self.photo_frame.zoom_level
         self.photo_frame_bis.mov_x = self.photo_frame.mov_x
@@ -465,8 +472,8 @@ class PhotoViewerApp():
 
     def setup_options(self):
         # don't shrink when packing, this is shaky af
-        self.options_frame.pack_propagate(False)
-        self.options_frame.grid_propagate(False)
+        #  self.options_frame.pack_propagate(False)
+        #  self.options_frame.grid_propagate(False)
 
         # setup grid for options_frame
         self.options_frame.grid_rowconfigure(0, weight=0)
@@ -474,13 +481,24 @@ class PhotoViewerApp():
         self.options_frame.grid_rowconfigure(2, weight=1)
         self.options_frame.grid_rowconfigure(3, weight=1)
         self.options_frame.grid_columnconfigure(0, weight=1)
+        #  self.options_frame.grid_columnconfigure(0, weight=0)
 
         # CREATE children frames
         # the height parameter is happily ignored, you might set grid_propagate in each frame
-        self.output_frame = tk.Frame(self.options_frame, height=120, bg='turquoise')
-        self.input_frame = tk.Frame(self.options_frame, height=200, bg='dark green')
-        self.selection_frame = tk.Frame(self.options_frame, bg='SkyBlue1')
-        self.photo_list_frame = tk.Frame(self.options_frame, bg='SkyBlue3')
+        self.output_frame = tk.Frame(self.options_frame,
+                width=self.sidebar_width,
+                height=120,
+                bg='turquoise')
+        self.input_frame = tk.Frame(self.options_frame,
+                width=self.sidebar_width,
+                height=200,
+                bg='dark green')
+        self.selection_frame = tk.Frame(self.options_frame,
+                width=self.sidebar_width,
+                bg='SkyBlue1')
+        self.photo_list_frame = tk.Frame(self.options_frame,
+                width=self.sidebar_width,
+                bg='SkyBlue3')
 
         # GRID childrens
         self.output_frame.grid(row=0, column=0, sticky='ew')
@@ -488,58 +506,78 @@ class PhotoViewerApp():
         self.selection_frame.grid(row=2, column=0, sticky='nsew')
         self.photo_list_frame.grid(row=3, column=0, sticky='nsew')
 
+        # tell children to GROW width
+        # and most importantly center their children
+        # https://stackoverflow.com/a/33047033
+        self.output_frame.grid_columnconfigure(0, weight=1)
+        self.input_frame.grid_columnconfigure(0, weight=1)
+        self.selection_frame.grid_columnconfigure(0, weight=1)
+        self.photo_list_frame.grid_columnconfigure(0, weight=1)
+
         ### SETUP OUTPUT FOLDERS ###
 
         # set output folder, packed in output_frame
         self.btn_set_output_folder = tk.Button(self.output_frame,
-            text='Set output folder',
-            command=self.set_output_folder)
+                text='Set output folder',
+                command=self.set_output_folder)
         self.output_folder_var = tk.StringVar(self.btn_set_output_folder,
-            value='Not set')
+                value='Not set')
         self.text_output_folder = tk.Label(self.output_frame,
-            textvariable=self.output_folder_var,
-            background=self.options_frame.cget('background'),
-            )
+                textvariable=self.output_folder_var,
+                background=self.options_frame.cget('background'),
+                )
         self.output_folder = 'Not set'
 
         # pack static options about output folder
-        self.btn_set_output_folder.pack()
-        self.text_output_folder.pack()
+        #  self.btn_set_output_folder.pack()
+        #  self.text_output_folder.pack()
+        #  self.btn_set_output_folder.grid(row=0, column=0, sticky='ew')
+        self.btn_set_output_folder.grid(row=0, column=0)
+        self.text_output_folder.grid(row=1, column=0, sticky='ew')
 
         ### SETUP INPUT FOLDERS ###
 
         # add input folders
         self.btn_add_folder = tk.Button(self.input_frame,
-            text='Add directory to list',
-            command=self.add_folder)
+                text='Add directory to list',
+                command=self.add_folder)
         self.checkbtn_input_dirs = {}
         self.checkbtn_input_state = {}
 
         # pack input folders
-        self.btn_add_folder.pack()
+        #  self.btn_add_folder.pack()
+        #  self.btn_add_folder.grid(row=0, column=0, sticky='ew')
+        self.btn_add_folder.grid(row=0, column=0)
         self.draw_input_folders()
 
+
+        ##############################
         ### SETUP PHOTO_LIST_FRAME ###
+        ##############################
 
         # add photo_list_frame header
         self.photo_list_frame_header = tk.Label(self.photo_list_frame,
-            text='Photo list:',
-            bg='wheat3',
-            )
+                text='Photo list:',
+                bg='wheat3',
+                #  width=self.sidebar_width,
+                )
         # create scrollbar for canvas
         self.photo_list_scrollbar = tk.Scrollbar(self.photo_list_frame)
         # create the canvas and bind it to Scrollbar
         self.photo_list_canvas = tk.Canvas(self.photo_list_frame,
-            bg='cornflower blue',
-            yscrollcommand=self.photo_list_scrollbar.set,
-            )
+                bg='cornflower blue',
+                yscrollcommand=self.photo_list_scrollbar.set,
+                width=self.sidebar_width-13,
+                highlightthickness=0,
+                )
         # bind Scrollbar to Canvas
         self.photo_list_scrollbar.config(command=self.photo_list_canvas.yview)
         # create the Frame to put inside the Canvas
         # thanks to the wizard BO https://stackoverflow.com/a/3092341
         self.photo_list_holder = tk.Frame(self.photo_list_canvas,
-            bg='red',
-            )
+                bg='red',
+                width=self.sidebar_width,
+                )
 
         # pack photo_list_frame
         #  self.photo_list_frame_header.pack(fill='x')
@@ -547,7 +585,9 @@ class PhotoViewerApp():
         # grid configure the photo_list_frame
         self.photo_list_frame.rowconfigure(0, weight=0)
         self.photo_list_frame.rowconfigure(1, weight=1)
-        self.photo_list_frame.columnconfigure(0, weight=1)
+        #  self.photo_list_frame.rowconfigure(1, weight=0)
+        #  self.photo_list_frame.columnconfigure(0, weight=1)
+        self.photo_list_frame.columnconfigure(0, weight=0)
         self.photo_list_frame.columnconfigure(1, weight=0)
 
         # grid photo list pieces
@@ -557,11 +597,11 @@ class PhotoViewerApp():
 
         # place the Frame on the Canvas
         self.photo_list_canvas.create_window(
-            (0,0),
-            window=self.photo_list_holder,
-            anchor='nw',
-            tags='self.photo_list_holder',
-            )
+                (0,0),
+                window=self.photo_list_holder,
+                anchor='nw',
+                tags='self.photo_list_holder',
+                )
 
         # bind resizing of canvas scrollregion
         self.photo_list_holder.bind('<Configure>', self.on_photo_list_holder_configure)
@@ -613,9 +653,12 @@ class PhotoViewerApp():
         # remove all widgets from options_frame
         # this doesn't destroy them
         for folder in self.checkbtn_input_dirs:
-            self.checkbtn_input_dirs[folder].pack_forget()
+            #  self.checkbtn_input_dirs[folder].pack_forget()
+            self.checkbtn_input_dirs[folder].grid_forget()
 
         # repack them in order
+        # first row (0) is the button
+        ri = 1
         for folder in sorted(self.all_dirs):
             folder_name = basename(folder)
 
@@ -623,15 +666,17 @@ class PhotoViewerApp():
             if not folder in self.checkbtn_input_dirs:
                 self.checkbtn_input_state[folder] = tk.IntVar(value=1)
                 self.checkbtn_input_dirs[folder] = tk.Checkbutton(self.input_frame,
-                    text=folder_name,
-                    command=self.toggle_input_folders,
-                    background=self.options_frame.cget('background'),
-                    variable=self.checkbtn_input_state[folder],
-                    )
+                        text=folder_name,
+                        command=self.toggle_input_folders,
+                        background=self.options_frame.cget('background'),
+                        variable=self.checkbtn_input_state[folder],
+                        )
 
             # pack it
             #  print(f'Packing {folder}')
-            self.checkbtn_input_dirs[folder].pack(fill='x')
+            #  self.checkbtn_input_dirs[folder].pack(fill='x')
+            self.checkbtn_input_dirs[folder].grid(row=ri, column=0, sticky='ew')
+            ri += 1
 
         # destroy unused Checkbutton if you want
         #  for folder in self.checkbtn_input_dirs:
@@ -641,42 +686,47 @@ class PhotoViewerApp():
     def draw_photo_list_frame(self):
         '''pack all acvite ThumbButton'''
         for pic in self.thumbbtn_photo_list:
-            self.thumbbtn_photo_list[pic].pack_forget()
+            #  self.thumbbtn_photo_list[pic].pack_forget()
+            self.thumbbtn_photo_list[pic].grid_forget()
 
+        # they start at the first row
+        ri = 0
         for pic in self.photo_list:
             if not pic in self.thumbbtn_photo_list:
                 self.thumbbtn_photo_list[pic] = ThumbButton(
-                    #  self.photo_list_frame,
-                    #  self.photo_list_canvas,
-                    self.photo_list_holder,
-                    self.photo_info[pic],
-                    bg='powder blue',
-                    width=200,
-                    )
+                        #  self.photo_list_frame,
+                        #  self.photo_list_canvas,
+                        self.photo_list_holder,
+                        self.photo_info[pic],
+                        bg='powder blue',
+                        thumb_btn_width=self.sidebar_width,
+                        )
 
                 self.thumbbtn_photo_list[pic].photo_text.bind('<Enter>',
-                    self.photo_list_highlight)
+                        self.photo_list_highlight)
                 self.thumbbtn_photo_list[pic].photo_text.bind('<Leave>',
-                    self.photo_list_highlight)
+                        self.photo_list_highlight)
 
                 self.thumbbtn_photo_list[pic].thumb_label.bind('<4>',
-                    self.on_photo_list_scroll)
+                        self.on_photo_list_scroll)
                 self.thumbbtn_photo_list[pic].thumb_label.bind('<5>',
-                    self.on_photo_list_scroll)
+                        self.on_photo_list_scroll)
                 self.thumbbtn_photo_list[pic].thumb_label.bind('<MouseWheel>',
-                    self.on_photo_list_scroll)
+                        self.on_photo_list_scroll)
 
                 self.thumbbtn_photo_list[pic].photo_text.bind('<4>',
-                    self.on_photo_list_scroll)
+                        self.on_photo_list_scroll)
                 self.thumbbtn_photo_list[pic].photo_text.bind('<5>',
-                    self.on_photo_list_scroll)
+                        self.on_photo_list_scroll)
                 self.thumbbtn_photo_list[pic].photo_text.bind('<MouseWheel>',
-                    self.on_photo_list_scroll)
+                        self.on_photo_list_scroll)
 
                 self.thumbbtn_photo_list[pic].photo_text.bind('<Double-Button-1>',
-                    self.on_photo_list_doubleclick)
+                        self.on_photo_list_doubleclick)
 
-            self.thumbbtn_photo_list[pic].pack(fill='x')
+            #  self.thumbbtn_photo_list[pic].pack(fill='x')
+            self.thumbbtn_photo_list[pic].grid(row=ri, column=0, sticky='ew')
+            ri += 1
 
     def on_photo_list_doubleclick(self, e):
         #  print(f'Doubleclick on {e.widget} generated by {e}')
@@ -742,7 +792,6 @@ class PhotoViewerApp():
 
     def add_to_selection(self, photo_frame_which):
         print()
-
         # if the layout only shows the primary frame, add the pic from that
         if photo_frame_which == 'secondary' and not self.layout_num in self.layout_is_double:
             print(f'Adding from primary')
@@ -804,9 +853,16 @@ class PhotoViewerApp():
         #  self.photo_frame_bis = PhotoFrame(self.root, frame_name='secondary')
 
         # you DO need width and height here (at least width)
+        self.sidebar_width = 250
         # they will be fixed size
-        self.metadata_frame = tk.Frame(self.root, width=250, height=100, bg='dark orange')
-        self.options_frame = tk.Frame(self.root, width=250, height=100, bg='SeaGreen1')
+        self.metadata_frame = tk.Frame(self.root,
+                width=self.sidebar_width,
+                height=100,
+                bg='dark orange')
+        self.options_frame = tk.Frame(self.root,
+                width=self.sidebar_width,
+                height=100,
+                bg='SeaGreen1')
 
         self.layout_tot = 5
         self.layout_is_double = (1, )
@@ -939,3 +995,49 @@ class PhotoViewerApp():
         self.fullscreen_state = not self.fullscreen_state
         self.root.attributes("-fullscreen", self.fullscreen_state)
 
+    def print_widget_info(self, wid, level=0):
+        colorz = [
+        'dark olive green',
+        'olive drab',
+        'lawn green',
+        #  'chart reuse',
+        #  'dark green',
+        'green',
+        #  'forest green',
+        'lime',
+        'green yellow',
+        #  'lime green',
+        'sea green',
+        'light green',
+        'pale green',
+        'dark sea green',
+        'medium spring green',
+        'spring green',
+        ]
+        #  print(f'{PhotoFrame.format_color(None, colorz[level], colorz[level])} ', end='')
+        print(f'{PhotoFrame.format_color(None, wid, colorz[level])}', end='')
+        print(f' w {wid.winfo_width()} h {wid.winfo_height()} rw {PhotoFrame.format_color(None, wid.winfo_reqwidth(), "green")} rh {wid.winfo_reqheight()} x {wid.winfo_x()} y {wid.winfo_y()}')
+        #  print(f'{wid} {wid.winfo_class()}')
+
+    def print_all_widget_info_BFS(self, wid_queue):
+        #  self.print_widget_info(wid_queue)
+        while not wid_queue.empty():
+            wid = wid_queue.get()
+            self.print_widget_info(wid)
+            for child in wid.winfo_children():
+                wid_queue.put(child)
+
+    def print_all_widget_info_DFS(self, wid, level):
+        self.print_widget_info(wid, level)
+        for child in wid.winfo_children():
+            self.print_all_widget_info_DFS(child, level+1)
+
+    def debug(self):
+        #  print(f'debugging')
+        self.photo_frame.debug()
+
+        #  wid_queue = Queue()
+        #  wid_queue.put(self.root)
+        #  self.print_all_widget_info_BFS(wid_queue)
+
+        self.print_all_widget_info_DFS(self.root, 0)

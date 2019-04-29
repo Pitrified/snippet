@@ -18,9 +18,11 @@ DONE
 
 * create thumbnail in [parallel](www.toptal.com/python/beginners-guide-to-concurrency-and-parallelism-in-python) with ProcessPoolExecutor
 * or with Ray
+* bind scroll to all children with [tags](https://stackoverflow.com/a/11459001)
 
 ##### Layout selection
 * layouts are boring and error prone, some nested grid might help, but you need intermediate frames
+* there are still errors when cycling all the layouts
 
 DONE
 
