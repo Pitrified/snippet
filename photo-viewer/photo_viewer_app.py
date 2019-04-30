@@ -11,11 +11,10 @@ from os.path import isfile
 from os.path import isdir
 from os.path import join
 from os.path import splitext
-from os.path import basename # Returns the final component of a pathname
+from os.path import basename
 from shutil import copy2
 from math import ceil
 from math import floor
-#  import re
 from queue import Queue
 
 import ray
@@ -277,7 +276,7 @@ class PhotoViewerApp():
             if pic in self.photo_info:
                 continue
 
-            self.photo_info[pic] = PhotoInfo(pic)
+            self.photo_info[pic] = PhotoInfo(pic, thumb_size=self.thumb_size)
 
             pic_count += 1
             #  if pic_count % step == 0: print('.', end='', flush=True)
@@ -326,6 +325,7 @@ class PhotoViewerApp():
         self.width = 900
         self.height = 600
         self.root.geometry(f'{self.width}x{self.height}')
+
         #  self.root.wm_iconbitmap('LogoPV.png')
         #  self.root.wm_iconbitmap('LogoPV.ico')
         #  self.root.wm_iconwindow('LogoPV.ico')
@@ -334,6 +334,10 @@ class PhotoViewerApp():
         #  icon_img = tk.PhotoImage(file='./LogoPV64.gif')
         icon_img = tk.PhotoImage(file='./LogoPV64_2-2.gif')
         self.root.iconphoto(True, icon_img)
+
+        self.thumb_size = 50
+        self.sidebar_width = 250
+        #  self.sidebar_width = 400
 
     def setup_bind(self):
         #  self.root.bind('<Escape>', self.exit)
@@ -745,6 +749,13 @@ class PhotoViewerApp():
                 self.thumbbtn_photo_list[pic].photo_text.bind('<Leave>',
                         self.photo_list_highlight)
 
+                self.thumbbtn_photo_list[pic].bind('<4>',
+                        self.on_photo_list_scroll)
+                self.thumbbtn_photo_list[pic].bind('<5>',
+                        self.on_photo_list_scroll)
+                self.thumbbtn_photo_list[pic].bind('<MouseWheel>',
+                        self.on_photo_list_scroll)
+
                 self.thumbbtn_photo_list[pic].thumb_label.bind('<4>',
                         self.on_photo_list_scroll)
                 self.thumbbtn_photo_list[pic].thumb_label.bind('<5>',
@@ -903,7 +914,6 @@ class PhotoViewerApp():
         #  self.photo_frame_bis = PhotoFrame(self.root, frame_name='secondary')
 
         # you DO need width and height here (at least width)
-        self.sidebar_width = 250
         # they will be fixed size
         self.metadata_frame = tk.Frame(self.root,
                 width=self.sidebar_width,
