@@ -438,6 +438,8 @@ class PhotoViewerApp():
     def change_photo(self, direction, photo_frame_which='primary'):
         #  print(f'cambio {direction} in {photo_frame_which}')
 
+        old_photo = self.photo_frame.current_photo
+
         if direction == 'sync':
             self.clone_frames(reset_index=True)
             return 1
@@ -459,6 +461,11 @@ class PhotoViewerApp():
         #  self.photo_frame_bis.mov_y = self.photo_frame.mov_y
         #  self.photo_frame_bis.load_photo()
         #  self.photo_frame_bis.show_photo()
+
+        new_photo = self.photo_frame.current_photo
+        if old_photo != new_photo:
+            self.thumbbtn_photo_list[old_photo].photo_text.label_widget.config(relief=tk.FLAT)
+            self.thumbbtn_photo_list[new_photo].photo_text.label_widget.config(relief=tk.RAISED)
 
     def zoom_photo(self, direction):
         #  print(f'zooming {direction}')
@@ -730,6 +737,8 @@ class PhotoViewerApp():
             #  self.thumbbtn_photo_list[pic].pack_forget()
             self.thumbbtn_photo_list[pic].grid_forget()
 
+        cur_photo = self.photo_frame.current_photo
+
         # they start at the first row
         ri = 0
         for pic in self.photo_list:
@@ -741,8 +750,11 @@ class PhotoViewerApp():
                         self.photo_info[pic],
                         bg='powder blue',
                         #  thumb_btn_width=self.sidebar_width,
-                        thumb_btn_width=self.sidebar_width-13,
+                        thumb_btn_width=self.sidebar_width-13-2,
                         )
+
+                if pic == cur_photo:
+                    self.thumbbtn_photo_list[cur_photo].photo_text.label_widget.config(relief=tk.RAISED)
 
                 self.thumbbtn_photo_list[pic].photo_text.bind('<Enter>',
                         self.photo_list_highlight)
@@ -791,7 +803,14 @@ class PhotoViewerApp():
         #  print(f'Parent {e.widget.master}')
         #  print(f'PhotoInfo.photo {e.widget.master.photo_info.photo}')
         #  self.photo_frame.seek_photo(e.widget.master.photo_info.photo)
+        old_photo = self.photo_frame.current_photo
+
         self.photo_frame.seek_photo(e.widget.master.master.photo_info.photo)
+
+        new_photo = self.photo_frame.current_photo
+        if old_photo != new_photo:
+            self.thumbbtn_photo_list[old_photo].photo_text.label_widget.config(relief=tk.FLAT)
+            self.thumbbtn_photo_list[new_photo].photo_text.label_widget.config(relief=tk.RAISED)
 
     def photo_list_highlight(self, e):
         #  print(f'Event type {e.type}')
