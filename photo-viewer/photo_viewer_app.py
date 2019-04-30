@@ -178,6 +178,7 @@ class ThumbButton(tk.Frame):
                 bg='wheat2',
                 activebackground='wheat1',
                 justify=tk.LEFT,
+                anchor=tk.W,
                 width=self.thumb_btn_width-self.photo_info.thumb_size,
                 #  width=200,
                 #  width=230,
