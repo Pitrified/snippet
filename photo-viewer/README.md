@@ -4,6 +4,8 @@
 
 ### general
 * decent loggers
+* reorder functions in a decent manner
+* code minimizer that removes all but function calls
 
 ### photo\_main.py
 * test performance of resize/zoom
@@ -19,13 +21,15 @@ DONE
 * create thumbnail in [parallel](www.toptal.com/python/beginners-guide-to-concurrency-and-parallelism-in-python) with ProcessPoolExecutor
 * or with Ray
 * bind scroll to all children with [tags](https://stackoverflow.com/a/11459001)
+* cut names that are too long 'DSC0...19.jpg'
+* 'LabelPixel' might propagate config down to 'label\_widget' as it does for 'grid'
 
 ##### Layout selection
-* layouts are boring and error prone, some nested grid might help, but you need intermediate frames
-* there are still errors when cycling all the layouts
 
 DONE
 
+* layouts are boring and error prone, some nested grid might help, but you need intermediate frames
+* there are still errors when cycling all the layouts
 * force redraw on layout change
 * widgets already need to exist to be packed, the second photo\_frame has to be created immediately? At the moment, yes
 * cycle through them, put code to build a layout in a function

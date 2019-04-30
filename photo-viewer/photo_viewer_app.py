@@ -47,6 +47,12 @@ class LabelPixel(tk.Frame):
         tk.Frame.grid(self, *args, **kwargs)
         self.grid_propagate(False)
 
+    def config(self, *args, **kwargs):
+        self.label_widget.config(*args, **kwargs)
+
+    def bind(self, *args, **kwargs):
+        self.label_widget.bind(*args, **kwargs)
+
 class PhotoInfo:
     def __init__(self, photo, thumb_size=50):
         self.photo = photo
@@ -179,7 +185,8 @@ class ThumbButton(tk.Frame):
                 activebackground='wheat1',
                 justify=tk.LEFT,
                 anchor=tk.W,
-                width=self.thumb_btn_width-self.photo_info.thumb_size,
+                #  width=self.thumb_btn_width-self.photo_info.thumb_size,
+                width=self.thumb_btn_width-self.photo_info.thumb_size-2,
                 #  width=200,
                 #  width=230,
                 #  width=20,       # https://stackoverflow.com/a/16363832 .....
@@ -196,8 +203,24 @@ class ThumbButton(tk.Frame):
         #  self.photo_text.grid(row=0, column=1, sticky='ns')
         self.photo_text.grid(row=0, column=1, sticky='nsew')
 
+class ThumbCheckButton(tk.Frame):
+    def __init__(self, parent, photo_info, chk_btn_thumb_width, **kwargs):
+        tk.Frame.__init__(self, parent, width=chk_btn_thumb_width, **kwargs)
+        self.photo_info = photo_info
+        self.chk_btn_thumb_width = chk_btn_thumb_width
+
+        # setup grid for this widget
+        self.grid_rowconfigure(0, weight=1, minsize=25)
+        self.grid_columnconfigure(0, weight=0)
+        self.grid_columnconfigure(1, weight=0)
+        self.grid_columnconfigure(2, weight=0)
+
 class PhotoViewerApp():
     def __init__(self, base_dir):
+        # misc variables
+        self.selection_list = []
+        self.fullscreen_state = False
+
         self.setup_window()
         self.setup_dirs(base_dir)
 
@@ -209,10 +232,6 @@ class PhotoViewerApp():
 
         self.layout_num = 0
         self.set_layout(self.layout_num)
-
-        # misc variables
-        self.selection_list = []
-        self.fullscreen_state = False
 
     def setup_dirs(self, base_dir):
         # where the main is, start here the fancy tk dir picker every time
@@ -388,6 +407,13 @@ class PhotoViewerApp():
         self.photo_list_frame.bind('<5>', self.on_photo_list_scroll)
         self.photo_list_frame.bind('<MouseWheel>', self.on_photo_list_scroll)
 
+        self.selection_list_canvas.bind('<4>', self.on_selection_list_scroll)
+        self.selection_list_canvas.bind('<5>', self.on_selection_list_scroll)
+        self.selection_list_canvas.bind('<MouseWheel>', self.on_selection_list_scroll)
+        self.selection_list_frame.bind('<4>', self.on_selection_list_scroll)
+        self.selection_list_frame.bind('<5>', self.on_selection_list_scroll)
+        self.selection_list_frame.bind('<MouseWheel>', self.on_selection_list_scroll)
+
     def keyup(self, e):
         #  print(f'key released {e}')
         if e.keysym == 'Escape': self.exit()
@@ -535,7 +561,7 @@ class PhotoViewerApp():
                 width=self.sidebar_width,
                 height=200,
                 bg='dark green')
-        self.selection_frame = tk.Frame(self.options_frame,
+        self.selection_list_frame = tk.Frame(self.options_frame,
                 width=self.sidebar_width,
                 bg='SkyBlue1')
         self.photo_list_frame = tk.Frame(self.options_frame,
@@ -545,7 +571,7 @@ class PhotoViewerApp():
         # GRID childrens
         self.output_frame.grid(row=0, column=0, sticky='ew')
         self.input_frame.grid(row=1, column=0, sticky='ew')
-        self.selection_frame.grid(row=2, column=0, sticky='nsew')
+        self.selection_list_frame.grid(row=2, column=0, sticky='nsew')
         self.photo_list_frame.grid(row=3, column=0, sticky='nsew')
 
         # tell children to GROW width
@@ -553,13 +579,23 @@ class PhotoViewerApp():
         # https://stackoverflow.com/a/33047033
         self.output_frame.grid_columnconfigure(0, weight=1)
         self.input_frame.grid_columnconfigure(0, weight=1)
-
-        # don't grow/center lists, widgets will be created with 250 width
-        #  self.selection_frame.grid_columnconfigure(0, weight=1)
+        # don't grow/center lists, widgets will be created with exact width
+        #  self.selection_list_frame.grid_columnconfigure(0, weight=1)
         #  self.photo_list_frame.grid_columnconfigure(0, weight=1)
 
         ### SETUP OUTPUT FOLDERS ###
+        self.setup_draw_output_folders()
 
+        ### SETUP INPUT FOLDERS ###
+        self.setup_draw_input_folders()
+
+        ### SETUP SELECTION_LIST_FRAME ###
+        self.setup_draw_selection_list_frame()
+
+        ### SETUP PHOTO_LIST_FRAME ###
+        self.setup_draw_photo_list_frame()
+
+    def setup_draw_output_folders(self):
         # set output folder, packed in output_frame
         self.btn_set_output_folder = tk.Button(self.output_frame,
                 text='Set output folder',
@@ -579,8 +615,7 @@ class PhotoViewerApp():
         self.btn_set_output_folder.grid(row=0, column=0)
         self.text_output_folder.grid(row=1, column=0, sticky='ew')
 
-        ### SETUP INPUT FOLDERS ###
-
+    def setup_draw_input_folders(self):
         # add input folders
         self.btn_add_folder = tk.Button(self.input_frame,
                 text='Add directory to list',
@@ -594,11 +629,62 @@ class PhotoViewerApp():
         self.btn_add_folder.grid(row=0, column=0)
         self.draw_input_folders()
 
+    def setup_draw_selection_list_frame(self):
+        # add selection_list_frame header
+        self.selection_list_frame_header = tk.Label(self.selection_list_frame,
+                text='Selection list:',
+                bg='wheat3',
+                )
+        # create scrollbar for canvas
+        self.selection_list_scrollbar = tk.Scrollbar(self.selection_list_frame)
+        # create the canvas and bind it to Scrollbar
+        self.selection_list_canvas = tk.Canvas(self.selection_list_frame,
+                bg='cornflower blue',
+                yscrollcommand=self.selection_list_scrollbar.set,
+                width=self.sidebar_width-13,
+                highlightthickness=0,
+                )
+        # bind Scrollbar to Canvas
+        self.selection_list_scrollbar.config(command=self.selection_list_canvas.yview)
+        # create the Frame to put inside the Canvas
+        # thanks to the wizard BO https://stackoverflow.com/a/3092341
+        self.selection_list_holder = tk.Frame(self.selection_list_canvas,
+                bg='red',
+                width=self.sidebar_width-13,
+                )
 
-        ##############################
-        ### SETUP PHOTO_LIST_FRAME ###
-        ##############################
+        # grid configure the selection_list_frame
 
+        self.selection_list_frame.rowconfigure(0, weight=0)
+        self.selection_list_frame.rowconfigure(1, weight=1)
+        #  self.selection_list_frame.rowconfigure(1, weight=0)
+
+        self.selection_list_frame.columnconfigure(0, weight=1)
+        #  self.selection_list_frame.columnconfigure(0, weight=0)
+        self.selection_list_frame.columnconfigure(1, weight=0)
+
+        # grid selection list pieces
+        self.selection_list_frame_header.grid(row=0, column=0, columnspan=2, sticky='nsew')
+        self.selection_list_canvas.grid(row=1, column=0, sticky='nsew')
+        self.selection_list_scrollbar.grid(row=1, column=1, sticky='ns')
+
+        # place the Frame on the Canvas
+        self.selection_list_canvas.create_window(
+                (0,0),
+                window=self.selection_list_holder,
+                anchor='nw',
+                tags='self.selection_list_holder',
+                width=self.sidebar_width-13,
+                )
+
+        # bind resizing of canvas scrollregion
+        self.selection_list_holder.bind('<Configure>', self.on_selection_list_holder_configure)
+
+        # populate the list for the first time
+        self.thumbbtn_selection_list = {}
+        self.draw_selection_list_frame()
+
+    def setup_draw_photo_list_frame(self):
         # add photo_list_frame header
         self.photo_list_frame_header = tk.Label(self.photo_list_frame,
                 text='Photo list:',
@@ -655,6 +741,7 @@ class PhotoViewerApp():
         # bind resizing of canvas scrollregion
         self.photo_list_holder.bind('<Configure>', self.on_photo_list_holder_configure)
 
+        # populate the list for the first time
         self.thumbbtn_photo_list = {}
         self.draw_photo_list_frame()
 
@@ -671,6 +758,20 @@ class PhotoViewerApp():
 
         #  print(f'Scrolling list {number} units, event {e} from {e.widget}')
         self.photo_list_canvas.yview_scroll(number, 'units')
+
+    def on_selection_list_holder_configure(self, e):
+        self.selection_list_canvas.configure(scrollregion=self.selection_list_canvas.bbox('all'))
+
+    def on_selection_list_scroll(self, e):
+        if e.num == 4 or e.delta == 120 or e.delta == 1:
+            number = -1
+        elif e.num == 5 or e.delta == -120 or e.delta == -1:
+            number = 1
+        else:
+            print(f'Errors when scrolling photo_list {e}')
+
+        #  print(f'Scrolling list {number} units, event {e} from {e.widget}')
+        self.selection_list_canvas.yview_scroll(number, 'units')
 
     def add_folder(self, new_dir=''):
         #  new_dir = tkFileDialog.askdirectory()
@@ -733,7 +834,7 @@ class PhotoViewerApp():
                 #  self.checkbtn_input_dirs[folder].destroy
 
     def draw_photo_list_frame(self):
-        '''pack all acvite ThumbButton'''
+        '''pack all active ThumbButton for the photo list'''
         for pic in self.thumbbtn_photo_list:
             #  self.thumbbtn_photo_list[pic].pack_forget()
             self.thumbbtn_photo_list[pic].grid_forget()
@@ -750,8 +851,8 @@ class PhotoViewerApp():
                         self.photo_list_holder,
                         self.photo_info[pic],
                         bg='powder blue',
-                        #  thumb_btn_width=self.sidebar_width,
-                        thumb_btn_width=self.sidebar_width-13-2,
+                        thumb_btn_width=self.sidebar_width-13,
+                        #  thumb_btn_width=self.sidebar_width-13-2,
                         )
 
                 if pic == cur_photo:
@@ -761,6 +862,9 @@ class PhotoViewerApp():
                         self.photo_list_highlight)
                 self.thumbbtn_photo_list[pic].photo_text.bind('<Leave>',
                         self.photo_list_highlight)
+
+                self.thumbbtn_photo_list[pic].photo_text.bind('<Double-Button-1>',
+                        self.on_photo_list_doubleclick)
 
                 self.thumbbtn_photo_list[pic].bind('<4>',
                         self.on_photo_list_scroll)
@@ -785,15 +889,21 @@ class PhotoViewerApp():
 
                 #  self.thumbbtn_photo_list[pic].photo_text.bind('<Double-Button-1>',
                         #  self.on_photo_list_doubleclick)
-                self.thumbbtn_photo_list[pic].photo_text.label_widget.bind('<4>',
-                        self.on_photo_list_scroll)
-                self.thumbbtn_photo_list[pic].photo_text.label_widget.bind('<5>',
-                        self.on_photo_list_scroll)
-                self.thumbbtn_photo_list[pic].photo_text.label_widget.bind('<MouseWheel>',
-                        self.on_photo_list_scroll)
+                #  self.thumbbtn_photo_list[pic].photo_text.label_widget.bind('<4>',
+                        #  self.on_photo_list_scroll)
+                #  self.thumbbtn_photo_list[pic].photo_text.label_widget.bind('<5>',
+                        #  self.on_photo_list_scroll)
+                #  self.thumbbtn_photo_list[pic].photo_text.label_widget.bind('<MouseWheel>',
+                        #  self.on_photo_list_scroll)
 
-                self.thumbbtn_photo_list[pic].photo_text.label_widget.bind('<Double-Button-1>',
-                        self.on_photo_list_doubleclick)
+                #  self.thumbbtn_photo_list[pic].photo_text.label_widget.bind('<Double-Button-1>',
+                        #  self.on_photo_list_doubleclick)
+                self.thumbbtn_photo_list[pic].photo_text.bind('<4>',
+                        self.on_photo_list_scroll)
+                self.thumbbtn_photo_list[pic].photo_text.bind('<5>',
+                        self.on_photo_list_scroll)
+                self.thumbbtn_photo_list[pic].photo_text.bind('<MouseWheel>',
+                        self.on_photo_list_scroll)
 
             #  self.thumbbtn_photo_list[pic].pack(fill='x')
             self.thumbbtn_photo_list[pic].grid(row=ri, column=0, sticky='ew')
@@ -807,6 +917,7 @@ class PhotoViewerApp():
         old_photo = self.photo_frame.current_photo
 
         self.photo_frame.seek_photo(e.widget.master.master.photo_info.photo)
+        #  self.photo_frame.seek_photo(e.widget.master.photo_info.photo)
 
         new_photo = self.photo_frame.current_photo
         if old_photo != new_photo:
@@ -814,16 +925,152 @@ class PhotoViewerApp():
             self.thumbbtn_photo_list[new_photo].photo_text.label_widget.config(relief=tk.RAISED)
 
     def photo_list_highlight(self, e):
-        #  print(f'Event type {e.type}')
-        #  print(f'Event widget {e.widget}')
+        #  print(f'PL Event type {e.type}')
+        #  print(f'PL Event widget {e.widget}')
         if e.type == '7': # 'Enter'
-            #  e.widget.config(state=tk.ACTIVE)
-            e.widget.label_widget.config(state=tk.ACTIVE)
+            e.widget.config(state=tk.ACTIVE)
+            #  e.widget.label_widget.config(state=tk.ACTIVE)
         elif e.type == '8': # 'Leave'
-            #  e.widget.config(state=tk.NORMAL)
-            e.widget.label_widget.config(state=tk.NORMAL)
+            e.widget.config(state=tk.NORMAL)
+            #  e.widget.label_widget.config(state=tk.NORMAL)
         else:
             print(f'Unrecognized event {e}')
+
+    def draw_selection_list_frame(self):
+        '''pack all active ThumbButton for the selection list'''
+        for pic in self.thumbbtn_selection_list:
+            self.thumbbtn_selection_list[pic].grid_forget()
+
+        # they start at the first row
+        ri = 0
+        #  seen_in_selection = sorted(set(self.selection_list, self.thumbbtn_selection_list))
+        seen_in_selection = sorted(set().union(self.selection_list, self.thumbbtn_selection_list))
+        #  seen_in_selection = sorted(seen_in_selection)
+
+        for pic in seen_in_selection:
+            # if the pic is new, create the ThumbButton
+            if not pic in self.thumbbtn_selection_list:
+                self.thumbbtn_selection_list[pic] = ThumbButton(
+                        self.selection_list_holder,
+                        self.photo_info[pic],
+                        bg='powder blue',
+                        thumb_btn_width=self.sidebar_width-13,
+                        )
+
+                # bind it to change bg
+                self.thumbbtn_selection_list[pic].photo_text.bind('<Enter>',
+                        self.selection_list_highlight)
+                self.thumbbtn_selection_list[pic].photo_text.bind('<Leave>',
+                        self.selection_list_highlight)
+
+                # bind it to on_selection_list_doubleclick
+                self.thumbbtn_selection_list[pic].photo_text.bind('<Double-Button-1>',
+                        self.on_selection_list_doubleclick)
+
+                # bind scroll to all elements
+                self.thumbbtn_selection_list[pic].bind('<4>',
+                        self.on_selection_list_scroll)
+                self.thumbbtn_selection_list[pic].bind('<5>',
+                        self.on_selection_list_scroll)
+                self.thumbbtn_selection_list[pic].bind('<MouseWheel>',
+                        self.on_selection_list_scroll)
+
+                self.thumbbtn_selection_list[pic].thumb_label.bind('<4>',
+                        self.on_selection_list_scroll)
+                self.thumbbtn_selection_list[pic].thumb_label.bind('<5>',
+                        self.on_selection_list_scroll)
+                self.thumbbtn_selection_list[pic].thumb_label.bind('<MouseWheel>',
+                        self.on_selection_list_scroll)
+
+                self.thumbbtn_selection_list[pic].photo_text.bind('<4>',
+                        self.on_selection_list_scroll)
+                self.thumbbtn_selection_list[pic].photo_text.bind('<5>',
+                        self.on_selection_list_scroll)
+                self.thumbbtn_selection_list[pic].photo_text.bind('<MouseWheel>',
+                        self.on_selection_list_scroll)
+
+
+            # if the pic is not in the selection anymore, set red bg
+            # when hovering, show opposite background
+            if pic in self.selection_list:
+                self.thumbbtn_selection_list[pic].photo_text.config(background='wheat2')
+                #  self.thumbbtn_selection_list[pic].photo_text.config(activebackground='coral1')
+                self.thumbbtn_selection_list[pic].photo_text.config(activebackground='wheat1')
+            else:
+                self.thumbbtn_selection_list[pic].photo_text.config(background='coral2')
+                self.thumbbtn_selection_list[pic].photo_text.config(activebackground='wheat1')
+
+            self.thumbbtn_selection_list[pic].grid(row=ri, column=0, sticky='ew')
+            ri += 1
+
+    def on_selection_list_doubleclick(self, e):
+        #  print(f'SL Event type {e.type} event {e}')
+        #  print(f'SL Event widget {e.widget}')
+        pic_name = e.widget.master.master.photo_info.photo
+        print()
+        print(f'Toggling {pic_name}')
+        self.toggle_selection(pic_name)
+
+    def selection_list_highlight(self, e):
+        #  print(f'SL Event type {e.type}')
+        #  print(f'SL Event widget {e.widget}')
+        if e.type == '7': # 'Enter'
+            e.widget.config(state=tk.ACTIVE)
+        elif e.type == '8': # 'Leave'
+            e.widget.config(state=tk.NORMAL)
+        else:
+            print(f'Unrecognized event {e}')
+
+    def add_to_selection(self, photo_frame_which):
+        print()
+        # if the layout only shows the primary frame, add the pic from that
+        if photo_frame_which == 'secondary' and not self.layout_num in self.layout_is_double:
+            print(f'Adding from primary')
+            photo_frame_which = 'primary'
+        
+        if photo_frame_which == 'primary':
+            pic_name = self.photo_frame.photo_list[self.photo_frame.photo_index]
+        elif photo_frame_which == 'secondary':
+            pic_name = self.photo_frame_bis.photo_list[self.photo_frame_bis.photo_index]
+        else:
+            print(f'Unrecognized frame {photo_frame_which}')
+            return -1
+
+        self.toggle_selection(pic_name)
+
+    def toggle_selection(self, pic_name):
+        if pic_name in self.selection_list:
+            self.selection_list.remove(pic_name)
+            print(f'{PhotoFrame.format_color(None, "De-selected", "tomato")} {basename(pic_name)}, selection_list is now {len(self.selection_list)} long')
+        else:
+            self.selection_list.append(pic_name)
+            print(f'{PhotoFrame.format_color(None, "Selected", "lawn green")} {basename(pic_name)}, selection_list is now {len(self.selection_list)} long')
+
+        # redraw selection list
+        self.draw_selection_list_frame()
+
+    def save_selection(self):
+        #  out_dir = self.output_folder_var.get()
+        out_dir = self.output_folder
+        print()
+
+        if out_dir == 'Not set':
+            print(f'{PhotoFrame.format_color(None, "Set", "indian red")} the output folder before saving the selection_list')
+            return -1
+
+        if len(self.selection_list) == 0:
+            print(f'{PhotoFrame.format_color(None, "Add", "indian red")} pictures to the selection_list before saving it')
+            return -1
+
+        out_dir_content = set(listdir(out_dir))
+
+        #  print(f'Saving {len(self.selection_list)} pics in {out_dir}')
+        print(f'{PhotoFrame.format_color(None, "Saving", "spring green")} {len(self.selection_list)} pics in folder: {out_dir}')
+        for pic in self.selection_list:
+            if basename(pic) in out_dir_content:
+                print(f'{basename(pic)} is already in out_dir, ignoring it')
+            else:
+                copy2(pic, out_dir)
 
     def toggle_input_folders(self):
         #  print(f'Toggling something')
@@ -870,51 +1117,6 @@ class PhotoViewerApp():
 
         self.output_folder_var.set(basename(out_dir))
         self.output_folder = out_dir
-
-    def add_to_selection(self, photo_frame_which):
-        print()
-        # if the layout only shows the primary frame, add the pic from that
-        if photo_frame_which == 'secondary' and not self.layout_num in self.layout_is_double:
-            print(f'Adding from primary')
-            photo_frame_which = 'primary'
-        
-        if photo_frame_which == 'primary':
-            pic_name = self.photo_frame.photo_list[self.photo_frame.photo_index]
-        elif photo_frame_which == 'secondary':
-            pic_name = self.photo_frame_bis.photo_list[self.photo_frame_bis.photo_index]
-        else:
-            print(f'Unrecognized frame {photo_frame_which}')
-            return -1
-
-        if pic_name in self.selection_list:
-            self.selection_list.remove(pic_name)
-            print(f'{PhotoFrame.format_color(None, "De-selected", "tomato")} {basename(pic_name)}, selection_list is now {len(self.selection_list)} long')
-        else:
-            self.selection_list.append(pic_name)
-            print(f'{PhotoFrame.format_color(None, "Selected", "lawn green")} {basename(pic_name)}, selection_list is now {len(self.selection_list)} long')
-
-    def save_selection(self):
-        #  out_dir = self.output_folder_var.get()
-        out_dir = self.output_folder
-        print()
-
-        if out_dir == 'Not set':
-            print(f'{PhotoFrame.format_color(None, "Set", "indian red")} the output folder before saving the selection_list')
-            return -1
-
-        if len(self.selection_list) == 0:
-            print(f'{PhotoFrame.format_color(None, "Add", "indian red")} pictures to the selection_list before saving it')
-            return -1
-
-        out_dir_content = set(listdir(out_dir))
-
-        #  print(f'Saving {len(self.selection_list)} pics in {out_dir}')
-        print(f'{PhotoFrame.format_color(None, "Saving", "spring green")} {len(self.selection_list)} pics in folder: {out_dir}')
-        for pic in self.selection_list:
-            if basename(pic) in out_dir_content:
-                print(f'{basename(pic)} is already in out_dir, ignoring it')
-            else:
-                copy2(pic, out_dir)
 
     def cycle_layout(self):
         self.layout_num = (self.layout_num + 1) % self.layout_tot
