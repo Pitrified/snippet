@@ -22,14 +22,40 @@ import ray
 
 from photo_frame import PhotoFrame
 
+class LabelPixel(tk.Frame):
+    '''label with width set in pixel
+
+    http://code.activestate.com/recipes/578887-text-widget-width-and-height-in-pixels-tkinter/
+    https://stackoverflow.com/questions/14887610/specify-the-dimensions-of-a-tkinter-text-box-in-pixels
+    '''
+    def __init__(self, parent, width=0, height=0, **kwargs):
+        self.width = width
+        self.height = height
+
+        tk.Frame.__init__(self, parent, width=self.width, height=self.height)
+
+        self.label_widget = tk.Label(self, **kwargs)
+
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        self.label_widget.grid(row=0, column=0, sticky='nsew')
+
+    def pack(self, *args, **kwargs):
+        tk.Frame.pack(self, *args, **kwargs)
+        self.pack_propagate(False)
+
+    def grid(self, *args, **kwargs):
+        tk.Frame.grid(self, *args, **kwargs)
+        self.grid_propagate(False)
+
 class PhotoInfo:
     def __init__(self, photo, thumb_size=50):
         self.photo = photo
         #  self.thumb_size = (thumb_size, thumb_size)
         self.thumb_size = thumb_size
 
-        self.define_useful_tags()
-        self.get_metadata()
+        #  self.define_useful_tags()
+        #  self.get_metadata()
 
         self.load_thumbnail()
 
@@ -130,13 +156,14 @@ class ThumbButton(tk.Frame):
 
         # setup grid for this widget
         #  self.grid_rowconfigure(0, weight=1, minsize=60)
+        self.grid_rowconfigure(0, weight=1, minsize=25)
         #  self.grid_rowconfigure(0, weight=0)
-        self.grid_rowconfigure(0, weight=1)
+        #  self.grid_rowconfigure(0, weight=1)
 
         #  self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=0)
-        self.grid_columnconfigure(1, weight=1)
-        #  self.grid_columnconfigure(1, weight=0)
+        #  self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(1, weight=0)
 
         # create child widgets
         #  # background frame to fill the grid
@@ -146,15 +173,16 @@ class ThumbButton(tk.Frame):
                 width=self.photo_info.thumb_size,
                 bg='powder blue',
                 )
-        self.photo_text = tk.Label(self,
-        #  self.photo_text = tk.LabelPixel(self,
+        #  self.photo_text = tk.Label(self,
+        self.photo_text = LabelPixel(self,
                 text=basename(self.photo_info.photo),
                 bg='wheat2',
                 activebackground='wheat1',
                 justify=tk.LEFT,
-                #  width=self.thumb_btn_width-self.photo_info.thumb_size, # XXX ERRORS
+                width=self.thumb_btn_width-self.photo_info.thumb_size,
                 #  width=200,
-                width=20,       # https://stackoverflow.com/a/16363832 .....
+                #  width=230,
+                #  width=20,       # https://stackoverflow.com/a/16363832 .....
                 #  relief=tk.RAISED,
                 )
         #  print(f'what {self.thumb_btn_width-self.photo_info.thumb_size}')
@@ -582,6 +610,7 @@ class PhotoViewerApp():
                 bg='red',
                 #  width=self.sidebar_width,
                 #  width=self.sidebar_width-30,
+                width=self.sidebar_width-13,
                 )
 
         # pack photo_list_frame
@@ -707,7 +736,8 @@ class PhotoViewerApp():
                         self.photo_list_holder,
                         self.photo_info[pic],
                         bg='powder blue',
-                        thumb_btn_width=self.sidebar_width,
+                        #  thumb_btn_width=self.sidebar_width,
+                        thumb_btn_width=self.sidebar_width-13,
                         )
 
                 self.thumbbtn_photo_list[pic].photo_text.bind('<Enter>',
@@ -722,14 +752,23 @@ class PhotoViewerApp():
                 self.thumbbtn_photo_list[pic].thumb_label.bind('<MouseWheel>',
                         self.on_photo_list_scroll)
 
-                self.thumbbtn_photo_list[pic].photo_text.bind('<4>',
+                #  self.thumbbtn_photo_list[pic].photo_text.bind('<4>',
+                        #  self.on_photo_list_scroll)
+                #  self.thumbbtn_photo_list[pic].photo_text.bind('<5>',
+                        #  self.on_photo_list_scroll)
+                #  self.thumbbtn_photo_list[pic].photo_text.bind('<MouseWheel>',
+                        #  self.on_photo_list_scroll)
+
+                #  self.thumbbtn_photo_list[pic].photo_text.bind('<Double-Button-1>',
+                        #  self.on_photo_list_doubleclick)
+                self.thumbbtn_photo_list[pic].photo_text.label_widget.bind('<4>',
                         self.on_photo_list_scroll)
-                self.thumbbtn_photo_list[pic].photo_text.bind('<5>',
+                self.thumbbtn_photo_list[pic].photo_text.label_widget.bind('<5>',
                         self.on_photo_list_scroll)
-                self.thumbbtn_photo_list[pic].photo_text.bind('<MouseWheel>',
+                self.thumbbtn_photo_list[pic].photo_text.label_widget.bind('<MouseWheel>',
                         self.on_photo_list_scroll)
 
-                self.thumbbtn_photo_list[pic].photo_text.bind('<Double-Button-1>',
+                self.thumbbtn_photo_list[pic].photo_text.label_widget.bind('<Double-Button-1>',
                         self.on_photo_list_doubleclick)
 
             #  self.thumbbtn_photo_list[pic].pack(fill='x')
@@ -740,15 +779,18 @@ class PhotoViewerApp():
         #  print(f'Doubleclick on {e.widget} generated by {e}')
         #  print(f'Parent {e.widget.master}')
         #  print(f'PhotoInfo.photo {e.widget.master.photo_info.photo}')
-        self.photo_frame.seek_photo(e.widget.master.photo_info.photo)
+        #  self.photo_frame.seek_photo(e.widget.master.photo_info.photo)
+        self.photo_frame.seek_photo(e.widget.master.master.photo_info.photo)
 
     def photo_list_highlight(self, e):
         #  print(f'Event type {e.type}')
         #  print(f'Event widget {e.widget}')
         if e.type == '7': # 'Enter'
-            e.widget.config(state=tk.ACTIVE)
+            #  e.widget.config(state=tk.ACTIVE)
+            e.widget.label_widget.config(state=tk.ACTIVE)
         elif e.type == '8': # 'Leave'
-            e.widget.config(state=tk.NORMAL)
+            #  e.widget.config(state=tk.NORMAL)
+            e.widget.label_widget.config(state=tk.NORMAL)
         else:
             print(f'Unrecognized event {e}')
 
