@@ -135,8 +135,8 @@ class ThumbButton(tk.Frame):
 
         #  self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=0)
-        #  self.grid_columnconfigure(1, weight=1)
-        self.grid_columnconfigure(1, weight=0)
+        self.grid_columnconfigure(1, weight=1)
+        #  self.grid_columnconfigure(1, weight=0)
 
         # create child widgets
         #  # background frame to fill the grid
@@ -147,12 +147,14 @@ class ThumbButton(tk.Frame):
                 bg='powder blue',
                 )
         self.photo_text = tk.Label(self,
+        #  self.photo_text = tk.LabelPixel(self,
                 text=basename(self.photo_info.photo),
                 bg='wheat2',
                 activebackground='wheat1',
-                #  justify=tk.LEFT,
-                #  width=self.thumb_btn_width-self.photo_info.thumb_size,
+                justify=tk.LEFT,
+                #  width=self.thumb_btn_width-self.photo_info.thumb_size, # XXX ERRORS
                 #  width=200,
+                width=20,       # https://stackoverflow.com/a/16363832 .....
                 #  relief=tk.RAISED,
                 )
         #  print(f'what {self.thumb_btn_width-self.photo_info.thumb_size}')
@@ -163,8 +165,8 @@ class ThumbButton(tk.Frame):
         self.thumb_label.grid(row=0, column=0)
         #  self.photo_text.grid(row=0, column=1)
         #  self.photo_text.grid(row=0, column=1, sticky='ew')
-        self.photo_text.grid(row=0, column=1, sticky='ns')
-        #  self.photo_text.grid(row=0, column=1, sticky='nsew')
+        #  self.photo_text.grid(row=0, column=1, sticky='ns')
+        self.photo_text.grid(row=0, column=1, sticky='nsew')
 
 class PhotoViewerApp():
     def __init__(self, base_dir):
@@ -480,8 +482,8 @@ class PhotoViewerApp():
         self.options_frame.grid_rowconfigure(1, weight=0)
         self.options_frame.grid_rowconfigure(2, weight=1)
         self.options_frame.grid_rowconfigure(3, weight=1)
-        self.options_frame.grid_columnconfigure(0, weight=1)
-        #  self.options_frame.grid_columnconfigure(0, weight=0)
+        #  self.options_frame.grid_columnconfigure(0, weight=1)
+        self.options_frame.grid_columnconfigure(0, weight=0)
 
         # CREATE children frames
         # the height parameter is happily ignored, you might set grid_propagate in each frame
@@ -511,8 +513,10 @@ class PhotoViewerApp():
         # https://stackoverflow.com/a/33047033
         self.output_frame.grid_columnconfigure(0, weight=1)
         self.input_frame.grid_columnconfigure(0, weight=1)
-        self.selection_frame.grid_columnconfigure(0, weight=1)
-        self.photo_list_frame.grid_columnconfigure(0, weight=1)
+
+        # don't grow/center lists, widgets will be created with 250 width
+        #  self.selection_frame.grid_columnconfigure(0, weight=1)
+        #  self.photo_list_frame.grid_columnconfigure(0, weight=1)
 
         ### SETUP OUTPUT FOLDERS ###
 
@@ -559,7 +563,7 @@ class PhotoViewerApp():
         self.photo_list_frame_header = tk.Label(self.photo_list_frame,
                 text='Photo list:',
                 bg='wheat3',
-                #  width=self.sidebar_width,
+                #  width=self.sidebar_width, # XXX ERRORS
                 )
         # create scrollbar for canvas
         self.photo_list_scrollbar = tk.Scrollbar(self.photo_list_frame)
@@ -576,18 +580,21 @@ class PhotoViewerApp():
         # thanks to the wizard BO https://stackoverflow.com/a/3092341
         self.photo_list_holder = tk.Frame(self.photo_list_canvas,
                 bg='red',
-                width=self.sidebar_width,
+                #  width=self.sidebar_width,
+                #  width=self.sidebar_width-30,
                 )
 
         # pack photo_list_frame
         #  self.photo_list_frame_header.pack(fill='x')
 
         # grid configure the photo_list_frame
+
         self.photo_list_frame.rowconfigure(0, weight=0)
         self.photo_list_frame.rowconfigure(1, weight=1)
         #  self.photo_list_frame.rowconfigure(1, weight=0)
-        #  self.photo_list_frame.columnconfigure(0, weight=1)
-        self.photo_list_frame.columnconfigure(0, weight=0)
+
+        self.photo_list_frame.columnconfigure(0, weight=1)
+        #  self.photo_list_frame.columnconfigure(0, weight=0)
         self.photo_list_frame.columnconfigure(1, weight=0)
 
         # grid photo list pieces
@@ -601,6 +608,7 @@ class PhotoViewerApp():
                 window=self.photo_list_holder,
                 anchor='nw',
                 tags='self.photo_list_holder',
+                width=self.sidebar_width-13,
                 )
 
         # bind resizing of canvas scrollregion
