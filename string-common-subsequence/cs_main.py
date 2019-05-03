@@ -6,6 +6,7 @@ from numpy.random import seed as npseed
 from os import popen
 
 from cs_finder import generate_string_by_len
+#  from cs_finder import find_LCS
 from cs_finder import LCSfinder
 
 def parse_arguments():
@@ -39,18 +40,46 @@ def parse_arguments():
     args_parsed = { a : v for a, v in args._get_kwargs() }
     return args_parsed
 
+def test_generate_string():
+    generate_string_by_len(10, 5)
+    generate_string_by_len(10, 26)
+    generate_string_by_len(10, 26*2)
+    generate_string_by_len(10, 26*2+1)
+
 def test_lcs_base(rows, columns):
     '''Test lcs'''
     print(f'doing test_lcs_base r {rows} c {columns}')
 
-    lenX = 10
-    lenY = 10
+    #  lenX = 10
+    #  lenY = 10
+    lenX = rows
+    lenY = columns
     num_possible_chars = 5
 
     X = generate_string_by_len(lenX, num_possible_chars)
     Y = generate_string_by_len(lenY, num_possible_chars)
+    #  X = ['A','B','C','D']
+    #  Y = ['A','E','C','D']
+    #  Y = ['A','C','E','D']
 
-    print(f'X {X}\nY {Y}')
+    #  print(f'X {X}\nY {Y}')
+
+    finder = LCSfinder(X, Y)
+
+    print(f'\nInput strings:\n{finder.get_str_input()}\n')
+
+    finder.init_lcs()
+
+    #  print(finder.get_str_B())
+
+    #  cost, B = find_LCS(X, Y)
+    finder.find_LCS()
+    #  print(finder.get_str_B())
+    #  print(finder.get_str_cost())
+    print(finder.get_str_B_cost())
+    #  print(finder.get_str_lcs())
+
+    finder.check_is_cs()
 
 def main():
     args = parse_arguments()
