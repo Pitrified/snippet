@@ -1,4 +1,5 @@
 from random import choices
+from random import randint
 
 def ascii_to_char(ascii_val):
     return str(chr(ascii_val))
@@ -31,8 +32,37 @@ def generate_string_by_len(length, num_possible_chars):
     S = choices(possible_chars, k=length)
 
     #  print(S)
+    #  print(len(S))
 
     return S
+
+def generate_similar_string_nonrepeating(length, num_errors):
+    numbers = range(length)
+    #  X = list( map( '_{:04d}'.format, numbers) )
+    char_len = 2
+    format_string = f' {{:0{char_len}d}}'
+    #  print(format_string)
+    X = list( map( format_string.format, numbers) )
+    #  print(f'{X}')
+    Y = X.copy()
+
+    #  num_errors = 5
+
+    error_string = f'+{{:0{char_len}d}}'
+    #  print(error_string)
+    for i in range(num_errors):
+        where = randint(1, len(X))
+        X.insert(where, error_string.format(i))
+
+    error_string = f'-{{:0{char_len}d}}'
+    #  print(error_string)
+    for i in range(num_errors):
+        where = randint(1, len(Y))
+        Y.insert(where, error_string.format(i))
+
+    #  print(f'{"".join(X)}')
+
+    return X, Y
 
 class LCSfinder:
     def __init__(self,# rows, columns,
@@ -111,13 +141,22 @@ class LCSfinder:
 
     def check_is_cs(self, ssq=None):
         if ssq is None:
-            ssq = self.get_str_lcs()
+            #  ssq = self.get_str_lcs()
+            ssq = self.get_list_lcs()
 
         if self.is_cs(self.X, ssq):
-            print(f'{ssq} is subsequence of {"".join(self.X)}')
+            #  print(f'{ssq} is subsequence of {"".join(self.X)}')
+            print(f'X is correct')
+        else:
+            return False
 
         if self.is_cs(self.Y, ssq):
-            print(f'{ssq} is subsequence of {"".join(self.Y)}')
+            #  print(f'{ssq} is subsequence of {"".join(self.Y)}')
+            print(f'Y is correct')
+        else:
+            return False
+
+        return True
 
     def is_cs(self, s, ssq):
         i=0
@@ -140,6 +179,12 @@ class LCSfinder:
         #  spaces = ' ' * level
         spaces = '    ' * level
         print(f'{spaces}{string}')
+
+    def print_stats(self):
+        tot_subproblems = (self.m+1)*(self.n+1)
+        solved = len(self.B)
+        print(f'Solved {solved} out of {tot_subproblems} subproblems')
+        print(f'Ratio {solved/tot_subproblems:.6f}')
 
     def get_str_B(self):
         #  print(self.get_str_vertical_numbers())
@@ -180,6 +225,27 @@ class LCSfinder:
             strb += '\n'
 
         return strb
+
+    def get_list_lcs_rec(self, i, j):
+        if (i,j) in self.B:
+            if self.B[ (i,j) ] == 1:
+                #  print(f'match at X[{i}]={self.X[i]} Y[{j}]={self.Y[j]}')
+                shorter = self.get_list_lcs_rec(i-1, j-1)
+                shorter.append(self.X[i])
+                return shorter
+            elif self.B[ (i,j) ] == 2:
+                return self.get_list_lcs_rec(i-1, j)
+            elif self.B[ (i,j) ] == 3:
+                return self.get_list_lcs_rec(i, j-1)
+            #  else:
+                #  print(f'My dude something is weird in {self.B[ (i,j) ]}')
+                #  print(f'X[{i}]={self.X[i]} Y[{j}]={self.Y[j]}')
+
+        #  print(f'returning {i} {j}')
+        return []
+
+    def get_list_lcs(self):
+        return self.get_list_lcs_rec(self.m, self.n)
 
     def get_str_lcs_rec(self, i, j):
         if (i,j) in self.B:
