@@ -1,6 +1,7 @@
 % guida overleaf.com/learn/latex/Management_in_a_large_project
 \documentclass[a4paper,11pt,oneside]{book}
 \usepackage{import}
+
 \usepackage{preamble}
  
 \usepackage{makeidx}
@@ -19,8 +20,9 @@
 \tableofcontents
  
 \mainmatter
+
 \chapter{On bibliography}
-% \import{chapters/}{bibliography-guide.tex}
+\import{chapters/}{bibliography-guide.tex}
 % \import{sections/}{section1-2.tex}
  
 \chapter{On algorithms}
@@ -29,15 +31,18 @@
 \chapter{Graphs and trees}
 \import{chapters/}{grafi-alberi.tex}
  
-\chapter{Plots}
-\import{chapters/}{grafici.tex}
+% \chapter{Plots}
+% \import{chapters/}{grafici.tex}
+ 
+\chapter{Figures}
+\import{chapters/}{figures.tex}
  
 \chapter{Lipsum chapter}
 \import{chapters/}{lipsum.tex}
  
-% \backmatter
+\backmatter
  
-% \import{./}{bibliography.tex}
+\import{./}{bibliography.tex}
  
 \end{document}
 

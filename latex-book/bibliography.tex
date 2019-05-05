@@ -1,1 +1,24 @@
-\printbibliography
+% \printbibliography
+
+\printbibliography[
+heading=bibintoc,
+title={Whole bibliography}
+] %Prints the entire bibliography with the titel "Whole bibliography"
+
+% \clearpage
+
+%Filters bibliography
+\printbibliography[heading=subbibintoc,type=article,title={Articles only}]
+\printbibliography[heading=subbibintoc,type=book,title={Books only}]
+
+\printbibliography[heading=subbibintoc,keyword={physics},title={Physics-related only}]
+\printbibliography[heading=subbibintoc,keyword={latex},title={\LaTeX-related only}]
+
+% I suspect that page breaks are added before bibliography because it is a book
+% in documentclass article it should not be inserted
+
+% \printbibliography[type=book,title={Books only}]
+
+% \printbibliography[keyword={physics},title={Physics-related only}]
+% \printbibliography[keyword={latex},title={\LaTeX-related only}]
+

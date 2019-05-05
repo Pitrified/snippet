@@ -1,5 +1,7 @@
 % https://it.overleaf.com/learn/latex/Bibliography_management_in_LaTeX
 
+\section{Bibliography}
+
 Using \texttt{biblatex} you can display bibliography divided into sections, 
 depending of citation type. 
 Let's cite! Einstein's journal paper \cite{einstein} and the Dirac's 
@@ -8,3 +10,31 @@ Next, \textit{The \LaTeX\ Companion} book \cite{latexcompanion}, the Donald
 Knuth's website \cite{knuthwebsite}, \textit{The Comprehensive Tex Archive 
 Network} (CTAN) \cite{ctan} are \LaTeX\ related items; but the others Donald 
 Knuth's items \cite{knuth-fa,knuth-acp} are dedicated to programming. 
+
+% https://www.overleaf.com/learn/latex/Hyperlinks
+\section{Hyperlinks and urls}
+
+\begin{equation}
+\label{eq:1}
+\sum_{i=0}^{\infty} a_i x^i
+\end{equation}
+ 
+The equation \ref{eq:1} shows a sum that is divergent. This formula 
+will later be used in the page \pageref{sss:esempio}.
+ 
+For further references see \href{http://www.sharelatex.com}{Something 
+Linky} or go to the next url: \url{http://www.sharelatex.com} or open 
+the bibliography \href{run:./chapters/bibliography-guide.tex}{source file}.
+Opening files is a shaky operation.
+ 
+It's also possible to link directly any word or 
+\hyperlink{ht:thesentence}{any sentence} in your document.
+
+If you read this text, you will get noinformation.  Really?  Is there no information?
+
+For instance \hypertarget{ht:thesentence}{this sentence} actually has a \texttt{hypertarget} embedded in it.
+ 
+\subsection{Sottosezione}
+\label{sss:esempio}
+
+Questa è una sottosezione d'esempio, con un label, a una certa pagina.

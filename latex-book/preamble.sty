@@ -1,29 +1,35 @@
 \ProvidesPackage{example}
 
-\usepackage[
-    backend=biber
-]{biblatex}
-
 \usepackage[utf8]{inputenc}
-\usepackage[italian]{babel}
+\usepackage[T1]{fontenc}
+% \usepackage[italian]{babel}
+\usepackage[english]{babel}
 \usepackage{marginnote}
 
+%%%%% Bibliography %%%%%
+\usepackage[
+    backend=biber,
+    style=alphabetic,
+    sorting=ynt,
+]{biblatex}
+% \usepackage[nottoc]{tocbibind}	% to generate Bibliography entry in toc
+% mah https://tex.stackexchange.com/a/71153
+% sorting order https://tex.stackexchange.com/a/51439
+% year name title
+
 \usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{bm}
 \usepackage[top=3cm, bottom=3cm, heightrounded, marginparwidth=2.5cm, marginparsep=1.5cm]{geometry}
 \usepackage{graphicx}
 \graphicspath{ {images/} }
-\usepackage[nottoc]{tocbibind}	% to generate Bibliography entry in toc
+% per poter usare subfigure devi importare questo package
+\usepackage{subcaption}
+
 \usepackage{lipsum}
-\usepackage{bm}
-\usepackage{hyperref}	% enable hyperlinks to referenced elements
-\hypersetup{
-	colorlinks=true,
-	linkcolor=cyan,
-	citecolor=cyan,
-	linkcolor=cyan
-}
+
 \usepackage{enumitem} % more control over lists: stackoverflow.com/a/4974583
 \usepackage{indentfirst} % YES indent after section/chapter heading
+
 \usepackage[Algoritmo]{algorithm}
 \usepackage[noend]{algpseudocode} % algoritmi decenti, senza end
 
@@ -35,6 +41,19 @@
 % \usetikzlibrary{external} % save plots in pdf for faster compiling
 % \tikzexternalize[prefix=tikz/] % save them here
 
+% people say this should be the last package added...
+\usepackage{hyperref}	% enable hyperlinks to referenced elements
+\hypersetup{
+	colorlinks=true,
+	linkcolor=cyan,
+	citecolor=cyan,
+    linkcolor=cyan,
+    filecolor=magenta,
+    urlcolor=blue,
+}
+\urlstyle{same}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%   CUSTOM THEOREM/DEF  %%
 
 \theoremstyle{definition}
@@ -43,7 +62,18 @@
 \theoremstyle{theorem}
 \newtheorem{theorem}{Teorema}[section]
 
-%%         END           %%
+%%   END THEOREM         %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%   CUSTOM COMMANDS     %%
+
+% \newcommand{\rfig}[1]{Figure~\ref{fig:#1}} % thanks to Seba for the keystrokes saved
+\newcommand{\rfig}[1]{Figure~\ref{#1}} % thanks to Seba for the keystrokes saved
+
+%%   END COMMANDS        %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % magic headers
 \usepackage{fancyhdr}
