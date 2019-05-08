@@ -83,8 +83,8 @@ def test_lcs_base(rows, columns):
     finder.find_LCS()
     #  print(finder.get_str_B())
     #  print(finder.get_str_cost())
-    #  print(finder.get_str_B_cost())
-    #  print(finder.get_str_lcs())
+    print(finder.get_str_B_cost())
+    print(finder.get_str_lcs())
 
     finder.check_is_cs()
 
@@ -148,8 +148,8 @@ def main():
 
     print(f'python3 sim_waves_main.py -s {myseed} -r {rows} -c {columns}')
 
-    #  run_test_lcs_base(rows=rows, columns=columns)
-    run_test_lcs_base(rows=4000, columns=4000)
+    run_test_lcs_base(rows=rows, columns=columns)
+    #  run_test_lcs_base(rows=4000, columns=4000)
     #  test_generate_similar_string_nonrepeating()
     #  run_test_lcs_similar()
 

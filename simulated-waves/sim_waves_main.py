@@ -47,11 +47,15 @@ def test_waves_base(rows, columns):
     #  depth = 10
     depth = 2
     qty = 20
+    #  qty = 200
     bucket.fill_bottom(depth, qty)
-    #  bucket.add_drop(row=1, column=4, radius=1, qty=5)
-    bucket.add_drop(row=1, column=4, radius=4, qty=5)
+    bucket.add_drop(row=1, column=4, radius=1, qty=5)
+    #  bucket.add_drop(row=1, column=4, radius=4, qty=5)
+    #  bucket.add_drop(row=2, column=15, radius=12, qty=2)
     #  bucket.print_qty()
-    bucket.print_qty_small()
+    #  print(f'{bucket.get_str_qty_small()}')
+    #  print(f'{bucket.get_str_qty_small(3)}')
+    print(f'{bucket.get_str_qty_small_saturated(3)}')
 
 def main():
     args = parse_arguments()

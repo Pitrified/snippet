@@ -37,6 +37,9 @@ def parse_arguments():
     # last line to parse them
     args = parser.parse_args()
 
+    # you can access a Namespace fields like this
+    print(f'args.repeat: {args.repeat}')
+
     #  parse the args even more if needed
     args_parsed = { a : v for a, v in args._get_kwargs() }
     return args_parsed
