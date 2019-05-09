@@ -7,6 +7,7 @@ from os import popen
 
 from sim_waves_holder import Holder
 
+
 def parse_arguments():
     # setup parser
     parser = argparse.ArgumentParser(
@@ -38,6 +39,31 @@ def parse_arguments():
     args_parsed = { a : v for a, v in args._get_kwargs() }
     return args_parsed
 
+def do_evolve(bucket, num):
+    #  char_wid = 2
+    for _ in range(num):
+        bucket.evolve()
+        #  print(f'{bucket.get_str_qty_small_saturated(2)}')
+        #  print(f'IN')
+        #  print(f'{bucket.get_str_flow_in(2)}')
+        #  print(f'OUT')
+        #  print(f'{bucket.get_str_flow_out(2)}')
+        print(f'{bucket.get_str_recap(3)}')
+
+def test_waves_mini():
+    rows = 3
+    columns = 5
+    print(f'doing test_waves_mini r {rows} c {columns}')
+    bucket = Holder(rows, columns)
+
+    depth = 1
+    qty = 20
+    bucket.fill_bottom(depth, qty)
+    bucket.add_drop(row=0, column=3, radius=0, qty=5)
+    print(f'{bucket.get_str_qty_small_saturated(3)}')
+
+    do_evolve(bucket, 3)
+
 def test_waves_base(rows, columns):
     '''create water and do things'''
     print(f'doing test_waves_base r {rows} c {columns}')
@@ -52,10 +78,13 @@ def test_waves_base(rows, columns):
     bucket.add_drop(row=1, column=4, radius=1, qty=5)
     #  bucket.add_drop(row=1, column=4, radius=4, qty=5)
     #  bucket.add_drop(row=2, column=15, radius=12, qty=2)
+
     #  bucket.print_qty()
     #  print(f'{bucket.get_str_qty_small()}')
     #  print(f'{bucket.get_str_qty_small(3)}')
     print(f'{bucket.get_str_qty_small_saturated(3)}')
+
+    do_evolve(bucket, 3)
 
 def main():
     args = parse_arguments()
@@ -80,7 +109,8 @@ def main():
 
     print(f'python3 sim_waves_main.py -s {myseed} -r {rows} -c {columns}')
 
-    test_waves_base(rows=rows, columns=columns)
+    #  test_waves_base(rows=rows, columns=columns)
+    test_waves_mini()
 
 if __name__ == '__main__':
     main()

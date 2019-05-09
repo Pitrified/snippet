@@ -35,15 +35,34 @@ class Holder:
 
         self.quantity = np.zeros( (self.rows, self.columns) )
 
-        self.flow_in_right = np.zeros( (self.rows, self.columns) )
-        self.flow_in_left = np.zeros( (self.rows, self.columns) )
-        self.flow_in_top = np.zeros( (self.rows, self.columns) )
-        self.flow_in_bottom = np.zeros( (self.rows, self.columns) )
+        #  self.flow_in_right = np.zeros( (self.rows, self.columns) )
+        #  self.flow_in_left = np.zeros( (self.rows, self.columns) )
+        #  self.flow_in_top = np.zeros( (self.rows, self.columns) )
+        #  self.flow_in_bottom = np.zeros( (self.rows, self.columns) )
 
-        self.flow_out_right = np.zeros( (self.rows, self.columns) )
-        self.flow_out_left = np.zeros( (self.rows, self.columns) )
-        self.flow_out_top = np.zeros( (self.rows, self.columns) )
-        self.flow_out_bottom = np.zeros( (self.rows, self.columns) )
+        # TOP RIGHT BOTTOM LEFT
+
+        self.flow_in= [
+                np.zeros( (self.rows, self.columns) ),
+                np.zeros( (self.rows, self.columns) ),
+                np.zeros( (self.rows, self.columns) ),
+                np.zeros( (self.rows, self.columns) ),
+                ]
+
+        #  self.flow_out_right = np.zeros( (self.rows, self.columns) )
+        #  self.flow_out_left = np.zeros( (self.rows, self.columns) )
+        #  self.flow_out_top = np.zeros( (self.rows, self.columns) )
+        #  self.flow_out_bottom = np.zeros( (self.rows, self.columns) )
+
+        self.reset_flow_out()
+
+    def reset_flow_out(self):
+        self.flow_out = [
+                np.zeros( (self.rows, self.columns) ),
+                np.zeros( (self.rows, self.columns) ),
+                np.zeros( (self.rows, self.columns) ),
+                np.zeros( (self.rows, self.columns) ),
+                ]
 
     def flow_step(self):
         '''compute one step'''
@@ -65,15 +84,110 @@ class Holder:
                         #  print(f'r {r} c {c} r+row {r+row} c+column {c+column}')
                         self.quantity[r+row][c+column] += qty
 
-    def evolve():
+    def evolve(self):
         '''apply movements on the map
 
         the idea is
-        gather the input from all directions
+        gather the input from all directions flow_in_top
+
         the water has momentum
+        which is slightly dampened each time
+        the dampening might be proportional to the quantity of water
+
         add some gravity
-        if we put the output in flow_out_top my dudes everything gets mixed
+
+        if the cell below is full
+        and some water needs to go down then splash it around
+        because the water HAS momentum, so the cell below can be invaded
+
+        we put the output in flow_out_top
         '''
+
+        dampening = 0.1
+
+        # build flow_in from previous flow_out
+        for i, row in enumerate(self.quantity):
+            for j, q in enumerate(row):
+
+                ### flow along columns
+                # first row
+                if i == 0:
+                    # edges are bounced back
+                    self.flow_in[0][i][j] = self.flow_out[0][i][j]
+                    self.flow_in[2][i][j] = self.flow_out[0][i+1][j]
+
+                # bottom row
+                elif i == self.rows - 1:
+                    self.flow_in[0][i][j] = self.flow_out[2][i-1][j]
+                    self.flow_in[2][i][j] = self.flow_out[2][i][j]
+
+                # middle rows: now we have to check if you are in a correct column
+                # NOT! we only do top 0 bottom 2 now
+                #  elif 0 < j < self.columns - 1:
+                else:
+                    self.flow_in[0][i][j] = self.flow_out[2][i-1][j]
+                    self.flow_in[2][i][j] = self.flow_out[0][i+1][j]
+
+                ### flow along rows
+                # left column
+                if j == 0:
+                    self.flow_in[1][i][j] = self.flow_out[1][i][j]
+                    self.flow_in[3][i][j] = self.flow_out[1][i][j+1]
+
+                # right column
+                elif j == self.columns - 1:
+                    self.flow_in[1][i][j] = self.flow_out[3][i][j-1]
+                    self.flow_in[3][i][j] = self.flow_out[3][i][j]
+
+                else:
+                    self.flow_in[1][i][j] = self.flow_out[3][i][j-1]
+                    self.flow_in[3][i][j] = self.flow_out[1][i][j+1]
+
+        self.reset_flow_out()
+
+
+        for i, row in enumerate(self.quantity):
+            for j, q in enumerate(row):
+
+                # water entering basically flows through
+                for direction in range(4):
+                    f_in = self.flow_in[direction][i][j]
+                    self.flow_out[(direction+4)%4][i][j] += f_in * dampening
+                    self.quantity[i][j] += f_in * (1-dampening)
+
+                # gravity
+                if self.quantity[i][j] > self.max_flow_gravity:
+                    grav_qty = self.max_flow_gravity
+                    self.quantity[i][j] -= self.max_flow_gravity
+                else:
+                    grav_qty = self.quantity[i][j]
+                    self.quantity[i][j] = 0
+                self.flow_out[2][i][j] += grav_qty
+
+                # is overflowing?
+                if self.quantity[i][j] > self.max_capacity:
+                    over_qty = self.max_capacity - self.quantity[i][j] 
+                    for direction in range(4):
+                        # splash EVERYWEHRHRE
+                        self.flow_out[direction][i][j] += over_qty / 4
+
+                # NOTE might do this in the flow_out > flow_in
+                #  # edges are bounced back
+                #  # first row
+                #  if i == 0:
+                    #  self.flow_in[0][i][j] = self.flow_out[0][i][j]
+
+                #  # bottom row
+                #  if i == self.rows:
+                    #  self.flow_in[2][i][j] = self.flow_out[2][i][j]
+
+                #  # left column
+                #  if j == 0:
+                    #  self.flow_in[1][i][j] = self.flow_out[1][i][j]
+
+                #  # right column
+                #  if j == self.columns:
+                    #  self.flow_in[3][i][j] = self.flow_out[3][i][j]
 
     def print_qty(self):
         '''print the values'''
@@ -128,6 +242,92 @@ class Holder:
 
         return str_qty_col
 
+    def get_str_flow_in(self, char_wid=2):
+        lfi_top = self.get_str_flow_in_dir(0, char_wid).split('\n')
+        lfi_right = self.get_str_flow_in_dir(1, char_wid).split('\n')
+        lfi_bottom = self.get_str_flow_in_dir(2, char_wid).split('\n')
+        lfi_left = self.get_str_flow_in_dir(3, char_wid).split('\n')
+
+        str_flow_in = ''
+        for t, r, b, l in zip( lfi_top, lfi_right, lfi_bottom, lfi_left):
+            str_flow_in += f'{t}  {r}  {b}  {l}\n'
+        #  return str_flow_in
+        return str_flow_in[:-1] # chop off double \n
+
+    def get_str_flow_in_dir(self, direction, char_wid=2):
+        str_flow_in_dir = ''
+        for row in self.flow_in[direction]:
+            for q in row:
+                str_flow_in_dir += f'{q:{char_wid}.0f}'[-char_wid:]
+            str_flow_in_dir += '\n'
+        return str_flow_in_dir
+
+    def get_str_flow_out(self, char_wid=2):
+        lfi_top = self.get_str_flow_out_dir(0, char_wid).split('\n')
+        lfi_right = self.get_str_flow_out_dir(1, char_wid).split('\n')
+        lfi_bottom = self.get_str_flow_out_dir(2, char_wid).split('\n')
+        lfi_left = self.get_str_flow_out_dir(3, char_wid).split('\n')
+
+        str_flow_out = ''
+        for t, r, b, l in zip( lfi_top, lfi_right, lfi_bottom, lfi_left):
+            str_flow_out += f'{t}  {r}  {b}  {l}\n'
+        #  return str_flow_out
+        return str_flow_out[:-1] # chop off double \n
+
+    def get_str_flow_out_dir(self, direction, char_wid=2):
+        str_flow_out_dir = ''
+        for row in self.flow_out[direction]:
+            for q in row:
+                str_flow_out_dir += f'{q:{char_wid}.0f}'[-char_wid:]
+            str_flow_out_dir += '\n'
+        return str_flow_out_dir
+
+    def get_str_recap(self, char_wid=2):
+        lfi_top = self.get_str_flow_in_dir(0, char_wid).splitlines()
+        lfi_right = self.get_str_flow_in_dir(1, char_wid).splitlines()
+        lfi_bottom = self.get_str_flow_in_dir(2, char_wid).splitlines()
+        lfi_left = self.get_str_flow_in_dir(3, char_wid).splitlines()
+
+        lfo_top = self.get_str_flow_out_dir(0, char_wid).splitlines()
+        lfo_right = self.get_str_flow_out_dir(1, char_wid).splitlines()
+        lfo_bottom = self.get_str_flow_out_dir(2, char_wid).splitlines()
+        lfo_left = self.get_str_flow_out_dir(3, char_wid).splitlines()
+
+        lqty = self.get_str_qty_small_saturated(char_wid).splitlines()
+        #  lqty = self.get_str_qty_small(char_wid).splitlines()
+
+        tab_wid = self.columns * char_wid + 2
+        header = f'{{:^{tab_wid}}}'
+        #  print(header)
+
+        str_recap = ''
+
+        str_recap += header.format('IN top')
+        str_recap += header.format('OUT top')
+        str_recap += header.format('IN right')
+        str_recap += '\n'
+
+        for a, b, c in zip( lfi_top, lfo_top, lfi_right):
+            str_recap += f'{a}  {b}  {c}\n'
+
+        str_recap += header.format('OUT left')
+        str_recap += header.format('QTY')
+        str_recap += header.format('OUT right')
+        str_recap += '\n'
+
+        for a, b, c in zip( lfo_left, lqty, lfo_right):
+            str_recap += f'{a}  {b}  {c}\n'
+
+        str_recap += header.format('IN left')
+        str_recap += header.format('OUT bottom')
+        str_recap += header.format('IN bottom')
+        str_recap += '\n'
+
+        for a, b, c in zip( lfi_left, lfo_bottom, lfi_bottom):
+            str_recap += f'{a}  {b}  {c}\n'
+
+        return str_recap
+
     def evaluate_rgb_depth(self, z, d_min, d_max):
         '''return the rgb value for saturation proportional to z in [d_min, d_max]'''
 
@@ -137,6 +337,8 @@ class Holder:
         if d_max <= d_min:
         #  if d_max == d_min:
             saturation = frac
+        elif z >= d_max:
+            saturation = 1
         else:
             # linear mapping z to saturation
             saturation = (z-d_min) / (d_max-d_min)
