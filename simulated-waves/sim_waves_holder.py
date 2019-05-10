@@ -1,6 +1,7 @@
 import numpy as np
 from colorsys import hsv_to_rgb
 from math import floor
+from math import sqrt
 
 class Holder:
     def __init__(self,
@@ -217,31 +218,6 @@ class Holder:
             str_qty_small += '\n'
         return str_qty_small
 
-    def get_str_qty_small_saturated(self, char_wid=2):
-        '''return a str of the values, saturated in proportion to capacity'''
-        #  print(f'bucket shape {self.quantity.shape}')
-        #  print(f'bucket\n{self.quantity}')
-        #  char_wid = 2
-        cs = '\x1b[38;2;{};{};{}m{}\x1b[0m'
-
-        str_qty_col = ''
-        for row in self.quantity:
-            for q in row:
-                r,g,b = self.evaluate_rgb_depth(q, 0, self.max_capacity)
-
-                # format the number
-                # remove floating part
-                # chop it off at char_wid, keep from right
-                str_q = f'{q:.0f}'[-char_wid:]
-                pad_q = f'{str_q:_>{char_wid}}'
-                col_q = cs.format(r,g,b,pad_q)
-
-                str_qty_col += col_q
-
-            str_qty_col += '\n'
-
-        return str_qty_col
-
     def get_str_flow_in(self, char_wid=2):
         lfi_top = self.get_str_flow_in_dir(0, char_wid).split('\n')
         lfi_right = self.get_str_flow_in_dir(1, char_wid).split('\n')
@@ -293,8 +269,7 @@ class Holder:
         lfo_bottom = self.get_str_flow_out_dir(2, char_wid).splitlines()
         lfo_left = self.get_str_flow_out_dir(3, char_wid).splitlines()
 
-        lqty = self.get_str_qty_small_saturated(char_wid).splitlines()
-        #  lqty = self.get_str_qty_small(char_wid).splitlines()
+        lqty = self.get_str_qty_small(char_wid).splitlines()
 
         tab_wid = self.columns * char_wid + 2
         header = f'{{:^{tab_wid}}}'
@@ -328,15 +303,149 @@ class Holder:
 
         return str_recap
 
-    def evaluate_rgb_depth(self, z, d_min, d_max):
+    def get_str_qty_small_saturated(self, char_wid=2):
+        '''return a str of the values, saturated in proportion to capacity'''
+        #  print(f'bucket shape {self.quantity.shape}')
+        #  print(f'bucket\n{self.quantity}')
+        #  char_wid = 2
+        cs = '\x1b[38;2;{};{};{}m{}\x1b[0m'
+
+        str_qty_col = ''
+        for row in self.quantity:
+            for q in row:
+                r,g,b = self.evaluate_rgb_depth(q, 0, self.max_capacity)
+
+                # format the number
+                # remove floating part
+                # chop it off at char_wid, keep from right
+                str_q = f'{q:.0f}'[-char_wid:]
+                pad_q = f'{str_q:_>{char_wid}}'
+                col_q = cs.format(r,g,b,pad_q)
+
+                str_qty_col += col_q
+
+            str_qty_col += '\n'
+
+        return str_qty_col
+
+    def get_str_flow_in_sat(self, char_wid=2):
+        lfi_top = self.get_str_flow_in_dir_sat(0, char_wid).split('\n')
+        lfi_right = self.get_str_flow_in_dir_sat(1, char_wid).split('\n')
+        lfi_bottom = self.get_str_flow_in_dir_sat(2, char_wid).split('\n')
+        lfi_left = self.get_str_flow_in_dir_sat(3, char_wid).split('\n')
+
+        str_flow_in_sat = ''
+        for t, r, b, l in zip( lfi_top, lfi_right, lfi_bottom, lfi_left):
+            str_flow_in_sat += f'{t}  {r}  {b}  {l}\n'
+        #  return str_flow_in_sat
+        return str_flow_in_sat[:-1] # chop off double \n
+
+    def get_str_flow_in_dir_sat(self, direction, char_wid=2):
+        cs = '\x1b[38;2;{};{};{}m{}\x1b[0m'
+
+        max_q = np.amax(self.flow_out[direction])
+
+        str_flow_in_dir_sat = ''
+        for row in self.flow_in[direction]:
+            for q in row:
+                #  r,g,b = self.evaluate_rgb_depth(q, 0, self.max_capacity, 0)
+                r,g,b = self.evaluate_rgb_depth(q, 0, max_q, 1/6)
+
+                str_q = f'{q:.0f}'[-char_wid:]
+                pad_q = f'{str_q:_>{char_wid}}'
+                col_q = cs.format(r,g,b,pad_q)
+                str_flow_in_dir_sat += col_q
+
+            str_flow_in_dir_sat += '\n'
+        return str_flow_in_dir_sat
+
+    def get_str_flow_out_sat(self, char_wid=2):
+        lfi_top = self.get_str_flow_out_dir_sat(0, char_wid).split('\n')
+        lfi_right = self.get_str_flow_out_dir_sat(1, char_wid).split('\n')
+        lfi_bottom = self.get_str_flow_out_dir_sat(2, char_wid).split('\n')
+        lfi_left = self.get_str_flow_out_dir_sat(3, char_wid).split('\n')
+
+        str_flow_out_sat = ''
+        for t, r, b, l in zip( lfi_top, lfi_right, lfi_bottom, lfi_left):
+            str_flow_out_sat += f'{t}  {r}  {b}  {l}\n'
+        #  return str_flow_out_sat
+        return str_flow_out_sat[:-1] # chop off double \n
+
+    def get_str_flow_out_dir_sat(self, direction, char_wid=2):
+        cs = '\x1b[38;2;{};{};{}m{}\x1b[0m'
+
+        max_q = np.amax(self.flow_out[direction])
+
+        str_flow_out_dir_sat = ''
+        for row in self.flow_out[direction]:
+            for q in row:
+                #  r,g,b = self.evaluate_rgb_depth(q, 0, self.max_capacity, 0)
+                r,g,b = self.evaluate_rgb_depth(q, 0, max_q, 0)
+
+                str_q = f'{q:.0f}'[-char_wid:]
+                pad_q = f'{str_q:_>{char_wid}}'
+                col_q = cs.format(r,g,b,pad_q)
+                str_flow_out_dir_sat += col_q
+
+            str_flow_out_dir_sat += '\n'
+        return str_flow_out_dir_sat
+
+    def get_str_recap_sat(self, char_wid=2):
+        lfi_top = self.get_str_flow_in_dir_sat(0, char_wid).splitlines()
+        lfi_right = self.get_str_flow_in_dir_sat(1, char_wid).splitlines()
+        lfi_bottom = self.get_str_flow_in_dir_sat(2, char_wid).splitlines()
+        lfi_left = self.get_str_flow_in_dir_sat(3, char_wid).splitlines()
+
+        lfo_top = self.get_str_flow_out_dir_sat(0, char_wid).splitlines()
+        lfo_right = self.get_str_flow_out_dir_sat(1, char_wid).splitlines()
+        lfo_bottom = self.get_str_flow_out_dir_sat(2, char_wid).splitlines()
+        lfo_left = self.get_str_flow_out_dir_sat(3, char_wid).splitlines()
+
+        lqty = self.get_str_qty_small_saturated(char_wid).splitlines()
+
+        tab_wid = self.columns * char_wid + 2
+        header = f'{{:^{tab_wid}}}'
+        #  print(header)
+
+        str_recap = ''
+
+        str_recap += header.format('IN top')
+        str_recap += header.format('OUT top')
+        str_recap += header.format('IN right')
+        str_recap += '\n'
+
+        for a, b, c in zip( lfi_top, lfo_top, lfi_right):
+            str_recap += f'{a}  {b}  {c}\n'
+
+        str_recap += header.format('OUT left')
+        str_recap += header.format('QTY')
+        str_recap += header.format('OUT right')
+        str_recap += '\n'
+
+        for a, b, c in zip( lfo_left, lqty, lfo_right):
+            str_recap += f'{a}  {b}  {c}\n'
+
+        str_recap += header.format('IN left')
+        str_recap += header.format('OUT bottom')
+        str_recap += header.format('IN bottom')
+        str_recap += '\n'
+
+        for a, b, c in zip( lfi_left, lfo_bottom, lfi_bottom):
+            str_recap += f'{a}  {b}  {c}\n'
+
+        return str_recap
+
+    def evaluate_rgb_depth(self, z, d_min, d_max, hue=4/6):
         '''return the rgb value for saturation proportional to z in [d_min, d_max]'''
 
-        hue = 4/6 # blue
+        #  hue = 4/6 # blue
 
-        frac = 0.4
+        #  frac = 0.4
+        frac = 0.1
         if d_max <= d_min:
         #  if d_max == d_min:
             saturation = frac
+            #  saturation = 0
         elif z >= d_max:
             saturation = 1
         else:
@@ -344,8 +453,8 @@ class Holder:
             saturation = (z-d_min) / (d_max-d_min)
             #  # reshape it with sqrt
             #  #  saturation = sqrt(saturation)
-            #  sq_fr = frac
-            #  saturation = sqrt( (saturation+sq_fr) / (1+sq_fr) )
+            sq_fr = frac
+            saturation = sqrt( (saturation+sq_fr) / (1+sq_fr) )
 
         value = 1
 

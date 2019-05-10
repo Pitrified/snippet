@@ -48,7 +48,8 @@ def do_evolve(bucket, num):
         #  print(f'{bucket.get_str_flow_in(2)}')
         #  print(f'OUT')
         #  print(f'{bucket.get_str_flow_out(2)}')
-        print(f'{bucket.get_str_recap(3)}')
+        #  print(f'{bucket.get_str_recap(3)}')
+        print(f'{bucket.get_str_recap_sat(3)}')
 
 def test_waves_mini():
     rows = 3
