@@ -56,6 +56,7 @@ class Holder:
         #  self.flow_out_bottom = np.zeros( (self.rows, self.columns) )
 
         self.reset_flow_out()
+        self.reset_exiting()
 
     def reset_flow_out(self):
         self.flow_out = [
@@ -64,6 +65,9 @@ class Holder:
                 np.zeros( (self.rows, self.columns) ),
                 np.zeros( (self.rows, self.columns) ),
                 ]
+
+    def reset_exiting(self):
+        self.qty_exiting = np.zeros( (self.rows, self.columns) )
 
     def flow_step(self):
         '''compute one step'''
@@ -84,6 +88,24 @@ class Holder:
                     if 0<= r+row < self.rows and 0<= c+column < self.columns:
                         #  print(f'r {r} c {c} r+row {r+row} c+column {c+column}')
                         self.quantity[r+row][c+column] += qty
+
+    def add_drop_moving(self, row, column, radius, qty, direction, speed):
+        '''place a moving drop in the specified position'''
+        radiussquared = radius**2
+        for r in range(-radius, radius+1):
+            for c in range(-radius, radius+1):
+                if r**2 + c**2 <= radiussquared \
+                        and 0<= r+row < self.rows \
+                        and 0<= c+column < self.columns:
+                    #  print(f'r {r} c {c} r+row {r+row} c+column {c+column}')
+                    #  self.quantity[r+row][c+column] += qty
+                    i = r+row
+                    j = c+column
+                    self.quantity[i][j] += qty
+                    self.flow_in[direction][i][j] += qty
+                    #  self.flow_out[direction][i][j] += qty
+                    #  self.qty_exiting[i][j] += qty
+
 
     def evolve(self):
         '''apply movements on the map
@@ -208,6 +230,7 @@ class Holder:
         str_evolve_debug += f'{self.get_str_recap_sat(3)}\n'
 
         self.reset_flow_out()
+        self.reset_exiting()
 
         # build OUT
         # using info also from IN (e.g. momentum)
@@ -278,6 +301,8 @@ class Holder:
                 for direction in range(4):
                     f_in = self.flow_in[direction][i][j]
                     self.flow_out[(direction+4)%4][i][j] += f_in * dampening
+
+                    self.qty_exiting[i][j] += f_in * dampening
                     #  self.quantity[i][j] += f_in * (1-dampening)
 
     def evolve_gravity(self):
@@ -286,27 +311,37 @@ class Holder:
         this might be not limited by max_flow_gravity directly, but
         proportionately with the quantity or even the whole quantity, it's not
         like a drop of water flows in stages
+
+        check that water truly is there
         '''
         for i, row in enumerate(self.quantity):
             for j, q in enumerate(row):
 
-                if self.quantity[i][j] > self.max_flow_gravity:
+                future_qty = self.quantity[i][j] - self.qty_exiting[i][j]
+
+                #  if self.quantity[i][j] > self.max_flow_gravity:
+                if future_qty > self.max_flow_gravity:
                     grav_qty = self.max_flow_gravity
                     #  self.quantity[i][j] -= self.max_flow_gravity
                 else:
-                    grav_qty = self.quantity[i][j]
+                    #  grav_qty = self.quantity[i][j]
+                    grav_qty = future_qty
                     #  self.quantity[i][j] = 0
 
                 self.flow_out[2][i][j] += grav_qty
+                self.qty_exiting[i][j] += grav_qty
 
     def evolve_diffusion(self):
-        '''some water just goes to nearby cells'''
+        '''some water just goes to nearby cells
+
+        check that water truly is there
+        '''
 
         diff_frac = 0.1
 
         for i, row in enumerate(self.quantity):
             for j, q in enumerate(row):
-                diff_qty = q * diff_frac
+                diff_qty = (q-self.qty_exiting[i][j]) * diff_frac
 
                 for direction in range(4):
                     self.flow_out[direction][i][j] += diff_qty
@@ -583,18 +618,22 @@ class Holder:
         '''return the rgb value for saturation proportional to z in [d_min, d_max]'''
 
         #  hue = 4/6 # blue
-
         #  frac = 0.4
         frac = 0.1
+
         if d_max <= d_min:
         #  if d_max == d_min:
             saturation = frac
             #  saturation = 0
+
         elif z < d_min:
-            saturation = 1
-            hue = 3/6
+            #  saturation = 1 # to debug negative numbers
+            #  hue = 3/6
+            saturation = sqrt(frac)
+
         elif z >= d_max:
             saturation = 1
+
         else:
             # linear mapping z to saturation
             saturation = (z-d_min) / (d_max-d_min)

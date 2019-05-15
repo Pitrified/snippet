@@ -71,7 +71,7 @@ def do_evolve_wait(bucket, num):
 
         print(f'{bucket.get_str_sum_info()}')
 
-        print(f'{bucket.get_str_qty_small_saturated(2)}')
+        print(f'{bucket.get_str_qty_small_saturated(1)}')
         #  print(f'{bucket.get_str_qty_small_saturated(6)}')
 
         #  print(f'{bucket.get_str_recap(3)}')
@@ -87,6 +87,21 @@ def test_waves_mini(num_iter):
     qty = 20
     bucket.fill_bottom(depth, qty)
     bucket.add_drop(row=0, column=3, radius=0, qty=5)
+    print(f'{bucket.get_str_qty_small_saturated(3)}')
+
+    do_evolve(bucket, num_iter)
+
+def test_waves_mini_moving(num_iter):
+    rows = 3
+    columns = 5
+    print(f'doing test_waves_mini_moving r {rows} c {columns} ni {num_iter}')
+    bucket = Holder(rows, columns)
+
+    depth = 1
+    qty = 20
+    bucket.fill_bottom(depth, qty)
+    bucket.add_drop_moving(row=0, column=2, radius=0, qty=5,
+            direction=1, speed=10)
     print(f'{bucket.get_str_qty_small_saturated(3)}')
 
     do_evolve(bucket, num_iter)
@@ -119,7 +134,7 @@ def test_waves_big(rows, columns, num_iter):
     '''create water and do things'''
     print(f'doing test_waves_big r {rows} c {columns} ni {num_iter}')
 
-    bucket = Holder(rows, columns, max_capacity=50)
+    bucket = Holder(rows, columns, max_capacity=60)
 
     depth = 7
     qty = 20
@@ -162,8 +177,9 @@ def main():
     print(f'python3 sim_waves_main.py -s {myseed} -r {rows} -c {columns} -i {num_iter}')
 
     #  test_waves_base(rows=rows, columns=columns, num_iter=num_iter)
-    test_waves_big(rows=rows, columns=columns, num_iter=num_iter)
+    #  test_waves_big(rows=rows, columns=columns, num_iter=num_iter)
     #  test_waves_mini(num_iter)
+    test_waves_mini_moving(num_iter)
 
 if __name__ == '__main__':
     main()
