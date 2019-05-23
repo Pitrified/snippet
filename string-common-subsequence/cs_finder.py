@@ -106,17 +106,17 @@ class LCSfinder:
 
     def rec_lcs(self, i, j, level):
         '''core function'''
-        #  self.printl(f'doing X[{i}]={self.X[i]} Y[{j}]={self.Y[j]}', level)
+        self.printl(f'doing X[{i}]={self.X[i]} Y[{j}]={self.Y[j]}', level)
 
         #  if i==0 or j==0:
         if i==-1 or j==-1:
-            #  self.printl(f'Returning base', level)
+            self.printl(f'Returning base', level)
             return 0
 
         if not (i,j) in self.B:
             # populate this for the first and only time
             if self.X[i] == self.Y[j]:
-                #  self.printl(f'equal X[{i}]={self.X[i]}', level)
+                self.printl(f'equal X[{i}]={self.X[i]}', level)
                 self.B[ (i,j) ] = 1
                 self.cost[(i,j)] = 1+self.rec_lcs(i-1, j-1, level+1)
                 #  self.printl(f'ret cost {1+self.rec_lcs(i-1, j-1)} self.cost {self.cost[(i,j)]}', level)
@@ -127,12 +127,12 @@ class LCSfinder:
                 cost_left = self.rec_lcs(i,j-1, level+1)
                 if cost_up > cost_left:
                 #  if self.rec_lcs(i-1,j) < self.rec_lcs(i,j-1):
-                    #  self.printl(f'less {i} {j} {cost_up} {cost_left}', level)
+                    self.printl(f'less {i} {j} {cost_up} {cost_left}', level)
                     self.B[ (i,j) ] = 2
                     #  self.cost[(i,j)] = self.rec_lcs(i-1, j) # so this is fast
                     self.cost[(i,j)] = cost_up
                 else:
-                    #  self.printl(f'more {i} {j} {cost_up} {cost_left}', level)
+                    self.printl(f'more {i} {j} {cost_up} {cost_left}', level)
                     self.B[ (i,j) ] = 3
                     #  self.cost[(i,j)] = self.rec_lcs(i, j-1)
                     self.cost[(i,j)] = cost_left

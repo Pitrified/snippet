@@ -123,8 +123,8 @@ def run_test_lcs_similar():
 
 def main():
     # we destroy the stack like men https://stackoverflow.com/a/16248113
-    resource.setrlimit(resource.RLIMIT_STACK, (2**29,-1))
-    sys.setrecursionlimit(10**6)
+    #  resource.setrlimit(resource.RLIMIT_STACK, (2**29,-1))
+    #  sys.setrecursionlimit(10**6)
 
     args = parse_arguments()
     print(args)
@@ -148,8 +148,9 @@ def main():
 
     print(f'python3 sim_waves_main.py -s {myseed} -r {rows} -c {columns}')
 
-    run_test_lcs_base(rows=rows, columns=columns)
+    #  run_test_lcs_base(rows=rows, columns=columns)
     #  run_test_lcs_base(rows=4000, columns=4000)
+    run_test_lcs_base(rows=20, columns=100)
     #  test_generate_similar_string_nonrepeating()
     #  run_test_lcs_similar()
 
