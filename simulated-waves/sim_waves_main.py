@@ -32,29 +32,55 @@ def parse_arguments():
             default=-1,
             help="random seed to use")
 
+    parser.add_argument('-i', "--num_iter",
+            type=int,
+            default=-1,
+            help="evolve iteration to do")
+
     # last line to parse them
     args = parser.parse_args()
 
     #  parse the args even more if needed
-    args_parsed = { a : v for a, v in args._get_kwargs() }
-    return args_parsed
+    #  args_parsed = { a : v for a, v in args._get_kwargs() }
+    #  return args_parsed
+    return args
 
 def do_evolve(bucket, num):
     #  char_wid = 2
     for _ in range(num):
-        bucket.evolve()
-        #  print(f'{bucket.get_str_qty_small_saturated(2)}')
-        #  print(f'IN')
-        #  print(f'{bucket.get_str_flow_in(2)}')
-        #  print(f'OUT')
-        #  print(f'{bucket.get_str_flow_out(2)}')
-        #  print(f'{bucket.get_str_recap(3)}')
-        print(f'{bucket.get_str_recap_sat(3)}')
+        #  bucket.evolve()
+        str_evolve_debug = bucket.evolve_steps()
 
-def test_waves_mini():
+        #  print(f'{str_evolve_debug}')
+
+        print(f'{bucket.get_str_sum_info()}')
+
+        #  print(f'{bucket.get_str_qty_small_saturated(1)}')
+        print(f'{bucket.get_str_qty_small_saturated(6)}')
+
+        #  print(f'{bucket.get_str_recap(3)}')
+        #  print(f'{bucket.get_str_recap_sat(3)}')
+
+def do_evolve_wait(bucket, num):
+    #  char_wid = 2
+    for _ in range(num):
+        #  bucket.evolve()
+        str_evolve_debug = bucket.evolve_steps()
+
+        #  print(f'{str_evolve_debug}')
+
+        print(f'{bucket.get_str_sum_info()}')
+
+        print(f'{bucket.get_str_qty_small_saturated(1)}')
+        #  print(f'{bucket.get_str_qty_small_saturated(6)}')
+
+        #  print(f'{bucket.get_str_recap(3)}')
+        #  print(f'{bucket.get_str_recap_sat(3)}')
+
+def test_waves_mini(num_iter):
     rows = 3
     columns = 5
-    print(f'doing test_waves_mini r {rows} c {columns}')
+    print(f'doing test_waves_mini r {rows} c {columns} ni {num_iter}')
     bucket = Holder(rows, columns)
 
     depth = 1
@@ -63,11 +89,26 @@ def test_waves_mini():
     bucket.add_drop(row=0, column=3, radius=0, qty=5)
     print(f'{bucket.get_str_qty_small_saturated(3)}')
 
-    do_evolve(bucket, 3)
+    do_evolve(bucket, num_iter)
 
-def test_waves_base(rows, columns):
+def test_waves_mini_moving(num_iter):
+    rows = 3
+    columns = 5
+    print(f'doing test_waves_mini_moving r {rows} c {columns} ni {num_iter}')
+    bucket = Holder(rows, columns)
+
+    depth = 1
+    qty = 20
+    bucket.fill_bottom(depth, qty)
+    bucket.add_drop_moving(row=0, column=2, radius=0, qty=5,
+            direction=1, speed=10)
+    print(f'{bucket.get_str_qty_small_saturated(3)}')
+
+    do_evolve(bucket, num_iter)
+
+def test_waves_base(rows, columns, num_iter):
     '''create water and do things'''
-    print(f'doing test_waves_base r {rows} c {columns}')
+    print(f'doing test_waves_base r {rows} c {columns} ni {num_iter}')
 
     bucket = Holder(rows, columns)
 
@@ -83,9 +124,32 @@ def test_waves_base(rows, columns):
     #  bucket.print_qty()
     #  print(f'{bucket.get_str_qty_small()}')
     #  print(f'{bucket.get_str_qty_small(3)}')
+    print(f'Starting state:')
     print(f'{bucket.get_str_qty_small_saturated(3)}')
 
-    do_evolve(bucket, 3)
+    #  do_evolve(bucket, 3)
+    do_evolve(bucket, num_iter)
+
+def test_waves_big(rows, columns, num_iter):
+    '''create water and do things'''
+    print(f'doing test_waves_big r {rows} c {columns} ni {num_iter}')
+
+    bucket = Holder(rows, columns, max_capacity=60)
+
+    depth = 7
+    qty = 20
+    #  qty = 200
+    bucket.fill_bottom(depth, qty)
+    bucket.fill_bottom(depth=5, qty=20)
+    bucket.add_drop(row=1, column=4, radius=1, qty=5)
+    bucket.add_drop(row=1, column=4, radius=4, qty=5)
+    bucket.add_drop(row=2, column=15, radius=12, qty=2)
+
+    print(f'Starting state:')
+    print(f'{bucket.get_str_sum_info()}')
+    print(f'{bucket.get_str_qty_small_saturated(1)}')
+
+    do_evolve_wait(bucket, num_iter)
 
 def main():
     args = parse_arguments()
@@ -94,24 +158,28 @@ def main():
     # setup width and heigth
     rows, columns = popen('stty size', 'r').read().split()
     #  mywidth, myheigth = 27,9
-    if args['columns'] == -1: columns = int(columns)
-    else: columns = args['columns']
-    if args['rows'] == -1: rows = int(rows)
-    else: rows = args['rows']
+    if args.columns == -1: columns = int(columns)
+    else: columns = args.columns
+    if args.rows == -1: rows = int(rows)
+    else: rows = args.rows
+    if args.num_iter == -1: num_iter = 3
+    else: num_iter = args.num_iter
 
     # setup seed value
-    if args['seed'] == -1:
+    if args.seed == -1:
         myseed = 1
         myseed = int( timer() * 1e9 % 2**32 )
     else:
-        myseed = args['seed']
+        myseed = args.seed
     seed(myseed)
     npseed(myseed)
 
-    print(f'python3 sim_waves_main.py -s {myseed} -r {rows} -c {columns}')
+    print(f'python3 sim_waves_main.py -s {myseed} -r {rows} -c {columns} -i {num_iter}')
 
-    #  test_waves_base(rows=rows, columns=columns)
-    test_waves_mini()
+    #  test_waves_base(rows=rows, columns=columns, num_iter=num_iter)
+    #  test_waves_big(rows=rows, columns=columns, num_iter=num_iter)
+    #  test_waves_mini(num_iter)
+    test_waves_mini_moving(num_iter)
 
 if __name__ == '__main__':
     main()

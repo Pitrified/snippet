@@ -56,6 +56,7 @@ class Holder:
         #  self.flow_out_bottom = np.zeros( (self.rows, self.columns) )
 
         self.reset_flow_out()
+        self.reset_exiting()
 
     def reset_flow_out(self):
         self.flow_out = [
@@ -64,6 +65,9 @@ class Holder:
                 np.zeros( (self.rows, self.columns) ),
                 np.zeros( (self.rows, self.columns) ),
                 ]
+
+    def reset_exiting(self):
+        self.qty_exiting = np.zeros( (self.rows, self.columns) )
 
     def flow_step(self):
         '''compute one step'''
@@ -84,6 +88,24 @@ class Holder:
                     if 0<= r+row < self.rows and 0<= c+column < self.columns:
                         #  print(f'r {r} c {c} r+row {r+row} c+column {c+column}')
                         self.quantity[r+row][c+column] += qty
+
+    def add_drop_moving(self, row, column, radius, qty, direction, speed):
+        '''place a moving drop in the specified position'''
+        radiussquared = radius**2
+        for r in range(-radius, radius+1):
+            for c in range(-radius, radius+1):
+                if r**2 + c**2 <= radiussquared \
+                        and 0<= r+row < self.rows \
+                        and 0<= c+column < self.columns:
+                    #  print(f'r {r} c {c} r+row {r+row} c+column {c+column}')
+                    #  self.quantity[r+row][c+column] += qty
+                    i = r+row
+                    j = c+column
+                    self.quantity[i][j] += qty
+                    self.flow_in[direction][i][j] += qty
+                    #  self.flow_out[direction][i][j] += qty
+                    #  self.qty_exiting[i][j] += qty
+
 
     def evolve(self):
         '''apply movements on the map
@@ -146,7 +168,6 @@ class Holder:
 
         self.reset_flow_out()
 
-
         for i, row in enumerate(self.quantity):
             for j, q in enumerate(row):
 
@@ -189,6 +210,157 @@ class Holder:
                 #  # right column
                 #  if j == self.columns:
                     #  self.flow_in[3][i][j] = self.flow_out[3][i][j]
+
+    def evolve_steps(self):
+        '''do evolution in steps so we can debug even more'''
+
+        str_evolve_debug = ''
+
+        str_evolve_debug += f'\n###############\nStarting evolution:\n'
+        str_evolve_debug += f'{self.get_str_recap_sat(3)}\n'
+
+        # build QTY: remove from OUT
+        self.qty_remove_out()
+        str_evolve_debug += f'Removed out\n'
+        str_evolve_debug += f'{self.get_str_recap_sat(3)}\n'
+
+        # build IN from previous OUT status
+        self.evolve_out_to_in()
+        str_evolve_debug += f'Evolved out to in\n'
+        str_evolve_debug += f'{self.get_str_recap_sat(3)}\n'
+
+        self.reset_flow_out()
+        self.reset_exiting()
+
+        # build OUT
+        # using info also from IN (e.g. momentum)
+        # do NOT modify QTY
+        self.evolve_momentum()
+        self.evolve_gravity()
+        self.evolve_diffusion()
+        str_evolve_debug += f'Applied evolve\n'
+        str_evolve_debug += f'{self.get_str_recap_sat(3)}\n'
+
+        # build QTY: add from IN
+        self.qty_add_in()
+        str_evolve_debug += f'Added in\n'
+        str_evolve_debug += f'{self.get_str_recap_sat(3)}\n'
+
+        # print HERE
+        #  print(f'Done evolving')
+        #  print(f'{self.get_str_recap_sat(3)}')
+
+        return str_evolve_debug
+
+    def evolve_out_to_in(self):
+        '''shuffle info around, from out (of previous step) to in'''
+        for i, row in enumerate(self.quantity):
+            for j, q in enumerate(row):
+
+                ### flow along columns
+                # first row
+                if i == 0:
+                    # edges are bounced back
+                    self.flow_in[0][i][j] = self.flow_out[0][i][j]
+                    self.flow_in[2][i][j] = self.flow_out[0][i+1][j]
+
+                # bottom row
+                elif i == self.rows - 1:
+                    self.flow_in[0][i][j] = self.flow_out[2][i-1][j]
+                    self.flow_in[2][i][j] = self.flow_out[2][i][j]
+
+                # middle rows: now we have to check if you are in a correct column
+                # NOT! we only do top 0 bottom 2 now
+                #  elif 0 < j < self.columns - 1:
+                else:
+                    self.flow_in[0][i][j] = self.flow_out[2][i-1][j]
+                    self.flow_in[2][i][j] = self.flow_out[0][i+1][j]
+
+                ### flow along rows
+                # left column
+                if j == 0:
+                    self.flow_in[1][i][j] = self.flow_out[1][i][j]
+                    self.flow_in[3][i][j] = self.flow_out[1][i][j+1]
+
+                # right column
+                elif j == self.columns - 1:
+                    self.flow_in[1][i][j] = self.flow_out[3][i][j-1]
+                    self.flow_in[3][i][j] = self.flow_out[3][i][j]
+
+                else:
+                    self.flow_in[1][i][j] = self.flow_out[3][i][j-1]
+                    self.flow_in[3][i][j] = self.flow_out[1][i][j+1]
+
+    def evolve_momentum(self):
+        '''water entering basically flows through'''
+
+        dampening = 0.1
+
+        for i, row in enumerate(self.quantity):
+            for j, q in enumerate(row):
+                for direction in range(4):
+                    f_in = self.flow_in[direction][i][j]
+                    self.flow_out[(direction+4)%4][i][j] += f_in * dampening
+
+                    self.qty_exiting[i][j] += f_in * dampening
+                    #  self.quantity[i][j] += f_in * (1-dampening)
+
+    def evolve_gravity(self):
+        '''do gravity evolution, put some water from quantity to flow_out
+
+        this might be not limited by max_flow_gravity directly, but
+        proportionately with the quantity or even the whole quantity, it's not
+        like a drop of water flows in stages
+
+        check that water truly is there
+        '''
+        for i, row in enumerate(self.quantity):
+            for j, q in enumerate(row):
+
+                future_qty = self.quantity[i][j] - self.qty_exiting[i][j]
+
+                #  if self.quantity[i][j] > self.max_flow_gravity:
+                if future_qty > self.max_flow_gravity:
+                    grav_qty = self.max_flow_gravity
+                    #  self.quantity[i][j] -= self.max_flow_gravity
+                else:
+                    #  grav_qty = self.quantity[i][j]
+                    grav_qty = future_qty
+                    #  self.quantity[i][j] = 0
+
+                self.flow_out[2][i][j] += grav_qty
+                self.qty_exiting[i][j] += grav_qty
+
+    def evolve_diffusion(self):
+        '''some water just goes to nearby cells
+
+        check that water truly is there
+        '''
+
+        diff_frac = 0.1
+
+        for i, row in enumerate(self.quantity):
+            for j, q in enumerate(row):
+                diff_qty = (q-self.qty_exiting[i][j]) * diff_frac
+
+                for direction in range(4):
+                    self.flow_out[direction][i][j] += diff_qty
+
+    def qty_add_in(self):
+        for i, row in enumerate(self.quantity):
+            for j, q in enumerate(row):
+                tot_flow_in = 0
+                for direction in range(4):
+                    tot_flow_in += self.flow_in[direction][i][j]
+                self.quantity[i][j] += tot_flow_in
+
+    def qty_remove_out(self):
+        for i, row in enumerate(self.quantity):
+            for j, q in enumerate(row):
+                tot_flow_out = 0
+                for direction in range(4):
+                    tot_flow_out += self.flow_out[direction][i][j]
+                self.quantity[i][j] -= tot_flow_out
 
     def print_qty(self):
         '''print the values'''
@@ -302,6 +474,13 @@ class Holder:
             str_recap += f'{a}  {b}  {c}\n'
 
         return str_recap
+
+    def get_str_sum_info(self):
+        str_info = ''
+
+        sum_qty = np.sum(self.quantity)
+        str_info += f'Sum qty: {sum_qty}'
+        return str_info
 
     def get_str_qty_small_saturated(self, char_wid=2):
         '''return a str of the values, saturated in proportion to capacity'''
@@ -439,15 +618,22 @@ class Holder:
         '''return the rgb value for saturation proportional to z in [d_min, d_max]'''
 
         #  hue = 4/6 # blue
-
         #  frac = 0.4
         frac = 0.1
+
         if d_max <= d_min:
         #  if d_max == d_min:
             saturation = frac
             #  saturation = 0
+
+        elif z < d_min:
+            #  saturation = 1 # to debug negative numbers
+            #  hue = 3/6
+            saturation = sqrt(frac)
+
         elif z >= d_max:
             saturation = 1
+
         else:
             # linear mapping z to saturation
             saturation = (z-d_min) / (d_max-d_min)
