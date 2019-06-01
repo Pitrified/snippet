@@ -26,8 +26,8 @@ sudo apt -y install libdc1394-22-dev
 sudo apt -y install libxine2-dev
 
 sudo apt -y install libv4l-dev
-# this cleaner for me
-# sudo ln -s /usr/include/libv4l1-videodev.h /usr/include/linux/videodev.h
+# this is clearer for me
+sudo ln -s /usr/include/libv4l1-videodev.h /usr/include/linux/videodev.h
 # cd /usr/include/linux
 # sudo ln -s -f ../libv4l1-videodev.h videodev.h
 # cd "$cwd"
@@ -54,9 +54,9 @@ sudo apt -y install libx264-dev
 sudo apt -y install libgtk-3-dev
 
 # python dep
-sudo apt -y install python3-dev
-sudo apt -y install python3-pip
-sudo -H pip3 install -U pip numpy
+# sudo apt -y install python3-dev
+# sudo apt -y install python3-pip
+# sudo -H pip3 install -U pip numpy
 
 
 
