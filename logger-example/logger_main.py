@@ -4,6 +4,7 @@
 
 import logging
 from logger_module import *
+from logger_class import *
 
 def setup_logger():
     '''setup the loggers for the main module
@@ -106,9 +107,12 @@ def main():
     setup_logger()
     test_child_logger()
     test_verbose_logger()
-    setup_module_logger()
     test_exception_logger()
+
+    setup_module_logger()
     test_multiple_handlers()
+
+    myclass = sample_class()
 
 if __name__ == '__main__':
     main()
