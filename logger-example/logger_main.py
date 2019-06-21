@@ -108,6 +108,7 @@ def main():
     test_verbose_logger()
     setup_module_logger()
     test_exception_logger()
+    test_multiple_handlers()
 
 if __name__ == '__main__':
     main()
