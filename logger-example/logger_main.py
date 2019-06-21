@@ -3,7 +3,7 @@
 # https://realpython.com/python-logging/
 
 import logging
-from logger_module import test_module_logger
+from logger_module import *
 
 def setup_logger():
     '''setup the loggers for the main module
@@ -106,7 +106,8 @@ def main():
     setup_logger()
     test_child_logger()
     test_verbose_logger()
-    test_module_logger()
+    setup_module_logger()
+    test_exception_logger()
 
 if __name__ == '__main__':
     main()
