@@ -34,6 +34,7 @@ def parse_arguments():
 
 def test_creator(path_input, path_output):
     theline = liner(path_input, path_output)
+    theline.compute_line()
 
 def main():
     args = parse_arguments()
@@ -54,7 +55,6 @@ def main():
     print(f'python3 line_drawer_main.py -s {myseed} -i {path_input} -o {path_output}')
 
     test_creator(path_input, path_output)
-
 
 if __name__ == '__main__':
     main()
