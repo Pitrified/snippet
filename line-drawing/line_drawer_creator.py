@@ -7,6 +7,7 @@ from math import cos
 from math import sin
 from math import inf
 from random import randint
+from random import choices
 from random import sample
 from timeit import default_timer as timer
 from time import sleep
@@ -106,7 +107,7 @@ class liner:
         self.img_masked = self.img_masked * 256
 
         cv2.imshow('masked image', self.img_masked)
-        #  cv2.waitKey(0)
+        cv2.waitKey(0)
 
         ######################################################################
         # generate the PINS for the line
@@ -131,9 +132,6 @@ class liner:
 
         self.drawn = np.zeros( self.img_masked.shape, dtype=np.uint16)
 
-        cv2.imshow('drawn image', self.drawn)
-        cv2.waitKey(0)
-
         #  self.residual = np.zeros( img_masked.shape, dtype=np.int16)
         self.residual = cv2.copyTo(self.img_masked, None)
         self.residual = self.residual.astype(np.int16)
@@ -144,23 +142,30 @@ class liner:
         first = randint(0, self.num_corners-1)
         self.line.append(first)
 
-        #  count = 1
-        #  step = self.max_line_len // 80
+        count = 1
+        step = self.max_line_len // 80
+        delta_count = 0
         while len(self.line) < self.max_line_len:
-            new_pin = self.evolve_step()
+            #  new_pin = self.evolve_step()
+            new_pin = self.evolve_step_random()
             #  logevolve.info(f'New pin {new_pin}')
-            is_decreasing = self.draw_line(new_pin, 'DEBUG')
-            #  self.draw_line(new_pin,)
+            #  delta = self.draw_line(new_pin, 'DEBUG')
+            delta = self.draw_line(new_pin,)
             self.line.append(new_pin)
 
-            #  if count % step == 0:
-                #  print('.', end='', flush=True)
-            #  count += 1
+            if count % step == 0:
+                print('.', end='', flush=True)
+            count += 1
 
-            if is_decreasing:
+            if delta == 0:
+                delta_count += 1
+            else:
+                delta_count = 0
+
+            if delta_count == 10:
                 break
 
-        #  print('.')
+        print('.')
         logevolve.log(5, self.line)
         cv2.imshow('Drawn image', self.drawn)
         cv2.waitKey(0)
@@ -190,6 +195,38 @@ class liner:
                 best_pin = i
 
         return best_pin
+
+    def evolve_step_random(self):
+        '''Find the next best line
+
+        Look for the next pin that reduces abs(residual) the most
+        '''
+        logevolve = logging.getLogger(f'{self.__class__.__name__}.console.step')
+        #  logevolve.setLevel('TRACE')
+        logevolve.setLevel('DEBUG')
+
+        #  best_pin = -1
+        #  best_loss = inf
+
+        probs = np.zeros(self.num_corners)
+
+        for i in range(self.num_corners):
+            if i == self.line[-1] or (len(self.line) > 2 and i == self.line[-2]):
+                probs[i] = 0
+                continue
+
+            #  new_loss = self.evaluate_line(self.line[-1], i, 'TRACE')
+            new_loss = self.evaluate_line(self.line[-1], i,)
+            probs[i] = self.loss - new_loss
+
+            #  if new_loss < best_loss:
+                #  logevolve.log(5, f'New candidate for best, pin {i} loss {new_loss}')
+                #  best_loss = new_loss
+                #  best_pin = i
+
+        new_pin = choices(range(self.num_corners), weights=probs)[0]
+        logevolve.log(5, f'Probs {probs} picked {new_pin}')
+        return new_pin
 
     def evaluate_line(self, pin_start, pin_end, logLevel='INFO'):
         '''Compute the loss for this couple of pin
@@ -240,7 +277,7 @@ class liner:
         delta = old_loss-self.loss
         logdraw.debug(f'Added pin {new_pin:03d} with delta: {delta} new loss: {self.loss}')
 
-        return delta < 0
+        return delta
 
     def compute_line(self):
         '''go through the line you have drawn so far and create the image

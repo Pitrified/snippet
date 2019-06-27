@@ -62,7 +62,8 @@ def test_pins_line(path_input, path_output):
 
 def test_evolve(path_input, path_output):
     theline = liner(path_input, path_output,
-            num_corners=200,
+            #  num_corners=200,
+            num_corners=400,
             #  output_size=51,
             output_size=251,
             max_line_len=10000,
