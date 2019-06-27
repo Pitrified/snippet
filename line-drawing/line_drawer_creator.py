@@ -176,6 +176,29 @@ class liner:
         testlog.info(f'Time to cast {x*y} cells: {end-start}')
         # 0.001 s for a 1000x1000
 
+        start = timer()
+        randmat = np.random.normal(0, 1, (x,y))
+        end = timer()
+        testlog.info(f'Time to generate random normal {x*y} cells: {end-start}')
+        # 0.04 s for a 1000x1000
+        start = timer()
+        randmat_abs = np.abs(randmat)
+        end = timer()
+        testlog.info(f'Time to compute abs {x*y} cells: {end-start}')
+        # 0.003 s for a 1000x1000
+
+        start = timer()
+        summed = np.sum(randmat_abs)
+        end = timer()
+        testlog.info(f'Time to sum the abs one {x*y} cells: {end-start}')
+        # 0.0005 s for a 1000x1000
+
+        start = timer()
+        summed = np.sum(np.abs(randmat) )
+        end = timer()
+        testlog.info(f'Time to sum while doing the abs {x*y} cells: {end-start}')
+        # 0.0035 s for a 1000x1000
+
     def test_line_shading(self):
         '''Test how summing lines works
         '''
@@ -356,20 +379,34 @@ class liner:
         testlog.log(5, f'RESIDUAL ABS\n{residual_abs}')
         testlog.debug(f'RESIDUAL ABS sum {np.sum(residual_abs)}')
 
+        self.test_draw_line(drawn, residual, (1, 1), (8,8), test_line_weight,)
+        testlog.log(5, f'\n')
+        testlog.log(5, f'DRAWN\n{drawn}')
+        testlog.log(5, f'RESIDUAL\n{residual}')
+        testlog.debug(f'RESIDUAL sum {np.sum(residual)}')
+
+        residual_abs = np.abs(residual)
+        testlog.log(5, f'\n')
+        testlog.log(5, f'RESIDUAL ABS\n{residual_abs}')
+        testlog.debug(f'RESIDUAL ABS sum {np.sum(residual_abs)}')
+
     def test_draw_line(self, drawn, residual, x, y, test_line_weight, logLevel='INFO'):
         '''draw a line on drawn, subtract it from residual
         '''
         testlog = logging.getLogger(f'{self.__class__.__name__}.console.testdl')
         testlog.setLevel(logLevel)
         testlog.debug(f'Line from {x} to {y}')
-        line = np.zeros( (11,11), dtype=np.uint16)
+
+        line = np.zeros( drawn.shape, dtype=drawn.dtype)
         cv2.line(line, x, y, test_line_weight)
-        # remove the last dot from the line
-        # WHAT
+
+        # remove the last dot from the line WHAT the transposed hell
         line[y[1], y[0]] -= test_line_weight
         testlog.debug(f'the LINE\n{line}')
+
         cv2.add(drawn , line, drawn)
-        line_int = line.astype(np.int16)
+
+        line_int = line.astype(residual.dtype)
         cv2.subtract(residual, line_int, residual)
 
     def generate_test_line(self, length, test_num_corners):
