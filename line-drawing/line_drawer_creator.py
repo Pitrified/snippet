@@ -7,6 +7,7 @@ from math import cos
 from math import sin
 from random import randint
 from random import sample
+from timeit import default_timer as timer
 
 class liner:
     '''draw an image using a string from point to point on a circle
@@ -128,6 +129,51 @@ class liner:
         pixels = self.img_crop.shape[0] * self.img_crop.shape[1]
         testlog.info(f'Average of img_crop {np.sum(self.img_crop)/pixels}')
 
+    def benchmark_looping_line(self):
+        '''How slow is looping over an entire matrix?
+        '''
+        testlog = logging.getLogger(f'{self.__class__.__name__}.console.benchll')
+        testlog.setLevel('INFO')
+        x = 1000
+        y = 1000
+        test_line_weight = 1
+
+        line = np.zeros( (x,y), dtype=np.uint16)
+        cv2.line(line, (1, 1), (1,8), test_line_weight)
+        start = timer()
+        for row in line:
+            for bit in row:
+                if bit == test_line_weight:
+                    testlog.debug(f'Trovato {bit}')
+        end = timer()
+        testlog.info(f'Time to loop over {x*y} cells: {end-start}')
+        # 1 second for 1M cells... 
+
+        #  line = np.zeros( (x,y), dtype=np.uint16)
+        #  cv2.line(line, (1, 1), (1,8), test_line_weight)
+        #  start = timer()
+        #  for i in range(x):
+            #  for j in range(y):
+                #  if line[i,j] == test_line_weight:
+                    #  testlog.debug(f'Trovato {bit}')
+        #  end = timer()
+        #  testlog.info(f'Time to explicitly loop over {x*y} cells: {end-start}')
+
+        drawn = np.zeros( (x,y), dtype=np.uint16)
+        line = np.zeros( (x,y), dtype=np.uint16)
+
+        start = timer()
+        cv2.line(line, (1, 1), (x-1,y-1), test_line_weight)
+        drawn = cv2.add(drawn , line)
+        end = timer()
+        testlog.info(f'Time to sum {x*y} cells: {end-start}')
+        # 0.002 s for a 1000x1000
+
+        start = timer()
+        line = line.astype(np.int16)
+        end = timer()
+        testlog.info(f'Time to cast {x*y} cells: {end-start}')
+        # 0.001 s for a 1000x1000
 
     def test_line_shading(self):
         '''Test how summing lines works
@@ -240,6 +286,10 @@ class liner:
         another has similar error. This is very intensive I guess, as you have
         to iterate over all the pixels to find if they are a linepixel or not.
 
+        To avoid looping over the entire matrix to find the line, a separate
+        algorithm might be useful
+        https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+
         Weighting the improvement with the line length might improve the
         results, as longer lines have more "residual difference" than shorter
         ones. To avoid weird effects when weighting, some parameters might be tuned:
@@ -256,11 +306,13 @@ class liner:
         '''
         testlog = logging.getLogger(f'{self.__class__.__name__}.console.testlo')
 
-        drawn = np.zeros( (10,10), dtype=np.uint16)
+        drawn = np.zeros( (11,11), dtype=np.uint16)
+        #  drawn = np.zeros( (11,11), dtype=np.int16)
         pins = np.array( [[1,1], [1,8], [8,1], [8,8] ] )
 
         #  testlog.debug(f'IMG CROP\n{self.img_crop}')
         testlog.debug(f'IMG MASKED\n{self.img_masked}')
+        testlog.debug(f'IMG MASKED sum\n{np.sum(self.img_masked)}')
 
         # PINS only when printing, not part of the loss computation
         #  white = 65535
@@ -271,14 +323,28 @@ class liner:
         test_line_weight = 1
 
         # add a line
-        line = np.zeros( (10,10), dtype=np.uint16)
+        line = np.zeros( (11,11), dtype=np.uint16)
+        #  line = np.zeros( (11,11), dtype=np.int16)
         cv2.line(line, (1, 1), (1,8), test_line_weight)
-        testlog.debug(f'LINE\n{line}')
+        #  testlog.debug(f'LINE\n{line}')
+
         drawn = cv2.add(drawn , line)
-        testlog.debug(f'DRAWN\n{drawn}')
+        #  testlog.debug(f'DRAWN\n{drawn}')
+
+        residual = np.zeros( (11,11), dtype=np.int16)
+        residual = cv2.copyTo(self.img_masked, None)
+        #  testlog.debug(f'RESIDUAL dtype after copy {type(residual[0,0])}')
+        residual = residual.astype(np.int16)
+        #  testlog.debug(f'RESIDUAL dtype after magic {type(residual[0,0])}')
+        
+        line_int = line.astype(np.int16)
+        residual = cv2.subtract(residual, line_int)
+        #  cv2.subtract(residual, line, residual, None, np.int16)
+        testlog.debug(f'RESIDUAL\n{residual}')
+        testlog.debug(f'RESIDUAL sum\n{np.sum(residual)}')
 
         # add a line
-        line = np.zeros( (10,10), dtype=np.uint16)
+        line = np.zeros( (11,11), dtype=np.uint16)
         cv2.line(line, (8, 1), (1,8), test_line_weight)
         testlog.debug(f'LINE\n{line}')
         drawn = cv2.add(drawn , line)
@@ -286,7 +352,12 @@ class liner:
         # remove the starting dot from the line (only from the second?)
         drawn[ (8,1) ] -= test_line_weight
 
-        testlog.debug(f'DRAWN\n{drawn}')
+        line_int = line.astype(np.int16)
+        residual = cv2.subtract(residual, line_int)
+        testlog.debug(f'RESIDUAL\n{residual}')
+        testlog.debug(f'RESIDUAL sum\n{np.sum(residual)}')
+
+        #  testlog.debug(f'DRAWN\n{drawn}')
 
     def generate_test_line(self, length, test_num_corners):
         '''generate a line with specified length and corners
