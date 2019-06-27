@@ -145,6 +145,7 @@ class liner:
         count = 1
         step = self.max_line_len // 80
         delta_count = 0
+        print(f'000%', end='', flush=True)
         while len(self.line) < self.max_line_len:
             #  new_pin = self.evolve_step()
             new_pin = self.evolve_step_random()
@@ -153,8 +154,13 @@ class liner:
             delta = self.draw_line(new_pin,)
             self.line.append(new_pin)
 
-            if count % step == 0:
-                print('.', end='', flush=True)
+            #  if count % step == 0:
+                #  print('.', end='', flush=True)
+            #  count += 1
+            if count % (step/10) == 0:
+                percent = round(count/self.max_line_len*100)
+                print('\b\b\b\b', end='', flush=True)
+                print(f'{percent:03}%', end='', flush=True)
             count += 1
 
             if delta == 0:
@@ -165,7 +171,8 @@ class liner:
             if delta_count == 10:
                 break
 
-        print('.')
+        #  print('.')
+        print('\b\b\b\bDone.')
         logevolve.log(5, self.line)
         cv2.imshow('Drawn image', self.drawn)
         cv2.waitKey(0)
