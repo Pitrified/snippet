@@ -32,10 +32,18 @@ def parse_arguments():
     args = parser.parse_args()
     return args
 
-def test_creator(path_input, path_output):
-    #  theline = liner(path_input, path_output)
-    #  theline.test_line_shading()
+def test_shading(path_input, path_output):
+    theline = liner(path_input, path_output)
+    theline.test_line_shading()
 
+def test_loss(path_input, path_output):
+    theline = liner(path_input, path_output,
+            num_corners=4,
+            output_size=10,
+            )
+    theline.test_loss()
+
+def test_pins_line(path_input, path_output):
     theline = liner(path_input, path_output,
             num_corners=300,
             output_size=600,
@@ -43,6 +51,7 @@ def test_creator(path_input, path_output):
     #  theline.test_pins_line(4000)
     theline.test_pins_line(8000)
     #  theline.compute_line()
+    theline.stats()
 
 def main():
     args = parse_arguments()
@@ -62,7 +71,9 @@ def main():
 
     print(f'python3 line_drawer_main.py -s {myseed} -i {path_input} -o {path_output}')
 
-    test_creator(path_input, path_output)
+    #  test_shading(path_input, path_output)
+    #  test_pins_line(path_input, path_output)
+    test_loss(path_input, path_output)
 
 if __name__ == '__main__':
     main()
