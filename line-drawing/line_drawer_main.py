@@ -33,8 +33,16 @@ def parse_arguments():
     return args
 
 def test_creator(path_input, path_output):
-    theline = liner(path_input, path_output)
-    theline.compute_line()
+    #  theline = liner(path_input, path_output)
+    #  theline.test_line_shading()
+
+    theline = liner(path_input, path_output,
+            num_corners=300,
+            output_size=600,
+            )
+    #  theline.test_pins_line(4000)
+    theline.test_pins_line(8000)
+    #  theline.compute_line()
 
 def main():
     args = parse_arguments()
