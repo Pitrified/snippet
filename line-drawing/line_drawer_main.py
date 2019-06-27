@@ -36,7 +36,7 @@ def test_shading(path_input, path_output):
     theline = liner(path_input, path_output)
     theline.test_line_shading()
 
-def test_loss(path_input, path_output):
+def test_loss_experiment(path_input, path_output):
     theline = liner(path_input, path_output,
             num_corners=4,
             output_size=11,
@@ -60,6 +60,22 @@ def test_pins_line(path_input, path_output):
     #  theline.compute_line()
     theline.stats()
 
+def test_evolve(path_input, path_output):
+    theline = liner(path_input, path_output,
+            num_corners=200,
+            #  output_size=51,
+            output_size=251,
+            max_line_len=10000,
+            line_weight=1000,
+            )
+    #  theline = liner(path_input, path_output,
+            #  num_corners=8,
+            #  output_size=51,
+            #  max_line_len=20,
+            #  line_weight=1000,
+            #  )
+    theline.evolve_line()
+
 def main():
     args = parse_arguments()
     #  print(args)
@@ -80,9 +96,9 @@ def main():
 
     #  test_shading(path_input, path_output)
     #  test_pins_line(path_input, path_output)
-    test_loss(path_input, path_output)
+    #  test_loss_experiment(path_input, path_output)
     #  test_benchmark_looping_line(path_input, path_output)
-
+    test_evolve(path_input, path_output)
 
 if __name__ == '__main__':
     main()

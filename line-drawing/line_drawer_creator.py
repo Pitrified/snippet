@@ -5,9 +5,11 @@ import numpy as np
 from math import pi
 from math import cos
 from math import sin
+from math import inf
 from random import randint
 from random import sample
 from timeit import default_timer as timer
+from time import sleep
 
 class liner:
     '''draw an image using a string from point to point on a circle
@@ -23,7 +25,8 @@ class liner:
             path_output='out_img.jpg',
             num_corners=100,
             output_size=200,
-            line_weight=1000,
+            max_line_len=100,
+            line_weight=100,
             ):
 
         self.setup_class_logger()
@@ -36,6 +39,8 @@ class liner:
         self.num_corners = num_corners
         self.output_size = output_size
         self.radius = self.output_size//2
+
+        self.max_line_len = max_line_len
         self.line_weight=line_weight
 
         self.line = []
@@ -96,7 +101,11 @@ class liner:
         self.img_masked = cv2.bitwise_and(self.img_crop, self.img_crop,
                 mask=self.circle_mask)
 
-        #  cv2.imshow('masked image', self.img_masked)
+        # rescale the image
+        self.img_masked = self.img_masked.astype(np.uint16)
+        self.img_masked = self.img_masked * 256
+
+        cv2.imshow('masked image', self.img_masked)
         #  cv2.waitKey(0)
 
         ######################################################################
@@ -108,6 +117,130 @@ class liner:
             self.pins[i, 1] = sin(theta * i) * self.radius + self.radius
 
         initlog.debug(f'Pin 1 {self.pins[1]}')
+
+    def evolve_line(self):
+        '''Compute the line
+
+        Using evolve_step
+        '''
+        logevolve = logging.getLogger(f'{self.__class__.__name__}.console.evolve')
+        #  logevolve.setLevel('TRACE')
+        logevolve.setLevel('DEBUG')
+
+        #  logevolve.debug(f'IMG MASKED sum {np.sum(self.img_masked)}')
+
+        self.drawn = np.zeros( self.img_masked.shape, dtype=np.uint16)
+
+        cv2.imshow('drawn image', self.drawn)
+        cv2.waitKey(0)
+
+        #  self.residual = np.zeros( img_masked.shape, dtype=np.int16)
+        self.residual = cv2.copyTo(self.img_masked, None)
+        self.residual = self.residual.astype(np.int16)
+
+        self.loss = np.sum( np.abs(self.residual) )
+        logevolve.debug(f'Starting loss {self.loss}')
+
+        first = randint(0, self.num_corners-1)
+        self.line.append(first)
+
+        #  count = 1
+        #  step = self.max_line_len // 80
+        while len(self.line) < self.max_line_len:
+            new_pin = self.evolve_step()
+            #  logevolve.info(f'New pin {new_pin}')
+            is_decreasing = self.draw_line(new_pin, 'DEBUG')
+            #  self.draw_line(new_pin,)
+            self.line.append(new_pin)
+
+            #  if count % step == 0:
+                #  print('.', end='', flush=True)
+            #  count += 1
+
+            if is_decreasing:
+                break
+
+        #  print('.')
+        logevolve.log(5, self.line)
+        cv2.imshow('Drawn image', self.drawn)
+        cv2.waitKey(0)
+
+    def evolve_step(self):
+        '''Find the next best line
+
+        Look for the next pin that reduces abs(residual) the most
+        '''
+        logevolve = logging.getLogger(f'{self.__class__.__name__}.console.step')
+        #  logevolve.setLevel('TRACE')
+        logevolve.setLevel('DEBUG')
+
+        best_pin = -1
+        best_loss = inf
+
+        for i in range(self.num_corners):
+            if i == self.line[-1] or (len(self.line) > 2 and i == self.line[-2]):
+                continue
+
+            #  new_loss = self.evaluate_line(self.line[-1], i, 'TRACE')
+            new_loss = self.evaluate_line(self.line[-1], i,)
+
+            if new_loss < best_loss:
+                logevolve.log(5, f'New candidate for best, pin {i} loss {new_loss}')
+                best_loss = new_loss
+                best_pin = i
+
+        return best_pin
+
+    def evaluate_line(self, pin_start, pin_end, logLevel='INFO'):
+        '''Compute the loss for this couple of pin
+        '''
+        logeval = logging.getLogger(f'{self.__class__.__name__}.console.evaluate_line')
+        logeval.setLevel(logLevel)
+        #  logeval.debug(f'Line from pin {pin_start} to {pin_end}')
+
+        #  line = np.zeros( drawn.shape, dtype=drawn.dtype)
+        line = np.zeros( self.residual.shape, dtype=self.residual.dtype)
+        x = tuple( self.pins[pin_start] )
+        y = tuple( self.pins[pin_end] )
+        #  logeval.log(5, f'Punti {x} {y}')
+        cv2.line(line, x, y, self.line_weight)
+        # remove the last dot from the line WHAT the transposed hell
+        line[y[1], y[0]] -= self.line_weight
+        #  logeval.log(5, f'the LINE\n{line}')
+
+        #  line_int = line.astype(self.residual.dtype)
+        #  cv2.subtract(self.residual, line_int, residual)
+        new_residual = cv2.subtract(self.residual, line)
+
+        new_loss = np.sum( np.abs (new_residual) )
+        logeval.debug(f'Line from pin {pin_start} to {pin_end} has loss {new_loss} and delta {self.loss-new_loss}')
+
+        return new_loss
+
+    def draw_line(self, new_pin, logLevel='INFO'):
+        '''Draw a line on drawn, subtract it from residual
+        '''
+        logdraw = logging.getLogger(f'{self.__class__.__name__}.console.draw_line')
+        logdraw.setLevel(logLevel)
+
+        line = np.zeros( self.drawn.shape, dtype=self.drawn.dtype)
+        x = tuple( self.pins[self.line[-1]] )
+        y = tuple( self.pins[new_pin] )
+
+        cv2.line(line, x, y, self.line_weight)
+        line[y[1], y[0]] -= self.line_weight
+
+        cv2.add(self.drawn, line, self.drawn)
+
+        line_int = line.astype(self.residual.dtype)
+        cv2.subtract(self.residual, line_int, self.residual)
+
+        old_loss = self.loss
+        self.loss = np.sum( np.abs ( self.residual ) )
+        delta = old_loss-self.loss
+        logdraw.debug(f'Added pin {new_pin:03d} with delta: {delta} new loss: {self.loss}')
+
+        return delta < 0
 
     def compute_line(self):
         '''go through the line you have drawn so far and create the image
@@ -296,7 +429,7 @@ class liner:
         cv2.imshow('generated image', drawn)
         cv2.waitKey(0)
 
-    def test_loss(self):
+    def test_loss_experiment(self):
         '''Experiments on how to compute decently the error from the line
 
         If I just look at the difference (target-drawn) the best line will be
@@ -391,9 +524,9 @@ class liner:
         testlog.debug(f'RESIDUAL ABS sum {np.sum(residual_abs)}')
 
     def test_draw_line(self, drawn, residual, x, y, test_line_weight, logLevel='INFO'):
-        '''draw a line on drawn, subtract it from residual
+        '''Draw a line on drawn, subtract it from residual
         '''
-        testlog = logging.getLogger(f'{self.__class__.__name__}.console.testdl')
+        testlog = logging.getLogger(f'{self.__class__.__name__}.console.test_draw_line')
         testlog.setLevel(logLevel)
         testlog.debug(f'Line from {x} to {y}')
 
@@ -402,7 +535,7 @@ class liner:
 
         # remove the last dot from the line WHAT the transposed hell
         line[y[1], y[0]] -= test_line_weight
-        testlog.debug(f'the LINE\n{line}')
+        testlog.log(5, f'the LINE\n{line}')
 
         cv2.add(drawn , line, drawn)
 
