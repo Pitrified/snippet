@@ -28,6 +28,7 @@ class liner:
 
         self.setup_class_logger()
         initlog = logging.getLogger(f'{self.__class__.__name__}.console.init')
+        initlog.setLevel('INFO')
 
         self.path_input = path_input
         self.path_output = path_output
@@ -305,59 +306,71 @@ class liner:
         the next pin accordingly
         '''
         testlog = logging.getLogger(f'{self.__class__.__name__}.console.testlo')
+        #  testlog.setLevel('TRACE')
 
-        drawn = np.zeros( (11,11), dtype=np.uint16)
-        #  drawn = np.zeros( (11,11), dtype=np.int16)
-        pins = np.array( [[1,1], [1,8], [8,1], [8,8] ] )
-
-        #  testlog.debug(f'IMG CROP\n{self.img_crop}')
-        testlog.debug(f'IMG MASKED\n{self.img_masked}')
-        testlog.debug(f'IMG MASKED sum\n{np.sum(self.img_masked)}')
-
-        # PINS only when printing, not part of the loss computation
-        #  white = 65535
-        #  for x,y in pins:
-            #  #  testlog.debug(f'Pin x y {x} {y}')
-            #  drawn[x,y] = white
+        testlog.log(5, f'IMG MASKED\n{self.img_masked}')
+        testlog.debug(f'IMG MASKED sum {np.sum(self.img_masked)}')
 
         test_line_weight = 1
 
-        # add a line
-        line = np.zeros( (11,11), dtype=np.uint16)
-        #  line = np.zeros( (11,11), dtype=np.int16)
-        cv2.line(line, (1, 1), (1,8), test_line_weight)
-        #  testlog.debug(f'LINE\n{line}')
-
-        drawn = cv2.add(drawn , line)
-        #  testlog.debug(f'DRAWN\n{drawn}')
+        drawn = np.zeros( (11,11), dtype=np.uint16)
 
         residual = np.zeros( (11,11), dtype=np.int16)
         residual = cv2.copyTo(self.img_masked, None)
-        #  testlog.debug(f'RESIDUAL dtype after copy {type(residual[0,0])}')
+        testlog.log(5, f'RESIDUAL dtype after copy {type(residual[0,0])}')
         residual = residual.astype(np.int16)
-        #  testlog.debug(f'RESIDUAL dtype after magic {type(residual[0,0])}')
-        
-        line_int = line.astype(np.int16)
-        residual = cv2.subtract(residual, line_int)
-        #  cv2.subtract(residual, line, residual, None, np.int16)
-        testlog.debug(f'RESIDUAL\n{residual}')
-        testlog.debug(f'RESIDUAL sum\n{np.sum(residual)}')
+        testlog.log(5, f'RESIDUAL dtype after magic {type(residual[0,0])}')
 
-        # add a line
+        #  self.test_draw_line(drawn, residual, (1, 1), (1,8), test_line_weight, 'DEBUG')
+        self.test_draw_line(drawn, residual, (1, 1), (1,8), test_line_weight,)
+        testlog.log(5, f'\n')
+        testlog.log(5, f'DRAWN\n{drawn}')
+        testlog.log(5, f'RESIDUAL\n{residual}')
+        testlog.debug(f'RESIDUAL sum {np.sum(residual)}')
+
+        self.test_draw_line(drawn, residual, (1, 8), (8,1), test_line_weight)
+        testlog.log(5, f'\n')
+        testlog.log(5, f'DRAWN\n{drawn}')
+        testlog.log(5, f'RESIDUAL\n{residual}')
+        testlog.debug(f'RESIDUAL sum {np.sum(residual)}')
+
+        self.test_draw_line(drawn, residual, (8,1), (1,1), test_line_weight)
+        testlog.log(5, f'\n')
+        testlog.log(5, f'DRAWN\n{drawn}')
+        testlog.log(5, f'RESIDUAL\n{residual}')
+        testlog.debug(f'RESIDUAL sum {np.sum(residual)}')
+
+        residual_abs = np.abs(residual)
+        testlog.log(5, f'\n')
+        testlog.log(5, f'RESIDUAL ABS\n{residual_abs}')
+        testlog.debug(f'RESIDUAL ABS sum {np.sum(residual_abs)}')
+
+        self.test_draw_line(drawn, residual, (1, 1), (1,8), test_line_weight,)
+        testlog.log(5, f'\n')
+        testlog.log(5, f'DRAWN\n{drawn}')
+        testlog.log(5, f'RESIDUAL\n{residual}')
+        testlog.debug(f'RESIDUAL sum {np.sum(residual)}')
+
+        residual_abs = np.abs(residual)
+        testlog.log(5, f'\n')
+        testlog.log(5, f'RESIDUAL ABS\n{residual_abs}')
+        testlog.debug(f'RESIDUAL ABS sum {np.sum(residual_abs)}')
+
+    def test_draw_line(self, drawn, residual, x, y, test_line_weight, logLevel='INFO'):
+        '''draw a line on drawn, subtract it from residual
+        '''
+        testlog = logging.getLogger(f'{self.__class__.__name__}.console.testdl')
+        testlog.setLevel(logLevel)
+        testlog.debug(f'Line from {x} to {y}')
         line = np.zeros( (11,11), dtype=np.uint16)
-        cv2.line(line, (8, 1), (1,8), test_line_weight)
-        testlog.debug(f'LINE\n{line}')
-        drawn = cv2.add(drawn , line)
-
-        # remove the starting dot from the line (only from the second?)
-        drawn[ (8,1) ] -= test_line_weight
-
+        cv2.line(line, x, y, test_line_weight)
+        # remove the last dot from the line
+        # WHAT
+        line[y[1], y[0]] -= test_line_weight
+        testlog.debug(f'the LINE\n{line}')
+        cv2.add(drawn , line, drawn)
         line_int = line.astype(np.int16)
-        residual = cv2.subtract(residual, line_int)
-        testlog.debug(f'RESIDUAL\n{residual}')
-        testlog.debug(f'RESIDUAL sum\n{np.sum(residual)}')
-
-        #  testlog.debug(f'DRAWN\n{drawn}')
+        cv2.subtract(residual, line_int, residual)
 
     def generate_test_line(self, length, test_num_corners):
         '''generate a line with specified length and corners
@@ -394,3 +407,8 @@ class liner:
         module_console_handler.setFormatter(formatter)
 
         self.clalog.addHandler(module_console_handler)
+
+        logging.addLevelName(5, 'TRACE')
+
+        #  self.clalog.setLevel('TRACE')
+        #  self.clalog.log(5, 'does this work')
