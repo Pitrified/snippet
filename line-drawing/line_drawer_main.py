@@ -20,7 +20,7 @@ def parse_arguments():
 
     parser.add_argument('-o', "--output_image",
             type=str,
-            default='out_img.jpg',
+            default='out_img.png',
             help="path to output image")
 
     parser.add_argument('-s', "--seed",
@@ -66,7 +66,7 @@ def test_evolve(path_input, path_output):
             num_corners=400,
             #  output_size=51,
             output_size=251,
-            max_line_len=10000,
+            max_line_len=5000,
             line_weight=1000,
             )
     #  theline = liner(path_input, path_output,

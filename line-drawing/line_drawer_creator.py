@@ -23,7 +23,7 @@ class liner:
     '''
     def __init__(self,
             path_input,
-            path_output='out_img.jpg',
+            path_output='out_img.png',
             num_corners=100,
             output_size=200,
             max_line_len=100,
@@ -157,7 +157,7 @@ class liner:
             #  if count % step == 0:
                 #  print('.', end='', flush=True)
             #  count += 1
-            if count % (step/10) == 0:
+            if count % (step//10+1) == 0:
                 percent = round(count/self.max_line_len*100)
                 print('\b\b\b\b', end='', flush=True)
                 print(f'{percent:03}%', end='', flush=True)
@@ -169,12 +169,20 @@ class liner:
                 delta_count = 0
 
             if delta_count == 10:
+                logevolve.info(f'Breaking for delta_count')
+                break
+
+            if self.loss < 0:
+                logevolve.info(f'Breaking for negative loss {self.loss}')
                 break
 
         #  print('.')
         print('\b\b\b\bDone.')
+
         logevolve.log(5, self.line)
+
         cv2.imshow('Drawn image', self.drawn)
+        cv2.imwrite(self.path_output, self.drawn)
         cv2.waitKey(0)
 
     def evolve_step(self):
