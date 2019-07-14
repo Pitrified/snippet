@@ -7,6 +7,8 @@ from random import seed
 from timeit import default_timer as timer
 
 from bresenham_line import Bresenham
+from bresenham_generator import bresenham_generator
+from bresenham_generator import setup_logger_generator
 
 
 def parse_arguments():
@@ -127,6 +129,56 @@ def test_bresenham():
     #  test_lines(20, 20, 'INFO')
 
 
+def test_bresenham_generator():
+    """Test the generator
+    """
+
+    setup_logger_generator()
+
+    logLevel = "DEBUG"
+    logline = logging.getLogger(f"{__name__}.console.gen_test")
+    logline.setLevel(logLevel)
+
+    x0, y0 = 2, 2
+    x1, y1 = 4, 8
+    for x, y in bresenham_generator(x0, y0, x1, y1):
+        logline.info(f"x {x} y {y}")
+
+    x1, y1 = 2, 2
+    for x, y in bresenham_generator(x0, y0, x1, y1):
+        logline.info(f"x {x} y {y}")
+
+
+def benchmark_bresenham_generator():
+    """Evaluate the performance
+    """
+    logLevel = "DEBUG"
+    logline = logging.getLogger(f"{__name__}.console.gen_test")
+    logline.setLevel(logLevel)
+
+    x0, y0 = 2, 2
+    n = int(1e6)
+    x1, y1 = 4 * n, 8 * n + 1
+    points = 0
+
+    start = timer()
+    for x, y in bresenham_generator(x0, y0, x1, y1):
+        points += 1
+    end = timer()
+    gen_time = end - start
+
+    p = 0
+    start_add = timer()
+    for _ in range(points):
+        p += 1
+    end_add = timer()
+    add_time = end_add - start_add
+    logline.info(f"Time to sum {points} points: {add_time:.4f} s")
+
+    tot_time = gen_time - add_time
+    logline.info(f"Time to generate {points} points: {tot_time:.4f} s")
+
+
 def main():
     args = parse_arguments()
 
@@ -142,10 +194,12 @@ def main():
     path_input = args.input_path
 
     logmoduleconsole = setup_logger()
-
     logmoduleconsole.info(f"python3 bresenham_main.py -s {myseed} -i {path_input}")
 
-    test_bresenham()
+    #  test_bresenham()
+
+    #  test_bresenham_generator()
+    benchmark_bresenham_generator()
 
 
 if __name__ == "__main__":
