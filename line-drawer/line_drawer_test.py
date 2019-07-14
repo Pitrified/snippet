@@ -132,6 +132,7 @@ class LinerTest(Liner):
         """
         analog = logging.getLogger(f"{self.__class__.__name__}.console.analog")
         analog.setLevel("DEBUG")
+        #  analog.setLevel("INFO")
 
         #  analog.info(f"img_masked\n{self.img_masked}")
 
@@ -142,7 +143,9 @@ class LinerTest(Liner):
 
         p1 = self.pins[0]
         p2 = self.pins[4]
-        #  analog.debug(f"p1 {p1} p2 {p2}")
+        analog.debug(f"p1 {p1} p2 {p2}")
+        line_length = max(abs(p1 - p2))
+        analog.info(f"line_length {line_length}")
 
         t1 = timer()
         line_img_1 = np.zeros_like(self.img_masked, dtype=np.int16)
@@ -159,7 +162,7 @@ class LinerTest(Liner):
         line_mask[x, y] = False
         t2a = timer()
         analog.info(f"time to create linemask\t{t2a-t1a:.9f} s")
-        analog.info(f"line_mask\n{line_mask}")
+        analog.debug(f"line_mask\n{line_mask}")
 
         t3 = timer()
         line_img = line_mask.astype(np.int16)
@@ -167,7 +170,7 @@ class LinerTest(Liner):
         t4 = timer()
         analog.info(f"time to cast linemask\t{t4-t3:.9f} s")
         analog.info(f"total linimg creation\t{t4-t3+(t2a-t1a):.9f} s")
-        #  analog.info(f"line_img\n{line_img}")
+        analog.debug(f"line_img\n{line_img}")
 
         img_built = np.zeros_like(self.img_masked)
 
@@ -177,7 +180,7 @@ class LinerTest(Liner):
         #  img_built = np.add(img_built, line_img)
         t6 = timer()
         analog.info(f"time to mult and sum\t{t6-t5:.9f} s")
-        #  analog.info(f"img_built\n{img_built}")
+        analog.debug(f"img_built\n{img_built}")
 
         t7 = timer()
         img_delta = np.subtract(
@@ -190,7 +193,7 @@ class LinerTest(Liner):
         img_delta = np.subtract(self.img_masked, img_built, dtype=np.int16)
         t8 = timer()
         analog.info(f"time to subtract all\t{t8-t7:.9f} s")
-        analog.info(f"img_delta\n{img_delta}")
+        analog.debug(f"img_delta\n{img_delta}")
 
         t9 = timer()
         img_delta_masked = np.bitwise_and(img_delta, img_delta, where=line_mask)
@@ -202,10 +205,10 @@ class LinerTest(Liner):
         sum_along_line = np.sum(img_delta_masked)
         t12 = timer()
         analog.info(f"time to sum delta\t{t12-t11:.9f} s")
-        analog.info(f"sum_along_line\n{sum_along_line}")
+        analog.info(f"sum_along_line: {sum_along_line}")
 
         t13 = timer()
-        not_line_mask = np.bitwise_not( line_mask)
+        not_line_mask = np.bitwise_not(line_mask)
         t14 = timer()
         analog.info(f"time to invert mask\t{t14-t13:.9f} s")
 

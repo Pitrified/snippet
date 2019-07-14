@@ -50,6 +50,10 @@ class Liner:
         self.top_left_y = top_left_y
 
         self.line = []
+        # random first pin
+        self.line.append(randint(0, self.num_corners - 1))
+        # first line is always a diameter
+        self.line.append(self.line[0] + (self.num_corners // 2) % self.num_corners)
 
         ######################################################################
         # LOAD image
@@ -59,9 +63,7 @@ class Liner:
             initlog.critical(f"Empty {self.path_input}")
 
         initlog.debug(f"Shape of img {self.img.shape} dtype {self.img.dtype}")
-        initlog.debug(
-            f"In img[5][5] {self.img[5][5]} type {type(self.img[5][5])}"
-        )
+        initlog.debug(f"In img[5][5] {self.img[5][5]} type {type(self.img[5][5])}")
 
         ######################################################################
         # create the MASK
@@ -90,16 +92,16 @@ class Liner:
         x = self.top_left_x
         y = self.top_left_y
 
-        # allocate the entire image
+        # allocate an image as big as the requested output
         self.img_crop = np.zeros(
             (self.output_size, self.output_size), dtype=self.img.dtype
         )
 
-        # copy the relevant part, if it is smaller you'll get a black border
+        # copy the relevant part, if it overflows you get a smaller image
         temp = self.img[x + 0 : x + self.output_size, y + 0 : y + self.output_size]
         initlog.debug(f"Shape temp {temp.shape}")
 
-        #  self.img_crop[x+0:x+self.output_size, y+0:y+self.output_size] =
+        # copy the image in the allocated space
         self.img_crop[0 : temp.shape[0], 0 : temp.shape[1]] = temp
         initlog.debug(f"Shape crop {self.img_crop.shape}")
 
@@ -107,24 +109,30 @@ class Liner:
         #  cv2.imshow('cropped image', self.img_crop)
         #  cv2.waitKey(0)
 
+        # mask the image
         self.img_masked = cv2.bitwise_and(
             self.img_crop, self.img_crop, mask=self.circle_mask
         )
 
-        # rescale the image
-        self.img_masked = self.img_masked.astype(np.uint16)
-        self.img_masked = self.img_masked * 256
-
+        # show the masked image
         #  cv2.imshow("masked image", self.img_masked)
         #  cv2.waitKey(0)
 
+        # retype the image to avoid overflow problems
+        self.img_objective = self.img_masked.astype(np.int16)
+
+        # image built so far
+        self.img_built = np.zeros_like(self.img_objective)
+
+        # image of residual deltas
+        self.img_residual = np.copy(self.img_objective)
+
         ######################################################################
         # generate the PINS for the line
-        self.pins = np.zeros((self.num_corners, 2), dtype=np.uint16)
+        # only positive values, but keeping them signed is good for subtraction
+        self.pins = np.zeros((self.num_corners, 2), dtype=np.int16)
         theta = 2 * pi / self.num_corners
         for i in range(self.num_corners):
-            #  self.pins[i, 0] = cos(theta * i) * self.radius + self.radius
-            #  self.pins[i, 1] = sin(theta * i) * self.radius + self.radius
             self.pins[i, 0] = floor(cos(theta * i) * self.radius) + self.radius + 1
             self.pins[i, 1] = floor(sin(theta * i) * self.radius) + self.radius + 1
 
