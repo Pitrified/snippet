@@ -12,6 +12,8 @@ from random import sample
 from timeit import default_timer as timer
 from time import sleep
 
+from bresenham_generator import bresenham_generator
+
 
 class liner:
     """draw an image using a string from point to point on a circle
@@ -22,6 +24,8 @@ class liner:
         * add another point at the end
         * move a point -> VERY intensive
     """
+
+    class_logger_loaded = False
 
     def __init__(
         self,
@@ -130,7 +134,9 @@ class liner:
     def evolve_line(self):
         """Compute the line
 
-        Using evolve_step
+        Using
+        * evolve_step
+        * evolve_step_random
         """
         logevolve = logging.getLogger(f"{self.__class__.__name__}.console.evolve")
         #  logevolve.setLevel('TRACE')
@@ -626,22 +632,28 @@ class liner:
         return test_line
 
     def setup_class_logger(self):
-        self.clalog = logging.getLogger(f"{self.__class__.__name__}.console")
-        self.clalog.propagate = False
+        """Setup a class wide logger
+        """
+        # this is run only the first time
+        if liner.class_logger_loaded is False:
+            self.clalog = logging.getLogger(f"{self.__class__.__name__}.console")
+            self.clalog.propagate = False
 
-        self.clalog.setLevel("DEBUG")
+            self.clalog.setLevel("DEBUG")
 
-        module_console_handler = logging.StreamHandler()
+            module_console_handler = logging.StreamHandler()
 
-        #  log_format_module = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        log_format_module = "%(name)s - %(levelname)s: %(message)s"
-        #  log_format_module = '%(levelname)s: %(message)s'
-        formatter = logging.Formatter(log_format_module)
-        module_console_handler.setFormatter(formatter)
+            #  log_format_module = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            log_format_module = "%(name)s - %(levelname)s: %(message)s"
+            #  log_format_module = '%(levelname)s: %(message)s'
+            formatter = logging.Formatter(log_format_module)
+            module_console_handler.setFormatter(formatter)
 
-        self.clalog.addHandler(module_console_handler)
+            self.clalog.addHandler(module_console_handler)
 
-        logging.addLevelName(5, "TRACE")
+            logging.addLevelName(5, "TRACE")
 
-        #  self.clalog.setLevel('TRACE')
-        #  self.clalog.log(5, 'does this work')
+            #  self.clalog.setLevel('TRACE')
+            #  self.clalog.log(5, 'does this work')
+
+            liner.class_logger_loaded = True

@@ -99,8 +99,8 @@ def main():
     #  test_shading(path_input, path_output)
     #  test_pins_line(path_input, path_output)
     #  test_loss_experiment(path_input, path_output)
-    #  test_benchmark_looping_line(path_input, path_output)
-    test_evolve(path_input, path_output)
+    test_benchmark_looping_line(path_input, path_output)
+    #  test_evolve(path_input, path_output)
 
 
 if __name__ == "__main__":
