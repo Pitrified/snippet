@@ -152,6 +152,7 @@ class Liner:
         """
         genlilog = logging.getLogger(f"{self.__class__.__name__}.console.genlilog")
         genlilog.setLevel("INFO")
+        #  genlilog.setLevel("DEBUG")
 
         percent_prog = True
         if percent_prog:
@@ -187,40 +188,49 @@ class Liner:
         Weigh the probabilities with line len
         """
         findlog = logging.getLogger(f"{self.__class__.__name__}.console.findlog")
-        #  findlog.setLevel("DEBUG")
         findlog.setLevel("INFO")
+        #  findlog.setLevel("DEBUG")
+        #  findlog.setLevel(7)
+        #  findlog.setLevel("TRACE")
 
         start_pin = self.line[-1]
         findlog.debug(f"Start_pin {start_pin} Line[-2] {self.line[-2]}")
 
         quarter = self.num_corners // 4
+        findlog.log(7, f"quarter {quarter}")
 
         probs = []
         for i in range(self.num_corners):
-            findlog.log(5, f"Examining pin {i}")
+            findlog.log(7, f"Examining pin {i}")
 
             # skip the start_pin and the previous one
             if i == self.line[-1] or i == self.line[-2]:
+                findlog.log(7, f"skipping start previous {i}")
                 probs.append(0)
                 continue
 
             # force the line to be toward the other side of the cirle
-            #  if i > ((start + quarter) % tot) and i < ((start - quarter) % tot):
-            if i > ((start_pin + quarter) % self.num_corners) and i < (
-                (start_pin - quarter) % self.num_corners
+            if not (
+                i > ((start_pin + quarter) % self.num_corners)
+                or i < ((start_pin - quarter) % self.num_corners)
             ):
+                findlog.log(7, f"skipping {i}")
                 probs.append(0)
                 continue
 
-            line_mask, _, line_length = self.get_line_mask(start_pin, i)
+            line_mask, lmw, line_length = self.get_line_mask(start_pin, i)
+            findlog.log(5, f"line_mask_weighted ottenuta\n{lmw}")
             img_res_masked = np.bitwise_and(
                 self.img_residual, self.img_residual, where=line_mask
             )
+            findlog.log(5, f"img_res_masked ottenuta\n{img_res_masked}")
 
             res_along_line = np.sum(img_res_masked)
+            #  res_along_line = np.max(img_res_masked)
             # if adding this line does more harm than good, ignore it
             if res_along_line > 0:
                 probs.append(res_along_line / line_length)
+                #  probs.append(res_along_line)
             else:
                 probs.append(0)
 
@@ -228,10 +238,11 @@ class Liner:
         if sum(probs) == 0:
             return -1
 
-        findlog.log(5, f"Probs {probs}")
+        findlog.log(7, f"Probs {probs}")
 
         next_pin = choices(range(self.num_corners), weights=probs, k=1)[0]
-        #  findlog.info(f"next_pin {next_pin}")
+        #  next_pin = np.argmax(probs)
+        findlog.debug(f"next_pin {next_pin}")
 
         return next_pin
 

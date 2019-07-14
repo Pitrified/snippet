@@ -136,7 +136,7 @@ def test_find_next_pin(input_image):
     max_line_len = 10
     line_weight = 5
 
-    l = Liner(
+    l = LinerTest(
         path_input=input_image,
         num_corners=num_corners,
         output_size=output_size,
@@ -147,7 +147,14 @@ def test_find_next_pin(input_image):
     #  print(f"l.img_residual\n{l.img_residual}")
     #  print(f"l.line_mask_weighted\n{l.line_mask_weighted}")
 
+    formatter = ":3d"
+
+    print(f"img_masked\n{l.get_str_mat(l.img_masked, formatter)}")
+    print(f"img_residual\n{l.get_str_mat(l.img_residual, formatter)}")
+
     l.find_next_pin()
+
+    print(f"img_residual\n{l.get_str_mat(l.img_residual, formatter)}")
 
     #  seg = 8, 9
     #  print(f"l.line_mask_weighted[{seg}]\n{l.line_mask_weighted[seg]}")
