@@ -94,10 +94,34 @@ def run_line_benchmarks(input_image):
     line_test.benchmark_bresenham_mask()
 
 
+def evolve_steps(input_image):
+    num_corners = 10
+    output_size = 10
+    #  output_size = 200
+    max_line_len = 10
+    line_weight = 100
+    top_left_x = 230
+    top_left_y = 210
+
+    line_test = LinerTest(
+        path_input=input_image,
+        num_corners=num_corners,
+        output_size=output_size,
+        max_line_len=max_line_len,
+        line_weight=line_weight,
+        top_left_x=top_left_x,
+        top_left_y=top_left_y,
+    )
+
+    line_test.analyze_drawing()
+
+
 def main():
     args = setup()
 
-    run_line_benchmarks(args.input_image)
+    #  run_line_benchmarks(args.input_image)
+
+    evolve_steps(args.input_image)
 
 
 if __name__ == "__main__":

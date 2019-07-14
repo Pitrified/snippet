@@ -1,6 +1,7 @@
 import cv2
 import logging
 import numpy as np
+import numpy.ma as ma
 
 from timeit import default_timer as timer
 
@@ -20,6 +21,8 @@ class LinerTest(Liner):
         output_size=200,
         max_line_len=100,
         line_weight=100,
+        top_left_x=230,
+        top_left_y=210,
     ):
         super(LinerTest, self).__init__(
             path_input, path_output, num_corners, output_size, max_line_len, line_weight
@@ -56,7 +59,7 @@ class LinerTest(Liner):
             delta_line += self.img_masked[x, y] - img_built[x, y]
 
             #  delta_line += np.subtract(
-                #  self.img_masked[x, y], img_built[x, y], dtype=np.int16
+            #  self.img_masked[x, y], img_built[x, y], dtype=np.int16
             #  )
 
             #  delta_line += int(self.img_masked[x, y]) - img_built[x, y]
@@ -76,7 +79,7 @@ class LinerTest(Liner):
         benchlog.setLevel("INFO")
 
         p1 = self.pins[0]
-        p2 = self.pins[50]
+        p2 = self.pins[5]
         benchlog.debug(f"p1 {p1} p2 {p2}")
 
         img_built = np.random.normal(loc=500, scale=500, size=self.img_masked.shape)
@@ -123,6 +126,94 @@ class LinerTest(Liner):
 
         benchlog.debug(f"time generate normal\t{t2-t1:.9f} s")
         benchlog.info(f"time to subtract\t{t3-t2:.9f} s")
+
+    def analyze_drawing(self):
+        """Show several linez, benchmark some more
+        """
+        analog = logging.getLogger(f"{self.__class__.__name__}.console.analog")
+        analog.setLevel("DEBUG")
+
+        #  analog.info(f"img_masked\n{self.img_masked}")
+
+        pinz = np.zeros_like(self.img_masked)
+        for pin in self.pins:
+            pinz[pin[0], pin[1]] = 1
+        #  analog.info(f"pinz\n{pinz}")
+
+        p1 = self.pins[0]
+        p2 = self.pins[4]
+        #  analog.debug(f"p1 {p1} p2 {p2}")
+
+        t1 = timer()
+        line_img_1 = np.zeros_like(self.img_masked, dtype=np.int16)
+        for x, y in bresenham_generator(*p1, *p2):
+            line_img_1[x, y] = self.line_weight
+        line_img_1[x, y] -= self.line_weight
+        t2 = timer()
+        analog.info(f"time to create lineimg\t{t2-t1:.9f} s")
+
+        t1a = timer()
+        line_mask = np.zeros_like(self.img_masked, dtype=bool)
+        for x, y in bresenham_generator(*p1, *p2):
+            line_mask[x, y] = True
+        line_mask[x, y] = False
+        t2a = timer()
+        analog.info(f"time to create linemask\t{t2a-t1a:.9f} s")
+        analog.info(f"line_mask\n{line_mask}")
+
+        t3 = timer()
+        line_img = line_mask.astype(np.int16)
+        #  line_img = line_mask.astype(np.int16) * self.line_weight
+        t4 = timer()
+        analog.info(f"time to cast linemask\t{t4-t3:.9f} s")
+        analog.info(f"total linimg creation\t{t4-t3+(t2a-t1a):.9f} s")
+        #  analog.info(f"line_img\n{line_img}")
+
+        img_built = np.zeros_like(self.img_masked)
+
+        t5 = timer()
+        img_built = img_built + line_img * self.line_weight
+        #  img_built = img_built + line_img
+        #  img_built = np.add(img_built, line_img)
+        t6 = timer()
+        analog.info(f"time to mult and sum\t{t6-t5:.9f} s")
+        #  analog.info(f"img_built\n{img_built}")
+
+        t7 = timer()
+        img_delta = np.subtract(
+            self.img_masked, img_built, where=line_mask, dtype=np.int16
+        )
+        t8 = timer()
+        analog.info(f"time to subtract mask\t{t8-t7:.9f} s")
+
+        t7 = timer()
+        img_delta = np.subtract(self.img_masked, img_built, dtype=np.int16)
+        t8 = timer()
+        analog.info(f"time to subtract all\t{t8-t7:.9f} s")
+        analog.info(f"img_delta\n{img_delta}")
+
+        t9 = timer()
+        img_delta_masked = np.bitwise_and(img_delta, img_delta, where=line_mask)
+        t10 = timer()
+        analog.info(f"time to mask delta\t{t10-t9:.9f} s")
+        analog.info(f"img_delta_masked\n{img_delta_masked}")
+
+        t11 = timer()
+        sum_along_line = np.sum(img_delta_masked)
+        t12 = timer()
+        analog.info(f"time to sum delta\t{t12-t11:.9f} s")
+        analog.info(f"sum_along_line\n{sum_along_line}")
+
+        t13 = timer()
+        not_line_mask = np.bitwise_not( line_mask)
+        t14 = timer()
+        analog.info(f"time to invert mask\t{t14-t13:.9f} s")
+
+        t15 = timer()
+        ma_delta = ma.masked_array(img_delta, mask=not_line_mask)
+        sum_along_line = sum(ma_delta)
+        t16 = timer()
+        analog.info(f"time to sum marray\t{t16-t15:.9f} s")
 
     def setup_class_logger(self):
         """Setup a class wide logger

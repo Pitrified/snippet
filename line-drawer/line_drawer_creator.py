@@ -32,8 +32,8 @@ class Liner:
 
         self.setup_class_logger()
         initlog = logging.getLogger(f"{self.__class__.__name__}.console.init")
-        #  initlog.setLevel("INFO")
-        initlog.setLevel("DEBUG")
+        initlog.setLevel("INFO")
+        #  initlog.setLevel("DEBUG")
 
         self.path_input = path_input
         self.path_output = path_output
@@ -60,7 +60,7 @@ class Liner:
 
         initlog.debug(f"Shape of img {self.img.shape} dtype {self.img.dtype}")
         initlog.debug(
-            f"In img[100][100] {self.img[100][100]} type {type(self.img[100][100])}"
+            f"In img[5][5] {self.img[5][5]} type {type(self.img[5][5])}"
         )
 
         ######################################################################
