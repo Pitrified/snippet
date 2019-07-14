@@ -130,7 +130,13 @@ def test_find_next_pin(input_image):
         line_weight=line_weight,
     )
 
+    #  print(f"l.img_residual\n{l.img_residual}")
+    #  print(f"l.line_mask_weighted\n{l.line_mask_weighted}")
+
     l.find_next_pin()
+
+    #  seg = 8, 9
+    #  print(f"l.line_mask_weighted[{seg}]\n{l.line_mask_weighted[seg]}")
 
 
 def test_get_line_mask(input_image):
@@ -182,6 +188,32 @@ def test_add_segment(input_image):
     print(f"l.img_residual\n{l.img_residual}")
 
 
+def test_generate_line(input_image):
+    num_corners = 10
+    #  num_corners = 100
+    output_size = 10
+    #  output_size = 200
+    #  max_line_len = 10
+    max_line_len = 100
+    #  max_line_len = 3000
+    #  line_weight = 5
+    line_weight = 1
+
+    l = Liner(
+        path_input=input_image,
+        num_corners=num_corners,
+        output_size=output_size,
+        max_line_len=max_line_len,
+        line_weight=line_weight,
+    )
+
+    l.generate_line()
+    l.save_img_built()
+    print(f"l.img_residual\n{l.img_residual}")
+    print(f"l.img_built\n{l.img_built}")
+    print(f"l.img_masked\n{l.img_masked}")
+
+
 def main():
     args = setup()
 
@@ -190,9 +222,10 @@ def main():
     #  run_line_benchmarks(args.input_image)
     #  analyze_drawing(args.input_image)
 
-    #  test_find_next_pin(args.input_image)
     #  test_get_line_mask(args.input_image)
-    test_add_segment(args.input_image)
+    #  test_add_segment(args.input_image)
+    #  test_find_next_pin(args.input_image)
+    test_generate_line(args.input_image)
 
 
 if __name__ == "__main__":

@@ -150,6 +150,32 @@ class Liner:
 
         Or until a fancier stopping condition is met, eg no improvement on loss
         """
+        genlilog = logging.getLogger(f"{self.__class__.__name__}.console.genlilog")
+        genlilog.setLevel("INFO")
+
+        #  count = 1
+        #  step = self.max_line_len // 80
+        #  print(f"000%", end="", flush=True)
+
+        for i in range(1, self.max_line_len):
+            genlilog.debug(f"Doing segment {i}")
+
+            next_pin = self.find_next_pin()
+
+            if next_pin == -1:
+                genlilog.warn(f"Breaking at segment {i}, no next_pin found")
+                break
+
+            genlilog.debug(f"Done segment {i}, found pin {next_pin}")
+            self.add_segment(next_pin)
+
+            #  if count % (step // 10 + 1) == 0:
+                #  percent = round(count / self.max_line_len * 100)
+                #  print("\b\b\b\b", end="", flush=True)
+                #  print(f"{percent:03}%", end="", flush=True)
+            #  count += 1
+
+        #  print("\b\b\b\bDone.")
 
     def find_next_pin(self):
         """Find the next pin that has highest residual along the line
@@ -157,17 +183,41 @@ class Liner:
         Weigh the probabilities with line len
         """
         findlog = logging.getLogger(f"{self.__class__.__name__}.console.findlog")
-        findlog.setLevel("DEBUG")
-        #  findlog.setLevel("INFO")
+        #  findlog.setLevel("DEBUG")
+        findlog.setLevel("INFO")
 
         start_pin = self.line[-1]
-        findlog.debug(f"start_pin {start_pin} old line {self.line}")
+        findlog.debug(f"Start_pin {start_pin} Line[-2] {self.line[-2]}")
 
         probs = []
         for i in range(self.num_corners):
+            findlog.log(5, f"Examining pin {i}")
             if i == self.line[-1] or i == self.line[-2]:
                 probs.append(0)
                 continue
+
+            line_mask, _, line_length = self.get_line_mask(start_pin, i)
+            img_res_masked = np.bitwise_and(
+                self.img_residual, self.img_residual, where=line_mask
+            )
+
+            res_along_line = np.sum(img_res_masked)
+            # if adding this line does more harm than good, ignore it
+            if res_along_line > 0:
+                probs.append(res_along_line / line_length)
+            else:
+                probs.append(0)
+
+        # if no good line has been found, signal it to generate_line
+        if sum(probs) == 0:
+            return -1
+
+        findlog.log(5, f"Probs {probs}")
+
+        next_pin = choices(range(self.num_corners), weights=probs, k=1)[0]
+        #  findlog.info(f"next_pin {next_pin}")
+
+        return next_pin
 
     def add_segment(self, end_pin):
         """Add a segment from line[-1] to end_pin
@@ -175,9 +225,9 @@ class Liner:
         Update img_built and img_residual
         """
         addseglog = logging.getLogger(f"{self.__class__.__name__}.console.addseglog")
-        addseglog.setLevel("DEBUG")
+        addseglog.setLevel("INFO")
 
-        addseglog.info(f"Adding segment from {self.line[-1]} to {end_pin}")
+        addseglog.debug(f"Adding segment from {self.line[-1]} to {end_pin}")
 
         _, line_mask_weighted, _ = self.get_line_mask(self.line[-1], end_pin)
 
@@ -191,22 +241,24 @@ class Liner:
         """Returns the line_mask, line_mask_weighted and line_length
         """
         getlinelog = logging.getLogger(f"{self.__class__.__name__}.console.getlinelog")
-        getlinelog.setLevel("DEBUG")
+        #  getlinelog.setLevel("DEBUG")
+        getlinelog.setLevel("INFO")
 
-        getlinelog.debug(f"Getting line from {start_pin} to {end_pin}")
+        #  getlinelog.debug(f"Getting line from {start_pin} to {end_pin}")
 
         if end_pin < start_pin:
             start_pin, end_pin = end_pin, start_pin
-            getlinelog.debug(f"Swapped {start_pin} to {end_pin}")
+            #  getlinelog.debug(f"Swapped {start_pin} to {end_pin}")
 
         seg = start_pin, end_pin
-        getlinelog.debug(f"Ordered segment {seg}")
+        #  getlinelog.debug(f"Ordered segment {seg}")
 
         p1 = self.pins[start_pin]
         p2 = self.pins[end_pin]
-        getlinelog.debug(f"p1 {p1} p2 {p2}")
+        #  getlinelog.debug(f"p1 {p1} p2 {p2}")
         line_length = max(abs(p1 - p2))
-        getlinelog.debug(f"line_length {line_length}")
+        #  getlinelog.debug(f"line_length {line_length}")
+        getlinelog.debug(f"p[{start_pin}]: {p1} p[{end_pin}]: {p2} len {line_length}")
 
         # if the line is unknown, compute it
         if not seg in self.line_mask:
@@ -226,6 +278,15 @@ class Liner:
 
         # now the value is there
         return self.line_mask[seg], self.line_mask_weighted[seg], line_length
+
+    def save_img_built(self):
+        """Save the generated image in path_output
+        """
+        self.img_result = self.img_built.astype(np.uint8)
+        print(f"max {np.max(self.img_result)}")
+        cv2.imshow("Result image", self.img_result)
+        cv2.imwrite(self.path_output, self.img_result)
+        cv2.waitKey(0)
 
     def setup_class_logger(self):
         """Setup a class wide logger
