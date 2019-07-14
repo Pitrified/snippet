@@ -153,9 +153,11 @@ class Liner:
         genlilog = logging.getLogger(f"{self.__class__.__name__}.console.genlilog")
         genlilog.setLevel("INFO")
 
-        #  count = 1
-        #  step = self.max_line_len // 80
-        #  print(f"000%", end="", flush=True)
+        percent_prog = True
+        if percent_prog:
+            count = 1
+            step = self.max_line_len // 80
+            print(f"000%", end="", flush=True)
 
         for i in range(1, self.max_line_len):
             genlilog.debug(f"Doing segment {i}")
@@ -169,13 +171,15 @@ class Liner:
             genlilog.debug(f"Done segment {i}, found pin {next_pin}")
             self.add_segment(next_pin)
 
-            #  if count % (step // 10 + 1) == 0:
-                #  percent = round(count / self.max_line_len * 100)
-                #  print("\b\b\b\b", end="", flush=True)
-                #  print(f"{percent:03}%", end="", flush=True)
-            #  count += 1
+            if percent_prog:
+                if count % (step // 10 + 1) == 0:
+                    percent = round(count / self.max_line_len * 100)
+                    print("\b\b\b\b", end="", flush=True)
+                    print(f"{percent:03}%", end="", flush=True)
+                count += 1
 
-        #  print("\b\b\b\bDone.")
+        if percent_prog:
+            print("\b\b\b\bDone.")
 
     def find_next_pin(self):
         """Find the next pin that has highest residual along the line
@@ -189,10 +193,22 @@ class Liner:
         start_pin = self.line[-1]
         findlog.debug(f"Start_pin {start_pin} Line[-2] {self.line[-2]}")
 
+        quarter = self.num_corners // 4
+
         probs = []
         for i in range(self.num_corners):
             findlog.log(5, f"Examining pin {i}")
+
+            # skip the start_pin and the previous one
             if i == self.line[-1] or i == self.line[-2]:
+                probs.append(0)
+                continue
+
+            # force the line to be toward the other side of the cirle
+            #  if i > ((start + quarter) % tot) and i < ((start - quarter) % tot):
+            if i > ((start_pin + quarter) % self.num_corners) and i < (
+                (start_pin - quarter) % self.num_corners
+            ):
                 probs.append(0)
                 continue
 
@@ -266,7 +282,11 @@ class Liner:
             self.line_mask[seg] = np.zeros_like(self.img_objective, dtype=bool)
 
             # compute the line
-            for x, y in bresenham_generator(*p1, *p2):
+            #  for x, y in bresenham_generator(*p1, *p2):
+            # skip the first and the last element
+            bre_gen = bresenham_generator(*p1, *p2)
+            next(bre_gen)
+            for x, y in bre_gen:
                 self.line_mask[seg][x, y] = True
             # reset the last point
             self.line_mask[seg][x, y] = False
@@ -286,6 +306,7 @@ class Liner:
         print(f"max {np.max(self.img_result)}")
         cv2.imshow("Result image", self.img_result)
         cv2.imwrite(self.path_output, self.img_result)
+        cv2.imwrite("masked.png", self.img_masked)
         cv2.waitKey(0)
 
     def setup_class_logger(self):

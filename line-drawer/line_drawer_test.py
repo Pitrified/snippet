@@ -218,6 +218,17 @@ class LinerTest(Liner):
         t16 = timer()
         analog.info(f"time to sum marray\t{t16-t15:.9f} s")
 
+    def get_str_mat(self, mat, formatter=""):
+        """Returns the string of a mat, each element formatted accordingly
+        """
+        fmt = "{{i{f}}}".format(f=formatter)
+        mat_str = ""
+        for row in mat:
+            for elem in row:
+                mat_str += fmt.format(i=elem)
+            mat_str += "\n"
+        return mat_str
+
     def setup_class_logger(self):
         """Setup a class wide logger
         """

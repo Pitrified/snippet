@@ -31,6 +31,20 @@ def parse_arguments():
     )
 
     parser.add_argument("-s", "--seed", type=int, default=-1, help="random seed to use")
+    parser.add_argument(
+        "-ml",
+        "--max_line_len",
+        type=int,
+        default=100,
+        help="number of segments to generate",
+    )
+    parser.add_argument(
+        "-nc", "--num_corners", type=int, default=100, help="number of pins"
+    )
+    parser.add_argument(
+        "-os", "--output_size", type=int, default=50, help="output size"
+    )
+    parser.add_argument("-lw", "--line_weight", type=int, default=3, help="line weight")
 
     # last line to parse the args
     args = parser.parse_args()
@@ -189,17 +203,19 @@ def test_add_segment(input_image):
 
 
 def test_generate_line(input_image):
-    num_corners = 10
-    #  num_corners = 100
-    output_size = 10
+    output_size = 100
     #  output_size = 200
+    #  num_corners = 10
+    #  num_corners = 50
+    #  num_corners = 100
+    num_corners = output_size * 2
     #  max_line_len = 10
-    max_line_len = 100
-    #  max_line_len = 3000
+    #  max_line_len = 100
+    max_line_len = 3000
     #  line_weight = 5
-    line_weight = 1
+    line_weight = 3
 
-    l = Liner(
+    l = LinerTest(
         path_input=input_image,
         num_corners=num_corners,
         output_size=output_size,
@@ -208,10 +224,18 @@ def test_generate_line(input_image):
     )
 
     l.generate_line()
+    #  print(f"l.img_residual\n{l.img_residual}")
+    #  print(f"l.img_built\n{l.img_built}")
+    #  print(f"l.img_masked\n{l.img_masked}")
+    formatter = ":4d"
+    print("masked")
+    print(l.get_str_mat(l.img_masked, formatter))
+    print("residual")
+    print(l.get_str_mat(l.img_residual, formatter))
+    print("built")
+    print(l.get_str_mat(l.img_built, formatter))
+
     l.save_img_built()
-    print(f"l.img_residual\n{l.img_residual}")
-    print(f"l.img_built\n{l.img_built}")
-    print(f"l.img_masked\n{l.img_masked}")
 
 
 def main():
