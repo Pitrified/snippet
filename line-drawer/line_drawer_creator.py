@@ -5,6 +5,8 @@ import numpy as np
 from math import cos, sin
 from math import floor
 from math import pi
+from random import randint
+from random import choices
 from timeit import default_timer as timer
 
 from bresenham_generator import bresenham_generator
@@ -49,11 +51,9 @@ class Liner:
         self.top_left_x = top_left_x
         self.top_left_y = top_left_y
 
-        self.line = []
-        # random first pin
-        self.line.append(randint(0, self.num_corners - 1))
-        # first line is always a diameter
-        self.line.append(self.line[0] + (self.num_corners // 2) % self.num_corners)
+        # compute line masks on the fly, burn memory to go faster
+        self.line_mask = {}
+        self.line_mask_weighted = {}
 
         ######################################################################
         # LOAD image
@@ -135,8 +135,97 @@ class Liner:
         for i in range(self.num_corners):
             self.pins[i, 0] = floor(cos(theta * i) * self.radius) + self.radius + 1
             self.pins[i, 1] = floor(sin(theta * i) * self.radius) + self.radius + 1
-
         initlog.debug(f"Pin 1 {self.pins[1]}")
+
+        ######################################################################
+        # initialize LINE
+        self.line = []
+        # random first pin
+        self.line.append(randint(0, self.num_corners - 1))
+        # first line is always a diameter
+        self.add_segment((self.line[0] + self.num_corners // 2) % self.num_corners)
+
+    def generate_line(self):
+        """Add segments until max_line_len is reached
+
+        Or until a fancier stopping condition is met, eg no improvement on loss
+        """
+
+    def find_next_pin(self):
+        """Find the next pin that has highest residual along the line
+
+        Weigh the probabilities with line len
+        """
+        findlog = logging.getLogger(f"{self.__class__.__name__}.console.findlog")
+        findlog.setLevel("DEBUG")
+        #  findlog.setLevel("INFO")
+
+        start_pin = self.line[-1]
+        findlog.debug(f"start_pin {start_pin} old line {self.line}")
+
+        probs = []
+        for i in range(self.num_corners):
+            if i == self.line[-1] or i == self.line[-2]:
+                probs.append(0)
+                continue
+
+    def add_segment(self, end_pin):
+        """Add a segment from line[-1] to end_pin
+
+        Update img_built and img_residual
+        """
+        addseglog = logging.getLogger(f"{self.__class__.__name__}.console.addseglog")
+        addseglog.setLevel("DEBUG")
+
+        addseglog.info(f"Adding segment from {self.line[-1]} to {end_pin}")
+
+        _, line_mask_weighted, _ = self.get_line_mask(self.line[-1], end_pin)
+
+        self.line.append(end_pin)
+
+        # TODO check if using where=line_mask is faster
+        self.img_built = self.img_built + line_mask_weighted
+        self.img_residual = self.img_residual - line_mask_weighted
+
+    def get_line_mask(self, start_pin, end_pin):
+        """Returns the line_mask, line_mask_weighted and line_length
+        """
+        getlinelog = logging.getLogger(f"{self.__class__.__name__}.console.getlinelog")
+        getlinelog.setLevel("DEBUG")
+
+        getlinelog.debug(f"Getting line from {start_pin} to {end_pin}")
+
+        if end_pin < start_pin:
+            start_pin, end_pin = end_pin, start_pin
+            getlinelog.debug(f"Swapped {start_pin} to {end_pin}")
+
+        seg = start_pin, end_pin
+        getlinelog.debug(f"Ordered segment {seg}")
+
+        p1 = self.pins[start_pin]
+        p2 = self.pins[end_pin]
+        getlinelog.debug(f"p1 {p1} p2 {p2}")
+        line_length = max(abs(p1 - p2))
+        getlinelog.debug(f"line_length {line_length}")
+
+        # if the line is unknown, compute it
+        if not seg in self.line_mask:
+            # create the empty mask
+            self.line_mask[seg] = np.zeros_like(self.img_objective, dtype=bool)
+
+            # compute the line
+            for x, y in bresenham_generator(*p1, *p2):
+                self.line_mask[seg][x, y] = True
+            # reset the last point
+            self.line_mask[seg][x, y] = False
+
+            # compute the weighted line
+            self.line_mask_weighted[seg] = (
+                self.line_mask[seg].astype(np.int16) * self.line_weight
+            )
+
+        # now the value is there
+        return self.line_mask[seg], self.line_mask_weighted[seg], line_length
 
     def setup_class_logger(self):
         """Setup a class wide logger

@@ -116,14 +116,83 @@ def analyze_drawing(input_image):
     line_test.analyze_drawing()
 
 
+def test_find_next_pin(input_image):
+    num_corners = 10
+    output_size = 10
+    max_line_len = 10
+    line_weight = 5
+
+    l = Liner(
+        path_input=input_image,
+        num_corners=num_corners,
+        output_size=output_size,
+        max_line_len=max_line_len,
+        line_weight=line_weight,
+    )
+
+    l.find_next_pin()
+
+
+def test_get_line_mask(input_image):
+    num_corners = 10
+    output_size = 10
+    max_line_len = 10
+    line_weight = 5
+
+    l = Liner(
+        path_input=input_image,
+        num_corners=num_corners,
+        output_size=output_size,
+        max_line_len=max_line_len,
+        line_weight=line_weight,
+    )
+
+    seg = 1, 5
+    l.get_line_mask(*seg)
+    print(f"l.line_mask[{seg}]\n{l.line_mask[seg]}")
+    print(f"l.line_mask_weighted[{seg}]\n{l.line_mask_weighted[seg]}")
+
+
+def test_add_segment(input_image):
+    num_corners = 10
+    output_size = 10
+    max_line_len = 10
+    line_weight = 5
+
+    l = Liner(
+        path_input=input_image,
+        num_corners=num_corners,
+        output_size=output_size,
+        max_line_len=max_line_len,
+        line_weight=line_weight,
+    )
+
+    #  seg = 1, 5
+    #  l.get_line_mask(*seg)
+    #  print(f"l.line_mask[{seg}]\n{l.line_mask[seg]}")
+    #  print(f"l.line_mask_weighted[{seg}]\n{l.line_mask_weighted[seg]}")
+
+    print(f"l.img_residual\n{l.img_residual}")
+    print(f"l.line_mask_weighted\n{l.line_mask_weighted}")
+
+    end_pin = 1
+    l.add_segment(end_pin)
+    print(f"l.line_mask_weighted\n{l.line_mask_weighted}")
+    print(f"l.img_built\n{l.img_built}")
+    print(f"l.img_residual\n{l.img_residual}")
+
+
 def main():
     args = setup()
 
     #  l = Liner(args.input_image)
 
     #  run_line_benchmarks(args.input_image)
+    #  analyze_drawing(args.input_image)
 
-    analyze_drawing(args.input_image)
+    #  test_find_next_pin(args.input_image)
+    #  test_get_line_mask(args.input_image)
+    test_add_segment(args.input_image)
 
 
 if __name__ == "__main__":
