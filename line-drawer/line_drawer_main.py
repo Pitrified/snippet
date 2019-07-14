@@ -84,18 +84,20 @@ def setup():
     return args
 
 
-def test_the_test_class(input_image):
+def run_line_benchmarks(input_image):
     """
     """
 
     line_test = LinerTest(input_image)
-    line_test.benchmark_bresenham_np()
+    line_test.benchmark_bresenham_naive()
+    line_test.benchmark_np_sum()
+    line_test.benchmark_bresenham_mask()
 
 
 def main():
     args = setup()
 
-    test_the_test_class(args.input_image)
+    run_line_benchmarks(args.input_image)
 
 
 if __name__ == "__main__":
