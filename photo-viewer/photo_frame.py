@@ -5,7 +5,6 @@ from math import floor
 from math import log
 from os.path import basename
 
-from utils import print_color
 from utils import format_color_name
 from utils import format_color
 
@@ -58,7 +57,7 @@ class PhotoFrame(tk.Frame):
         #  self.show_photo()
 
         #  print(f'\nfinished init for ', end='')
-        #  print_color(f'{self.frame_name}', self.frame_name)
+        #  print(f"{format_color_name(f'{self.frame_name}', self.frame_name)}")
 
     def load_photo(self):
         """load a photo and relatives attributes (wid, hei)"""
@@ -86,7 +85,7 @@ class PhotoFrame(tk.Frame):
         self.mov_y = 0
 
         print(f"current index {self.photo_index} photo ", end="")
-        print_color(f"{basename(self.current_photo)}", self.frame_name)
+        print(f"{format_color_name(basename(self.current_photo), self.frame_name)}")
 
         self.show_photo()
 
@@ -103,7 +102,7 @@ class PhotoFrame(tk.Frame):
             self.mov_y = 0
 
             print(f"Found at index {self.photo_index} photo ", end="")
-            print_color(f"{basename(self.current_photo)}", self.frame_name)
+            print(f"{format_color_name(basename(self.current_photo), self.frame_name)}")
 
             self.show_photo()
         else:
@@ -121,7 +120,7 @@ class PhotoFrame(tk.Frame):
             self.zoom_level = log(ratio, self.zoom_base)
 
         #  print(f'zooming ', end='')
-        #  print_color(f'{basename(current_photo)}', self.frame_name)
+        #  print(f"{format_color_name(basename(self.current_photo), self.frame_name)}")
         #  print()
         #  print(f'do calc_zoom_level photo {format_color(f"{basename(self.current_photo)}", "blue1")}')
         #  print(f'widget width {self.winfo_width()} height {self.winfo_height()}')
@@ -368,7 +367,7 @@ class PhotoFrame(tk.Frame):
     def show_photo(self):
         #  print()
         #  print(f'current index {self.photo_index} photo ', end='')
-        #  print_color(f'{basename(self.current_photo)}', self.frame_name)
+        #  print(f"{format_color_name(basename(self.current_photo), self.frame_name)}")
         #  print(f'widget width {self.winfo_width()} height {self.winfo_height()}')
         #  print(f'current width {self.cur_wid} height {self.cur_hei}')
         #  print(f'widget reqwidth {self.winfo_reqwidth()} reqheight {self.winfo_reqheight()}')
@@ -521,4 +520,3 @@ class PhotoFrame(tk.Frame):
 
     def debug(self):
         print(f'\n{format_color("debugging PhotoFrame", "yellow")}')
-
