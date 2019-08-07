@@ -5,14 +5,20 @@ def print_color(string, frame_name):
         color = "green"
     print(format_color(string, color))
 
+
 def format_color_name(string, frame_name):
+    """Color the string according to the frame name
+    """
     if frame_name == "primary":
         color = "red"
     else:
         color = "green"
     return format_color(string, color)
 
+
 def format_color(string, color):
+    """Return an ANSI colored string
+    """
     cs = "\x1b[38;2;{};{};{}m{}\x1b[0m"
 
     # my colors
@@ -338,4 +344,3 @@ def format_color(string, color):
         r, g, b = 255, 255, 255
 
     return cs.format(r, g, b, string)
-
