@@ -22,6 +22,7 @@ from queue import Queue
 from photo_frame import PhotoFrame
 from photo_info import PhotoInfo
 from thumb_button import ThumbButton
+from utils import format_color
 
 
 class PhotoViewerApp:
@@ -627,7 +628,7 @@ class PhotoViewerApp:
             new_dir = tk.filedialog.askdirectory()
         print()
         print(
-            f'{PhotoFrame.format_color(None, "New", "spring green")} folder to add to the list: {new_dir}'
+            f'{format_color("New", "spring green")} folder to add to the list: {new_dir}'
         )
 
         # pressing ESC in the dialog returns a tuple
@@ -927,12 +928,12 @@ class PhotoViewerApp:
         if pic_name in self.selection_list:
             self.selection_list.remove(pic_name)
             print(
-                f'{PhotoFrame.format_color(None, "De-selected", "tomato")} {basename(pic_name)}, selection_list is now {len(self.selection_list)} long'
+                f'{format_color("De-selected", "tomato")} {basename(pic_name)}, selection_list is now {len(self.selection_list)} long'
             )
         else:
             self.selection_list.append(pic_name)
             print(
-                f'{PhotoFrame.format_color(None, "Selected", "lawn green")} {basename(pic_name)}, selection_list is now {len(self.selection_list)} long'
+                f'{format_color("Selected", "lawn green")} {basename(pic_name)}, selection_list is now {len(self.selection_list)} long'
             )
 
         # redraw selection list
@@ -945,13 +946,13 @@ class PhotoViewerApp:
 
         if out_dir == "Not set":
             print(
-                f'{PhotoFrame.format_color(None, "Set", "indian red")} the output folder before saving the selection_list'
+                f'{format_color("Set", "indian red")} the output folder before saving the selection_list'
             )
             return -1
 
         if len(self.selection_list) == 0:
             print(
-                f'{PhotoFrame.format_color(None, "Add", "indian red")} pictures to the selection_list before saving it'
+                f'{format_color("Add", "indian red")} pictures to the selection_list before saving it'
             )
             return -1
 
@@ -959,7 +960,7 @@ class PhotoViewerApp:
 
         #  print(f'Saving {len(self.selection_list)} pics in {out_dir}')
         print(
-            f'{PhotoFrame.format_color(None, "Saving", "spring green")} {len(self.selection_list)} pics in folder: {out_dir}'
+            f'{format_color("Saving", "spring green")} {len(self.selection_list)} pics in folder: {out_dir}'
         )
         for pic in self.selection_list:
             if basename(pic) in out_dir_content:
@@ -1004,7 +1005,7 @@ class PhotoViewerApp:
 
         print()
         print(
-            f'{PhotoFrame.format_color(None, "Output", "spring green")} folder: {out_dir}'
+            f'{format_color("Output", "spring green")} folder: {out_dir}'
         )
 
         # create the folder if it doesn't exist
@@ -1191,10 +1192,10 @@ class PhotoViewerApp:
             "medium spring green",
             "spring green",
         ]
-        #  print(f'{PhotoFrame.format_color(None, colorz[level], colorz[level])} ', end='')
-        print(f"{PhotoFrame.format_color(None, wid, colorz[level])}", end="")
+        #  print(f'{format_color(colorz[level], colorz[level])} ', end='')
+        print(f"{format_color(wid, colorz[level])}", end="")
         print(
-            f' w {wid.winfo_width()} h {wid.winfo_height()} rw {PhotoFrame.format_color(None, wid.winfo_reqwidth(), "green")} rh {wid.winfo_reqheight()} x {wid.winfo_x()} y {wid.winfo_y()}'
+            f' w {wid.winfo_width()} h {wid.winfo_height()} rw {format_color(wid.winfo_reqwidth(), "green")} rh {wid.winfo_reqheight()} x {wid.winfo_x()} y {wid.winfo_y()}'
         )
         #  print(f'{wid} {wid.winfo_class()}')
 
