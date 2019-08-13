@@ -42,6 +42,8 @@ class PhotoViewerApp:
         self.set_layout(self.layout_num)
 
     def setup_dirs(self, base_dir):
+        '''Setup the first directory, load the photo_list
+        '''
         # where the main is, start here the fancy tk dir picker every time
         self.base_dir = base_dir
 
@@ -83,6 +85,7 @@ class PhotoViewerApp:
         #  print(f'Photo list {self.photo_list}')
 
     def populate_info(self):
+        # count new pics for progress bar
         new_pics = 0
         for pic in self.photo_list:
             if not pic in self.photo_info:
@@ -126,6 +129,8 @@ class PhotoViewerApp:
             return False
 
     def setup_window(self):
+        """Setup the main window for the app
+        """
         self.root = tk.Tk()
 
         self.width = 900
@@ -423,10 +428,7 @@ class PhotoViewerApp:
         )
         self.output_folder = "Not set"
 
-        # pack static options about output folder
-        #  self.btn_set_output_folder.pack()
-        #  self.text_output_folder.pack()
-        #  self.btn_set_output_folder.grid(row=0, column=0, sticky='ew')
+        # grid widget about output folder
         self.btn_set_output_folder.grid(row=0, column=0)
         self.text_output_folder.grid(row=1, column=0, sticky="ew")
 
@@ -438,8 +440,7 @@ class PhotoViewerApp:
         self.checkbtn_input_dirs = {}
         self.checkbtn_input_state = {}
 
-        # pack input folders
-        #  self.btn_add_folder.pack()
+        # grid widget about input folders
         #  self.btn_add_folder.grid(row=0, column=0, sticky='ew')
         self.btn_add_folder.grid(row=0, column=0)
         self.draw_input_folders()
@@ -633,7 +634,7 @@ class PhotoViewerApp:
             #  self.checkbtn_input_dirs[folder].pack_forget()
             self.checkbtn_input_dirs[folder].grid_forget()
 
-        # repack them in order
+        # regrid them in order
         # first row (0) is the button
         ri = 1
         for folder in sorted(self.all_dirs):
@@ -650,9 +651,8 @@ class PhotoViewerApp:
                     variable=self.checkbtn_input_state[folder],
                 )
 
-            # pack it
+            # grid it
             #  print(f'Packing {folder}')
-            #  self.checkbtn_input_dirs[folder].pack(fill='x')
             self.checkbtn_input_dirs[folder].grid(row=ri, column=0, sticky="ew")
             ri += 1
 
@@ -979,9 +979,7 @@ class PhotoViewerApp:
             return -1
 
         print()
-        print(
-            f'{format_color("Output", "spring green")} folder: {out_dir}'
-        )
+        print(f'{format_color("Output", "spring green")} folder: {out_dir}')
 
         # create the folder if it doesn't exist
         if not isdir(out_dir):

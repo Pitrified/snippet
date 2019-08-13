@@ -113,6 +113,7 @@ def main():
     test_multiple_handlers()
 
     myclass = sample_class()
+    myclass2 = sample_class()
 
 if __name__ == '__main__':
     main()
