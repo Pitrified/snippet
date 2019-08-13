@@ -4,6 +4,7 @@ import logging
 
 from logger_class import sample_class
 
+
 def setup_logger(logLevel="DEBUG"):
     """Setup logger that outputs to console
     """
