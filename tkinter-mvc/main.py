@@ -8,14 +8,15 @@ from controller import Controller
 def setup_logger(logLevel="DEBUG"):
     """Setup logger that outputs to console for the module
     """
-    logroot = logging.getLogger()
+    #  logroot = logging.getLogger()
+    logroot = logging.getLogger("c")
     logroot.setLevel(logLevel)
 
     module_console_handler = logging.StreamHandler()
 
-    #  log_format_module = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    log_format_module = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     #  log_format_module = "%(name)s - %(levelname)s: %(message)s"
-    log_format_module = "%(name)s: %(message)s"
+    #  log_format_module = "%(name)s: %(message)s"
     #  log_format_module = '%(levelname)s: %(message)s'
     #  log_format_module = "%(message)s"
 
@@ -37,16 +38,19 @@ def test_view():
     v = View(root)
     root.mainloop()
 
+
 def test_run():
     c = Controller()
     c.run()
 
+
 def main():
     setup_logger()
+    #  setup_logger('INFO')
 
     recap = f"python3 main.py"
 
-    logmain = logging.getLogger(f"{__name__}.main")
+    logmain = logging.getLogger(f"c.{__name__}.main")
     logmain.info(recap)
 
     #  test_view()

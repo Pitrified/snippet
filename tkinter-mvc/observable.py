@@ -6,7 +6,7 @@ class Observable:
     """
 
     def __init__(self, initialValue=None):
-        log = logging.getLogger(f"{__name__}.init")
+        log = logging.getLogger(f"c.{__name__}.init")
         log.debug('Start init')
 
         self.data = initialValue

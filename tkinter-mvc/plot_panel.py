@@ -4,11 +4,12 @@ import tkinter as tk
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
+from matplotlib import font_manager
 
 
 class PlotPanel(tk.Frame):
     def __init__(self, *args, **kwargs):
-        log = logging.getLogger(f"{__name__}.init")
+        log = logging.getLogger(f"c.{__name__}.init")
         log.debug('Start init')
 
         tk.Frame.__init__(self, *args, **kwargs)

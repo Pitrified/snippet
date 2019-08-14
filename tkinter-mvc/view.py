@@ -7,7 +7,7 @@ from plot_panel import PlotPanel
 
 class View:
     def __init__(self, root):
-        log = logging.getLogger(f"{__name__}.init")
+        log = logging.getLogger(f"c.{__name__}.init")
         log.debug('Start init')
 
 

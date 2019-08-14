@@ -8,7 +8,7 @@ from view import View
 
 class Controller:
     def __init__(self):
-        log = logging.getLogger(f"{__name__}.init")
+        log = logging.getLogger(f"c.{__name__}.init")
         log.debug('Start init')
 
         self.root = tk.Tk()
@@ -22,8 +22,8 @@ class Controller:
         self.view.side_panel.plotBut.config(command=self.PlotDraw)
 
     def run(self):
-        #  self.root.title("Tkinter MVC example")
-        #  self.root.deiconify()
+        self.root.title("Tkinter MVC example")
+        self.root.deiconify()
         self.root.mainloop()
 
     def PlotDraw(self):

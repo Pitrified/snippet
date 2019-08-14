@@ -5,7 +5,7 @@ from observable import Observable
 
 class Model:
     def __init__(self):
-        log = logging.getLogger(f"{__name__}.init")
+        log = logging.getLogger(f"c.{__name__}.init")
         log.debug('Start init')
 
         self.xpoint = 200

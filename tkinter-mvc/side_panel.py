@@ -5,7 +5,7 @@ import tkinter as tk
 
 class SidePanel(tk.Frame):
     def __init__(self, *args, **kwargs):
-        log = logging.getLogger(f"{__name__}.init")
+        log = logging.getLogger(f"c.{__name__}.init")
         log.debug('Start init')
 
         tk.Frame.__init__(self, *args, **kwargs)
