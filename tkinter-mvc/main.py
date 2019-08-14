@@ -14,7 +14,7 @@ def setup_logger(logLevel="DEBUG"):
 
     module_console_handler = logging.StreamHandler()
 
-    log_format_module = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    log_format_module = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     #  log_format_module = "%(name)s - %(levelname)s: %(message)s"
     #  log_format_module = "%(name)s: %(message)s"
     #  log_format_module = '%(levelname)s: %(message)s'
@@ -46,7 +46,7 @@ def test_run():
 
 def main():
     setup_logger()
-    #  setup_logger('INFO')
+    #  setup_logger("INFO")
 
     recap = f"python3 main.py"
 
@@ -54,7 +54,6 @@ def main():
     logmain.info(recap)
 
     #  test_view()
-
     test_run()
 
 

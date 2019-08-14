@@ -7,12 +7,15 @@ class Observable:
 
     def __init__(self, initialValue=None):
         log = logging.getLogger(f"c.{__name__}.init")
-        log.debug('Start init')
+        log.info("Start init")
 
         self.data = initialValue
         self.callbacks = {}
 
     def addCallback(self, func):
+        log = logging.getLogger(f"c.{__name__}.addCallback")
+        log.info("Adding callback")
+
         self.callbacks[func] = 1
 
     def delCallback(self, func):
@@ -23,6 +26,10 @@ class Observable:
             func(self.data)
 
     def set(self, data):
+        log = logging.getLogger(f"c.{__name__}.set")
+        log.setLevel("INFO")
+        log.debug("Setting data")
+
         self.data = data
         self._docallbacks()
 
