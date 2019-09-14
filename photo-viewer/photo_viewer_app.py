@@ -17,11 +17,10 @@ from math import ceil
 from math import floor
 from queue import Queue
 
-#  import ray
-
 from photo_frame import PhotoFrame
 from photo_info import PhotoInfo
 from thumb_button import ThumbButton
+from utils import format_color
 
 
 class PhotoViewerApp:
@@ -43,6 +42,8 @@ class PhotoViewerApp:
         self.set_layout(self.layout_num)
 
     def setup_dirs(self, base_dir):
+        '''Setup the first directory, load the photo_list
+        '''
         # where the main is, start here the fancy tk dir picker every time
         self.base_dir = base_dir
 
@@ -62,7 +63,6 @@ class PhotoViewerApp:
         # update info
         self.photo_info = {}
         self.populate_info()
-        #  self.populate_info_ray()
 
     def populate_photo_list(self):
         """go through the directories and add the photos that are
@@ -85,6 +85,7 @@ class PhotoViewerApp:
         #  print(f'Photo list {self.photo_list}')
 
     def populate_info(self):
+        # count new pics for progress bar
         new_pics = 0
         for pic in self.photo_list:
             if not pic in self.photo_info:
@@ -114,27 +115,6 @@ class PhotoViewerApp:
             print(f"\b\b\b\b{progress: 3d}%", end="", flush=True)
         print("\b\b\b\bDone")
 
-    #  def populate_info_ray(self):
-    #  # www.toptal.com/python/beginners-guide-to-concurrency-and-parallelism-in-python
-    #  # https://towardsdatascience.com/modern-parallel-and-distributed-python-a-quick-tutorial-on-ray-99f8d70369b8
-
-    #  new_pics_pair_ray = []
-    #  for pic in self.photo_list:
-    #  if pic in self.photo_info:
-    #  continue
-
-    #  #  self.photo_info[pic] = self.new_photo_info.remote(pic)
-    #  new_pics_pair_ray.append(self.new_photo_info.remote(pic))
-
-    #  new_pics_pair = ray.get(new_pics_pair_ray)
-
-    #  for which_pic, info in new_pics_pair:
-    #  self.photo_info[which_pic] = info
-
-    #  def new_photo_info(pic):
-    #  @ray.remote
-    #  return (pic, PhotoInfo(pic))
-
     def is_photo(self, photo):
         """photo is the FULL path to the pic"""
         if not isfile(photo):
@@ -149,6 +129,8 @@ class PhotoViewerApp:
             return False
 
     def setup_window(self):
+        """Setup the main window for the app
+        """
         self.root = tk.Tk()
 
         self.width = 900
@@ -446,10 +428,7 @@ class PhotoViewerApp:
         )
         self.output_folder = "Not set"
 
-        # pack static options about output folder
-        #  self.btn_set_output_folder.pack()
-        #  self.text_output_folder.pack()
-        #  self.btn_set_output_folder.grid(row=0, column=0, sticky='ew')
+        # grid widget about output folder
         self.btn_set_output_folder.grid(row=0, column=0)
         self.text_output_folder.grid(row=1, column=0, sticky="ew")
 
@@ -461,8 +440,7 @@ class PhotoViewerApp:
         self.checkbtn_input_dirs = {}
         self.checkbtn_input_state = {}
 
-        # pack input folders
-        #  self.btn_add_folder.pack()
+        # grid widget about input folders
         #  self.btn_add_folder.grid(row=0, column=0, sticky='ew')
         self.btn_add_folder.grid(row=0, column=0)
         self.draw_input_folders()
@@ -627,7 +605,7 @@ class PhotoViewerApp:
             new_dir = tk.filedialog.askdirectory()
         print()
         print(
-            f'{PhotoFrame.format_color(None, "New", "spring green")} folder to add to the list: {new_dir}'
+            f'{format_color("New", "spring green")} folder to add to the list: {new_dir}'
         )
 
         # pressing ESC in the dialog returns a tuple
@@ -656,7 +634,7 @@ class PhotoViewerApp:
             #  self.checkbtn_input_dirs[folder].pack_forget()
             self.checkbtn_input_dirs[folder].grid_forget()
 
-        # repack them in order
+        # regrid them in order
         # first row (0) is the button
         ri = 1
         for folder in sorted(self.all_dirs):
@@ -673,9 +651,8 @@ class PhotoViewerApp:
                     variable=self.checkbtn_input_state[folder],
                 )
 
-            # pack it
+            # grid it
             #  print(f'Packing {folder}')
-            #  self.checkbtn_input_dirs[folder].pack(fill='x')
             self.checkbtn_input_dirs[folder].grid(row=ri, column=0, sticky="ew")
             ri += 1
 
@@ -927,12 +904,12 @@ class PhotoViewerApp:
         if pic_name in self.selection_list:
             self.selection_list.remove(pic_name)
             print(
-                f'{PhotoFrame.format_color(None, "De-selected", "tomato")} {basename(pic_name)}, selection_list is now {len(self.selection_list)} long'
+                f'{format_color("De-selected", "tomato")} {basename(pic_name)}, selection_list is now {len(self.selection_list)} long'
             )
         else:
             self.selection_list.append(pic_name)
             print(
-                f'{PhotoFrame.format_color(None, "Selected", "lawn green")} {basename(pic_name)}, selection_list is now {len(self.selection_list)} long'
+                f'{format_color("Selected", "lawn green")} {basename(pic_name)}, selection_list is now {len(self.selection_list)} long'
             )
 
         # redraw selection list
@@ -945,13 +922,13 @@ class PhotoViewerApp:
 
         if out_dir == "Not set":
             print(
-                f'{PhotoFrame.format_color(None, "Set", "indian red")} the output folder before saving the selection_list'
+                f'{format_color("Set", "indian red")} the output folder before saving the selection_list'
             )
             return -1
 
         if len(self.selection_list) == 0:
             print(
-                f'{PhotoFrame.format_color(None, "Add", "indian red")} pictures to the selection_list before saving it'
+                f'{format_color("Add", "indian red")} pictures to the selection_list before saving it'
             )
             return -1
 
@@ -959,7 +936,7 @@ class PhotoViewerApp:
 
         #  print(f'Saving {len(self.selection_list)} pics in {out_dir}')
         print(
-            f'{PhotoFrame.format_color(None, "Saving", "spring green")} {len(self.selection_list)} pics in folder: {out_dir}'
+            f'{format_color("Saving", "spring green")} {len(self.selection_list)} pics in folder: {out_dir}'
         )
         for pic in self.selection_list:
             if basename(pic) in out_dir_content:
@@ -988,7 +965,6 @@ class PhotoViewerApp:
         self.populate_photo_list()
 
         self.populate_info()
-        #  self.populate_info_ray()
         self.draw_photo_list_frame()
 
         self.photo_frame.change_photo_list(self.photo_list)
@@ -1003,9 +979,7 @@ class PhotoViewerApp:
             return -1
 
         print()
-        print(
-            f'{PhotoFrame.format_color(None, "Output", "spring green")} folder: {out_dir}'
-        )
+        print(f'{format_color("Output", "spring green")} folder: {out_dir}')
 
         # create the folder if it doesn't exist
         if not isdir(out_dir):
@@ -1191,10 +1165,10 @@ class PhotoViewerApp:
             "medium spring green",
             "spring green",
         ]
-        #  print(f'{PhotoFrame.format_color(None, colorz[level], colorz[level])} ', end='')
-        print(f"{PhotoFrame.format_color(None, wid, colorz[level])}", end="")
+        #  print(f'{format_color(colorz[level], colorz[level])} ', end='')
+        print(f"{format_color(wid, colorz[level])}", end="")
         print(
-            f' w {wid.winfo_width()} h {wid.winfo_height()} rw {PhotoFrame.format_color(None, wid.winfo_reqwidth(), "green")} rh {wid.winfo_reqheight()} x {wid.winfo_x()} y {wid.winfo_y()}'
+            f' w {wid.winfo_width()} h {wid.winfo_height()} rw {format_color(wid.winfo_reqwidth(), "green")} rh {wid.winfo_reqheight()} x {wid.winfo_x()} y {wid.winfo_y()}'
         )
         #  print(f'{wid} {wid.winfo_class()}')
 
