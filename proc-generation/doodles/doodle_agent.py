@@ -26,6 +26,7 @@ class Agent:
         self.bias = bias
         self.scale = scale
         self.step_len = step_len
+        self.num_steps = 3
 
         pad = 10
         if x is None:
@@ -55,17 +56,18 @@ class Agent:
         #  logg.info(f"Step")
 
         dir_delta = npnorm(loc=self.bias, scale=self.scale)
-        logg.debug(f"sampled {dir_delta:.3f}")
-        logg.debug(f"pre  x {self.x} y {self.y} d {self.d:.3f}")
+        logg.log(5, f"sampled {dir_delta:.3f}")
+        logg.log(5, f"pre  x {self.x} y {self.y} d {self.d:.3f}")
 
-        self.d += dir_delta
+        for _ in range(self.num_steps):
+            self.d += dir_delta
 
-        rd = radians(self.d)
+            rd = radians(self.d)
 
-        #  self.x += int(cos(rd) * self.step_len)
-        #  self.y += int(sin(rd) * self.step_len)
-        self.x += cos(rd) * self.step_len
-        self.y += sin(rd) * self.step_len
-        logg.debug(f"post x {self.x} y {self.y} d {self.d:.3f}")
+            #  self.x += int(cos(rd) * self.step_len)
+            #  self.y += int(sin(rd) * self.step_len)
+            self.x += cos(rd) * self.step_len
+            self.y += sin(rd) * self.step_len
+            logg.log(5, f"post x {self.x} y {self.y} d {self.d:.3f}")
 
-        self.dod_map.mappa[int(self.x)][int(self.y)] = 255
+            self.dod_map.mappa[int(self.x)][int(self.y)] = 255
