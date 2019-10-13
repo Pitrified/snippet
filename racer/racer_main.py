@@ -105,31 +105,32 @@ def run_racer_main(path_input):
         #  clock.tick(60)
         clock.tick(1)
         logg.debug(f"    New frame")
-        action_done = False
 
         # Handle Input Events
+        # https://stackoverflow.com/a/22099654
         for event in pygame.event.get():
             logg.debug(f"Handling event {event}")
             if event.type == pygame.QUIT:
                 going = False
             elif event.type == pygame.KEYDOWN:
-                action_done = True
                 if event.key == pygame.K_ESCAPE:
                     going = False
-                elif event.key == pygame.K_d:
-                    racer.step("right")
-                elif event.key == pygame.K_a:
-                    racer.step("left")
-                elif event.key == pygame.K_w:
-                    racer.step("up")
-                elif event.key == pygame.K_x:
-                    racer.step("down")
             logg.debug(f"Done handling")
+
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_d]:
+            racer.step("right")
+        elif keys[pygame.K_a]:
+            racer.step("left")
+        elif keys[pygame.K_w]:
+            racer.step("up")
+        elif keys[pygame.K_x]:
+            racer.step("down")
+        else:
+            racer.step("nop")
 
         # manually update the racer, pass the action
         #  allsprites.update()
-        if not action_done:
-            racer.step("nop")
 
         # Draw Everything
         screen.blit(background, (0, 0))
