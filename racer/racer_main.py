@@ -17,12 +17,13 @@ def parse_arguments():
 
     parser.add_argument(
         "-i",
-        "--path_input",
+        "--out_file_sprite",
         type=str,
-        default="hp.jpg",
-        help="path to input image to use",
+        default="car.bmp",
+        help="where to save the car image",
     )
 
+    parser.add_argument("-fps", "--fps", type=int, default=1, help="frame per second")
     parser.add_argument("-s", "--seed", type=int, default=-1, help="random seed to use")
 
     # last line to parse the args
@@ -58,7 +59,7 @@ def setup_logger(logLevel="DEBUG"):
     logg.debug(f"Done setting up logger")
 
 
-def run_racer_main(path_input):
+def run_racer_main(out_file_sprite, fps):
     """mainloop of the game
 
     adapted from https://www.pygame.org/docs/tut/chimp.py.html
@@ -75,14 +76,15 @@ def run_racer_main(path_input):
     # convert() changes the pixel format
     # https://www.pygame.org/docs/ref/surface.html#pygame.Surface.convert
     background = background.convert()
-    background.fill((250, 250, 250))
+    #  background.fill((250, 250, 250))
+    background.fill((0, 0, 0))
 
     # Put Text On The Background, Centered
     if pygame.font:
         # create a new Font object (from a file)
         font = pygame.font.Font(None, 36)
         # render() draws the text on a Surface
-        text = font.render("Drive safely", 1, (10, 10, 10))
+        text = font.render("Drive safely", 1, (128, 128, 128))
         # somewhere here there is a nice drawing of rect pos
         # https://dr0id.bitbucket.io/legacy/pygame_tutorial01.html
         textpos = text.get_rect(centerx=background.get_width() / 2)
@@ -96,14 +98,13 @@ def run_racer_main(path_input):
 
     # Prepare Game Objects
     clock = pygame.time.Clock()
-    racer = Racer(screen.get_size()[0] // 2, screen.get_size()[1] // 2)
+    racer = Racer(out_file_sprite, screen.get_size()[0] // 2, screen.get_size()[1] // 2)
     allsprites = pygame.sprite.RenderPlain((racer))
 
     # Main Loop
     going = True
     while going:
-        #  clock.tick(60)
-        clock.tick(1)
+        clock.tick(fps)
         logg.debug(f"    New frame")
 
         # Handle Input Events
@@ -129,10 +130,10 @@ def run_racer_main(path_input):
         else:
             racer.step("nop")
 
-        # manually update the racer, pass the action
+        # manually update the racer, pass the action in step
         #  allsprites.update()
 
-        # Draw Everything
+        # Draw Everything again, every frame
         screen.blit(background, (0, 0))
         allsprites.draw(screen)
         pygame.display.flip()
@@ -154,16 +155,18 @@ def main():
     seed(myseed)
     np.random.seed(myseed)
 
-    path_input = args.path_input
+    out_file_sprite = args.out_file_sprite
+    fps = args.fps
 
     recap = f"python3 racer_main.py"
-    recap += f" --path_input {path_input}"
+    recap += f" --out_file_sprite {out_file_sprite}"
+    recap += f" --fps {fps}"
     recap += f" --seed {myseed}"
 
     logmain = logging.getLogger(f"c.{__name__}.main")
     logmain.info(recap)
 
-    run_racer_main(path_input)
+    run_racer_main(out_file_sprite, fps)
 
 
 if __name__ == "__main__":
