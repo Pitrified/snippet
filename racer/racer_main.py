@@ -7,6 +7,8 @@ import numpy as np
 from random import seed
 from timeit import default_timer as timer
 
+from pygame.sprite import spritecollide
+
 from racer_racer import Racer
 from racer_map import RacingMap
 
@@ -69,7 +71,7 @@ def run_racer_main(out_file_sprite, fps):
     logg = logging.getLogger(f"c.{__name__}.run_racer_main")
 
     pygame.init()
-    screen = pygame.display.set_mode((600, 900))
+    screen = pygame.display.set_mode((900, 900))
     # size is (int, int) tuple
     field_size = screen.get_size()
     # unpack the field size for clarity
@@ -103,9 +105,11 @@ def run_racer_main(out_file_sprite, fps):
 
     # Prepare Game Objects
     clock = pygame.time.Clock()
-    racer = Racer(out_file_sprite, field_wid // 2, field_hei // 2)
+    #  racer = Racer(out_file_sprite, field_wid // 2, field_hei // 2)
+    racer = Racer(out_file_sprite, 100, 150)
     rmap = RacingMap(field_wid, field_hei)
-    allsprites = pygame.sprite.RenderPlain((racer, rmap))
+    # draw the map first, the car on top
+    allsprites = pygame.sprite.RenderPlain((rmap, racer))
 
     # Main Loop
     going = True
@@ -146,6 +150,11 @@ def run_racer_main(out_file_sprite, fps):
 
         # manually update the racer, pass the action in step
         #  allsprites.update()
+
+        hits = spritecollide(racer, rmap, dokill=False)
+        logg.debug(f"hitting {hits}")
+        for segment in hits:
+            logg.debug(f"hit segment with id {segment.sid}")
 
         # Draw Everything again, every frame
         screen.blit(field, (0, 0))
