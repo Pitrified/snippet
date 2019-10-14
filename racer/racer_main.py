@@ -8,6 +8,7 @@ from random import seed
 from timeit import default_timer as timer
 
 from racer_racer import Racer
+from racer_map import RacingMap
 
 
 def parse_arguments():
@@ -68,18 +69,22 @@ def run_racer_main(out_file_sprite, fps):
     logg = logging.getLogger(f"c.{__name__}.run_racer_main")
 
     pygame.init()
-    screen = pygame.display.set_mode((900, 900))
+    screen = pygame.display.set_mode((600, 900))
+    # size is (int, int) tuple
+    field_size = screen.get_size()
+    # unpack the field size for clarity
+    field_wid, field_hei = field_size
     pygame.display.set_caption("Racer")
 
-    # Create The Backgound
-    background = pygame.Surface(screen.get_size())
+    # Create The playing field
+    field = pygame.Surface(field_size)
     # convert() changes the pixel format
     # https://www.pygame.org/docs/ref/surface.html#pygame.Surface.convert
-    background = background.convert()
-    #  background.fill((250, 250, 250))
-    background.fill((0, 0, 0))
+    field = field.convert()
+    #  field.fill((250, 250, 250))
+    field.fill((0, 0, 0))
 
-    # Put Text On The Background, Centered
+    # Put Text On The field, Centered
     if pygame.font:
         # create a new Font object (from a file)
         font = pygame.font.Font(None, 36)
@@ -87,19 +92,20 @@ def run_racer_main(out_file_sprite, fps):
         text = font.render("Drive safely", 1, (128, 128, 128))
         # somewhere here there is a nice drawing of rect pos
         # https://dr0id.bitbucket.io/legacy/pygame_tutorial01.html
-        textpos = text.get_rect(centerx=background.get_width() / 2)
-        # draw the text on the background
-        background.blit(text, textpos)
+        textpos = text.get_rect(centerx=field_wid / 2)
+        # draw the text on the field
+        field.blit(text, textpos)
 
-    # draw the background on the screen
-    screen.blit(background, (0, 0))
+    # draw the field on the screen
+    screen.blit(field, (0, 0))
     # update the display (linked with screen)
     pygame.display.flip()
 
     # Prepare Game Objects
     clock = pygame.time.Clock()
-    racer = Racer(out_file_sprite, screen.get_size()[0] // 2, screen.get_size()[1] // 2)
-    allsprites = pygame.sprite.RenderPlain((racer))
+    racer = Racer(out_file_sprite, field_wid // 2, field_hei // 2)
+    rmap = RacingMap()
+    allsprites = pygame.sprite.RenderPlain((racer, rmap))
 
     # Main Loop
     going = True
@@ -142,7 +148,7 @@ def run_racer_main(out_file_sprite, fps):
         #  allsprites.update()
 
         # Draw Everything again, every frame
-        screen.blit(background, (0, 0))
+        screen.blit(field, (0, 0))
         allsprites.draw(screen)
         pygame.display.flip()
 

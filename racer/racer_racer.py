@@ -1,9 +1,7 @@
-import argparse
 import logging
-import numpy as np
 
-from random import seed
 from timeit import default_timer as timer
+
 from math import cos
 from math import sin
 from math import radians
@@ -11,7 +9,7 @@ from math import radians
 from PIL import Image
 from PIL import ImageDraw
 
-from pygame import display
+#  from pygame import display
 from pygame.sprite import Sprite
 from pygame.transform import rotate
 
