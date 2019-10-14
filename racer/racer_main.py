@@ -68,7 +68,7 @@ def run_racer_main(out_file_sprite, fps):
     logg = logging.getLogger(f"c.{__name__}.run_racer_main")
 
     pygame.init()
-    screen = pygame.display.set_mode((600, 900))
+    screen = pygame.display.set_mode((900, 900))
     pygame.display.set_caption("Racer")
 
     # Create The Backgound
@@ -127,6 +127,14 @@ def run_racer_main(out_file_sprite, fps):
             racer.step("up")
         elif keys[pygame.K_x]:
             racer.step("down")
+        elif keys[pygame.K_q]:
+            racer.step("upleft")
+        elif keys[pygame.K_e]:
+            racer.step("upright")
+        elif keys[pygame.K_z]:
+            racer.step("downleft")
+        elif keys[pygame.K_c]:
+            racer.step("downright")
         else:
             racer.step("nop")
 

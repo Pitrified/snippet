@@ -68,20 +68,29 @@ class Racer(Sprite):
         logg.debug(f"Doing action {action}")
 
         if action == "up":
-            self.speed += self.speed_step
+            self._accelerate("up")
         elif action == "down":
-            self.speed -= self.speed_step
-            # MAYBE it can go in reverse?
-            if self.speed < 0:
-                self.speed = 0
+            self._accelerate("down")
+
         elif action == "right":
-            self.direction += self.dir_step
-            if self.direction >= 360:
-                self.direction -= 360
+            self._steer("right")
         elif action == "left":
-            self.direction -= self.dir_step
-            if self.direction < 0:
-                self.direction += 360
+            self._steer("left")
+            
+        elif action == "upright":
+            self._accelerate("up")
+            self._steer("right")
+        elif action == "upleft":
+            self._accelerate("up")
+            self._steer("left")
+
+        elif action == "downright":
+            self._accelerate("down")
+            self._steer("right")
+        elif action == "downleft":
+            self._accelerate("down")
+            self._steer("left")
+
         elif action == "nop":
             pass
 
@@ -100,6 +109,30 @@ class Racer(Sprite):
         self.image = self.rot_car_image[self.direction]
         self.rect = self.rot_car_rect[self.direction]
         self.rect.center = self.pos_x, self.pos_y
+
+    def _steer(self, action):
+        """Steer the car
+        """
+        if action == "right":
+            self.direction += self.dir_step
+            if self.direction >= 360:
+                self.direction -= 360
+        elif action == "left":
+            self.direction -= self.dir_step
+            if self.direction < 0:
+                self.direction += 360
+
+    def _accelerate(self, action):
+        """Control the speed of the car
+        """
+        if action == "up":
+            # TODO some threshold, possibly from the drag
+            self.speed += self.speed_step
+        elif action == "down":
+            self.speed -= self.speed_step
+            # MAYBE it can go in reverse?
+            if self.speed < 0:
+                self.speed = 0
 
     def _create_car_image(self):
         self.size = 60, 40
