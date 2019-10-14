@@ -22,7 +22,7 @@ class Racer(Sprite):
     Will be rewritten as proper gym env
     """
 
-    def __init__(self, out_file_sprite, pos_x, pos_y, direction=0):
+    def __init__(self, out_file_car, pos_x, pos_y, direction=0):
         logg = logging.getLogger(f"c.{__name__}.__init__")
         logg.debug(f"Start init")
 
@@ -44,10 +44,10 @@ class Racer(Sprite):
         # viscous drag coefficient
         self.drag_coeff = 0.5
 
-        self.out_file_sprite = out_file_sprite
+        self.out_file_car = out_file_car
         # image and rect are used by allsprites.draw
         self._create_car_image()
-        self.orig_image, self.rect = load_image(self.out_file_sprite)
+        self.orig_image, self.rect = load_image(self.out_file_car)
         self._rotate_car_image()
         logg.debug(f"Rect di car {self.rect}")
 
@@ -181,7 +181,7 @@ class Racer(Sprite):
         )
 
         # MAYBE can the saving be avoided
-        img1.save(self.out_file_sprite, "bmp")
+        img1.save(self.out_file_car, "bmp")
 
     def _draw_oval(self, draw, top, left, width, length, color):
         """draw an oval, top left is for the rectangle

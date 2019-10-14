@@ -104,7 +104,7 @@ def run_racer_main(out_file_sprite, fps):
     # Prepare Game Objects
     clock = pygame.time.Clock()
     racer = Racer(out_file_sprite, field_wid // 2, field_hei // 2)
-    rmap = RacingMap()
+    rmap = RacingMap(field_wid, field_hei)
     allsprites = pygame.sprite.RenderPlain((racer, rmap))
 
     # Main Loop
