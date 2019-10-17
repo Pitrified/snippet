@@ -115,8 +115,8 @@ class Racer(Sprite):
             pass
 
         # compute delta
-        pos_x_d = cos(radians(self.direction)) * self.speed
-        pos_y_d = sin(radians(self.direction)) * self.speed
+        pos_x_d = cos(radians(360-self.direction)) * self.speed
+        pos_y_d = sin(radians(360-self.direction)) * self.speed
 
         # move the car
         self.precise_x += pos_x_d
