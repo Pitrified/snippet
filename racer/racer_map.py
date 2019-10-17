@@ -34,19 +34,19 @@ class RacingMap(Group):
         # direction, centerx, centery
         self.seg_info = [
             [0, 200, 150],
-            [90, 300, 250],
+            [270, 300, 250],
             [0, 400, 350],
-            [270, 500, 250],
+            [90, 500, 250],
             [0, 600, 150],
-            [90, 700, 250],
-            [90, 700, 450],
-            [90, 700, 650],
+            [270, 700, 250],
+            [270, 700, 450],
+            [270, 700, 650],
             [180, 600, 750],
             [180, 400, 750],
             [180, 200, 750],
-            [270, 100, 650],
-            [270, 100, 450],
-            [270, 100, 250],
+            [90, 100, 650],
+            [90, 100, 450],
+            [90, 100, 250],
         ]
         self.segments = {}
         self.num_segments = len(self.seg_info)
@@ -107,7 +107,8 @@ class Segment(Sprite):
         """
         logg = logging.getLogger(f"c.{__name__}.__init__")
 
-        self.image = rotate(self.orig_image, 360 - direction)
+        #  self.image = rotate(self.orig_image, 360 - direction)
+        self.image = rotate(self.orig_image, direction)
         self.rect = self.image.get_rect(center=(self.cx, self.cy))
 
         logg.debug(f"lefttop {self.rect.topleft} rightbottom {self.rect.bottomright}")

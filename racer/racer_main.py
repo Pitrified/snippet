@@ -71,11 +71,15 @@ def run_racer_main(out_file_sprite, fps):
     logg = logging.getLogger(f"c.{__name__}.run_racer_main")
 
     pygame.init()
-    screen = pygame.display.set_mode((900, 900))
     # size is (int, int) tuple
-    field_size = screen.get_size()
+    field_size = (900, 900)
     # unpack the field size for clarity
     field_wid, field_hei = field_size
+    sidebar_size = (300, field_hei)
+    sidebar_wid, sidebar_hei = sidebar_size
+    total_size = (field_wid + sidebar_wid, field_hei)
+
+    screen = pygame.display.set_mode(total_size)
     pygame.display.set_caption("Racer")
 
     # Create The playing field
@@ -87,29 +91,62 @@ def run_racer_main(out_file_sprite, fps):
     field.fill((0, 0, 0))
 
     # Put Text On The field, Centered
-    if pygame.font:
-        # create a new Font object (from a file)
-        font = pygame.font.Font(None, 36)
-        # render() draws the text on a Surface
-        text = font.render("Drive safely", 1, (128, 128, 128))
-        # somewhere here there is a nice drawing of rect pos
-        # https://dr0id.bitbucket.io/legacy/pygame_tutorial01.html
-        textpos = text.get_rect(centerx=field_wid / 2)
-        # draw the text on the field
-        field.blit(text, textpos)
+    if not pygame.font:
+        logg.error("You need fonts to put text on the screen")
+
+    # create a new Font object (from a file if you want)
+    font = pygame.font.Font(None, 36)
 
     # draw the field on the screen
     screen.blit(field, (0, 0))
+
+    # create the sidebar
+    sidebar = pygame.Surface(sidebar_size)
+    sidebar = sidebar.convert()
+    sidebar.fill((80, 80, 80))
+
+    # render() draws the text on a Surface
+    text_title = font.render("Drive safely", 1, (255, 255, 255))
+    # somewhere here there is a nice drawing of rect pos
+    # https://dr0id.bitbucket.io/legacy/pygame_tutorial01.html
+    # the pos is relative to the surface you blit to
+    textpos_title = text_title.get_rect(centerx=sidebar_wid / 2)
+
+    # draw the text on the sidebar
+    sidebar.blit(text_title, textpos_title)
+
+    val_delta = 50
+    speed_text_hei = 200
+    text_speed = font.render("Speed:", 1, (255, 255, 255))
+    textpos_speed = text_speed.get_rect(center=(sidebar_wid / 2, speed_text_hei))
+    sidebar.blit(text_speed, textpos_speed)
+    speed_val_hei = speed_text_hei + val_delta
+
+    direction_text_hei = 300
+    text_direction = font.render("Direction:", 1, (255, 255, 255))
+    textpos_direction = text_direction.get_rect(center=(sidebar_wid / 2, direction_text_hei))
+    sidebar.blit(text_direction, textpos_direction)
+    direction_val_hei = direction_text_hei + val_delta
+
+    # draw the sidebar on the screen
+    screen.blit(sidebar, (field_wid, 0))
+
     # update the display (linked with screen)
     pygame.display.flip()
 
     # Prepare Game Objects
     clock = pygame.time.Clock()
+
     #  racer = Racer(out_file_sprite, field_wid // 2, field_hei // 2)
     racer = Racer(out_file_sprite, 100, 150)
+
     rmap = RacingMap(field_wid, field_hei)
+    # draw map on the field, it is static, so there is no need to redraw it every time
+    rmap.draw(field)
+
     # draw the map first, the car on top
-    allsprites = pygame.sprite.RenderPlain((rmap, racer))
+    #  allsprites = pygame.sprite.RenderPlain((rmap, racer))
+    allsprites = pygame.sprite.RenderPlain(( racer))
 
     # Main Loop
     going = True
@@ -153,12 +190,25 @@ def run_racer_main(out_file_sprite, fps):
 
         hits = spritecollide(racer, rmap, dokill=False)
         logg.debug(f"hitting {hits}")
+        hit_directions = []
         for segment in hits:
             logg.debug(f"hit segment with id {segment.sid}")
+            hit_directions.append(rmap.seg_info[segment.sid][0])
+        racer._compute_reward(hit_directions)
 
         # Draw Everything again, every frame
+        # the field already has the road drawn
         screen.blit(field, (0, 0))
+
+        # draw all moving sprites (the car) on the screen
         allsprites.draw(screen)
+        # if you draw on the field you can easily leave a track
+        #  allsprites.draw(field)
+
+        # draw the sidebar template
+        screen.blit(sidebar, (field_wid, 0))
+        # draw the updated numbers
+
         pygame.display.flip()
 
     pygame.quit()

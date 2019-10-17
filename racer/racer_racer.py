@@ -35,7 +35,8 @@ class Racer(Sprite):
 
         # car heading, degrees
         self.direction = direction
-        self.dir_step = 3
+        #  self.dir_step = 3
+        self.dir_step = 15
 
         logg.debug(f"Pos x {self.pos_x} y {self.pos_y} dir {self.direction}")
 
@@ -43,6 +44,8 @@ class Racer(Sprite):
         self.speed_step = 1
         # viscous drag coefficient
         self.drag_coeff = 0.5
+
+        self.done = False
 
         self.out_file_car = out_file_car
         # image and rect are used by allsprites.draw
@@ -61,6 +64,25 @@ class Racer(Sprite):
         up-down: accelerate/brake
         combination of the above
         do nothing
+ 
+        ----------
+        This method steps the game forward one step
+        Parameters
+        ----------
+        action : str
+            MAYBE should be int anyway
+        Returns
+        -------
+        ob, reward, episode_over, info : tuple
+            ob (object) :
+                an environment-specific object representing the
+                state of the environment.
+            reward (float) :
+                amount of reward achieved by the previous action.
+            episode_over (bool) :
+                whether it's time to reset the environment again.
+            info (dict) :
+                diagnostic information useful for debugging.
         """
         logg = logging.getLogger(f"c.{__name__}.step")
         logg.debug(f"Doing action {action}")
@@ -74,7 +96,7 @@ class Racer(Sprite):
             self._steer("right")
         elif action == "left":
             self._steer("left")
-            
+
         elif action == "upright":
             self._accelerate("up")
             self._steer("right")
@@ -108,14 +130,38 @@ class Racer(Sprite):
         self.rect = self.rot_car_rect[self.direction]
         self.rect.center = self.pos_x, self.pos_y
 
+    def _compute_reward(self, hit_directions):
+        """Compute the reward of moving, related to the map you are in
+
+        hit_directions is a list of direction of the segments you are hitting
+        """
+        logg = logging.getLogger(f"c.{__name__}._compute_reward")
+        logg.debug(f"Reward for hitting {hit_directions}")
+
+        # out of the map
+        if len(hit_directions) == 0:
+            self.done = True
+            return
+
+        mean_direction = sum(hit_directions) / len(hit_directions)
+        logg.debug(f"mean_direction {mean_direction}")
+
+        error = self.direction - mean_direction
+        logg.debug(f"direction-mean {error}")
+        error %= 360
+        logg.debug(f"modulus {error}")
+        if error > 180:
+            error = 360 - error
+        logg.debug(f"current direction {self.direction} has error of {error:.4f}")
+
     def _steer(self, action):
         """Steer the car
         """
-        if action == "right":
+        if action == "left":
             self.direction += self.dir_step
             if self.direction >= 360:
                 self.direction -= 360
-        elif action == "left":
+        elif action == "right":
             self.direction -= self.dir_step
             if self.direction < 0:
                 self.direction += 360
@@ -211,6 +257,6 @@ class Racer(Sprite):
         self.rot_car_image = {}
         self.rot_car_rect = {}
         for dire in range(0, 360, self.dir_step):
-            self.rot_car_image[dire] = rotate(self.orig_image, 360 - dire)
+            self.rot_car_image[dire] = rotate(self.orig_image, dire)
             self.rot_car_rect[dire] = self.rot_car_image[dire].get_rect()
             #  logg.debug(f"rect {dire}: {self.rot_car_rect[dire]}")
