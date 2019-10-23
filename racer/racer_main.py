@@ -191,10 +191,12 @@ def run_racer_main(out_file_sprite, fps):
         hits = spritecollide(racer, rmap, dokill=False)
         logg.debug(f"hitting {hits}")
         hit_directions = []
+        hit_sid = []
         for segment in hits:
             logg.debug(f"hit segment with id {segment.sid}")
             hit_directions.append(rmap.seg_info[segment.sid][0])
-        racer._compute_reward(hit_directions)
+            hit_sid.append(segment.sid)
+        racer._compute_reward(hit_directions, hit_sid)
 
         # Draw Everything again, every frame
         # the field already has the road drawn

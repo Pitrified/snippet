@@ -130,18 +130,43 @@ class Racer(Sprite):
         self.rect = self.rot_car_rect[self.direction]
         self.rect.center = self.pos_x, self.pos_y
 
-    def _compute_reward(self, hit_directions):
+    def _compute_reward(self, hit_directions, hit_sid):
         """Compute the reward of moving, related to the map you are in
 
         hit_directions is a list of direction of the segments you are hitting
+        hit_sid is a list of segment ids
         """
         logg = logging.getLogger(f"c.{__name__}._compute_reward")
-        logg.debug(f"Reward for hitting {hit_directions}")
+        logg.debug(f"Reward for hitting {hit_directions} {hit_sid}")
 
         # out of the map
         if len(hit_directions) == 0:
             self.done = True
             return
+        # too many hits, your road is weird, cap them at 3 segments
+        elif len(hit_directions) > 3:
+            hit_directions = hit_directions[:3]
+            hit_sid = hit_sid[:3]
+
+        # one segment, all rigth
+        if len(hit_directions) == 1:
+            logg.debug(f"One segment")
+            pass
+        # two or three
+        #  elif len(hit_directions) == 2 or len(hit_directions) == 3:
+        else:
+            # find the first segment, [0, 13] should be [13, 0]
+            # do it twice to handle [0, 12, 13] -> [12, 13, 0]
+            for i in range(2):
+                if hit_sid[-1] - hit_sid[-2] > 2:
+                    tmp_sid = hit_sid.pop()
+                    hit_sid.insert(0, tmp_sid)
+                    tmp_directions = hit_directions.pop()
+                    hit_directions.insert(0, tmp_directions)
+                    logg.debug(f"{i}: now {hit_directions} {hit_sid}")
+
+
+        logg.debug(f"Shuffled {hit_directions} {hit_sid}")
 
         mean_direction = sum(hit_directions) / len(hit_directions)
         logg.debug(f"mean_direction {mean_direction}")
