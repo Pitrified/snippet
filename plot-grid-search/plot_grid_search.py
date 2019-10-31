@@ -129,11 +129,16 @@ def run_plot_grid_search():
 
     # dnp has all the combinations of the fixed parameters
     # we want to pass them labeled, so we build a dict
+    # THIS is to do triple_hist
     for dnp in product(*[hyper_params_grid[l] for l in dont_change]):
         fixed = {label: p for label, p in zip(dont_change, dnp)}
         logg.debug(fixed)
         multigram(hyper_params_grid, do_change, fixed, hp2res, hp_labels)
         break
+
+    # TODO or MAYBE we pass do_change e dont_change and compute the mean/stddev
+    # of all the points for each changing set of params
+    # using this we do fancy double_hist
 
     plt.show()
 
@@ -199,6 +204,7 @@ def single_hist(hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, **kw
     # only one label, change the values on this parameter
     la = do_change[0]
 
+    index = 1
     for val_a in hyper_params_grid[la]:
         # build the hp_set for the corresponding bar
         hp_set = []
@@ -210,6 +216,10 @@ def single_hist(hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, **kw
         hp_set = tuple(hp_set)
         hp_val = hp2res[hp_set]
         logg.debug(f"hp_set {hp_set} hp_val {hp_val}")
+
+        ax.bar(index, hp_val)
+        index += 1
+
 
 
 def double_hist(hyper_params_grid, do_change, fixed, hp2res, ax, **kwargs):
