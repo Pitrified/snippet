@@ -71,15 +71,29 @@ def load_results():
     with open(fp_res, "r") as f:
         res = json.load(f)
 
-    #  logg.debug(f"hp_ids {hp_ids} res {res}")
+    #  logg.debug(f"hp_ids {hp_ids}\nres {res}")
 
     # link hp_set to loss
-    hp2res = {tuple(hp_ids[id_]): res[id_] for id_ in hp_ids}
+    #  hp2res = {tuple(hp_ids[id_]): res[id_] for id_ in hp_ids}
+
+    # get hp labels
+    hp_labels = sorted(hp_ids["0"])
+    logg.debug(f"sorted labels {hp_labels}")
+
+    hp2res = {}
+    for id_ in hp_ids:
+        #  hp_set = (hp_ids[id_][lab_hp] for lab_hp in sorted(hp_ids[id_]))
+        hp_set = []
+        for lab_hp in hp_labels:
+            # extract the values from the dict
+            hp_set.append(hp_ids[id_][lab_hp])
+        hp_set = tuple(hp_set)
+        hp2res[hp_set] = res[id_]
 
     #  logg.debug(f"hp2res {hp2res}")
     logg.debug(f"loaded hp2res {len(hp2res)}")
 
-    return hp2res
+    return hp2res, hp_labels
 
 
 def run_plot_grid_search():
@@ -98,7 +112,7 @@ def run_plot_grid_search():
         "early_stop_pad": [20],
         "epsilon_loss": [0.0001],
     }
-    results = load_results()
+    hp2res, hp_labels = load_results()
 
     # hypa that we want to change WITHIN the same plot
     #  do_change = ["Nh1", "lr", "lr_final"]
@@ -118,7 +132,7 @@ def run_plot_grid_search():
     for dnp in product(*[hyper_params_grid[l] for l in dont_change]):
         fixed = {label: p for label, p in zip(dont_change, dnp)}
         logg.debug(fixed)
-        multigram(hyper_params_grid, do_change, fixed)
+        multigram(hyper_params_grid, do_change, fixed, hp2res, hp_labels)
         break
 
     plt.show()
@@ -139,7 +153,7 @@ def split_labels(hyper_params_grid, do_change):
     return dont_change
 
 
-def multigram(hyper_params_grid, do_change, fixed, ax=None, **kwargs):
+def multigram(hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax=None, **kwargs):
     """Plot the multi histogram
 
     hyper_params_grid:
@@ -148,6 +162,8 @@ def multigram(hyper_params_grid, do_change, fixed, ax=None, **kwargs):
         list of labels of hypa to change in this plot
     fixed:
         dict { label : fixed_val }
+    hp2res:
+        dict { (hp, set, used) : loss }
 
     Style of the function vaguely inspired from here
     https://matplotlib.org/3.1.1/gallery/images_contours_and_fields/image_annotated_heatmap.html
@@ -163,7 +179,9 @@ def multigram(hyper_params_grid, do_change, fixed, ax=None, **kwargs):
     # if you need the fig as well?
 
     if len(do_change) == 1:
-        single_hist(hyper_params_grid, do_change, fixed, ax, **kwargs)
+        single_hist(
+            hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, **kwargs
+        )
     elif len(do_change) == 2:
         double_hist(hyper_params_grid, do_change, fixed, ax, **kwargs)
     elif len(do_change) == 3:
@@ -172,21 +190,36 @@ def multigram(hyper_params_grid, do_change, fixed, ax=None, **kwargs):
         logg.critical(f"You can change from 1 to 3 hyper parameters")
 
 
-def single_hist(hyper_params_grid, do_change, fixed, ax, **kwargs):
+def single_hist(hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, **kwargs):
     """
     """
     logg = logging.getLogger(f"c.{__name__}.single_hist")
     logg.debug(f"Start single_hist")
 
+    # only one label, change the values on this parameter
+    la = do_change[0]
 
-def double_hist(hyper_params_grid, do_change, fixed, ax, **kwargs):
+    for val_a in hyper_params_grid[la]:
+        # build the hp_set for the corresponding bar
+        hp_set = []
+        for label in hp_labels:
+            if label == la:
+                hp_set.append(val_a)
+            else:
+                hp_set.append(fixed[label])
+        hp_set = tuple(hp_set)
+        hp_val = hp2res[hp_set]
+        logg.debug(f"hp_set {hp_set} hp_val {hp_val}")
+
+
+def double_hist(hyper_params_grid, do_change, fixed, hp2res, ax, **kwargs):
     """
     """
     logg = logging.getLogger(f"c.{__name__}.double_hist")
     logg.debug(f"Start double_hist")
 
 
-def triple_hist(hyper_params_grid, do_change, fixed, ax, **kwargs):
+def triple_hist(hyper_params_grid, do_change, fixed, hp2res, ax, **kwargs):
     """
 
     Instead of just points on the line, might use swarmplot

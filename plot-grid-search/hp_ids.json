@@ -1,0 +1,434 @@
+{
+    "0": {
+        "Nh1": 5,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": false,
+        "num_epochs": 10
+    },
+    "1": {
+        "Nh1": 5,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": false,
+        "num_epochs": 20
+    },
+    "2": {
+        "Nh1": 5,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": 0.0001,
+        "num_epochs": 10
+    },
+    "3": {
+        "Nh1": 5,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": 0.0001,
+        "num_epochs": 20
+    },
+    "4": {
+        "Nh1": 5,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": 1e-05,
+        "num_epochs": 10
+    },
+    "5": {
+        "Nh1": 5,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": 1e-05,
+        "num_epochs": 20
+    },
+    "6": {
+        "Nh1": 5,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": false,
+        "num_epochs": 10
+    },
+    "7": {
+        "Nh1": 5,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": false,
+        "num_epochs": 20
+    },
+    "8": {
+        "Nh1": 5,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": 0.0001,
+        "num_epochs": 10
+    },
+    "9": {
+        "Nh1": 5,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": 0.0001,
+        "num_epochs": 20
+    },
+    "10": {
+        "Nh1": 5,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": 1e-05,
+        "num_epochs": 10
+    },
+    "11": {
+        "Nh1": 5,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": 1e-05,
+        "num_epochs": 20
+    },
+    "12": {
+        "Nh1": 5,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": false,
+        "num_epochs": 10
+    },
+    "13": {
+        "Nh1": 5,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": false,
+        "num_epochs": 20
+    },
+    "14": {
+        "Nh1": 5,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": 0.0001,
+        "num_epochs": 10
+    },
+    "15": {
+        "Nh1": 5,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": 0.0001,
+        "num_epochs": 20
+    },
+    "16": {
+        "Nh1": 5,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": 1e-05,
+        "num_epochs": 10
+    },
+    "17": {
+        "Nh1": 5,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": 1e-05,
+        "num_epochs": 20
+    },
+    "18": {
+        "Nh1": 5,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": false,
+        "num_epochs": 10
+    },
+    "19": {
+        "Nh1": 5,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": false,
+        "num_epochs": 20
+    },
+    "20": {
+        "Nh1": 5,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": 0.0001,
+        "num_epochs": 10
+    },
+    "21": {
+        "Nh1": 5,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": 0.0001,
+        "num_epochs": 20
+    },
+    "22": {
+        "Nh1": 5,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": 1e-05,
+        "num_epochs": 10
+    },
+    "23": {
+        "Nh1": 5,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": 1e-05,
+        "num_epochs": 20
+    },
+    "24": {
+        "Nh1": 10,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": false,
+        "num_epochs": 10
+    },
+    "25": {
+        "Nh1": 10,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": false,
+        "num_epochs": 20
+    },
+    "26": {
+        "Nh1": 10,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": 0.0001,
+        "num_epochs": 10
+    },
+    "27": {
+        "Nh1": 10,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": 0.0001,
+        "num_epochs": 20
+    },
+    "28": {
+        "Nh1": 10,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": 1e-05,
+        "num_epochs": 10
+    },
+    "29": {
+        "Nh1": 10,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": 1e-05,
+        "num_epochs": 20
+    },
+    "30": {
+        "Nh1": 10,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": false,
+        "num_epochs": 10
+    },
+    "31": {
+        "Nh1": 10,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": false,
+        "num_epochs": 20
+    },
+    "32": {
+        "Nh1": 10,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": 0.0001,
+        "num_epochs": 10
+    },
+    "33": {
+        "Nh1": 10,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": 0.0001,
+        "num_epochs": 20
+    },
+    "34": {
+        "Nh1": 10,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": 1e-05,
+        "num_epochs": 10
+    },
+    "35": {
+        "Nh1": 10,
+        "Nh2": 5,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": 1e-05,
+        "num_epochs": 20
+    },
+    "36": {
+        "Nh1": 10,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": false,
+        "num_epochs": 10
+    },
+    "37": {
+        "Nh1": 10,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": false,
+        "num_epochs": 20
+    },
+    "38": {
+        "Nh1": 10,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": 0.0001,
+        "num_epochs": 10
+    },
+    "39": {
+        "Nh1": 10,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": 0.0001,
+        "num_epochs": 20
+    },
+    "40": {
+        "Nh1": 10,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": 1e-05,
+        "num_epochs": 10
+    },
+    "41": {
+        "Nh1": 10,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.01,
+        "lr_final": 1e-05,
+        "num_epochs": 20
+    },
+    "42": {
+        "Nh1": 10,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": false,
+        "num_epochs": 10
+    },
+    "43": {
+        "Nh1": 10,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": false,
+        "num_epochs": 20
+    },
+    "44": {
+        "Nh1": 10,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": 0.0001,
+        "num_epochs": 10
+    },
+    "45": {
+        "Nh1": 10,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": 0.0001,
+        "num_epochs": 20
+    },
+    "46": {
+        "Nh1": 10,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": 1e-05,
+        "num_epochs": 10
+    },
+    "47": {
+        "Nh1": 10,
+        "Nh2": 10,
+        "early_stop_pad": 20,
+        "epsilon_loss": 0.0001,
+        "lr": 0.001,
+        "lr_final": 1e-05,
+        "num_epochs": 20
+    }
+}
