@@ -191,3 +191,186 @@ level 2/.style={sibling distance=1cm}]
 \end{tikzpicture}
 
 
+
+\subsubsection{Grafo con archi evidenziati}
+
+Info su
+% https://www.overleaf.com/project/5dbc3071520a9e0001edc9f8
+\href{https://www.overleaf.com/project/5dbc3071520a9e0001edc9f8}{overleaf}.
+
+Stili locali alla figura
+\href{https://tex.stackexchange.com/a/52379}{stackexchange}.
+\begin{verbatim}
+\begin{tikzpicture} [some options,
+        first style/.style={blah},
+        second style/.style={blub}
+    ]
+    ...
+\end{tikzpicture}
+\end{verbatim}
+
+% Declare layers
+\pgfdeclarelayer{background}
+\pgfsetlayers{background,main}
+
+\begin{figure}[h]
+    \centering
+    \caption{Algoritmo di Prim}
+    \label{fig:prim1}
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \begin{subfigure}[b]{0.45\textwidth}
+        \caption{Archi uscenti dal primo nodo}
+        \label{fig:au1}
+        \begin{tikzpicture} [
+                % automagically put labels not on edges
+                auto,
+                % exchanges the roles of left and right in automatic placement
+                % the side the label is put on depends on the order of the nodes in the edge
+                swap,
+                scale=1.4,
+                vertex/.style={circle,fill=black!25,minimum size=20pt,inner sep=0pt},
+                selected vertex/.style = {vertex, fill=red!24},
+                edge/.style = {draw,thick,-},
+                weight/.style = {font=\small},
+                selected edge/.style = {draw,line width=5pt,-,red!50},
+                outbound edge/.style = {draw,line width=5pt,-,blue!50},
+                ignored edge/.style = {draw,line width=5pt,-,black!20}
+            ]
+            % First we draw the vertices
+            \foreach \pos/\name in {
+            {(0,1)/a}, {(1.5,1)/b}, {(4,1)/c}, {(0,-1)/d}, {(3,0.2)/e}, {(2,-1)/f}, {(4,-1)/g}}
+                \node[vertex] (\name) at \pos {$\name$};
+            % Connect vertices with edges and draw weights
+            \foreach \source/ \dest /\weight in {b/a/7, c/b/8, d/a/5, d/b/9,
+                                                 e/b/7, e/c/5, e/d/15,
+                                                 f/d/6, f/e/8, g/e/9, g/f/11}
+                \path[edge] (\source) -- node[weight] {$\weight$} (\dest);
+            % color a node
+            % \path node[selected vertex] at (d) {$d$};
+            % prepare it in loop version anyway
+            \foreach \vertex in {d}
+                \path node[selected vertex] at (\vertex) {$\vertex$};
+            % For convenience we use a background layer to highlight edges
+            % This way we don't have to worry about the highlighting covering
+            % weight labels. 
+            \begin{pgfonlayer}{background}
+                \foreach \source / \dest in {d/a,d/b,d/e,d/f}
+                    \path[outbound edge] (\source.center) -- (\dest.center);
+            \end{pgfonlayer}
+        \end{tikzpicture}
+    \end{subfigure}
+    \quad
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \begin{subfigure}[b]{0.45\textwidth}
+        \caption{Arco selezionato}
+        \label{fig:au2}
+        \begin{tikzpicture} [
+                auto,
+                swap,
+                scale=1.4,
+                vertex/.style={circle,fill=black!25,minimum size=20pt,inner sep=0pt},
+                selected vertex/.style = {vertex, fill=red!24},
+                edge/.style = {draw,thick,-},
+                weight/.style = {font=\small},
+                selected edge/.style = {draw,line width=5pt,-,red!50},
+                outbound edge/.style = {draw,line width=5pt,-,blue!50},
+                ignored edge/.style = {draw,line width=5pt,-,black!20}
+            ]
+            % First we draw the vertices
+            \foreach \pos/\name in {
+                {(0,1)/a}, {(1.5,1)/b}, {(4,1)/c}, {(0,-1)/d}, {(3,0.2)/e}, {(2,-1)/f}, {(4,-1)/g}}
+                \node[vertex] (\name) at \pos {$\name$};
+            % Connect vertices with edges and draw weights
+            \foreach \source/ \dest /\weight in {b/a/7, c/b/8, d/a/5, d/b/9,
+                                                 e/b/7, e/c/5, e/d/15,
+                                                 f/d/6, f/e/8, g/e/9, g/f/11}
+                \path[edge] (\source) -- node[weight] {$\weight$} (\dest);
+            % color a node
+            \foreach \vertex in {d,a}
+                \path node[selected vertex] at (\vertex) {$\vertex$};
+            \begin{pgfonlayer}{background}
+                \foreach \source / \dest in {b/a,d/b,d/e,d/f}
+                    \path[outbound edge] (\source.center) -- (\dest.center);
+                \foreach \source / \dest in {d/a}
+                    \path[selected edge] (\source.center) -- (\dest.center);
+            \end{pgfonlayer}
+        \end{tikzpicture}
+    \end{subfigure}
+    \\
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \begin{subfigure}[b]{0.45\textwidth}
+        \caption{Secondo arco selezionato}
+        \label{fig:au3}
+        \begin{tikzpicture} [
+                auto,
+                swap,
+                scale=1.4,
+                vertex/.style={circle,fill=black!25,minimum size=20pt,inner sep=0pt},
+                selected vertex/.style = {vertex, fill=red!24},
+                edge/.style = {draw,thick,-},
+                weight/.style = {font=\small},
+                selected edge/.style = {draw,line width=5pt,-,red!50},
+                outbound edge/.style = {draw,line width=5pt,-,blue!50},
+                ignored edge/.style = {draw,line width=5pt,-,black!20}
+            ]
+            % First we draw the vertices
+            \foreach \pos/\name in {
+                {(0,1)/a}, {(1.5,1)/b}, {(4,1)/c}, {(0,-1)/d}, {(3,0.2)/e}, {(2,-1)/f}, {(4,-1)/g}}
+                \node[vertex] (\name) at \pos {$\name$};
+            % Connect vertices with edges and draw weights
+            \foreach \source/ \dest /\weight in {b/a/7, c/b/8, d/a/5, d/b/9,
+                                                 e/b/7, e/c/5, e/d/15,
+                                                 f/d/6, f/e/8, g/e/9, g/f/11}
+                \path[edge] (\source) -- node[weight] {$\weight$} (\dest);
+            % color a node
+            \foreach \vertex in {d,a}
+                \path node[selected vertex] at (\vertex) {$\vertex$};
+            \begin{pgfonlayer}{background}
+                \foreach \source / \dest in {b/a,d/b,d/e,e/f,f/g}
+                    \path[outbound edge] (\source.center) -- (\dest.center);
+                \foreach \source / \dest in {d/a, d/f}
+                    \path[selected edge] (\source.center) -- (\dest.center);
+            \end{pgfonlayer}
+        \end{tikzpicture}
+    \end{subfigure}
+    \quad
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \begin{subfigure}[b]{0.45\textwidth}
+        \caption{Terzo arco selezionato}
+        \label{fig:au4}
+        \begin{tikzpicture} [
+                auto,
+                swap,
+                scale=1.4,
+                vertex/.style={circle,fill=black!25,minimum size=20pt,inner sep=0pt},
+                selected vertex/.style = {vertex, fill=red!24},
+                edge/.style = {draw,thick,-},
+                weight/.style = {font=\small},
+                selected edge/.style = {draw,line width=5pt,-,red!50},
+                outbound edge/.style = {draw,line width=5pt,-,blue!50},
+                ignored edge/.style = {draw,line width=5pt,-,black!20}
+            ]
+            % First we draw the vertices
+            \foreach \pos/\name in {
+                {(0,1)/a}, {(1.5,1)/b}, {(4,1)/c}, {(0,-1)/d}, {(3,0.2)/e}, {(2,-1)/f}, {(4,-1)/g}}
+                \node[vertex] (\name) at \pos {$\name$};
+            % Connect vertices with edges and draw weights
+            \foreach \source/ \dest /\weight in {b/a/7, c/b/8, d/a/5, d/b/9,
+                                                 e/b/7, e/c/5, e/d/15,
+                                                 f/d/6, f/e/8, g/e/9, g/f/11}
+                \path[edge] (\source) -- node[weight] {$\weight$} (\dest);
+            % color a node
+            \foreach \vertex in {d,a}
+                \path node[selected vertex] at (\vertex) {$\vertex$};
+            \begin{pgfonlayer}{background}
+                \foreach \source / \dest in {d/b,d/e,e/f,f/g,b/e,b/c}
+                    \path[outbound edge] (\source.center) -- (\dest.center);
+                \foreach \source / \dest in {d/a, d/f, a/b}
+                    \path[selected edge] (\source.center) -- (\dest.center);
+                \foreach \source / \dest in {d/b}
+                    \path[ignored edge] (\source.center) -- (\dest.center);
+            \end{pgfonlayer}
+        \end{tikzpicture}
+    \end{subfigure}
+\end{figure}
+
