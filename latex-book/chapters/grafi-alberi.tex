@@ -374,3 +374,69 @@ Stili locali alla figura
     \end{subfigure}
 \end{figure}
 
+\begin{verbatim}
+\begin{figure}[h]
+    \centering
+    \caption{$FPW$}
+    \label{fig:exbend}
+    \begin{tikzpicture} [
+            scale=1.4,
+            vertex/.style={circle,fill=black!25,minimum size=20pt,inner sep=0pt},
+            edge/.style = {draw,thick,-},
+            outbound edge/.style = {draw,line width=8pt,-,blue!30},
+            selected edge/.style = {draw,line width=8pt,-,red!30},
+            arrow edge/.style = {draw,thick,->},
+            bent right/.style = {bend right=20},
+            bent left/.style = {bend left=20},
+        ]
+        \foreach \pos/\name in {
+        {(0,0)/c}, {(2,0)/d}, {(1,1.5)/b}, {(3,1.5)/e}, {(2,3)/a}}
+        \node[vertex] (\name) at \pos {$\name$};
+        \foreach \source/ \dest in {
+        b/c,b/d,a/b,a/e}
+        \path[arrow edge] (\source) edge [bent right] (\dest);
+        \foreach \source/ \dest in {
+        c/b,d/b,b/a,e/a}
+        \path[arrow edge] (\source) edge [bent right] (\dest);
+        \begin{pgfonlayer}{background}
+            \foreach \source / \dest in {a/b}
+            \path[outbound edge] (\source) edge [bent right] (\dest);
+            \foreach \source / \dest in {b/a}
+            \path[selected edge] (\source) edge [bent right] (\dest);
+        \end{pgfonlayer}
+    \end{tikzpicture}
+\end{figure}
+\end{verbatim}
+
+\begin{figure}[h]
+    \centering
+    \caption{$FPW$}
+    \label{fig:exbend}
+    \begin{tikzpicture} [
+            scale=1.4,
+            vertex/.style={circle,fill=black!25,minimum size=20pt,inner sep=0pt},
+            edge/.style = {draw,thick,-},
+            outbound edge/.style = {draw,line width=8pt,-,blue!30},
+            selected edge/.style = {draw,line width=8pt,-,red!30},
+            arrow edge/.style = {draw,thick,->},
+            bent right/.style = {bend right=20},
+            bent left/.style = {bend left=20},
+        ]
+        \foreach \pos/\name in {
+        {(0,0)/c}, {(2,0)/d}, {(1,1.5)/b}, {(3,1.5)/e}, {(2,3)/a}}
+            \node[vertex] (\name) at \pos {$\name$};
+        \foreach \source/ \dest in {
+                b/c,b/d,a/b,a/e}
+            \path[arrow edge] (\source) edge [bent right] (\dest);
+        \foreach \source/ \dest in {
+                c/b,d/b,b/a,e/a}
+            \path[arrow edge] (\source) edge [bent right] (\dest);
+        \begin{pgfonlayer}{background}
+            \foreach \source / \dest in {a/b}
+                \path[outbound edge] (\source) edge [bent right] (\dest);
+            \foreach \source / \dest in {b/a}
+                \path[selected edge] (\source) edge [bent right] (\dest);
+        \end{pgfonlayer}
+    \end{tikzpicture}
+\end{figure}
+
