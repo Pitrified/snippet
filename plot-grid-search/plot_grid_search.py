@@ -167,11 +167,11 @@ def run_plot_grid_search(template_input, template_output):
                 continue
             out_file += f"{label}_{fixed[label]}_"
         out_file += "{}"
-        template_output = template_output.format(out_file)
-        logg.debug(f"template_output {template_output}")
+        this_template_output = template_output.format(out_file)
+        logg.debug(f"template_output {this_template_output}")
 
         multigram(
-            hyper_params_grid, do_change, fixed, hp2res, hp_labels, template_output
+            hyper_params_grid, do_change, fixed, hp2res, hp_labels, this_template_output
         )
         #  break
 
