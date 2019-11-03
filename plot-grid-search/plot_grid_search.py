@@ -22,11 +22,11 @@ def parse_arguments():
     )
 
     parser.add_argument(
-        "-it",
-        "--template_input",
+        "-io",
+        "--template_files",
         type=str,
-        default="./input/default_{}",
-        help="template to input files",
+        default="default_{}",
+        help="template to input and output files",
     )
 
     parser.add_argument("-s", "--seed", type=int, default=-1, help="random seed to use")
@@ -114,7 +114,7 @@ def load_results(template_input):
     return hyper_params_grid, hp2res, hp_labels
 
 
-def run_plot_grid_search(template_input):
+def run_plot_grid_search(template_input, template_output):
     """Can change up to 3 hypa
     """
     logg = logging.getLogger(f"c.{__name__}.run_plot_grid_search")
@@ -156,10 +156,24 @@ def run_plot_grid_search(template_input):
     # the third parameter is linked to a color and we show *only* the points
     # for the three changing param in the plot, all the other params are fixed
     for dnp in product(*[hyper_params_grid[l] for l in dont_change]):
+        # create fixed hypa dict
         fixed = {label: p for label, p in zip(dont_change, dnp)}
         logg.debug(f"fixed {fixed}")
-        multigram(hyper_params_grid, do_change, fixed, hp2res, hp_labels)
-        break
+
+        # build filename to save plot
+        out_file = ""
+        for label in fixed:
+            if label in ["early_stop_pad", "epsilon_loss"]:
+                continue
+            out_file += f"{label}_{fixed[label]}_"
+        out_file += "{}"
+        template_output = template_output.format(out_file)
+        logg.debug(f"template_output {template_output}")
+
+        multigram(
+            hyper_params_grid, do_change, fixed, hp2res, hp_labels, template_output
+        )
+        #  break
 
     # TODO or MAYBE we pass do_change e dont_change and compute the mean/stddev
     # of all the points for each changing set of params
@@ -206,7 +220,15 @@ def res_get(hp2res, hp_dict, hp_labels):
 
 
 def multigram(
-    hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax=None, fig=None, **kwargs
+    hyper_params_grid,
+    do_change,
+    fixed,
+    hp2res,
+    hp_labels,
+    template_output,
+    ax=None,
+    fig=None,
+    **kwargs,
 ):
     """Plot the multi histogram
 
@@ -232,22 +254,54 @@ def multigram(
 
     if len(do_change) == 1:
         single_hist(
-            hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, fig, **kwargs
+            hyper_params_grid,
+            do_change,
+            fixed,
+            hp2res,
+            hp_labels,
+            template_output,
+            ax,
+            fig,
+            **kwargs,
         )
     elif len(do_change) == 2:
         double_hist(
-            hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, fig, **kwargs
+            hyper_params_grid,
+            do_change,
+            fixed,
+            hp2res,
+            hp_labels,
+            template_output,
+            ax,
+            fig,
+            **kwargs,
         )
     elif len(do_change) == 3:
         triple_hist(
-            hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, fig, **kwargs
+            hyper_params_grid,
+            do_change,
+            fixed,
+            hp2res,
+            hp_labels,
+            template_output,
+            ax,
+            fig,
+            **kwargs,
         )
     else:
         logg.critical(f"You can change from 1 to 3 hyper parameters")
 
 
 def single_hist(
-    hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, fig, **kwargs
+    hyper_params_grid,
+    do_change,
+    fixed,
+    hp2res,
+    hp_labels,
+    template_output,
+    ax,
+    fig,
+    **kwargs,
 ):
     """
     """
@@ -284,11 +338,20 @@ def single_hist(
     wrapped_title = "\n".join(wrap(title, max_title_len))
     ax.set_title(wrapped_title)
 
-    fig.savefig("./output/test_single_hist.png")
+    #  fig.savefig("./output/test_single_hist.png")
+    fig.savefig(template_output.format("single_hist"))
 
 
 def double_hist(
-    hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, fig, **kwargs
+    hyper_params_grid,
+    do_change,
+    fixed,
+    hp2res,
+    hp_labels,
+    template_output,
+    ax,
+    fig,
+    **kwargs,
 ):
     """
     This is for double hist when showing all the points for the 2 param combo
@@ -350,11 +413,20 @@ def double_hist(
     wrapped_title = "\n".join(wrap(title, max_title_len))
     ax.set_title(wrapped_title)
 
-    fig.savefig("./output/test_double_hist.png")
+    #  fig.savefig("./output/test_double_hist.png")
+    fig.savefig(template_output.format("double_hist"))
 
 
 def triple_hist(
-    hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, fig, **kwargs
+    hyper_params_grid,
+    do_change,
+    fixed,
+    hp2res,
+    hp_labels,
+    template_output,
+    ax,
+    fig,
+    **kwargs,
 ):
     """
     """
@@ -433,7 +505,8 @@ def triple_hist(
     ax.set_title(wrapped_title)
 
     fig.tight_layout()
-    fig.savefig("./output/test_triple_hist.png")
+    #  fig.savefig("./output/test_triple_hist.png")
+    fig.savefig(template_output.format("triple_hist"))
 
 
 def main():
@@ -450,16 +523,19 @@ def main():
     seed(myseed)
     np.random.seed(myseed)
 
-    template_input = args.template_input
+    template_files = args.template_files
 
     recap = f"python3 plot_grid_search.py"
     recap += f" --seed {myseed}"
-    recap += f" --template_input {template_input}"
+    recap += f" --template_files {template_files}"
 
     logmain = logging.getLogger(f"c.{__name__}.main")
     logmain.info(recap)
 
-    run_plot_grid_search(template_input)
+    template_input = f"./input/{template_files}"
+    template_output = f"./output/{template_files}"
+    logmain.debug(f"template_input {template_input} template_output {template_output}")
+    run_plot_grid_search(template_input, template_output)
 
 
 if __name__ == "__main__":
