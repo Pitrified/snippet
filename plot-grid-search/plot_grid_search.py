@@ -7,6 +7,7 @@ import numpy as np
 from random import seed
 from timeit import default_timer as timer
 from itertools import product
+from textwrap import wrap
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -38,7 +39,8 @@ def setup_logger(logLevel="DEBUG"):
     #  log_format_module = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     #  log_format_module = "%(name)s - %(levelname)s: %(message)s"
     #  log_format_module = '%(levelname)s: %(message)s'
-    log_format_module = "%(message)s"
+    log_format_module = "%(name)s: %(message)s"
+    #  log_format_module = "%(message)s"
 
     formatter = logging.Formatter(log_format_module)
     module_console_handler.setFormatter(formatter)
@@ -83,7 +85,9 @@ def load_results():
     hp2res = {}
     for id_ in hp_ids:
         #  hp_set = (hp_ids[id_][lab_hp] for lab_hp in sorted(hp_ids[id_]))
+        # hp_set is the set of hypa that we want to link to a result
         hp_set = []
+        # we build it using the sorted hp_labels, to be consistent
         for lab_hp in hp_labels:
             # extract the values from the dict
             hp_set.append(hp_ids[id_][lab_hp])
@@ -117,6 +121,7 @@ def run_plot_grid_search():
     # hypa that we want to change WITHIN the same plot
     #  do_change = ["Nh1", "lr", "lr_final"]
     do_change = ["Nh1"]
+    #  do_change = ["Nh1", "lr"]
 
     # these hypa will change in DIFFERENT plots, fixed in each
     dont_change = split_labels(hyper_params_grid, do_change)
@@ -130,15 +135,18 @@ def run_plot_grid_search():
     # dnp has all the combinations of the fixed parameters
     # we want to pass them labeled, so we build a dict
     # THIS is to do triple_hist
+    # the third parameter is linked to a color and we show *only* the points
+    # for the three changing param in the plot, all the other params are fixed
     for dnp in product(*[hyper_params_grid[l] for l in dont_change]):
         fixed = {label: p for label, p in zip(dont_change, dnp)}
-        logg.debug(fixed)
+        logg.debug(f"fixed {fixed}")
         multigram(hyper_params_grid, do_change, fixed, hp2res, hp_labels)
         break
 
     # TODO or MAYBE we pass do_change e dont_change and compute the mean/stddev
     # of all the points for each changing set of params
     # using this we do fancy double_hist
+    # for 2 params, we show *all* possible values when changing the others
 
     plt.show()
 
@@ -158,7 +166,9 @@ def split_labels(hyper_params_grid, do_change):
     return dont_change
 
 
-def multigram(hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax=None, **kwargs):
+def multigram(
+    hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax=None, fig=None, **kwargs
+):
     """Plot the multi histogram
 
     hyper_params_grid:
@@ -172,20 +182,18 @@ def multigram(hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax=None, *
 
     Style of the function vaguely inspired from here
     https://matplotlib.org/3.1.1/gallery/images_contours_and_fields/image_annotated_heatmap.html
+    No idea on fig/ax 
+    use https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.pyplot.subplots.html
+
+    Info on bar https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.axes.Axes.bar.html
     """
     logg = logging.getLogger(f"c.{__name__}.multigram")
     logg.debug(f"Start multigram")
     logg.debug(f"do_change {do_change} fixed {fixed}")
 
-    if not ax:
-        ax = plt.gca()
-    #  im = ax.hist([1,2])
-    # use https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.pyplot.subplots.html
-    # if you need the fig as well?
-
     if len(do_change) == 1:
         single_hist(
-            hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, **kwargs
+            hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, fig, **kwargs
         )
     elif len(do_change) == 2:
         double_hist(hyper_params_grid, do_change, fixed, ax, **kwargs)
@@ -195,17 +203,29 @@ def multigram(hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax=None, *
         logg.critical(f"You can change from 1 to 3 hyper parameters")
 
 
-def single_hist(hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, **kwargs):
+def single_hist(
+    hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, fig, **kwargs
+):
     """
     """
     logg = logging.getLogger(f"c.{__name__}.single_hist")
     logg.debug(f"Start single_hist")
 
+    if ax is None or fig is None:
+        fig, ax = plt.subplots()
+
     # only one label, change the values on this parameter
     la = do_change[0]
 
-    index = 1
-    for val_a in hyper_params_grid[la]:
+    bin_width = 0.8
+    # bin_pos is the CENTER of the bar
+    #  bin_pos = [i + bin_width/2 for i in range(1, len(hyper_params_grid[la])+1)]
+    bin_pos = [i + bin_width / 2 for i in range(0, len(hyper_params_grid[la]))]
+    logg.debug(f"bin_width {bin_width} bin_pos {bin_pos}")
+
+    #  index = 1
+    #  index = 0
+    for index, val_a in enumerate(hyper_params_grid[la]):
         # build the hp_set for the corresponding bar
         hp_set = []
         for label in hp_labels:
@@ -214,19 +234,33 @@ def single_hist(hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, **kw
             else:
                 hp_set.append(fixed[label])
         hp_set = tuple(hp_set)
+        # get the corresponding loss value
         hp_val = hp2res[hp_set]
         logg.debug(f"hp_set {hp_set} hp_val {hp_val}")
 
-        ax.bar(index, hp_val)
-        index += 1
+        #  ax.bar(x=index, height=hp_val, width=bin_width)
+        ax.bar(x=bin_pos[index], height=hp_val, width=bin_width)
+        #  index += 1
+
+    ax.set_xticks(bin_pos)
+    ax.set_xticklabels([x for x in hyper_params_grid[la]], rotation=90)
+    ax.set_xlabel(f"{la}")
+    ax.set_ylabel(f"Loss")
+    title = f"Loss for fixed params {fixed}"
+    max_title_len = 80
+    wrapped_title = "\n".join(wrap(title, max_title_len))
+    ax.set_title(wrapped_title)
+
+    fig.savefig("./output/test_single_hist.png")
 
 
-
-def double_hist(hyper_params_grid, do_change, fixed, hp2res, ax, **kwargs):
+def double_hist(hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, **kwargs):
     """
     """
     logg = logging.getLogger(f"c.{__name__}.double_hist")
     logg.debug(f"Start double_hist")
+
+    colors = ["b", "g", "r", "c", "m", "y", "k"]
 
 
 def triple_hist(hyper_params_grid, do_change, fixed, hp2res, ax, **kwargs):
