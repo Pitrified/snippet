@@ -166,6 +166,24 @@ def split_labels(hyper_params_grid, do_change):
     return dont_change
 
 
+def res_get(hp2res, hp_dict, hp_labels):
+    """Get the res linked to the hypa in hp_dict
+    """
+    logg = logging.getLogger(f"c.{__name__}.res_get")
+    logg.debug(f"Start res_get")
+
+    # build the hp_set for the corresponding bar
+    hp_set = []
+    for label in hp_labels:
+        hp_set.append(hp_dict[label])
+    hp_set = tuple(hp_set)
+    # get the corresponding loss value
+    hp_val = hp2res[hp_set]
+
+    logg.debug(f"hp_set {hp_set} hp_val {hp_val}")
+    return hp_val
+
+
 def multigram(
     hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax=None, fig=None, **kwargs
 ):
@@ -223,24 +241,14 @@ def single_hist(
     bin_pos = [i + bin_width / 2 for i in range(0, len(hyper_params_grid[la]))]
     logg.debug(f"bin_width {bin_width} bin_pos {bin_pos}")
 
-    #  index = 1
-    #  index = 0
-    for index, val_a in enumerate(hyper_params_grid[la]):
-        # build the hp_set for the corresponding bar
-        hp_set = []
-        for label in hp_labels:
-            if label == la:
-                hp_set.append(val_a)
-            else:
-                hp_set.append(fixed[label])
-        hp_set = tuple(hp_set)
-        # get the corresponding loss value
-        hp_val = hp2res[hp_set]
-        logg.debug(f"hp_set {hp_set} hp_val {hp_val}")
+    # copy the fixed param dict
+    # in hp_dict we add the changing params
+    hp_dict = fixed.copy()
 
-        #  ax.bar(x=index, height=hp_val, width=bin_width)
+    for index, val_a in enumerate(hyper_params_grid[la]):
+        hp_dict[la] = val_a
+        hp_val = res_get(hp2res, hp_dict, hp_labels)
         ax.bar(x=bin_pos[index], height=hp_val, width=bin_width)
-        #  index += 1
 
     ax.set_xticks(bin_pos)
     ax.set_xticklabels([x for x in hyper_params_grid[la]], rotation=90)
@@ -261,6 +269,19 @@ def double_hist(hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, **kw
     logg.debug(f"Start double_hist")
 
     colors = ["b", "g", "r", "c", "m", "y", "k"]
+
+    bin_width = 0.8
+    # bin_pos is the CENTER of the bar
+    bin_pos = [i + bin_width / 2 for i in range(len(hyper_params_grid[la]))]
+    logg.debug(f"bin_width {bin_width} bin_pos {bin_pos}")
+
+    # two params to change
+    la = do_change[0]
+    lb = do_change[1]
+
+    # iterate over the first
+    for index, val_a in enumerate(hyper_params_grid[la]):
+        pass
 
 
 def triple_hist(hyper_params_grid, do_change, fixed, hp2res, ax, **kwargs):
