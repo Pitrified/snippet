@@ -122,7 +122,8 @@ def run_plot_grid_search():
     #  do_change = ["Nh1", "lr", "lr_final"]
     #  do_change = ["Nh1"]
     #  do_change = ["Nh1", "lr"]
-    do_change = ["lr", "lr_final"]
+    #  do_change = ["lr", "lr_final"]
+    do_change = ["num_epochs", "lr", "lr_final"]
 
     # these hypa will change in DIFFERENT plots, fixed in each
     dont_change = split_labels(hyper_params_grid, do_change)
@@ -171,6 +172,7 @@ def res_get(hp2res, hp_dict, hp_labels):
     """Get the res linked to the hypa in hp_dict
     """
     logg = logging.getLogger(f"c.{__name__}.res_get")
+    logg.setLevel("INFO")
     logg.debug(f"Start res_get")
 
     # build the hp_set for the corresponding bar
@@ -271,6 +273,9 @@ def double_hist(
     hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, fig, **kwargs
 ):
     """
+    This is for double hist when showing all the points for the 2 param combo
+    Instead of just points on the line, might use swarmplot
+    https://seaborn.pydata.org/generated/seaborn.swarmplot.html
     """
     logg = logging.getLogger(f"c.{__name__}.double_hist")
     logg.debug(f"Start double_hist")
@@ -299,20 +304,16 @@ def double_hist(
         hp_dict[la] = val_a
         last_bars = []
         bar_labels = []
+        # iterate over the second
         for ib, val_b in enumerate(hyper_params_grid[lb]):
             hp_dict[lb] = val_b
             hp_val = res_get(hp2res, hp_dict, hp_labels)
             bar_pos = ia + bin_step * ib + bin_step / 2
             bar_label = f"{val_b}"
             bar_labels.append(bar_label)
-            last_bars.append(
-                ax.bar(
-                    x=bar_pos,
-                    height=hp_val,
-                    width=bin_step,
-                    color=colors[ib % len(colors)],
-                )
-            )
+            c = colors[ib % len(colors)]
+            new_bar = ax.bar(x=bar_pos, height=hp_val, width=bin_step, color=c)
+            last_bars.append(new_bar)
 
     # we do the horror of last_bars to set the legend only once, as the lb
     # params are the same in all la bins
@@ -324,24 +325,81 @@ def double_hist(
     ax.set_xticklabels([x for x in hyper_params_grid[la]], rotation=0)
     ax.set_xlabel(f"{la} - {lb}")
     ax.set_ylabel(f"Loss")
+    ax.legend()
+
     title = f"Loss for fixed params {fixed}"
     max_title_len = 70
     wrapped_title = "\n".join(wrap(title, max_title_len))
     ax.set_title(wrapped_title)
-    ax.legend()
 
     fig.savefig("./output/test_double_hist.png")
 
 
-def triple_hist(hyper_params_grid, do_change, fixed, hp2res, ax, **kwargs):
+def triple_hist(
+    hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, fig, **kwargs
+):
     """
-
-    Instead of just points on the line, might use swarmplot
-    https://seaborn.pydata.org/generated/seaborn.swarmplot.html
     """
     logg = logging.getLogger(f"c.{__name__}.triple_hist")
     logg.debug(f"Start triple_hist")
 
+    if ax is None or fig is None:
+        fig, ax = plt.subplots()
+
+    colors = ["b", "g", "r", "c", "m", "y", "k"]
+
+    # three params to change
+    la = do_change[0]
+    lb = do_change[1]
+    lc = do_change[2]
+
+    bin_width = 0.8
+    # bin_pos is the CENTER of the group
+    bin_pos = [i + bin_width / 2 for i in range(len(hyper_params_grid[la]))]
+    # sub length of a step for secondary param
+    bin_step = bin_width / len(hyper_params_grid[lb])
+
+    logg.debug(f"bin_width {bin_width} bin_pos {bin_pos} bin_step {bin_step}")
+
+    hp_dict = fixed.copy()
+
+    # iterate over the first
+    for ia, val_a in enumerate(hyper_params_grid[la]):
+        hp_dict[la] = val_a
+        # iterate over the second
+        for ib, val_b in enumerate(hyper_params_grid[lb]):
+            hp_dict[lb] = val_b
+            bar_pos = ia + bin_step * ib + bin_step / 2
+            # legend label only on the last set of dot added
+            last_dots = []
+            dot_labels = []
+            # iterate over the third
+            for ic, val_c in enumerate(hyper_params_grid[lc]):
+                hp_dict[lc] = val_c
+                hp_val = res_get(hp2res, hp_dict, hp_labels)
+                c = colors[ic % len(colors)]
+                new_dot = ax.scatter(x=bar_pos, y=hp_val, color=c)
+                dot_label = f"{val_c}"
+                dot_labels.append(dot_label)
+                last_dots.append(new_dot)
+
+    # put labels
+    for i, last_dot in enumerate(last_dots):
+        last_dot.set_label(dot_labels[i])
+
+    ax.set_xticks(bin_pos)
+    #  ax.set_xticklabels([x for x in hyper_params_grid[la]], rotation=90)
+    ax.set_xticklabels([x for x in hyper_params_grid[la]], rotation=0)
+    ax.set_xlabel(f"{la} - {lb}")
+    ax.set_ylabel(f"Loss")
+    ax.legend()
+
+    title = f"Loss for fixed params {fixed}"
+    max_title_len = 70
+    wrapped_title = "\n".join(wrap(title, max_title_len))
+    ax.set_title(wrapped_title)
+
+    fig.savefig("./output/test_triple_hist.png")
 
 def main():
     setup_logger()
