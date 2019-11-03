@@ -120,8 +120,9 @@ def run_plot_grid_search():
 
     # hypa that we want to change WITHIN the same plot
     #  do_change = ["Nh1", "lr", "lr_final"]
-    do_change = ["Nh1"]
+    #  do_change = ["Nh1"]
     #  do_change = ["Nh1", "lr"]
+    do_change = ["lr", "lr_final"]
 
     # these hypa will change in DIFFERENT plots, fixed in each
     dont_change = split_labels(hyper_params_grid, do_change)
@@ -214,9 +215,13 @@ def multigram(
             hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, fig, **kwargs
         )
     elif len(do_change) == 2:
-        double_hist(hyper_params_grid, do_change, fixed, ax, **kwargs)
+        double_hist(
+            hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, fig, **kwargs
+        )
     elif len(do_change) == 3:
-        triple_hist(hyper_params_grid, do_change, fixed, ax, **kwargs)
+        triple_hist(
+            hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, fig, **kwargs
+        )
     else:
         logg.critical(f"You can change from 1 to 3 hyper parameters")
 
@@ -262,26 +267,70 @@ def single_hist(
     fig.savefig("./output/test_single_hist.png")
 
 
-def double_hist(hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, **kwargs):
+def double_hist(
+    hyper_params_grid, do_change, fixed, hp2res, hp_labels, ax, fig, **kwargs
+):
     """
     """
     logg = logging.getLogger(f"c.{__name__}.double_hist")
     logg.debug(f"Start double_hist")
 
-    colors = ["b", "g", "r", "c", "m", "y", "k"]
+    if ax is None or fig is None:
+        fig, ax = plt.subplots()
 
-    bin_width = 0.8
-    # bin_pos is the CENTER of the bar
-    bin_pos = [i + bin_width / 2 for i in range(len(hyper_params_grid[la]))]
-    logg.debug(f"bin_width {bin_width} bin_pos {bin_pos}")
+    colors = ["b", "g", "r", "c", "m", "y", "k"]
 
     # two params to change
     la = do_change[0]
     lb = do_change[1]
 
+    bin_width = 0.8
+    # bin_pos is the CENTER of the bar
+    bin_pos = [i + bin_width / 2 for i in range(len(hyper_params_grid[la]))]
+    # sub length of a step for secondary param
+    bin_step = bin_width / len(hyper_params_grid[lb])
+
+    logg.debug(f"bin_width {bin_width} bin_pos {bin_pos} bin_step {bin_step}")
+
+    hp_dict = fixed.copy()
+
     # iterate over the first
-    for index, val_a in enumerate(hyper_params_grid[la]):
-        pass
+    for ia, val_a in enumerate(hyper_params_grid[la]):
+        hp_dict[la] = val_a
+        last_bars = []
+        bar_labels = []
+        for ib, val_b in enumerate(hyper_params_grid[lb]):
+            hp_dict[lb] = val_b
+            hp_val = res_get(hp2res, hp_dict, hp_labels)
+            bar_pos = ia + bin_step * ib + bin_step / 2
+            bar_label = f"{val_b}"
+            bar_labels.append(bar_label)
+            last_bars.append(
+                ax.bar(
+                    x=bar_pos,
+                    height=hp_val,
+                    width=bin_step,
+                    color=colors[ib % len(colors)],
+                )
+            )
+
+    # we do the horror of last_bars to set the legend only once, as the lb
+    # params are the same in all la bins
+    for i, last_bar in enumerate(last_bars):
+        last_bar.set_label(bar_labels[i])
+
+    ax.set_xticks(bin_pos)
+    #  ax.set_xticklabels([x for x in hyper_params_grid[la]], rotation=90)
+    ax.set_xticklabels([x for x in hyper_params_grid[la]], rotation=0)
+    ax.set_xlabel(f"{la} - {lb}")
+    ax.set_ylabel(f"Loss")
+    title = f"Loss for fixed params {fixed}"
+    max_title_len = 70
+    wrapped_title = "\n".join(wrap(title, max_title_len))
+    ax.set_title(wrapped_title)
+    ax.legend()
+
+    fig.savefig("./output/test_double_hist.png")
 
 
 def triple_hist(hyper_params_grid, do_change, fixed, hp2res, ax, **kwargs):
