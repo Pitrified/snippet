@@ -8,6 +8,7 @@ from random import seed
 from timeit import default_timer as timer
 from itertools import product
 from textwrap import wrap
+from pprint import pformat
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -18,6 +19,14 @@ def parse_arguments():
     """
     parser = argparse.ArgumentParser(
         description="Plot grid search results, at most 3 params can be changed"
+    )
+
+    parser.add_argument(
+        "-it",
+        "--template_input",
+        type=str,
+        default="./input/default_{}",
+        help="template to input files",
     )
 
     parser.add_argument("-s", "--seed", type=int, default=-1, help="random seed to use")
@@ -56,21 +65,26 @@ def setup_logger(logLevel="DEBUG"):
     logg.debug(f"Done setting up logger")
 
 
-def load_results():
+def load_results(template_input):
     """
     """
     logg = logging.getLogger(f"c.{__name__}.load_results")
     logg.debug(f"Start load_results")
 
-    fp_ids = "./hp_ids.json"
-    fp_res = "./gridres.json"
+    fp_hypagrid = template_input.format("hyper_params_grid.json")
+    fp_hp_ids = template_input.format("hp_ids.json")
+    fp_grid_loss_results = template_input.format("gridres.json")
+
+    # load dict of hyper_params_grid
+    with open(fp_hypagrid, "r") as f:
+        hyper_params_grid = json.load(f)
 
     # load dict ID to hp_set
-    with open(fp_ids, "r") as f:
+    with open(fp_hp_ids, "r") as f:
         hp_ids = json.load(f)
 
     # load dict ID to loss
-    with open(fp_res, "r") as f:
+    with open(fp_grid_loss_results, "r") as f:
         res = json.load(f)
 
     #  logg.debug(f"hp_ids {hp_ids}\nres {res}")
@@ -97,26 +111,28 @@ def load_results():
     #  logg.debug(f"hp2res {hp2res}")
     logg.debug(f"loaded hp2res {len(hp2res)}")
 
-    return hp2res, hp_labels
+    return hyper_params_grid, hp2res, hp_labels
 
 
-def run_plot_grid_search():
+def run_plot_grid_search(template_input):
     """Can change up to 3 hypa
     """
     logg = logging.getLogger(f"c.{__name__}.run_plot_grid_search")
     logg.debug(f"Start plotting")
 
     # HYPERPARAMETERS!
-    hyper_params_grid = {
-        "num_epochs": [10, 20],
-        "Nh1": [5, 10],
-        "Nh2": [5, 10],
-        "lr": [0.01, 0.001],
-        "lr_final": [False, 0.0001, 0.00001],
-        "early_stop_pad": [20],
-        "epsilon_loss": [0.0001],
-    }
-    hp2res, hp_labels = load_results()
+    #  hyper_params_grid = {
+    #  "num_epochs": [10, 20],
+    #  "Nh1": [5, 10],
+    #  "Nh2": [5, 10],
+    #  "lr": [0.01, 0.001],
+    #  "lr_final": [False, 0.0001, 0.00001],
+    #  "early_stop_pad": [20],
+    #  "epsilon_loss": [0.0001],
+    #  }
+    hyper_params_grid, hp2res, hp_labels = load_results(template_input)
+    #  pprint(hyper_params_grid, stream=logg)
+    logg.debug(f"hyper_params_grid\n{pformat(hyper_params_grid)}")
 
     # hypa that we want to change WITHIN the same plot
     #  do_change = ["Nh1", "lr", "lr_final"]
@@ -149,6 +165,8 @@ def run_plot_grid_search():
     # of all the points for each changing set of params
     # using this we do fancy double_hist
     # for 2 params, we show *all* possible values when changing the others
+
+    # MAYBE do some frequency count and plot horizontal bars as wide as the freq
 
     plt.show()
 
@@ -363,20 +381,32 @@ def triple_hist(
 
     hp_dict = fixed.copy()
 
+    # save here precise positions of ticks
+    detailed_bin_pos = []
+    detailed_labels_ab = []
+
     # iterate over the first
     for ia, val_a in enumerate(hyper_params_grid[la]):
         hp_dict[la] = val_a
+
         # iterate over the second
         for ib, val_b in enumerate(hyper_params_grid[lb]):
             hp_dict[lb] = val_b
             bar_pos = ia + bin_step * ib + bin_step / 2
+
+            detailed_bin_pos.append(bar_pos)
+            label_ab = f"{val_a} - {val_b}"
+            detailed_labels_ab.append(label_ab)
+
             # legend label only on the last set of dot added
             last_dots = []
             dot_labels = []
+
             # iterate over the third
             for ic, val_c in enumerate(hyper_params_grid[lc]):
                 hp_dict[lc] = val_c
                 hp_val = res_get(hp2res, hp_dict, hp_labels)
+
                 c = colors[ic % len(colors)]
                 new_dot = ax.scatter(x=bar_pos, y=hp_val, color=c)
                 dot_label = f"{val_c}"
@@ -387,9 +417,12 @@ def triple_hist(
     for i, last_dot in enumerate(last_dots):
         last_dot.set_label(dot_labels[i])
 
-    ax.set_xticks(bin_pos)
+    #  ax.set_xticks(bin_pos)
+    ax.set_xticks(detailed_bin_pos)
+    ax.set_xticklabels(detailed_labels_ab, rotation=45)
     #  ax.set_xticklabels([x for x in hyper_params_grid[la]], rotation=90)
-    ax.set_xticklabels([x for x in hyper_params_grid[la]], rotation=0)
+    #  ax.set_xticklabels([x for x in hyper_params_grid[la]], rotation=0)
+
     ax.set_xlabel(f"{la} - {lb}")
     ax.set_ylabel(f"Loss")
     ax.legend()
@@ -399,7 +432,9 @@ def triple_hist(
     wrapped_title = "\n".join(wrap(title, max_title_len))
     ax.set_title(wrapped_title)
 
+    fig.tight_layout()
     fig.savefig("./output/test_triple_hist.png")
+
 
 def main():
     setup_logger()
@@ -415,13 +450,16 @@ def main():
     seed(myseed)
     np.random.seed(myseed)
 
+    template_input = args.template_input
+
     recap = f"python3 plot_grid_search.py"
     recap += f" --seed {myseed}"
+    recap += f" --template_input {template_input}"
 
     logmain = logging.getLogger(f"c.{__name__}.main")
     logmain.info(recap)
 
-    run_plot_grid_search()
+    run_plot_grid_search(template_input)
 
 
 if __name__ == "__main__":
