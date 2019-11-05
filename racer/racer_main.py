@@ -46,7 +46,8 @@ def setup_logger(logLevel="DEBUG"):
     #  log_format_module = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     #  log_format_module = "%(name)s - %(levelname)s: %(message)s"
     #  log_format_module = '%(levelname)s: %(message)s'
-    log_format_module = "%(message)s"
+    log_format_module = "%(name)s: %(message)s"
+    #  log_format_module = "%(message)s"
 
     formatter = logging.Formatter(log_format_module)
     module_console_handler.setFormatter(formatter)
@@ -62,13 +63,44 @@ def setup_logger(logLevel="DEBUG"):
     logg.debug(f"Done setting up logger")
 
 
-def run_racer_main(out_file_sprite, fps):
+def setup_env():
+    setup_logger()
+
+    args = parse_arguments()
+
+    # setup seed value
+    if args.seed == -1:
+        myseed = 1
+        myseed = int(timer() * 1e9 % 2 ** 32)
+    else:
+        myseed = args.seed
+    seed(myseed)
+    np.random.seed(myseed)
+
+    # build command string to repeat this run
+    recap = f"python3 lab03_main.py"
+    for a, v in args._get_kwargs():
+        if a == "rand_seed":
+            recap += f" --rand_seed {myseed}"
+        else:
+            recap += f" --{a} {v}"
+
+    logmain = logging.getLogger(f"c.{__name__}.setup_env")
+    logmain.info(recap)
+
+    return args
+
+
+def run_racer_main(args):
     """mainloop of the game
 
     adapted from https://www.pygame.org/docs/tut/chimp.py.html
     and https://www.pygame.org/docs/tut/ChimpLineByLine.html
     """
     logg = logging.getLogger(f"c.{__name__}.run_racer_main")
+
+    out_file_sprite = args.out_file_sprite
+    fps = args.fps
 
     pygame.init()
     # size is (int, int) tuple
@@ -124,7 +156,9 @@ def run_racer_main(out_file_sprite, fps):
 
     direction_text_hei = 300
     text_direction = font.render("Direction:", 1, (255, 255, 255))
-    textpos_direction = text_direction.get_rect(center=(sidebar_wid / 2, direction_text_hei))
+    textpos_direction = text_direction.get_rect(
+        center=(sidebar_wid / 2, direction_text_hei)
+    )
     sidebar.blit(text_direction, textpos_direction)
     direction_val_hei = direction_text_hei + val_delta
 
@@ -138,7 +172,7 @@ def run_racer_main(out_file_sprite, fps):
     clock = pygame.time.Clock()
 
     #  racer = Racer(out_file_sprite, field_wid // 2, field_hei // 2)
-    racer = Racer(out_file_sprite, 100, 150)
+    racer = Racer(out_file_sprite, 100, 100)
 
     rmap = RacingMap(field_wid, field_hei)
     # draw map on the field, it is static, so there is no need to redraw it every time
@@ -146,7 +180,7 @@ def run_racer_main(out_file_sprite, fps):
 
     # draw the map first, the car on top
     #  allsprites = pygame.sprite.RenderPlain((rmap, racer))
-    allsprites = pygame.sprite.RenderPlain(( racer))
+    allsprites = pygame.sprite.RenderPlain((racer))
 
     # Main Loop
     going = True
@@ -216,33 +250,6 @@ def run_racer_main(out_file_sprite, fps):
     pygame.quit()
 
 
-def main():
-    setup_logger()
-
-    args = parse_arguments()
-
-    # setup seed value
-    if args.seed == -1:
-        myseed = 1
-        myseed = int(timer() * 1e9 % 2 ** 32)
-    else:
-        myseed = args.seed
-    seed(myseed)
-    np.random.seed(myseed)
-
-    out_file_sprite = args.out_file_sprite
-    fps = args.fps
-
-    recap = f"python3 racer_main.py"
-    recap += f" --out_file_sprite {out_file_sprite}"
-    recap += f" --fps {fps}"
-    recap += f" --seed {myseed}"
-
-    logmain = logging.getLogger(f"c.{__name__}.main")
-    logmain.info(recap)
-
-    run_racer_main(out_file_sprite, fps)
-
-
 if __name__ == "__main__":
-    main()
+    args = setup_env()
+    run_racer_main(args)
