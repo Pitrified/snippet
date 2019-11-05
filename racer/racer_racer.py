@@ -115,8 +115,8 @@ class Racer(Sprite):
             pass
 
         # compute delta
-        pos_x_d = cos(radians(360-self.direction)) * self.speed
-        pos_y_d = sin(radians(360-self.direction)) * self.speed
+        pos_x_d = cos(radians(360 - self.direction)) * self.speed
+        pos_y_d = sin(radians(360 - self.direction)) * self.speed
 
         # move the car
         self.precise_x += pos_x_d
@@ -143,41 +143,42 @@ class Racer(Sprite):
         if len(hit_directions) == 0:
             self.done = True
             return
-        # too many hits, your road is weird, cap them at 3 segments
-        elif len(hit_directions) > 3:
-            hit_directions = hit_directions[:3]
-            hit_sid = hit_sid[:3]
+        # too many hits, your road is weird, cap them at 2 segments
+        elif len(hit_directions) > 2:
+            logg.warn(f"Too many segments hit")
+            hit_directions = hit_directions[:2]
+            hit_sid = hit_sid[:2]
 
-        # one segment, all rigth
+        # now hit_directions is either 1 or 2 elements long
         if len(hit_directions) == 1:
-            logg.debug(f"One segment")
-            pass
-        # two or three
-        #  elif len(hit_directions) == 2 or len(hit_directions) == 3:
+            mean_direction = hit_directions[0]
         else:
-            # find the first segment, [0, 13] should be [13, 0]
-            # do it twice to handle [0, 12, 13] -> [12, 13, 0]
-            for i in range(2):
-                if hit_sid[-1] - hit_sid[-2] > 2:
-                    tmp_sid = hit_sid.pop()
-                    hit_sid.insert(0, tmp_sid)
-                    tmp_directions = hit_directions.pop()
-                    hit_directions.insert(0, tmp_directions)
-                    logg.debug(f"{i}: now {hit_directions} {hit_sid}")
+            # 135   90  45    140   95  50    130   85  40
+            # 180       0     185       5     175       -5
+            # 225   270 315   230   275 320   220   265 310
+            # 270, 0 have mean 315 = (270+0+360)/2
+            # 270, 180 have mean 225 = (270+180)/2
+            # 0, 90 have mean 45 = (0+90)/2
+            if abs(hit_directions[0] - hit_directions[1]) > 180:
+                mean_direction = (sum(hit_directions) + 360) / 2
+                if mean_direction >= 360:
+                    mean_direction -= 360
+            else:
+                mean_direction = sum(hit_directions) / 2
 
-
-        logg.debug(f"Shuffled {hit_directions} {hit_sid}")
-
-        mean_direction = sum(hit_directions) / len(hit_directions)
         logg.debug(f"mean_direction {mean_direction}")
 
         error = self.direction - mean_direction
         logg.debug(f"direction-mean {error}")
-        error %= 360
+        #  error %= 360
+        if error < 0:
+            error += 360
         logg.debug(f"modulus {error}")
         if error > 180:
             error = 360 - error
         logg.debug(f"current direction {self.direction} has error of {error:.4f}")
+
+        # now error goes from 0 (good) to 180 (very bad)
 
     def _steer(self, action):
         """Steer the car
