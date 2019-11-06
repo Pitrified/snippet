@@ -29,11 +29,13 @@ class RacerCar(Sprite):
 
     """
 
-    def __init__(self, out_file_car, pos_x, pos_y, direction=0):
+    def __init__(self, template_images, pos_x, pos_y, direction=0):
         logg = logging.getLogger(f"c.{__name__}.__init__")
         logg.debug(f"Start init")
 
         super().__init__()
+
+        self.template_images = template_images
 
         self.pos_x = pos_x
         self.pos_y = pos_y
@@ -54,7 +56,8 @@ class RacerCar(Sprite):
 
         self.done = False
 
-        self.out_file_car = out_file_car
+        name_car_image = "car.bmp"
+        self.out_file_car = self.template_images.format(name_car_image)
         # image and rect are used by allsprites.draw
         self._create_car_image()
         self.orig_image, self.rect = load_image(self.out_file_car)
@@ -186,10 +189,6 @@ class RacerCar(Sprite):
         logg.debug(f"current direction {self.direction} has error of {error:.4f}")
 
         # now error goes from 0 (good) to 180 (very bad)
-
-    def get_screen():
-        """
-        """
 
     def _steer(self, action):
         """Steer the car

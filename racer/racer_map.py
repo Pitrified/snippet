@@ -18,15 +18,17 @@ class RacerMap(Group):
     Should be easy to do collision detection
     """
 
-    def __init__(self, field_wid, field_hei):
+    def __init__(self, template_images, field_wid, field_hei):
         logg = logging.getLogger(f"c.{__name__}.__init__")
         logg.debug(f"Start init")
         super().__init__()
 
         self.field_wid = field_wid
         self.field_hei = field_hei
+        self.template_images = template_images
 
-        self.out_file_road = "road.bmp"
+        name_road_image = "road.bmp"
+        self.out_file_road = self.template_images.format(name_road_image)
         self._create_road_segment()
 
         #  self.orig_image, self.rect = load_image(self.out_file_road)

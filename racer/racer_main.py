@@ -24,7 +24,7 @@ def parse_arguments():
         "-i",
         "--template_images",
         type=str,
-        default="car.bmp",
+        default="./{}",
         help="where to save/find the images",
     )
 
@@ -267,7 +267,10 @@ def run_racer_new(args):
     field_wid = 900
     field_hei = 900
 
-    racer_env = RacerEnv(field_wid, field_hei)
+    racer_env = RacerEnv(field_wid, field_hei, template_images)
+
+    # add the car to the list of sprites to draw
+    #  allsprites = pygame.sprite.RenderPlain((racer_env.racer_car))
 
     # Main Loop
     going = True
@@ -286,8 +289,28 @@ def run_racer_new(args):
                     going = False
             logg.debug(f"Done handling")
 
-        # update the display
-        pygame.display.flip()
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_d]:
+            racer_env.step("right")
+        elif keys[pygame.K_a]:
+            racer_env.step("left")
+        elif keys[pygame.K_w]:
+            racer_env.step("up")
+        elif keys[pygame.K_x]:
+            racer_env.step("down")
+        elif keys[pygame.K_q]:
+            racer_env.step("upleft")
+        elif keys[pygame.K_e]:
+            racer_env.step("upright")
+        elif keys[pygame.K_z]:
+            racer_env.step("downleft")
+        elif keys[pygame.K_c]:
+            racer_env.step("downright")
+        else:
+            racer_env.step("nop")
+
+        racer_env.update_display()
+
 
 if __name__ == "__main__":
     args = setup_env()

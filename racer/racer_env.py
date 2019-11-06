@@ -5,6 +5,7 @@ from timeit import default_timer as timer
 # pygame
 import pygame
 from pygame.sprite import Sprite
+from pygame.sprite import spritecollide
 from pygame.transform import rotate
 
 # my files
@@ -17,9 +18,11 @@ class RacerEnv:
     """
     """
 
-    def __init__(self, field_wid, field_hei):
+    def __init__(self, field_wid, field_hei, template_images):
         logg = getMyLogger(f"c.{__class__.__name__}.__init__")
         logg.debug(f"Start init")
+
+        self.template_images = template_images
 
         self.field_wid = field_wid
         self.field_hei = field_hei
@@ -56,6 +59,14 @@ class RacerEnv:
         self.main_font = pygame.font.Font(None, 36)
 
         self.setup_sidebar()
+
+        self.racer_car = RacerCar(self.template_images, 100, 100)
+
+        self.racer_map = RacerMap(self.template_images, self.field_wid, self.field_hei)
+        # draw map on the field, it is static, so there is no need to redraw it every time
+        self.racer_map.draw(self.field)
+
+        self.allsprites = pygame.sprite.RenderPlain((self.racer_car))
 
     def setup_sidebar(self):
         """
@@ -94,3 +105,116 @@ class RacerEnv:
 
         # draw the sidebar on the screen
         self.screen.blit(self.sidebar, (self.field_wid, 0))
+
+    def step(self, action):
+        """Perform the action
+
+        left-rigth: change steering
+        up-down: accelerate/brake
+        combination of the above
+        do nothing
+ 
+        ----------
+        This method steps the game forward one step
+        Parameters
+        ----------
+        action : str
+            MAYBE should be int anyway
+        Returns
+        -------
+        ob, reward, episode_over, info : tuple
+            ob (object) :
+                an environment-specific object representing the
+                state of the environment.
+            reward (float) :
+                amount of reward achieved by the previous action.
+            episode_over (bool) :
+                whether it's time to reset the environment again.
+            info (dict) :
+                diagnostic information useful for debugging.
+        """
+        logg = getMyLogger(f"c.{__class__.__name__}.step")
+        logg.debug(f"Start step {action}")
+
+        self.racer_car.step(action)
+
+        reward = self._compute_reward()
+
+    def _compute_reward(self):
+        """
+        """
+        logg = getMyLogger(f"c.{__class__.__name__}._compute_reward")
+        logg.debug(f"Start _compute_reward")
+
+        hits = spritecollide(self.racer_car, self.racer_map, dokill=False)
+        logg.debug(f"hitting {hits}")
+        hit_directions = []
+        hit_sid = []
+        for segment in hits:
+            logg.debug(f"hit segment with id {segment.sid}")
+            hit_directions.append(self.racer_map.seg_info[segment.sid][0])
+            hit_sid.append(segment.sid)
+
+        # out of the map
+        if len(hit_directions) == 0:
+            self.done = True
+            return
+        # too many hits, your road is weird, cap them at 2 segments
+        elif len(hit_directions) > 2:
+            logg.warn(f"Too many segments hit")
+            hit_directions = hit_directions[:2]
+            hit_sid = hit_sid[:2]
+
+        # now hit_directions is either 1 or 2 elements long
+        if len(hit_directions) == 1:
+            mean_direction = hit_directions[0]
+        else:
+            # 135   90  45    140   95  50    130   85  40
+            # 180       0     185       5     175       -5
+            # 225   270 315   230   275 320   220   265 310
+            # 270, 0 have mean 315 = (270+0+360)/2
+            # 270, 180 have mean 225 = (270+180)/2
+            # 0, 90 have mean 45 = (0+90)/2
+            if abs(hit_directions[0] - hit_directions[1]) > 180:
+                mean_direction = (sum(hit_directions) + 360) / 2
+                if mean_direction >= 360:
+                    mean_direction -= 360
+            else:
+                mean_direction = sum(hit_directions) / 2
+
+        logg.debug(f"mean_direction {mean_direction}")
+
+        error = self.racer_car.direction - mean_direction
+        logg.debug(f"direction-mean {error}")
+        #  error %= 360
+        if error < 0:
+            error += 360
+        logg.debug(f"modulus {error}")
+        if error > 180:
+            error = 360 - error
+        logg.debug(f"current direction {self.racer_car.direction} has error of {error:.4f}")
+
+        reward = 90 - error
+        return reward
+
+    def get_screen():
+        """
+        """
+
+    def update_display(self):
+        """
+        """
+        logg = getMyLogger(f"c.{__class__.__name__}.update_display")
+        logg.debug(f"Start update_display")
+
+        # Draw Everything again, every frame
+        # the field already has the road drawn
+        self.screen.blit(self.field, (0, 0))
+
+        # draw all moving sprites (the car) on the screen
+        self.allsprites.draw(self.screen)
+        # if you draw on the field you can easily leave a track
+        #  allsprites.draw(field)
+
+        # update the display
+        pygame.display.flip()
