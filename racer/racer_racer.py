@@ -20,6 +20,13 @@ class Racer(Sprite):
     """Experimental car to understand the agent
 
     Will be rewritten as proper gym env
+
+    NOTE: this class must be split in two:
+        step, get_screen, _compute_reward moved in RacerEnv
+        the car specific functions will be in RacerCar
+
+    run_racer_main that does the setup of the field, will be in RacerEnv as well
+
     """
 
     def __init__(self, out_file_car, pos_x, pos_y, direction=0):
@@ -179,6 +186,10 @@ class Racer(Sprite):
         logg.debug(f"current direction {self.direction} has error of {error:.4f}")
 
         # now error goes from 0 (good) to 180 (very bad)
+
+    def get_screen():
+        """
+        """
 
     def _steer(self, action):
         """Steer the car
