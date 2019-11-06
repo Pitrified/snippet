@@ -9,8 +9,10 @@ from timeit import default_timer as timer
 
 from pygame.sprite import spritecollide
 
-from racer_racer import Racer
-from racer_map import RacingMap
+from racer_env import RacerEnv
+from racer_racer import RacerCar
+from racer_map import RacerMap
+from utils import getMyLogger
 
 
 def parse_arguments():
@@ -20,10 +22,10 @@ def parse_arguments():
 
     parser.add_argument(
         "-i",
-        "--out_file_sprite",
+        "--template_images",
         type=str,
         default="car.bmp",
-        help="where to save the car image",
+        help="where to save/find the images",
     )
 
     parser.add_argument("-fps", "--fps", type=int, default=1, help="frame per second")
@@ -99,7 +101,7 @@ def run_racer_main(args):
     """
     logg = logging.getLogger(f"c.{__name__}.run_racer_main")
 
-    out_file_sprite = args.out_file_sprite
+    template_images = args.template_images
     fps = args.fps
 
     pygame.init()
@@ -171,10 +173,10 @@ def run_racer_main(args):
     # Prepare Game Objects
     clock = pygame.time.Clock()
 
-    #  racer = Racer(out_file_sprite, field_wid // 2, field_hei // 2)
-    racer = Racer(out_file_sprite, 100, 100)
+    #  racer = RacerCar(template_images, field_wid // 2, field_hei // 2)
+    racer = RacerCar(template_images, 100, 100)
 
-    rmap = RacingMap(field_wid, field_hei)
+    rmap = RacerMap(field_wid, field_hei)
     # draw map on the field, it is static, so there is no need to redraw it every time
     rmap.draw(field)
 
@@ -250,6 +252,44 @@ def run_racer_main(args):
     pygame.quit()
 
 
+def run_racer_new(args):
+    """
+    """
+    logg = getMyLogger(f"c.{__name__}.run_racer_new")
+    logg.debug(f"Start run_racer_new")
+
+    template_images = args.template_images
+    fps = args.fps
+
+    # clock for interactive play
+    clock = pygame.time.Clock()
+
+    field_wid = 900
+    field_hei = 900
+
+    racer_env = RacerEnv(field_wid, field_hei)
+
+    # Main Loop
+    going = True
+    while going:
+        clock.tick(fps)
+        logg.debug(f"    New frame")
+
+        # Handle Input Events
+        # https://stackoverflow.com/a/22099654
+        for event in pygame.event.get():
+            logg.debug(f"Handling event {event}")
+            if event.type == pygame.QUIT:
+                going = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    going = False
+            logg.debug(f"Done handling")
+
+        # update the display
+        pygame.display.flip()
+
 if __name__ == "__main__":
     args = setup_env()
-    run_racer_main(args)
+    #  run_racer_main(args)
+    run_racer_new(args)

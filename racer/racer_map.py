@@ -12,7 +12,7 @@ from pygame.transform import rotate
 from utils import load_image
 
 
-class RacingMap(Group):
+class RacerMap(Group):
     """Map for a racer, as collection of rect
 
     Should be easy to do collision detection

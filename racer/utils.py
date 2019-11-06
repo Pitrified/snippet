@@ -1,3 +1,4 @@
+import logging
 import pygame
 
 # functions to create our resources
@@ -23,3 +24,8 @@ def load_image(name, colorkey=None):
             colorkey = image.get_at((0, 0))
         image.set_colorkey(colorkey, RLEACCEL)
     return image, image.get_rect()
+
+def getMyLogger(logger_name, log_level='DEBUG'):
+    logg = logging.getLogger(logger_name)
+    logg.setLevel(log_level)
+    return logg

@@ -16,7 +16,7 @@ from pygame.transform import rotate
 from utils import load_image
 
 
-class Racer(Sprite):
+class RacerCar(Sprite):
     """Experimental car to understand the agent
 
     Will be rewritten as proper gym env
