@@ -269,9 +269,6 @@ def run_racer_new(args):
 
     racer_env = RacerEnv(field_wid, field_hei, template_images)
 
-    # add the car to the list of sprites to draw
-    #  allsprites = pygame.sprite.RenderPlain((racer_env.racer_car))
-
     # Main Loop
     going = True
     while going:
@@ -309,7 +306,7 @@ def run_racer_new(args):
         else:
             racer_env.step("nop")
 
-        racer_env.update_display()
+        #  racer_env._update_display()
 
 
 if __name__ == "__main__":

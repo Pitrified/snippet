@@ -138,7 +138,11 @@ class RacerEnv:
 
         self.racer_car.step(action)
 
-        reward = self._compute_reward()
+        reward, done = self._compute_reward()
+
+        self._update_display()
+
+        view = self._get_screen()
 
     def _compute_reward(self):
         """
@@ -146,6 +150,7 @@ class RacerEnv:
         logg = getMyLogger(f"c.{__class__.__name__}._compute_reward")
         logg.debug(f"Start _compute_reward")
 
+        # compute collision car/road
         hits = spritecollide(self.racer_car, self.racer_map, dokill=False)
         logg.debug(f"hitting {hits}")
         hit_directions = []
@@ -157,8 +162,7 @@ class RacerEnv:
 
         # out of the map
         if len(hit_directions) == 0:
-            self.done = True
-            return
+            return 0, True
         # too many hits, your road is weird, cap them at 2 segments
         elif len(hit_directions) > 2:
             logg.warn(f"Too many segments hit")
@@ -181,7 +185,6 @@ class RacerEnv:
                     mean_direction -= 360
             else:
                 mean_direction = sum(hit_directions) / 2
-
         logg.debug(f"mean_direction {mean_direction}")
 
         error = self.racer_car.direction - mean_direction
@@ -195,17 +198,20 @@ class RacerEnv:
         logg.debug(f"current direction {self.racer_car.direction} has error of {error:.4f}")
 
         reward = 90 - error
-        return reward
+        # MAYBE a sigmoid-like shape
+        return reward, False
 
-    def get_screen():
+    def _get_screen():
+        """a square with the car in the corner, looking to the diagonal
         """
-        """
+        logg = getMyLogger(f"c.{__class__.__name__}._get_screen")
+        logg.debug(f"Start _get_screen")
 
-    def update_display(self):
+    def _update_display(self):
         """
         """
-        logg = getMyLogger(f"c.{__class__.__name__}.update_display")
-        logg.debug(f"Start update_display")
+        logg = getMyLogger(f"c.{__class__.__name__}._update_display")
+        logg.debug(f"Start _update_display")
 
         # Draw Everything again, every frame
         # the field already has the road drawn
