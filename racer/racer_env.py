@@ -255,29 +255,54 @@ class RacerEnv:
         logg = getMyLogger(f"c.{__class__.__name__}._get_sensor_array")
         logg.debug(f"Start _get_sensor_array")
 
+        # get the current sensor_array to use
         self.curr_sa = self.racer_car.get_current_sensor_array()
-        logg.debug(f'shape curr_sa {self.curr_sa.shape}')
-        self._draw_sensor_array()
+        logg.debug(f"shape curr_sa {self.curr_sa.shape}")
 
-    def _draw_sensor_array(self):
+        obs = []
+        for s_pos in self.curr_sa:
+            #  logg.debug(f"s_pos {s_pos}")
+            if (
+                s_pos[0] < 0
+                or s_pos[0] >= self.field_wid
+                or s_pos[1] < 0
+                or s_pos[1] >= self.field_hei
+            ):
+                obs.append(0)
+            else:
+                obs.append(self.racer_map.raw_map[s_pos[0], s_pos[1]])
+        #  logg.debug(f"obs {obs}")
+
+        # draw the array on the sa_surf
+        self._draw_sensor_array(obs)
+
+        return obs
+
+    def _draw_sensor_array(self, obs=None):
         """draw the sensor_array on a Surface
         """
         logg = getMyLogger(f"c.{__class__.__name__}._draw_sensor_array")
         logg.debug(f"Start _draw_sensor_array")
 
         # create the new surface for the sensor_array
-        self.sat_surf = pygame.Surface(self.field_size)
-        #  self.sat_surf = self.sat_surf.convert()
+        self.sa_surf = pygame.Surface(self.field_size)
+        #  self.sa_surf = self.sa_surf.convert()
         black = (0, 0, 0)
-        self.sat_surf.fill(black)
+        self.sa_surf.fill(black)
         # black colors will not be blit
-        self.sat_surf.set_colorkey(black)
+        self.sa_surf.set_colorkey(black)
 
         the_color = (0, 255, 0, 128)
+        the_second_color = (0, 0, 255, 128)
+        color = the_color
         the_size = 3
-        for s_pos in self.curr_sa:
-            #  pygame.draw.circle(self.sat_surf, the_color, (10,10), the_size)
-            pygame.draw.circle(self.sat_surf, the_color, s_pos, the_size)
+        for i, s_pos in enumerate(self.curr_sa):
+            if not obs is None:
+                if obs[i] == 1:
+                    color = the_second_color
+                else:
+                    color = the_color
+            pygame.draw.circle(self.sa_surf, color, s_pos, the_size)
 
     def _update_display(self):
         """draw everything
@@ -295,7 +320,7 @@ class RacerEnv:
         #  allsprites.draw(field)
 
         # draw the sensor surface
-        self.screen.blit(self.sat_surf, (0, 0))
+        self.screen.blit(self.sa_surf, (0, 0))
 
         # update the display
         pygame.display.flip()

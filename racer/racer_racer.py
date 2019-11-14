@@ -320,7 +320,7 @@ class RacerCar(Sprite):
             rot_mat = compute_rot_matrix(360-dire)
             rotated_sa = np.matmul(rot_mat, sensor_array_template)
             #  self.all_sensor_array[dire] = rotated_sa.transpose()
-            int_sa = np.array(rotated_sa, dtype=np.uint16)
+            int_sa = np.array(rotated_sa, dtype=np.int16)
             self.all_sensor_array[dire] = int_sa.transpose()
 
     def _get_sensor_array_template(self):
@@ -330,9 +330,11 @@ class RacerCar(Sprite):
         logg.debug(f"Start _get_sensor_array_template")
 
         # create a grid
-        self.viewfield_size = 101
-        #  self.viewfield_step = 10
-        self.viewfield_step = 25
+        #  self.viewfield_size = 101
+        self.viewfield_size = 301
+        self.viewfield_step = 10
+        #  self.viewfield_step = 25
+        #  self.viewfield_step = 33
         sat = []
         for i in range(0, self.viewfield_size, self.viewfield_step):
             for j in range(0, self.viewfield_size, self.viewfield_step):

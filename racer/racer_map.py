@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 
 from timeit import default_timer as timer
 
@@ -55,6 +56,8 @@ class RacerMap(Group):
             self.segments[i] = Segment(self.out_file_road, direction, cx, cy, i)
             self.add(self.segments[i])
 
+        self._precompute_map()
+
     def _create_road_segment(self):
         """Create the bmp for a road segment
         """
@@ -76,6 +79,19 @@ class RacerMap(Group):
         )
 
         img1.save(self.out_file_road, "bmp")
+
+    def _precompute_map(self):
+        """turn the map into a np array
+        """
+        logg = getMyLogger(f"c.{__name__}._precompute_map", "DEBUG")
+        logg.debug(f"Start _precompute_map")
+
+        self.raw_map = np.zeros((self.field_wid, self.field_hei), dtype=np.uint8)
+        for i in self.segments:
+            rect = self.segments[i].rect
+            logg.debug(f"rect {rect}")
+            logg.debug(f" left {rect.left} right {rect.right} top {rect.top} bottom {rect.bottom} ")
+            self.raw_map[rect.left:rect.right, rect.top:rect.bottom] = 1
 
 
 class Segment(Sprite):
