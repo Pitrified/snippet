@@ -1,6 +1,9 @@
 import logging
 
 from timeit import default_timer as timer
+from math import cos
+from math import sin
+from math import radians
 
 # pygame
 import pygame
@@ -140,9 +143,9 @@ class RacerEnv:
 
         reward, done = self._compute_reward()
 
-        self._update_display()
+        view = self.get_sensors()
 
-        view = self._get_screen()
+        self._update_display()
 
     def _compute_reward(self):
         """
@@ -195,17 +198,49 @@ class RacerEnv:
         logg.debug(f"modulus {error}")
         if error > 180:
             error = 360 - error
-        logg.debug(f"current direction {self.racer_car.direction} has error of {error:.4f}")
+        logg.debug(
+            f"current direction {self.racer_car.direction} has error of {error:.4f}"
+        )
 
         reward = 90 - error
         # MAYBE a sigmoid-like shape
         return reward, False
 
-    def _get_screen():
+    def get_screen(self):
         """a square with the car in the corner, looking to the diagonal
         """
-        logg = getMyLogger(f"c.{__class__.__name__}._get_screen")
-        logg.debug(f"Start _get_screen")
+        logg = getMyLogger(f"c.{__class__.__name__}.get_screen")
+        logg.debug(f"Start get_screen")
+
+        self.viewfield_size = 100
+        pos_car = self.racer_car.pos_x, self.racer_car.pos_y
+        vf_cos = cos(radians(360 - self.racer_car.direction - 45)) * self.viewfield_size
+        vf_sin = sin(radians(360 - self.racer_car.direction - 45)) * self.viewfield_size
+
+        # positions of the corners of the viewfield
+        pos_left = int(pos_car[0] + vf_cos), int(pos_car[1] + vf_sin)
+        pos_right = int(pos_car[0] - vf_sin), int(pos_car[1] + vf_cos)
+        pos_front = int(pos_car[0] + vf_cos - vf_sin), int(pos_car[1] + vf_cos + vf_sin)
+
+    def get_sensors(self, trace=False):
+        """
+        """
+
+        self.viewfield_size = 100
+
+        pos_car = self.racer_car.pos_x, self.racer_car.pos_y
+        vf_cos = cos(radians(360 - self.racer_car.direction - 45)) * self.viewfield_size
+        vf_sin = sin(radians(360 - self.racer_car.direction - 45)) * self.viewfield_size
+        pos_left = int(pos_car[0] + vf_cos), int(pos_car[1] + vf_sin)
+        pos_right = int(pos_car[0] - vf_sin), int(pos_car[1] + vf_cos)
+        pos_front = int(pos_car[0] + vf_cos - vf_sin), int(pos_car[1] + vf_cos + vf_sin)
+
+        the_color = (0, 255, 0, 128)
+        the_size = 3
+        pygame.draw.circle(self.field, the_color, pos_car, the_size)
+        pygame.draw.circle(self.field, the_color, pos_right, the_size)
+        pygame.draw.circle(self.field, the_color, pos_left, the_size)
+        pygame.draw.circle(self.field, the_color, pos_front, the_size)
 
     def _update_display(self):
         """

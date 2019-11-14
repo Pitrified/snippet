@@ -215,6 +215,11 @@ class RacerCar(Sprite):
                 self.speed = 0
 
     def _create_car_image(self):
+        """create the car bmp
+
+        all the colors
+        logg.debug(f"colors {pygame.colordict.THECOLORS.items()}")
+        """
         self.size = 60, 40
         img1 = Image.new("RGBA", self.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(img1)
