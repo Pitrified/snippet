@@ -143,7 +143,8 @@ class RacerEnv:
 
         reward, done = self._compute_reward()
 
-        view = self.get_sensors()
+        #  view = self.get_sensors()
+        view = self._get_sensor_array()
 
         self._update_display()
 
@@ -223,7 +224,13 @@ class RacerEnv:
         pos_front = int(pos_car[0] + vf_cos - vf_sin), int(pos_car[1] + vf_cos + vf_sin)
 
     def get_sensors(self, trace=False):
-        """
+        """check if an array of sensors in front of the car is inside the road
+
+        * compute the array for direction 0
+        * rotate it for every direction needed
+        * get the current one with a simple translation
+        * check if the points in the current are inside the road or not:
+            precompute a yes/no road map, as big as the field
         """
 
         self.viewfield_size = 100
@@ -242,8 +249,38 @@ class RacerEnv:
         pygame.draw.circle(self.field, the_color, pos_left, the_size)
         pygame.draw.circle(self.field, the_color, pos_front, the_size)
 
-    def _update_display(self):
+    def _get_sensor_array(self):
+        """get the sa for the current direction and collide it with the road
         """
+        logg = getMyLogger(f"c.{__class__.__name__}._get_sensor_array")
+        logg.debug(f"Start _get_sensor_array")
+
+        self.curr_sa = self.racer_car.get_current_sensor_array()
+        logg.debug(f'shape curr_sa {self.curr_sa.shape}')
+        self._draw_sensor_array()
+
+    def _draw_sensor_array(self):
+        """draw the sensor_array on a Surface
+        """
+        logg = getMyLogger(f"c.{__class__.__name__}._draw_sensor_array")
+        logg.debug(f"Start _draw_sensor_array")
+
+        # create the new surface for the sensor_array
+        self.sat_surf = pygame.Surface(self.field_size)
+        #  self.sat_surf = self.sat_surf.convert()
+        black = (0, 0, 0)
+        self.sat_surf.fill(black)
+        # black colors will not be blit
+        self.sat_surf.set_colorkey(black)
+
+        the_color = (0, 255, 0, 128)
+        the_size = 3
+        for s_pos in self.curr_sa:
+            #  pygame.draw.circle(self.sat_surf, the_color, (10,10), the_size)
+            pygame.draw.circle(self.sat_surf, the_color, s_pos, the_size)
+
+    def _update_display(self):
+        """draw everything
         """
         logg = getMyLogger(f"c.{__class__.__name__}._update_display")
         logg.debug(f"Start _update_display")
@@ -256,6 +293,9 @@ class RacerEnv:
         self.allsprites.draw(self.screen)
         # if you draw on the field you can easily leave a track
         #  allsprites.draw(field)
+
+        # draw the sensor surface
+        self.screen.blit(self.sat_surf, (0, 0))
 
         # update the display
         pygame.display.flip()

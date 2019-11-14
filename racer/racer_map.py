@@ -10,6 +10,7 @@ from pygame.sprite import Sprite
 from pygame.transform import rotate
 
 from utils import load_image
+from utils import getMyLogger
 
 
 class RacerMap(Group):
@@ -19,7 +20,7 @@ class RacerMap(Group):
     """
 
     def __init__(self, template_images, field_wid, field_hei):
-        logg = logging.getLogger(f"c.{__name__}.__init__")
+        logg = getMyLogger(f"c.{__name__}.__init__", "INFO")
         logg.debug(f"Start init")
         super().__init__()
 
@@ -57,7 +58,7 @@ class RacerMap(Group):
     def _create_road_segment(self):
         """Create the bmp for a road segment
         """
-        logg = logging.getLogger(f"c.{__name__}._create_road_segment")
+        logg = getMyLogger(f"c.{__name__}._create_road_segment")
 
         self.size = 350, 150
         #  img1 = Image.new("RGBA", self.size, "grey")
@@ -82,7 +83,7 @@ class Segment(Sprite):
     """
 
     def __init__(self, out_file_road, direction, cx, cy, sid):
-        logg = logging.getLogger(f"c.{__name__}.__init__")
+        logg = getMyLogger(f"c.{__name__}.__init__", "INFO")
         logg.debug(f"Start init")
         super().__init__()
 
@@ -101,7 +102,7 @@ class Segment(Sprite):
     def rotate_image(self, direction):
         """Rotate the image segment
         """
-        logg = logging.getLogger(f"c.{__name__}.__init__")
+        logg = getMyLogger(f"c.{__name__}.__init__", "INFO")
 
         #  self.image = rotate(self.orig_image, 360 - direction)
         self.image = rotate(self.orig_image, direction)

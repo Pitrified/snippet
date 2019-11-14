@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 
 from timeit import default_timer as timer
 
@@ -14,6 +15,8 @@ from pygame.sprite import Sprite
 from pygame.transform import rotate
 
 from utils import load_image
+from utils import getMyLogger
+from utils import compute_rot_matrix
 
 
 class RacerCar(Sprite):
@@ -63,6 +66,7 @@ class RacerCar(Sprite):
         self.orig_image, self.rect = load_image(self.out_file_car)
         self._rotate_car_image()
         logg.debug(f"Rect di car {self.rect}")
+        self._create_car_sensors()
 
         #  self.rect.center = self.pos_x, self.pos_y
         self.step("nop")
@@ -301,3 +305,53 @@ class RacerCar(Sprite):
             self.rot_car_image[dire] = rotate(self.orig_image, dire)
             self.rot_car_rect[dire] = self.rot_car_image[dire].get_rect()
             #  logg.debug(f"rect {dire}: {self.rot_car_rect[dire]}")
+
+    def _create_car_sensors(self):
+        """create the array of sensors, and rotate it for all possible directions
+        """
+        logg = getMyLogger(f"c.{__class__.__name__}._create_car_sensors")
+        logg.debug(f"Start _create_car_sensors")
+
+        sensor_array_template = self._get_sensor_array_template()
+        #  return sensor_array_template
+
+        self.all_sensor_array = {}
+        for dire in range(0, 360, self.dir_step):
+            rot_mat = compute_rot_matrix(360-dire)
+            rotated_sa = np.matmul(rot_mat, sensor_array_template)
+            #  self.all_sensor_array[dire] = rotated_sa.transpose()
+            int_sa = np.array(rotated_sa, dtype=np.uint16)
+            self.all_sensor_array[dire] = int_sa.transpose()
+
+    def _get_sensor_array_template(self):
+        """create the template for the sensor array
+        """
+        logg = getMyLogger(f"c.{__class__.__name__}._get_sensor_array_template")
+        logg.debug(f"Start _get_sensor_array_template")
+
+        # create a grid
+        self.viewfield_size = 101
+        #  self.viewfield_step = 10
+        self.viewfield_step = 25
+        sat = []
+        for i in range(0, self.viewfield_size, self.viewfield_step):
+            for j in range(0, self.viewfield_size, self.viewfield_step):
+                sat.append((i, j))
+        sat = np.array(sat).transpose()
+        logg.debug(f"shape sensor_array_template {sat.shape}")
+
+        # rotate the array so that is a diamond
+        rot_mat = compute_rot_matrix(-45)
+        sat = np.matmul(rot_mat, sat)
+        #  logg.debug(f"sat {sat}")
+        logg.debug(f"shape sensor_array_template {sat.shape}")
+
+        return sat
+
+    def get_current_sensor_array(self):
+        """returns the current sa to use
+        """
+        base_sa = self.all_sensor_array[self.direction]
+        car_pos = np.array((self.pos_x, self.pos_y))
+        translated_sa = np.add(base_sa, car_pos)
+        return translated_sa
