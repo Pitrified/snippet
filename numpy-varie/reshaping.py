@@ -111,7 +111,7 @@ def run_reshaping(args):
     logg.debug(f"wrapped_bis[2,0] = {wrapped_bis[2,0]}")
     logg.debug(f"wrapped_bis[0,2] = {wrapped_bis[0,2]}")
 
-    for s_pos in wrapped[:,:]:
+    for s_pos in wrapped[:, :]:
         logg.debug(f"s_pos {s_pos.shape}\n{s_pos}")
 
     for row in wrapped:
@@ -119,6 +119,50 @@ def run_reshaping(args):
         for s_pos in row:
             logg.debug(f"s_pos {s_pos.shape} : {s_pos}")
 
+
+def run_lidar(args):
+    """
+    """
+    logg = logging.getLogger(f"c.{__name__}.run_lidar")
+    logg.debug(f"Reshaping run_lidar")
+
+    ray_sensors_per_ray = 10  # number of sensors along a ray
+    ray0 = tuple((s, 0) for s in range(1, ray_sensors_per_ray + 1))
+    ray0 = np.array(ray0).transpose()
+    ray1 = tuple((s, 1) for s in range(11, ray_sensors_per_ray + 11))
+    ray1 = np.array(ray1).transpose()
+    ray2 = tuple((s, 2) for s in range(21, ray_sensors_per_ray + 21))
+    ray2 = np.array(ray2).transpose()
+    logg.debug(f"shape ray0 {ray0.shape}")
+    logg.debug(f"ray0\n{ray0}")
+    logg.debug(f"ray1\n{ray1}")
+    logg.debug(f"ray2\n{ray2}")
+    sat = []
+    sat.append(ray0)
+    sat.append(ray1)
+    sat.append(ray2)
+    sat = np.array(sat)
+    logg.debug(f"shape sensor_array_template {sat.shape}")
+    logg.debug(f"sat\n{sat}")
+
+    #  sat = sat.transpose((0,2,1))
+    sat = sat.transpose((1, 0, 2))
+    logg.debug(f"shape transposed {sat.shape}")
+    logg.debug(f"sat\n{sat}")
+
+    sat = sat.reshape(2, ray_sensors_per_ray * 3)
+    logg.debug(f"shape reshaped {sat.shape}")
+    logg.debug(f"sat\n{sat}")
+
+    sat = sat.transpose()
+    logg.debug(f"shape transposed again {sat.shape}")
+    logg.debug(f"sat\n{sat}")
+    logg.debug(f"sat[0]: {sat[0]}")
+    logg.debug(f"sat[15]: {sat[15]}")
+    logg.debug(f"sat[26]: {sat[26]}")
+
+
 if __name__ == "__main__":
     args = setup_env()
-    run_reshaping(args)
+    #  run_reshaping(args)
+    run_lidar(args)
