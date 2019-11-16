@@ -98,15 +98,26 @@ def run_reshaping(args):
     logg.debug(f"squared0: shape {squared0.shape}\n{squared0}")
 
     wrapped = np.zeros((n, n, 2), dtype=np.uint8)
-    wrapped[:,:,0] = unrolled[0].reshape(n, n)
-    wrapped[:,:,1] = unrolled[1].reshape(n, n)
+    wrapped[:, :, 0] = unrolled[0].reshape(n, n)
+    wrapped[:, :, 1] = unrolled[1].reshape(n, n)
     logg.debug(f"wrapped: shape {wrapped.shape}\n{wrapped}")
     logg.debug(f"wrapped[0,0] = {wrapped[0,0]}")
     logg.debug(f"wrapped[2,0] = {wrapped[2,0]}")
     logg.debug(f"wrapped[0,2] = {wrapped[0,2]}")
 
+    wrapped_bis = unrolled.transpose().reshape(n, n, 2)
+    logg.debug(f"wrapped_bis: shape {wrapped_bis.shape}\n{wrapped_bis}")
+    logg.debug(f"wrapped_bis[0,0] = {wrapped_bis[0,0]}")
+    logg.debug(f"wrapped_bis[2,0] = {wrapped_bis[2,0]}")
+    logg.debug(f"wrapped_bis[0,2] = {wrapped_bis[0,2]}")
 
+    for s_pos in wrapped[:,:]:
+        logg.debug(f"s_pos {s_pos.shape}\n{s_pos}")
 
+    for row in wrapped:
+        logg.debug(f"row {row.shape}")
+        for s_pos in row:
+            logg.debug(f"s_pos {s_pos.shape} : {s_pos}")
 
 if __name__ == "__main__":
     args = setup_env()
