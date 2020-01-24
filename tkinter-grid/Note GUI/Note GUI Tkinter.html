@@ -1,0 +1,734 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!-- saved from url=(0049)http://stor.altervista.org/python/tk/tkinter.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width">
+<title>Note GUI Tkinter</title>
+<meta name="generator" content="Bluefish 2.2.4">
+<meta name="keywords" content="Linguaggio Python Programmazione Tk Tkinter">
+
+<link href="./Note GUI Tkinter_files/stili2.css" type="text/css" rel="stylesheet">
+
+</head>
+<body>
+
+<!-- ****************************************************************************
+                             TESTATA DOCUMENTO
+***************************************************************************** -->
+<div class="testata">
+<br>
+<h1>Note GUI Tkinter</h1>
+<a href="http://stor.altervista.org/python/python.html" style="color:#fafafa; font-size:200%;">&nbsp;☗&nbsp;</a>
+</div>
+
+<!-- ****************************************************************************
+                             CORPO DOCUMENTO
+***************************************************************************** -->
+<div class="corpo">
+
+  <a name="indice"></a>
+
+  <h2>Creazione applicazione grafica:</h2>
+  <br>
+
+
+<h4>Strutturata con le classi</h4>
+<pre>try: import Tkinter as tk                   <span class="com"># Py2</span>
+except ImportError: import tkinter as tk    <span class="com"># Py3</span>
+
+class Applicazione:
+
+    def __init__ (self):
+        self.finestra = tk.Tk()
+        self.finestra.title(<span class="str">"Hello world"</span>)
+
+    def start(self):
+        self.finestra.mainloop()
+
+app = Applicazione()
+app.start()
+</pre>
+
+<br>
+<h4>Strutturata senza classi</h4>
+<pre>try: import Tkinter as tk                   <span class="com"># Py2</span>
+except ImportError: import tkinter as tk    <span class="com"># Py3</span>
+
+finestra = tk.Tk()
+finestra.title(<span class="str">"Hello world"</span>)
+finestra.mainloop()
+</pre>
+
+
+<br>
+<h4>Aspetto della finestra</h4>
+<pre>finestra.resizable(False, False)    <span class="com"># rende la finestra non ridimensionabile</span>
+finestra.overrideredirect(True)     <span class="com"># toglie i bordi, non si puo' chiudere con la X</span>
+</pre>
+
+<br>
+Normalmente la finestra è elastica e diventa grande quanto il suo contenuto,
+tuttavia è possibile indicarne a priori la grandezza e la posizione:<br>
+<pre>finestra.geometry(<span class="str">"640x480"</span>)
+finestra.geometry(<span class="str">"%dx%d"</span> % (WIDTH, HEIGHT))              <span class="com"># solo dimensioni</span>
+finestra.geometry(<span class="str">"%dx%d+%d+%d"</span> % (WIDTH, HEIGHT, X, Y))  <span class="com"># anche posizione</span>
+</pre>
+
+<br>
+Conoscendo le dimensioni dello schermo è possibile
+centrare la finestra nello schermo stesso:
+<pre>larghezza = finestra.winfo_screenwidth()    <span class="com"># larghezza schermo in pixel</span>
+altezza = finestra.winfo_screenheight()     <span class="com"># altezza schermo in pixel</span>
+x = larghezza//2 - WIDTH//2
+y = altezza//2 - HEIGHT//2
+finestra.geometry(<span class="str">"%dx%d+%d+%d"</span> % (WIDTH, HEIGHT, x, y))
+</pre>
+
+
+<br>
+Impostare l'icona della finestra su sistemi Windows:
+<pre>finestra.wm_iconbitmap(<span class="str">"icona.ico"</span>)
+</pre>
+(si possono creare icone 16x16 su: <a href="http://www.favicon.cc/">www.favicon.cc/</a>)<br>
+<br>
+
+
+<br>
+  <h2>Oggetto Frame, il contenitore: </h2>
+  All'interno della finestra si possono disporre dei widget
+  (window-objects). L'oggetto Frame (riquadro/cornice) permette di raggruppare
+  un certo numero di widget all'interno di esso. Questo serve
+  principalmente per il posizionamento, infatti disponendo il frame
+  in un altro punto della finestra si spostano assieme ad esso anche
+  tutti i widget contenuti, ma è utile anche per creare elementi
+  decorativi, come separatori o riquadri tridimensionali.<br>
+  <br>
+  Ogni elemento di una applicazione grafica ha un oggetto "genitore"
+  ed eventualmente uno o più oggetti "figli". Un oggetto
+  Frame di base ha come genitore la finestra stessa:<br>
+  <br>
+<pre>frame1 = tk.Frame(form1)
+</pre>
+  
+  <br>
+  Con questa riga si crea un oggetto di tipo Frame chiamato frame1,
+  appartenente alla finestra di nome form1. Un frame, come tutti gli altri widget, dispone di un grande
+  numero di attributi visuali (dimensioni, colori, tipo e dimensione
+  dei bordi, font ecc. Per impostare (configurare) questi attributi
+  (chiamati anche option / opzioni) ci sono tre modi, si possono specificare
+  nell'operazione di creazione dell'oggetto (vengono passati
+  automaticamente al costruttore dell'oggetto quando viene
+  istanziato), si può usare il metodo configure (dopo aver
+  già istanziato l'oggetto), oppure si possono impostare
+  manualmente uno per uno accedendo direttamente al dizionario
+  interno dei widget (sempre dopo aver istanziato l'oggetto):<br>
+<br>  
+<pre>frame1 = tk.Frame(form1, bg=<span class="str">"yellow"</span>, width=300, height=200)
+
+frame1.configure(bg="<span class="str">yellow"</span>, width=300, height=200)
+
+frame1[<span class="str">"bg"</span>] = <span class="str">"yellow"</span>
+frame1[<span class="str">"width"</span>] = 300
+frame1[<span class="str">"height"</span>] = 200
+</pre>
+
+  <br>
+  Per rendere visibile il tutto si deve chiamare 
+  uno dei tre metodi possibili di posizionamento: pack, grid o place:
+  <br>
+  
+<pre>try: import Tkinter as tk                   <span class="com"># Py2</span>
+except ImportError: import tkinter as tk    <span class="com"># Py3</span>
+
+class Applicazione:
+
+    def __init__ (self):
+        self.form1 = tk.Tk()
+        self.form1.title(<span class="str">"Titolo finestra"</span>)
+        self.form1.resizable(False, False)
+
+        self.frame1 = tk.Frame(self.form1)
+        self.frame2 = tk.Frame(self.form1)
+        self.frame3 = tk.Frame(self.form1)
+        self.frame4 = tk.Frame(self.form1)
+
+        self.frame1.configure(bg=<span class="str">"yellow"</span>, width=150, height=100)
+        self.frame2.configure(bg=<span class="str">"red"</span>,    width=150, height=100)
+        self.frame3.configure(bg=<span class="str">"blue"</span>,   width=150, height=100)
+        self.frame4.configure(bg=<span class="str">"green"</span>,  width=150, height=100)
+
+        self.frame1.grid(row=0, column=0)
+        self.frame2.grid(row=0, column=1)
+        self.frame3.grid(row=1, column=0)
+        self.frame4.grid(row=1, column=1)
+
+
+    def start(self):
+        self.form1.mainloop()
+
+app = Applicazione()
+app.start()
+</pre>
+
+
+  <br>
+  <div style="text-align: center;">
+  <img alt="" src="./Note GUI Tkinter_files/form1.gif" style="max-width:100%">
+  </div>
+  <br>
+
+
+
+  <br>
+  <br>
+  <h2> Frame di grandezza fissa o elastici</h2>
+  Normalmente un frame è un oggetto "elastico", può estendersi per
+  accettare elementi interni più grandi, ma può anche
+  "collassare" attorno agli oggetti, se vengono inseriti in esso con
+  i metodi di posizionamento pack e grid. Nell'esempio precedente si
+  vedono 4 frames rettangolari di identiche dimensioni (specificate
+  per ciascuno con width e height). Le dimensioni visualizzate sono
+  quelle volute perchè i frames non contengono nulla.
+  Provando ad inserire un qualsiasi widget al loro interno, e a
+  posizionarlo con i metodi pack o grid, i frames si restringono
+  alle dimensioni del contenuto, e la finestra si restringe
+  eventualmente alle dimensioni residue dei frames. 
+  <br>
+<pre>        self.frame1 = tk.Frame(self.form1)
+        self.frame2 = tk.Frame(self.form1)
+        self.frame3 = tk.Frame(self.form1)
+        self.frame4 = tk.Frame(self.form1)
+
+        self.bottone1 = tk.Button(self.frame1, text=<span class="str">"PULSANTE"</span>)
+
+        self.frame1.configure(bg=<span class="str">"yellow"</span>, width=150, height=100)
+        self.frame2.configure(bg=<span class="str">"red"</span>,    width=150, height=100)
+        self.frame3.configure(bg=<span class="str">"blue"</span>,   width=150, height=100)
+        self.frame4.configure(bg=<span class="str">"green"</span>,  width=150, height=100)
+
+        self.frame1.grid(row=0, column=0)
+        self.frame2.grid(row=0, column=1)
+        self.frame3.grid(row=1, column=0)
+        self.frame4.grid(row=1, column=1)
+
+        self.bottone1.grid(row=0, column=0)
+</pre>  
+
+  <br>
+  <div style="text-align: center;">
+  <img alt="" src="./Note GUI Tkinter_files/form7.gif" style="max-width:100%"><br>
+  </div>
+  <br><br>
+  Per evitare questo si può usare il metodo grid_propagate(False): sul frame che vogliamo "bloccare". 
+  <br>
+<pre>        self.frame1.grid_propagate(False)
+
+        self.frame1.grid(row=0, column=0)
+        self.frame2.grid(row=0, column=1)
+        self.frame3.grid(row=1, column=0)
+        self.frame4.grid(row=1, column=1)
+
+        self.bottone1.grid(row=0, column=0)
+</pre>
+  <br>
+  <div style="text-align: center;">
+  <img alt="" src="./Note GUI Tkinter_files/form8.gif" style="max-width:100%">
+  <br>
+  </div>
+
+<br>
+<br>
+Dalla versione 2.6 di Python in poi il metodo grid non centra più
+di default i widget nelle celle. Per fare questo bisogna scrivere:
+<pre>        self.frame1.grid_rowconfigure(0, weight=2)
+        self.frame1.grid_columnconfigure(0, weight=2)
+        self.bottone1.grid(row=0, column=0)
+</pre>
+<br>
+(Info tratte da: <a href="http://stackoverflow.com/questions/14946963/tkinter-grid-how-to-position-widgets-so-they-are-not-stuck-together">stackoverflow.com/questions/14946963</a>)
+
+
+  <br>
+  <br>
+  <br>
+  <br>
+  <h2>Gli attributi visivi comuni</h2>
+  <br>
+  <h3>Dimensioni</h3>
+  <div style="margin-left: 40px;">Sono specificate con width e height
+    (larghezza e altezza). Per oggetti non testuali come i Canvas e
+    i Frame le dimensioni si intendono in pixel, per oggetti
+    testuali come bottoni, listbox, label le dimensioni si intendono
+    in caratteri.<br>
+  </div>
+  <br>
+  <br>
+  <h3>Colore</h3>
+  <div style="margin-left: 40px;">Lo sfondo si identifica con bg, mentre il
+    primo piano, cioè il colore del testo, si identifica con fg.
+    <br>
+    I colori possono essere scritti con il loro nome ("yellow"
+    "blue" ecc) o specificandoli in RGB: bg="#FF0000"<br>
+  </div>
+  <br>
+  <br>
+  <h3>Bordi</h3>
+  <div style="margin-left: 40px;">I bordi hanno una dimensione
+    (spessore in pixel) specificato con bd=..., e uno stile
+    specificato con relief="stile". Gli stili possibili per i bordi
+    sono:<br>
+    <br>
+    <div style="text-align: center;">
+    <img alt="" src="./Note GUI Tkinter_files/tipibordi.gif" style="max-width:100%">
+    </div>
+    <br>
+  </div>
+  <br>
+  <h3>Testo</h3>
+  <div style="margin-left: 40px;">Molti widget (come bottoni e
+    label) possono rappresentare del testo. Lo stile del testo si
+    può specificare con
+    font = ("nomedelfont", dimensioni, "stile"). Per essere il più
+    possibile indipendenti dal sistema operativo usato si dovrebbero
+    specificare solo famiglie generiche come "serif", "monospace" ecc,
+    oppure caratteri comuni come "helvetica", "courier", "times" ecc. Lo stile può
+    essere: "normal", "bold", "roman", "italic", "underline", "overstrike".<br>
+<pre>self.label1 = tk.Label(self.form1, font=(<span class="str">"helvetica"</span>, 12, <span class="str">"bold"</span>))
+</pre>
+  </div>
+
+
+  <br>
+  <h3>Immagini</h3>
+  <div style="margin-left: 40px;">Alcuni widget, come label e bottoni, permettono di
+    rappresentare immagini al posto o assieme al testo. Si deve creare un oggetto 
+    PhotoImage e assegnarlo alla
+    proprietà image dei widget.<br>
+<pre>self.immagine1 = tk.PhotoImage(file=<span class="str">"logo.gif"</span>)
+self.bottone1.configure(image=self.immagine1)
+</pre>
+  </div>
+
+
+
+
+  <br>
+  <br>
+  <h2>Il posizionamento</h2>
+  <br>
+  <h3>La griglia</h3>
+  <div style="margin-left: 40px;">Il metodo grid permette di
+    posizionare ogni widget all'interno di una cella immaginaria di
+    una griglia creata sull'elemento genitore. Il metodo grid
+    applicato ai frames principali di una finestra li allinea in una
+    griglia relativa all'intera finestra, mentre grid applicato a
+    widget contenuti in un frame allinea questi widget su una
+    griglia interna a quel frame. Per posizionare un oggetto
+    è sufficiente indicare oggetto.grid(row=riga,
+    column=colonna). I valori di riga e colonna partono da zero.
+    <br>
+  </div>
+  
+  
+  
+  
+  
+  <br>
+  <br>
+  <h3>Celle estese su più righe o colonne</h3>
+  <div style="margin-left: 40px;">Può essere necessario
+    estendere un oggetto per più colonne o righe, in questo
+    caso, oltre ad indicare la sua cella, si indicano anche i
+    parametri rowspan = numerodirighe o columnspan = numerodicolonne.
+    <br>
+<pre>try: import Tkinter as tk                   <span class="com"># Py2</span>
+except ImportError: import tkinter as tk    <span class="com"># Py3</span>
+
+class Applicazione:
+
+    def __init__ (self):
+
+        self.form1 = tk.Tk()
+        self.form1.title(<span class="str">"Titolo finestra"</span>)
+        self.form1.resizable(False, False)
+
+        self.frame1 = tk.Frame(self.form1)
+        self.frame2 = tk.Frame(self.form1)
+        self.frame3 = tk.Frame(self.form1)
+
+        self.frame1.configure(bg=<span class="str">"yellow"</span>, width=150, height=100)
+        self.frame2.configure(bg=<span class="str">"red</span>",    width=150, height=100)
+        self.frame3.configure(bg=<span class="str">"blue</span>",   width=300, height=100)
+
+        self.frame1.grid(row=0, column=0)
+        self.frame2.grid(row=0, column=1)
+        self.frame3.grid(row=1, column=0, columnspan=2)
+
+    def start(self):
+        self.form1.mainloop()
+
+app = Applicazione()
+app.start()
+</pre>    
+   
+    <br>
+    <div style="text-align: center;">
+    <img alt="" src="./Note GUI Tkinter_files/form2.gif" style="max-width:100%"><br>
+    </div>
+    <br><br>
+<pre>        self.frame1.grid(row=0, column=0)
+        self.frame2.grid(row=0, column=1, rowspan=2)
+        self.frame3.grid(row=1, column=0)
+</pre>
+<br>
+
+    <br>
+    <div style="text-align: center;">
+    <img alt="" src="./Note GUI Tkinter_files/form3.gif" style="max-width:100%"><br>
+    </div>
+    <br>
+  </div>
+  
+  
+  
+  
+  
+  <br>
+  <br>
+  <h3>Padding</h3>
+  <div style="margin-left: 40px;">Ogni oggetto visuale dispone di
+    parametri per regolare il margine esterno (attorno all'oggetto)
+    o interno (tra il bordo e il contenuto). 
+    Con padx e pady regoliamo il padding esterno, con
+    ipadx e ipady quello interno. Il margine lasciato dal padding
+    esterno ha il colore di fondo dell'elemento genitore:<br>
+<pre>         self.frame1.grid(row=0, column=0, padx=10, pady=10)
+         self.frame2.grid(row=0, column=1, rowspan=2, padx=10, pady=10)
+         self.frame3.grid(row=1, column=0, padx=10, pady=10)
+</pre>
+    <br>
+    <div style="text-align: center;">
+    <img alt="" src="./Note GUI Tkinter_files/form4.gif" style="max-width:100%"><br>
+    </div>
+
+    <br>
+    <br>
+  </div>
+  <br>
+  <h3>Estensione</h3>
+  <div style="margin-left: 40px;">Con il parametro sticky possiamo
+    fare in modo che un frame si estenda per riempire lo spazio
+    vuoto nella finestra causato da frame vicini più grandi.
+    Sticky accetta come valori delle coordinate n (nord) s (sud) w
+    (ovest) e (est), anche combinate "ns" vuol dire estendi in tutto
+    lo spazio verticale, "ew" in tutto quello orizzontale, "nsew"
+    tutto attorno:<br>
+<pre>        self.frame1.grid(row=0, column=0, padx=10, pady=10)
+        self.frame2.grid(row=0, column=1, rowspan=2, padx=10, pady=10, sticky=<span class="str">"ns"</span>)
+        self.frame3.grid(row=1, column=0, padx=10, pady=10)
+</pre>
+    <br>
+    <div style="text-align: center;">
+    <img alt="" src="./Note GUI Tkinter_files/form5.gif" style="max-width:100%">
+    </div>
+    <br>
+    <br>
+  </div>
+
+  <br>
+  <br>
+  <h2> Label e pulsanti</h2>
+  Due widget molto comuni in un'interfaccia grafica sono
+  le Label (per rappresentare del testo o delle piccole immagini) e
+  i pulsanti (Button) da cliccare col mouse (anche loro possono
+  mostrare delle piccole immagini al loro interno). Nel seguente
+  esempio si crea una finestra dall'aspetto più classico
+  usando tre frames orizzontali. Il primo in alto contiene due
+  pulsanti (nella loro dichiarazione si indica che sono figli di
+  frame1), quello al centro ha il colore di fondo bianco e una label
+  (chiamata label1) che serve per mostrare un'immagine (nella
+  dichiarazione della label è indicato che è figlia di
+  frame2). La label è posizionata con grid, quindi il frame
+  deve essere "bloccato" per non collassare attorno alla label
+  stessa (frame2.grid_propagate(0)). Inoltre affinché non
+  venga visualizzato un bordo attorno all'immagine mostrata dalla
+  label, il bordo della label stessa deve essere impostato a 0 (bd=0).
+  Infine il frame in basso (frame3) contiene solo una label
+  testuale. L'immagine visualizzata dalla
+  label1 nel frame2 appare nel frame centrale in quanto va ricordato che grid si applica
+  riferendosi all'oggetto genitore, la label1 è figlia di frame2,
+  come frame2 è figlio di form1, quindi grid applicato sulla label1
+  si riferisce all'area di frame2, mentre grid applicato a frame2 si
+  rifersice all'area di form1, cioè all'intera finestra).<br>
+  <br>
+  
+<pre>try: import Tkinter as tk                   <span class="com"># Py2</span>
+except ImportError: import tkinter as tk    <span class="com"># Py3</span>
+
+class Applicazione:
+
+    def __init__ (self):
+
+        self.form1 = tk.Tk()
+        self.form1.resizable(False, False)
+
+
+        <span class="com"># Frame alto con pulsanti ---------------------------------------------</span>
+        self.frame1 = tk.Frame(self.form1, bd=1, relief=<span class="str">"raised"</span>)
+        self.frame1.grid(row=0, column=0, sticky=<span class="str">"we"</span>)
+
+        self.bottone1 = tk.Button(self.frame1, text=<span class="str">"Bottone1"</span>)
+        self.bottone1.grid(row=0, column=0, padx=4, pady=4)
+
+        self.bottone2 = tk.Button(self.frame1, text=<span class="str">"Bottone2"</span>)
+        self.bottone2.grid(row=0, column=1, pady=4)
+
+
+        <span class="com"># Frame centrale con immagine centrata --------------------------------</span>
+        self.frame2 = tk.Frame(
+            self.form1, height=300, width=400, 
+            bd=1, relief=<span class="str">"raised"</span>, bg=<span class="str">"white"</span>)
+        self.frame2.grid_propagate(False)
+        self.frame2.grid_rowconfigure(0, weight=2)
+        self.frame2.grid_columnconfigure(0, weight=2)
+        self.frame2.grid(row=1, column=0)
+
+        self.immagine1 = tk.PhotoImage(file=<span class="str">"bissio.gif"</span>)
+        self.label1 = tk.Label(self.frame2, image=self.immagine1, bd=0)
+        self.label1.grid(row=0, column=0)
+
+
+        <span class="com"># Frame basso con label -----------------------------------------------</span>
+        self.frame3 = tk.Frame(self.form1, bd=1, relief=<span class="str">"raised"</span>)
+        self.frame3.grid(row=2, column=0, sticky=<span class="str">"we"</span>)
+
+        self.label2 = tk.Label(self.frame3, text=<span class="str">"Barra di stato"</span>)
+        self.label2.grid(row=0, column=0, padx=4, pady=4)
+
+
+    def start(self):
+        self.form1.mainloop()
+
+app = Applicazione()
+app.start()
+</pre>  
+  <br>
+  <div style="text-align: center;">
+  <img alt="" src="./Note GUI Tkinter_files/form6.gif" style="max-width:100%">
+  </div>
+  <br>
+ 
+
+
+  <br>
+  <br>
+  <br>
+  <h2>Canvas</h2>
+  Il canvas è una superficie su cui creare oggetti grafici come
+  linee, poligoni, rettangoli, ovali, cerchi, testi, immagini  ecc. 
+  Ogni elemento grafico disegnato è un oggetto dotato di un identificatore 
+  interno al canvas e di proprietà modificabili (posizione, colori ecc).
+  Il canvas di tk non è un'area bitmap dove lavorare bit per bit, se serve
+  lavorare con i singoli bit si può usare un oggetto PhotoImage.
+  <br>  
+ 
+<pre>try: import Tkinter as tk                   <span class="com"># Py2</span>
+except ImportError: import tkinter as tk    <span class="com"># Py3</span>
+
+<span class="com"># Crea una finestra grafica 640x480</span>
+form1 = tk.Tk()
+form1.resizable(False,False)
+canvas1 = tk.Canvas(
+    form1, width=640, height=480, 
+    bg=<span class="str">"white"</span>, highlightthickness=0)
+canvas1.grid()
+form1.mainloop()
+</pre>
+L'area grafica utile è pari alle dimensioni impostate con width e height (il punto in alto
+a sinistra ha coordinate x e y pari a 0,0). Se non
+si imposta highlightthickness a zero, viene automaticamente disegnato un
+bordo di due pixel interno all'area grafica stessa.
+<br><br>
+I colori predefiniti sono "white", "black", "red", "green", "blue", "yellow", "cyan", "magenta" 
+(vedere anche <a href="http://infohost.nmt.edu/tcc/help/pubs/tkinter/colors.html">infohost.nmt.edu/tcc/help/pubs/tkinter/colors.html</a>)
+<br><br><br>
+
+<h3>Tracciare una linea o più segmenti</h3> (vedere anche <a href="http://infohost.nmt.edu/tcc/help/pubs/tkinter/create_line.html">infohost.nmt.edu/tcc/help/pubs/tkinter/create_line.html</a>):
+<pre>canvas1.create_line(x1, y1, x2, y2)
+</pre>
+<ul>
+<li>L'ultimo pixel della linea non viene disegnato.</li>
+<li>Con il parametro arrow="" si può aggiungere una freccia alle estremità della linea, arrow può essere "first", "last", "both".</li>
+<li>Il colore della riga è nero di default, si può cambiare con il parametro fill="colore"</li>
+<li>Con dash=1 la linea diventa tratteggiata.</li>
+<li>Con width  si imposta lo spessore della linea (default 1).</li>
+</ul>
+
+Il plottaggio di un singolo pixel si può simulare tracciando una riga lunga 2 pixel 
+(di cui solo il primo viene disegnato).
+
+
+<br><br>
+Se si usa una variabile per identificare un oggetto grafico, questo può essere modificato a runtime:
+<pre>identificatore = canvas1.create_line(2, 25, 101, 25, arrow=<span class="str">"both"</span>, dash=1)
+canvas1.itemconfigure(identificatore, fill=<span class="str">"red"</span>, width=3)
+canvas1.coords(identificatore, 2, 2, 101, 51)
+</pre>
+
+
+<br><br>
+<a href="http://stor.altervista.org/python/tk/prova7.html">Esempio</a> di tracciamento funzione animato:
+<br>
+<br>
+<div style="text-align: center;">
+<img alt="" src="./Note GUI Tkinter_files/prova7.png" style="max-width:100%">
+</div>
+<br>
+
+
+
+
+
+
+
+<br><br>
+<h3>Cancellare tutti gli oggetti dal canvas</h3>
+<pre>canvas1.delete(<span class="str">"all"</span>)
+</pre>
+
+
+
+<br><br>
+<h3>Ottenere lista identificatori di tutti gli oggetti dal canvas</h3> (gli id 
+sono numeri interi non necessariamente consecutivi):
+<pre>lista_id = canvas1.find_all()
+</pre>
+<br>
+<br>
+
+<h3>Esportare il canvas in formato postscript</h3>
+<pre>canvas1.postscript(
+    colormode=<span class="str">"color"</span>,
+    file=<span class="str">"nomefile.ps"</span>, 
+    rotate=False, x=2, y=2,
+    width=100, height=50)
+</pre>
+(Visualizzatore postscript online: <a href="http://view.samurajdata.se/">view.samurajdata.se/</a>)
+  
+
+  <br>
+  <br>
+  <br>
+  <br>
+  <h2>Metodi PhotoImage</h2>
+  È possibile leggere e modificare i singoli pixel di un oggetto PhotoImage tramite
+  i metodi get e put. Put nella forma più semplice accetta un colore specificato con una stringa RGB e una
+  coordinata x,y, mentre nel caso più complesso accetta un'intera stringa di colori suddivisa
+  in righe e colonne formattata con dei delimitatori {}.
+  <br>
+  <br>
+  <a href="http://stor.altervista.org/python/tk/es4.html">Esempio</a> di creazione di una semplice immagine 8x8 ingrandita con un fattore specificato
+  in una costante (SCALE). L'immagine viene posizionata all'interno di un canvas e ne viene periodicamente
+  cambiato il colore agendo direttamente sui pixel.
+  <br>
+  <br>
+  <div style="text-align: center;">
+  <img alt="" src="./Note GUI Tkinter_files/form9.png" style="max-width:100%">
+  </div>
+  <br>
+  <br>
+  (info tratte da: <a href="http://tkinter.unpythonic.net/wiki/PhotoImage">tkinter.unpythonic.net/wiki/PhotoImage</a>)<br>
+
+
+
+  <br>
+  <br>
+  <br>
+  <h2>Funzioni temporizzate</h2>
+  È possibile chiamare funzioni a tempo (metodo after), gestire gli
+  eventi pendenti (metodo update_idletasks), aggiornare un widget (metodo update):
+<pre>finestra.after(millisecondi, funzione)      <a href="http://stor.altervista.org/python/tk/es3.html">ESEMPIO</a>
+finestra.update_idletasks()
+widget.update()  
+</pre>  
+
+  <br>
+  (info tratte da: <a href="http://infohost.nmt.edu/tcc/help/pubs/tkinter/universal.html">infohost.nmt.edu/tcc/help/pubs/tkinter/universal.html</a>)
+
+
+
+
+<br>
+<br>
+<br>
+<h2>Rimuovere e riposizionare widget</h2>
+Un widget può essere rimosso visualmente dalla finestra (senza distruggerlo) con il metodo forget.
+Se ci si sono salvate preventivamente le informazioni di posizionamento è possibile rivisualizzarlo:
+<pre>info = widget.grid.info()
+widget.grid.forget()
+widget.grid(info)
+</pre> 
+
+
+
+
+ 
+<br>
+<br>
+<br>
+Può essere utile intercettare l'evento di chiusura per chiamare una funzione:<br>
+<pre>finestra.protocol(<span class="str">"WM_DELETE_WINDOW"</span>, funzione)        <a href="http://stor.altervista.org/python/tk/es1.html">ESEMPIO</a>     
+</pre>
+  <br>
+  (info tratte da: <a href="http://effbot.org/tkinterbook/tkinter-events-and-bindings.htm">effbot.org/tkinterbook/tkinter-events-and-bindings.htm</a>)<br>
+
+
+
+
+
+
+
+
+
+
+  <br>
+  <br>
+  <br>
+  <h2>Intercettare evento di chiusura</h2>
+  Una finestra si può chiudere da programma chiamando il metodo destroy o cliccando sulla X di chiusura:
+<pre>finestra.destroy()
+</pre> 
+ 
+  <br>
+  Può essere utile intercettare l'evento di chiusura per chiamare una funzione:<br>
+<pre>finestra.protocol(<span class="str">"WM_DELETE_WINDOW"</span>, funzione)        <a href="http://stor.altervista.org/python/tk/es1.html">ESEMPIO</a>     
+</pre>
+  <br>
+  (info tratte da: <a href="http://effbot.org/tkinterbook/tkinter-events-and-bindings.htm">effbot.org/tkinterbook/tkinter-events-and-bindings.htm</a>)<br>
+  <br>
+  <br>
+  <br>
+<a href="http://stor.altervista.org/python/tk/tkinter.html#" class="b_topper">↑</a>
+<br><br>
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+<!-- ****************************************************************************
+                             FINE DOCUMENTO
+***************************************************************************** -->
+<div class="footer">
+<span style="font-size: smaller;">By C.Fin 2008 - Ultimo aggiornamento pagina 5/5/2014</span>
+</div>
+
+
+</body></html>
