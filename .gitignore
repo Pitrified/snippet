@@ -19,4 +19,11 @@
 *.pdf
 *.run.xml
 *.toc
+*.md5
+
+*.png
+*.jpg
+
+*.html
+*.txt
 
