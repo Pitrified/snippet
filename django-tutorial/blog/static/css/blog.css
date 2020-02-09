@@ -6,7 +6,7 @@ header {
 header .page-header {
     background-color: #C25100;
     max-width: 960px;
-    padding: 20px 20px 20px 40px;
+    padding: 20px 20px 20px 20px;
     margin: 0 auto;
 }
 
@@ -22,7 +22,7 @@ header .page-header h1 a:active {
 
 .content {
     max-width: 960px;
-    padding: 20px 20px 20px 40px;
+    padding: 20px 20px 20px 20px;
     margin: 0 auto;
 }
 
