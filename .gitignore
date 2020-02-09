@@ -3,6 +3,8 @@
 *.o
 *.out
 
+*.txt
+
 # all the latex
 *.aux
 *.auxlock
