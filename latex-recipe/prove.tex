@@ -1,0 +1,145 @@
+\documentclass[a4paper,11pt]{book}
+\usepackage{import}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[italian]{babel}
+
+\usepackage{lipsum}
+\usepackage{enumitem} % more control over lists: stackoverflow.com/a/4974583
+\usepackage{indentfirst} % YES indent after section/chapter heading
+
+\usepackage{wrapfig}
+\usepackage{adjustbox}
+
+\newlength{\strutheight}
+\settoheight{\strutheight}{\strut}
+
+\usepackage{hyperref}	% enable hyperlinks to referenced elements
+\hypersetup{
+	colorlinks=true,
+	linkcolor=cyan,
+	citecolor=cyan,
+    linkcolor=cyan,
+    filecolor=magenta,
+    urlcolor=blue,
+}
+\urlstyle{same}
+
+\begin{document}
+
+\chapter{Prove ingredienti}
+
+\section{Crostata}
+
+\subsection{Prima soluzione}
+
+Proposta \url{https://tex.stackexchange.com/a/387324} qua.
+
+\begin{adjustbox}{valign=T,raise=\strutheight,minipage={1.0\linewidth}}
+    \begin{wrapfigure}{c}{0.55\linewidth}
+        \begin{itemize}
+            \item 300g farina
+            \item 150g zucchero
+            \item 100g burro
+            \item 2 uova
+            \item mezza bustina di lievito
+            \item marmellata a piacere
+        \end{itemize}
+    \end{wrapfigure}% 
+%
+\lipsum[1]
+\end{adjustbox}  
+
+Per fare una crostata bla bla bla
+\lipsum[2]
+
+Succedono cose ssssstrane alla fine della box
+ 
+\subsection{Seconda soluzione}
+
+\begin{wrapfigure}{c}{0.55\linewidth}
+    \begin{itemize}
+        \item[--] 300g farina
+        \item[--] 150g zucchero
+        \item[--] 100g burro
+        \item[--] 2 uova
+        \item[--] mezza bustina di lievito
+        \item[--] marmellata a piacere
+    \end{itemize}
+\end{wrapfigure}% boh c'era quando l'ho copiato
+
+Mescolate zucchero e uova
+
+Aggiungete il burro, eventualmente scaldato leggermente per semplicit\`a
+
+Mescolate mezza bustina di lievito nella farina, ed aggiungetela mano a mano all'impasto, avendo cura di eliminare tutti i grumi
+
+Per rendere la pasta pi\`u facile da maneggiare, la si pu\`o far riposare in frigo, coperta, per un quarto d'ora
+
+Stendere la pasta sul fondo di una tortiera, creare un bordo con un rotolino di pasta;
+Spalmate la marmellata;
+Coprite la crostata con la tipica griglia, la pasta dovrebbe bastare per 6-8 rotoli
+
+\subsection{Terza soluzione}
+
+Testo per forzare il wrap
+\begin{wrapfigure}{c}{0.55\linewidth}
+    \begin{itemize}
+        \item 300g farina
+        \item 150g zucchero
+        \item 100g burro
+        \item 2 uova
+        \item mezza bustina di lievito
+        \item marmellata a piacere
+    \end{itemize}
+\end{wrapfigure}% boh c'era quando l'ho copiato
+\begin{enumerate}
+    \item Mescolate zucchero e uova
+    \item Aggiungete il burro, eventualmente scaldato leggermente per semplicit\`a
+    \item Mescolate mezza bustina di lievito nella farina, ed aggiungetela mano a mano all'impasto, avendo cura di eliminare tutti i grumi
+    \item Per rendere la pasta pi\`u facile da maneggiare, la si pu\`o far riposare in frigo, coperta, per un quarto d'ora
+    \item Stendere la pasta sul fondo di una tortiera, creare un bordo con un rotolino di pasta;
+        Spalmate la marmellata;
+        Coprite la crostata con la tipica griglia, la pasta dovrebbe bastare per 6-8 rotoli
+\end{enumerate}
+
+Succedono cose ancora pi\`u strane
+
+\subsection{Quarta soluzione}
+
+\textbf{Ingredienti:}
+
+\emph{Per la pasta}
+% \begin{itemize}[noitemsep,parsep=0pt,partopsep=0pt,topsep=0pt]
+% \begin{itemize}[noitemsep]
+\begin{itemize}[itemsep=1pt]
+% \begin{itemize}
+    \item[--] 300g farina
+    \item[--] 150g zucchero
+    \item[--] 100g burro
+    \item[--] 2 uova
+    \item[--] mezza bustina di lievito
+    \item[--] marmellata a piacere
+\end{itemize}
+
+\emph{Per la marmellata}
+\begin{itemize}[itemsep=1pt]
+    \item[--] 1kg albicocche
+    \item[--] 350g zucchero
+    \item[--] una bustina di pecina
+\end{itemize}
+
+\textbf{Procedimento:}
+
+Mescolate zucchero e uova;
+Aggiungete il burro, eventualmente scaldato leggermente per semplicit\`a
+
+Mescolate mezza bustina di lievito nella farina, ed aggiungetela mano a mano all'impasto, avendo cura di eliminare tutti i grumi
+
+Per rendere la pasta pi\`u facile da maneggiare, la si pu\`o far riposare in frigo, coperta, per un quarto d'ora
+
+Stendere la pasta sul fondo di una tortiera, creare un bordo con un rotolino di pasta;
+Spalmate la marmellata;
+Coprite la crostata con la tipica griglia, la pasta dovrebbe bastare per 6-8 rotoli
+\end{document}
