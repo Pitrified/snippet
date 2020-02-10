@@ -19,7 +19,7 @@ header .page-header h1 a:active {
     text-decoration: none;
 }
 
-span .glyphicon .glyphicon-plus {
+header .page-header .span .glyphicon .glyphicon-plus {
     display: inline-block;
 }
 
