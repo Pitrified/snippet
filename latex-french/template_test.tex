@@ -1,0 +1,231 @@
+\documentclass[a4paper,11pt,oneside]{book}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+\usepackage{lipsum}
+
+\usepackage{enumitem} % more control over lists: stackoverflow.com/a/4974583
+\usepackage{indentfirst} % YES indent after section/chapter heading
+\usepackage{multirow}
+
+\usepackage{hyperref}	% enable hyperlinks to referenced elements
+\hypersetup{
+	colorlinks=true,
+	linkcolor=cyan,
+	citecolor=cyan,
+    linkcolor=cyan,
+    filecolor=magenta,
+    urlcolor=blue,
+}
+\urlstyle{same}
+
+% magic headers
+\usepackage{fancyhdr}
+\makeatletter
+\pagestyle{fancy}
+\lhead{\@title}
+\chead{}
+\rhead{}
+% https://tex.stackexchange.com/a/340126
+% \lfoot{\if@mainmatter Chapter \thechapter\fi}
+% \lfoot{\if@mainmatter Section \thesection\fi}
+\lfoot{\if@mainmatter \rightmark\fi}
+\cfoot{\@author}
+\rfoot{\thepage}
+\makeatother 
+
+\title{Template for a grammar book}
+\author{Pietro}
+\date{February 2020}
+
+\newcommand{\phrasea}[2]{\noindent#1\\#2}
+\newcommand{\phraseb}[2]{\noindent\textbf{#1}\\#2}
+\newcommand{\phrasec}[2]{\noindent\textbf{#1}\\\textit{#2}}
+\newcommand{\phrased}[2]{\noindent\textbf{#1}\\\-\hspace{0.5cm}\textit{#2}}
+\newcommand{\phrasee}[2]{\noindent\textbf{#1}\\*\-\hspace{0.5cm}\textit{#2}}
+
+\newcommand{\verbconja}[8]{
+\begin{tabular}{rl}
+#1 & #2 \\ 
+je & #3 \\  
+tu & #4 \\
+il/elle & #5 \\  
+nous & #6 \\  
+vous & #7 \\  
+ils/elles & #8  
+\end{tabular}
+}
+\newcommand{\verbconjb}[8]{
+\begin{center}
+\begin{tabular}{rl}
+#1 & #2 \\ 
+je & #3 \\  
+tu & #4 \\
+il/elle & #5 \\  
+nous & #6 \\  
+vous & #7 \\  
+ils/elles & #8  
+\end{tabular}
+\end{center}
+}
+\newcommand{\verbconjc}[8]{
+\begin{center}
+\begin{tabular}{rl}
+#1 & \MakeUppercase{#2} \\ 
+je & #3 \\  
+tu & #4 \\
+il/elle & #5 \\  
+nous & #6 \\  
+vous & #7 \\  
+ils/elles & #8  
+\end{tabular}
+\end{center}
+}
+\newcommand{\verbconjd}[8]{
+\begin{tabular}{rl}
+#1 & \MakeUppercase{#2} \\ 
+% #1 & #2 \\ 
+je & \textbf{#3} \\  
+tu & \textbf{#4} \\
+il/elle & \textbf{#5} \\  
+nous & \textbf{#6} \\  
+vous & \textbf{#7} \\  
+ils/elles & \textbf{#8}  
+\end{tabular}
+}
+
+\newcommand{\noundecla}[4]{
+\begin{tabular}{rcc}
+ & masculine & feminine \\
+sing. & #1 & #2 \\
+plur. & #3 & #4
+\end{tabular}
+}
+\newcommand{\noundeclb}[4]{
+\begin{center}
+\begin{tabular}{rcc}
+ & masculine & feminine \\
+sing. & #1 & #2 \\
+plur. & #3 & #4
+\end{tabular}
+\end{center}
+}
+\newcommand{\noundeclc}[4]{
+\begin{tabular}{rcc}
+ & masculine & feminine \\
+ sing. & \textbf{#1} & \textbf{#2} \\
+ plur. & \textbf{#3} & \textbf{#4}
+\end{tabular}
+}
+
+\newcommand{\noundecltra}[8]{
+\begin{tabular}{rcc}
+ & masculine & feminine \\
+sing. & #1 & #2 \\
+& #3 & #4 \\
+plur. & #5 & #6 \\
+& #7 & #8
+\end{tabular}
+}
+\newcommand{\noundecltrb}[8]{
+\begin{tabular}{rcc}
+ & masculine & feminine \\
+sing. & #1 & #2 \\
+& \textit{#3} & \textit{#4} \\
+plur. & #5 & #6 \\
+& \textit{#7} & \textit{#8}
+\end{tabular}
+}
+\newcommand{\noundecltrc}[8]{
+\begin{tabular}{rcc}
+ & masculine & feminine \\
+ sing. & \textbf{#1} & \textbf{#2} \\
+& \textit{#3} & \textit{#4} \\
+plur. & \textbf{#5} & \textbf{#6} \\
+& \textit{#7} & \textit{#8}
+\end{tabular}
+}
+\newcommand{\noundecltrd}[8]{
+\begin{tabular}{rcc}
+ & masculine & feminine \\
+ \multirow{2}{*}{sing.} & \textbf{#1} & \textbf{#2} \\
+& \textit{#3} & \textit{#4} \\
+ \multirow{2}{*}{plur.} & \textbf{#5} & \textbf{#6} \\
+& \textit{#7} & \textit{#8}
+\end{tabular}
+}
+
+\newcommand{\noundefa}[4]{#1 (#3) (pl. #2): #4}
+\newcommand{\noundefb}[4]{\textbf{#1} (#3) (pl. #2): \textit{#4}}
+\newcommand{\noundefc}[5]{#1 \textbf{#2} (#4) (pl. #3): \textit{#5}}
+\newcommand{\noundefd}[4]{#3 \textbf{#1} (pl. #2): \textit{#4}}
+
+\begin{document}
+ 
+\frontmatter
+
+\maketitle
+
+\tableofcontents
+
+\mainmatter
+
+\chapter{First castle}
+
+\section{Phrase example}
+
+\phrasea{Je m'appelle Pierre}{My name is Peter}\\
+\phraseb{Je m'appelle Pierre}{My name is Peter}\\
+\phrasec{Je m'appelle Pierre}{My name is Peter}\\
+\phrased{Je m'appelle Pierre}{My name is Peter}
+
+\section{Verb conjugation example}
+
+\verbconja{Présent}{Boire}{bois}{bois}{boit}{buvons}{buvez}{boivent}
+\verbconjb{Présent}{Boire}{bois}{bois}{boit}{buvons}{buvez}{boivent}
+\verbconjc{Présent}{Boire}{bois}{bois}{boit}{buvons}{buvez}{boivent}
+
+\begin{center}
+\verbconja{Présent}{Boire}{bois}{bois}{boit}{buvons}{buvez}{boivent}
+\quad
+\verbconjd{Présent}{Boire}{bois}{bois}{boit}{buvons}{buvez}{boivent}
+\end{center}
+
+\section{Noun declension example}
+
+\subsection{All four combinations}
+
+\noundecla{étudiant}{étudiante}{étudiants}{étudiantes}
+
+\begin{center}
+\noundeclc{étudiant}{étudiante}{étudiants}{étudiantes}
+\end{center}
+
+\noundeclb{étudiant}{étudiante}{étudiants}{étudiantes}
+
+\begin{center}
+\noundecltra{celui-ci}{celle-ci}{this one}{this one}{ceux-ci}{celles-ci}{these ones}{these ones}
+\quad
+\noundecltrb{celui-là}{celle-là}{that one}{that one}{ceux-là}{celles-là}{those ones}{those ones}
+\end{center}
+
+\noundecltrc{celui-là}{celle-là}{that one}{that one}{ceux-là}{celles-là}{those ones}{those ones}
+
+\noundecltrd{celui-là}{celle-là}{that one}{that one}{ceux-là}{celles-là}{those ones}{those ones}
+
+\subsection{Noun definition}
+
+\noundefa{voiture}{voitures}{f}{car}
+
+\noundefb{voiture}{voitures}{f}{car}
+
+\noundefc{une}{voiture}{voitures}{f}{car}
+
+\noundefd{voiture}{voitures}{une}{car}
+
+
+
+
+\end{document}
+

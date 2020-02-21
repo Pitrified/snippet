@@ -1,0 +1,366 @@
+\documentclass[a4paper,11pt,oneside]{book}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+\usepackage{lipsum}
+
+\usepackage{enumitem} % more control over lists: stackoverflow.com/a/4974583
+% \usepackage{indentfirst} % indent after section/chapter heading
+\usepackage{multirow}
+
+% do not include subsection in in the toc
+\setcounter{tocdepth}{1}
+
+\usepackage{hyperref}	% enable hyperlinks to referenced elements
+\hypersetup{
+	colorlinks=true,
+	linkcolor=cyan,
+	citecolor=cyan,
+    linkcolor=cyan,
+    filecolor=magenta,
+    urlcolor=blue,
+}
+\urlstyle{same}
+
+% magic headers
+\usepackage{fancyhdr}
+\makeatletter
+\pagestyle{fancy}
+\lhead{\@title}
+\chead{}
+\rhead{}
+% https://tex.stackexchange.com/a/340126
+% \lfoot{\if@mainmatter Chapter \thechapter\fi}
+% \lfoot{\if@mainmatter Section \thesection\fi}
+\lfoot{\if@mainmatter \rightmark\fi}
+\cfoot{\@author}
+\rfoot{\thepage}
+\makeatother 
+
+\title{French lessons}
+\author{Pietro}
+\date{February 2020}
+
+
+%%%%% COMMANDS %%%%%
+
+%% phrases %%
+\newcommand{\phrase}[2]{\noindent\textbf{#1}\\*\-\hspace{0.5cm}\textit{#2}\\}
+
+%% verbs %%
+
+\newcommand{\verbconj}[8]{
+\begin{tabular}{rl}
+#1 & \MakeUppercase{#2} \\ 
+je & \textbf{#3} \\  
+tu & \textbf{#4} \\
+il/elle & \textbf{#5} \\  
+nous & \textbf{#6} \\  
+vous & \textbf{#7} \\  
+ils/elles & \textbf{#8}  
+\end{tabular}
+}
+
+\newcommand{\verbconjcol}[7]{
+\begin{tabular}{l}
+\MakeUppercase{#1} \\ 
+\textbf{#2} \\  
+\textbf{#3} \\
+\textbf{#4} \\  
+\textbf{#5} \\  
+\textbf{#6} \\  
+\textbf{#7}  
+\end{tabular}
+}
+
+%% nouns %%
+
+% declension with MFxSP
+\newcommand{\noundecl}[4]{
+\begin{tabular}{rcc}
+ & masculine & feminine \\
+ sing. & \textbf{#1} & \textbf{#2} \\
+ plur. & \textbf{#3} & \textbf{#4}
+\end{tabular}
+}
+
+% declension with MFxSP and translations
+\newcommand{\noundecltr}[8]{
+\begin{tabular}{rcc}
+ & masculine & feminine \\
+ \multirow{2}{*}{sing.} & \textbf{#1} & \textbf{#2} \\
+& \textit{#3} & \textit{#4} \\
+ \multirow{2}{*}{plur.} & \textbf{#5} & \textbf{#6} \\
+& \textit{#7} & \textit{#8}
+\end{tabular}
+}
+
+% definition
+\newcommand{\noundef}[4]{\textbf{#1} (#3) (pl. #2): \textit{#4}\\}
+% \newcommand{\noundef}[4]{#3 \textbf{#1} (pl. #2): \textit{#4}}
+
+
+% sections
+% \newcommand{\lexicon}{\subsection{Lexicon}}
+\newcommand{\lexicon}{\subsection{Vocabulary}}
+\newcommand{\phrases}{\subsection{Phrases}}
+\newcommand{\nouns}{\subsubsection{Nouns}}
+\newcommand{\adjectives}{\subsubsection{Adjectives}}
+
+% idiomax.com copia bene i verbi
+% coniugazione.reverso.net indica il verbo di modello
+
+\begin{document}
+ 
+\frontmatter
+
+\maketitle
+
+\tableofcontents
+
+\mainmatter
+
+\chapter{Grammar and vocabulary}
+
+\section{Grammar}
+
+\subsection{Adjectives}
+
+French adjectives usually come after the noun they’re describing.
+
+\subsection{Preposition}
+
+\subsubsection{Space}
+
+French has two words for in. Use \textbf{à} with cities but \textbf{en} with many countries.
+
+\section{Time}
+
+\subsubsection{Days}
+
+\subsubsection{Months}
+
+\subsubsection{Seasons}
+
+\section{Nouns}
+
+\subsubsection{Countries}
+
+% MAYBE in a group on top
+spain
+england
+
+\chapter{First castle}
+
+\section{Basics 1}
+
+\noundef{chat}{chats}{m}{cat}
+\noundef{cheval}{chevaux}{m}{horse}
+\noundef{chien}{chiens}{m}{dog}
+\noundef{croissant}{croissants}{m}{croissant}
+\noundef{femme}{femmes}{f}{woman, wife}
+\noundef{fille}{filles}{f}{girl, daughter}
+\noundef{garçon}{garçons}{m}{boy, young man, waiter}
+\noundef{homme}{hommes}{m}{man}
+\noundef{orange}{oranges}{f}{orange}
+\noundef{pizza}{pizzas}{f}{pizza}
+
+\phrase{C'est un chien.}{It's a dog.}
+\phrase{Tu es Alice?}{Are you Alice?}
+\phrase{Tu es un chat.}{You are a cat.}
+\phrase{Je suis un homme.}{I am a man.}
+\phrase{Paul mange un croissant.}{Paul is eating a croissant.}
+\phrase{Tu es un cheval?}{Are you a horse?}
+\phrase{Un garçon mange un croissant.}{A boy is eating a croissant.}
+
+\begin{center}
+\verbconj{Présent}{être}{suis}{es}{est}{sommes}{êtes}{sont}
+\verbconjcol{manger}{mange}{manges}{mange}{mangeons}{mangez}{mangent}
+\end{center}
+
+\section{Greetings}
+
+\phrase{Au revoir, bonne journée!}{Goodbye, have a good day!}
+\phrase{Au revoir, bonne soirée.}{Goodbye, have a good evening.}
+\phrase{Au revoir, à bientôt!}{Goodbye, see you soon!}
+\phrase{Bienvenue.}{Welcome.}
+\phrase{Bonjour Marie, enchanté.}{Good morning Marie, nice to meet you.}
+\phrase{Bonjour.}{Good day.}
+\phrase{Bonne nuit, Paul.}{Good night, Paul.}
+\phrase{Bonsoir, comment ça va?}{Good evening, how are you doing?}
+\phrase{Bonsoir.}{Good evening.}
+\phrase{Oui, et toi?}{Yes, and you?}
+\phrase{Oui, merci.}{Yes, thank you.}
+\phrase{Oui, ça va bien.}{Yes, I am doing well.}
+\phrase{Salut, bonne nuit!}{Bye, goodnight!}
+\phrase{Salut, bonne soirée.}{Bye, have a good evening.}
+\phrase{Salut, comment ça va?}{Hi, how are you?}
+\phrase{Salut, ça va?}{Hi, how are you?}
+\phrase{Salut.}{Hello.}
+\phrase{À demain!}{See you tomorrow!}
+\phrase{Ça va, et toi?}{I’m fine, and you?}
+
+\section{Basics 2}
+
+\begin{center}
+\noundecl{américain}{américaine}{américains}{américaines}
+\noundecl{anglais}{anglaise}{anglais}{anglaises}
+
+\noundecl{espagnol}{espagnole}{espagnols}{espagnoles}
+\noundecl{français}{française}{français}{françaises}
+
+\noundecl{mexicain}{mexicaine}{mexicains}{mexicaines}
+\end{center}
+
+\phrase{Duo est américain?}{Is Duo American?}
+\phrase{Excuse-moi, comment tu t'appelles?}{Excuse me, what is your name?}
+\phrase{Excuse-moi, tu parles français?}{Excuse me, do you speak French?}
+\phrase{Il parle anglais.}{He speaks English.}
+\phrase{Je m'appelle Julia.}{My name is Julia.}
+\phrase{Julia est mexicaine.}{Julia is Mexican.}
+\phrase{Marc est américain.}{Marc is American.}
+\phrase{Paul parle français.}{Paul speaks French.}
+
+\begin{center}
+\verbconj{Présent}{parler}{parle}{parles}{parle}{parlons}{parlez}{parlent}
+\end{center}
+
+\section{People}
+
+\noundef{hôpital}{hôpitaux}{m}{hospital}
+\noundef{journaliste}{journalistes}{m/f}{journalist, anchorman or anchorwoman, reporter}
+
+\phrase{J’habite à Paris.}{I live in Paris.}
+\phrase{Je travaille à Madrid. }{I work in Madrid.}
+\phrase{Je suis à Londres.}{I’m in London.}
+\phrase{J’habite en France.}{I live in France.}
+\phrase{Je travaille en Espagne.}{I work in Spain.}
+\phrase{Je suis en Angleterre.}{I’m in England.}
+\phrase{Elle est étudiante.}{She is a student.}
+\phrase{Non, merci.}{No, thank you.}
+\phrase{Oui, en Angleterre.}{Yes, in England.}
+\phrase{Paul est journaliste.}{Paul is a journalist.}
+\phrase{Tu habites à Bordeaux?}{Do you live in Bordeaux?}
+
+\begin{center}
+\verbconj{Présent}{travailler}{travaille}{travailles}{travaille}{travaillons}{travaillez}{travaillent}
+\verbconjcol{étudier}{étudie}{étudies}{étudie}{étudions}{étudiez}{étudient}
+\verbconjcol{habiter}{habite}{habites}{habite}{habitons}{habitez}{habitent}
+\end{center}
+
+\section{Travel}
+
+\noundef{passeport}{passeports}{m}{passport}
+\noundef{taxi}{taxis}{m}{taxi}
+\noundef{voiture}{voitures}{f}{car}
+\noundef{hôtel}{hôtels}{m}{hotel}
+\noundef{avion}{avions}{m}{plane}
+\noundef{billet}{billets}{m}{ticket, note, banknote}
+\noundef{restaurant}{restaurants}{m}{restaurant}
+\noundef{train}{trains}{m}{train}
+\noundef{aéroport}{aéroports}{m}{airport}
+
+\phrase{A croissant, please.}{Un croissant, s'il vous plaît.}
+\phrase{C'est un avion français.}{It is a French plane.}
+\phrase{C'est une valise.}{It is a suitcase.}
+\phrase{C'est une valise.}{It is a suitcase?}
+\phrase{Elle a un billet d'avion.}{She has a plane ticket.}
+\phrase{Elle va à l'hôtel.}{She is going to the hotel.}
+\phrase{Il va à la gare.}{He is going to the train station.}
+\phrase{Je prends la voiture.}{I am taking the car.}
+\phrase{Je vais à Montréal.}{I am going to Montreal.}
+\phrase{Où est la gare, s'il vous plaît ?}{Where is the train station, please?}
+\phrase{Tu as un billet d'avion ?}{Do you have a plane ticket?}
+\phrase{Tu prends l'avion?}{Are you taking the plane?}
+\phrase{Tu prends une valise ?}{Are you taking a suitcase?}
+\phrase{Tu vas à la gare en taxi ?}{Are you going to the train station by taxi?}
+
+\begin{center}
+\verbconj{Présent}{aller}{vais}{vas}{va}{allons}{allez}{vont}
+\verbconjcol{avoir}{ai}{as}{a}{avons}{avez}{ont}
+\end{center}
+
+\section{Family}
+\section{Activities}
+\section{People 2}
+\section{Family 2}
+\section{Restaurant}
+
+\chapter{Second castle}
+
+\section{City}
+
+\lexicon
+
+\noundef{hôpital}{hôpitaux}{m}{hospital}
+\noundef{pharmacie}{pharmacies}{f}{pharmacy, drugstore}
+\noundef{plante}{plantes}{f}{plant}
+\noundef{supermarché}{supermarchés}{m}{supermarket}
+\noundef{vert}{verts}{m}{green}
+\noundef{ville}{villes}{f}{city}
+
+\noundecl{vert}{verte}{verts}{vertes}
+
+\phrases
+
+\phrase{Il est au supermarché.}{He is at the supermarket.}
+\phrase{Il mange de la salade verte.}{He is eating green salad.}
+\phrase{Je suis dans la pharmacie.}{I am in the pharmacy.}
+\phrase{La maison est petite.}{The house is small.}
+\phrase{Le cinéma est ouvert.}{The movie theater is open.}
+\phrase{Le magasin est fermé.}{The store is closed.}
+\phrase{Les universités sont grandes.}{The universities are big.}
+\phrase{Les voitures sont grandes.}{The cars are big.}
+\phrase{Les écoles sont grandes.}{The schools are big.}
+\phrase{Où est l'hôpital?}{Where is the hospital?}
+
+\section{Travel 2}
+\section{At Home}
+\section{At Work}
+\section{Food}
+\section{Habits}
+\section{Shopping}
+\section{People 3}
+\section{City 2}
+\section{Friends}
+\section{People 4}
+\section{At Home 2}
+\section{Travel 3}
+\section{Activities}
+\section{Breakfast}
+\section{Vacation}
+\section{School}
+\section{At Work 2}
+\section{Hotel}
+\section{Routine}
+\section{Weather}
+\section{People 5}
+
+\chapter{Third castle}
+
+\section{Sensations}
+\section{Groceries}
+\section{Shopping 2}
+\section{City 3}
+\section{Routine 2}
+\section{Leisure}
+\section{Opinion}
+\section{Friends 2}
+\section{Nature}
+\section{Family 3}
+\section{School 2}
+\section{Food 2}
+\section{Routine 3}
+\section{Travel 4}
+\section{Health}
+\section{Housing}
+\section{At Work 3}
+\section{Memories}
+\section{Leisure 2}
+\section{At Home 3}
+\section{Travel 5}
+
+
+\end{document}
+
