@@ -108,8 +108,7 @@ ils/elles & \textbf{#8}
 \newcommand{\nouns}{\subsubsection{Nouns}}
 \newcommand{\adjectives}{\subsubsection{Adjectives}}
 
-% idiomax.com copia bene i verbi
-% coniugazione.reverso.net indica il verbo di modello
+\newcommand{\outref}[1]{\url{#1}}
 
 \begin{document}
  
@@ -133,7 +132,27 @@ French adjectives usually come after the noun they’re describing.
 
 \subsubsection{Space}
 
-French has two words for in. Use \textbf{à} with cities but \textbf{en} with many countries.
+French has several words for in.
+Use \textbf{à} with cities but \textbf{en} with many countries
+(more info on countries and cities: \outref{https://forum.wordreference.com/threads/countries-pays.229586/}).
+
+% TODO
+a le
+a au aux
+
+
+\textbf{En} is used for transportation.
+Je vais au Canada \textbf{en} avion; Je voyage \textbf{en} Europe \textbf{en} train.
+\textbf{En} is also used for time when you're saying how long it takes to do something.
+Je peux construire une maison \textbf{en} 6 mois.
+It is also used for months, years, and seasons (except printemps which uses au).
+
+\textbf{Dans} is used when you are literally in something.
+Tu peux être \textbf{dans} le bus, \textbf{dans} l'avion, \textbf{dans} un bar, \textbf{dans} une maison.
+% Les choses et les gens peuvent être dans un état.
+\textbf{Dans} is also used for time when you're saying when something in the future will happen.
+J'arrive \textbf{dans} un quart d'heure (I'll be there in 15 minutes).
+
 
 \section{Time}
 
@@ -143,11 +162,43 @@ French has two words for in. Use \textbf{à} with cities but \textbf{en} with ma
 
 \subsubsection{Seasons}
 
+\section{Pronouns}
+
+\subsection{Possessive}
+Possessive adjectives (\textit{les adjectifs possessifs}) in French are used to signify that one person or thing belongs to another and are usually placed in front of the noun they refer to. 
+French possessive adjectives change depending on the gender of the noun they're describing.
+
+\begin{center}
+\noundecl{mon}{ma}{mes}{mes}
+\noundecl{ton}{ta}{tes}{tes}
+
+\noundecl{son}{sa}{ses}{ses}
+\noundecl{notre}{notre}{nos}{nos}
+
+\noundecl{votre}{votre}{vos}{vos}
+\noundecl{leur}{leur}{leurs}{leurs}
+\end{center}
+
+Note that \textbf{mon}, \textbf{ton} and \textbf{son} are used before feminine nouns or adjectives beginning with a vowel or silent h.
+
+Possessive pronouns can substitute a noun (\textit{le pronom possessif}), that has generally been mentioned before, and change according to the noun they substitute.
+
+\phrase{Ce n’est pas mon chapeau, c’est \emph{le sien}.}{It's not my hat, it's hers.}
+
+
+\noundecl{le mien}{la mienne}{les miens}{les miennes}
+\noundecl{le tien}{la tienne}{les tiens}{les tiennes}
+
+\noundecl{le sien}{la sienne}{les siens}{les siennes}
+\noundecl{le nôtre}{la nôtre}{les nôtres}{les nôtres}
+
+\noundecl{le vôtre}{la vôtre}{les vôtres}{les vôtres}
+\noundecl{le leur}{la leur}{les leurs}{les leurs}
+
 \section{Nouns}
 
 \subsubsection{Countries}
 
-% MAYBE in a group on top
 spain
 england
 
@@ -282,10 +333,101 @@ england
 \end{center}
 
 \section{Family}
+
+\noundef{animal de compagnie}{animaux de compagnie}{m}{pet}
+\noundef{chouette}{chouettes}{f}{owl}
+\noundef{famille}{familles}{f}{family}
+\noundef{fille}{filles}{f}{daughter}
+\noundef{fils}{fils}{m}{son}
+\noundef{frère}{frères}{m}{brother}
+\noundef{grand-mère}{grand-mères}{f}{grandmother}
+\noundef{grand-père}{grand-pères}{m}{grandfather}
+\noundef{jardin}{jardins}{m}{garden}
+\noundef{maison}{maisons}{f}{house}
+\noundef{mari}{maris}{m}{husband}
+\noundef{mère}{mères}{f}{mother}
+\noundef{père}{pères}{m}{father}
+\noundef{sœur}{sœurs}{f}{sister}
+
+\phrase{Duo est une chouette.}{Duo is an owl.}
+\phrase{J'ai une chouette.}{I have an owl.}
+\phrase{Ma famille habite en France.}{My family lives in France.}
+\phrase{Ma fille est française.}{My daughter is French.}
+\phrase{Marc habite avec sa mère.}{Marc lives with his mother.}
+\phrase{Mon fils habite en France.}{My son lives in France.}
+\phrase{Paul veut un animal de compagnie.}{Paul wants a pet.}
+\phrase{Sa grand-mère est mexicaine.}{His grandmother is Mexican.}
+\phrase{Ton frère est américain.}{Your brother is American.}
+\phrase{Ton mari va bien ?}{Is your husband doing well?}
+\phrase{Ton père va bien ?}{Is your father doing well?}
+\phrase{Tu as un animal de compagnie ?}{Do you have a pet?}
+\phrase{Tu vas très bien.}{You are doing very well.}
+\phrase{Une maison avec un jardin.}{A house with a garden.}
+\phrase{Vous avez une fille?}{Do you have a daughter?}
+
+\begin{center}
+\verbconj{Présent}{vouloir}{veux}{veux}{veut}{voulons}{voulez}{veulent}
+\end{center}
+
 \section{Activities}
+
+\noundef{banque}{banques}{f}{bank}
+\noundef{boulangerie}{boulangeries}{f}{bakery}
+\noundef{bus}{bus}{m/f}{bus}
+\noundef{chocolat}{chocolats}{m}{chocolate}
+\noundef{livre}{livres}{m}{book}
+\noundef{musique}{musiques}{f}{music}
+\noundef{métro}{métros}{m}{subway, underground}
+\noundef{zoo}{zoos}{m}{zoo}
+\noundef{école}{écoles}{f}{school}
+
+
+\phrase{Je vais au travail en métro.}{I go to work by subway.}
+\phrase{Je vais à la banque en voiture.}{I am going to the bank by car.}
+\phrase{Nous aimons Duo.}{We like Duo.}
+\phrase{Nous aimons lire.}{We like to read.}
+\phrase{Nous allons à l'hôtel.}{We are going to the hotel.}
+\phrase{Nous allons à la boulangerie.}{We are going to the bakery.}
+\phrase{Nous avons un chat.}{We have a cat.}
+\phrase{Nous habitons en France.}{We live in France.}
+\phrase{Nous habitons en France.}{We live in France.}
+\phrase{Nous mangeons un croissant.}{We are eating a croissant.}
+\phrase{Nous sommes à la banque.}{We are at the bank.}
+\phrase{Nous voulons lire un livre.}{We want to read a book.}
+\phrase{Nous voulons une pizza.}{We want a pizza.}
+\phrase{Tu prends le métro ?}{Do you take the subway?}
+\phrase{Tu veux un chat ?}{Do you want a cat?}
+\phrase{Tu veux une orange ?}{Do you want an orange?}
+
+\begin{center}
+\verbconj{Présent}{lire}{lis}{lis}{lit}{lisons}{lisez}{lisent}
+\end{center}
+
 \section{People 2}
+
+\noundef{professeur}{professeurs}{m}{teacher, professor}
+
+\phrase{Elles ont deux voitures.}{They have two cars.}
+\phrase{Elles parlent anglais.}{They speak English.}
+\phrase{Il a trois chats.}{He has three cats.}
+\phrase{Ils mangent deux pizzas.}{They eat two pizzas. / They are eating two pizzas.}
+\phrase{Ils ont un chat.}{They have a cat.}
+\phrase{Ils étudient le français.}{They study French.}
+\phrase{Je mange beaucoup.}{I eat a lot.}
+\phrase{Les filles sont étudiantes.}{The girls are students.}
+\phrase{Les professeurs habitent ici.}{The professors live here.}
+
+\begin{center}
+\verbconj{Présent}{prendre}{prends}{prends}{prend}{prenons}{prenez}{prennent}
+\end{center}
+
 \section{Family 2}
+
+
+
 \section{Restaurant}
+
+
 
 \chapter{Second castle}
 
@@ -364,3 +506,5 @@ england
 
 \end{document}
 
+% idiomax.com copia bene i verbi
+% coniugazione.reverso.net indica il verbo di modello
