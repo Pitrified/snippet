@@ -45,10 +45,11 @@
 
 %%%%% COMMANDS %%%%%
 
-%% phrases %%
+%%%% phrases %%%%
+
 \newcommand{\phrase}[2]{\noindent\textbf{#1}\\*\-\hspace{0.5cm}\textit{#2}\\}
 
-%% verbs %%
+%%%% verbs %%%%
 
 \newcommand{\verbconj}[8]{
 \begin{tabular}{rl}
@@ -74,7 +75,7 @@ ils/elles & \textbf{#8}
 \end{tabular}
 }
 
-%% nouns %%
+%%%% nouns/adjectives %%%%
 
 % declension with MFxSP
 \newcommand{\noundecl}[4]{
@@ -108,7 +109,12 @@ ils/elles & \textbf{#8}
 \newcommand{\nouns}{\subsubsection{Nouns}}
 \newcommand{\adjectives}{\subsubsection{Adjectives}}
 
+% styling links
 \newcommand{\outref}[1]{\url{#1}}
+
+% french phrases in esamples
+\newcommand{\frtext}[1]{\emph{#1}}
+
 
 \begin{document}
  
@@ -137,21 +143,21 @@ Use \textbf{à} with cities but \textbf{en} with many countries
 (more info on countries and cities: \outref{https://forum.wordreference.com/threads/countries-pays.229586/}).
 
 % TODO
-a le
-a au aux
+TODO a le a au aux
 
 
-\textbf{En} is used for transportation.
-Je vais au Canada \textbf{en} avion; Je voyage \textbf{en} Europe \textbf{en} train.
-\textbf{En} is also used for time when you're saying how long it takes to do something.
-Je peux construire une maison \textbf{en} 6 mois.
-It is also used for months, years, and seasons (except printemps which uses au).
+\frtext{\textbf{En}} is used for transportation.
+\frtext{Je vais au Canada \textbf{en} avion};
+\frtext{Je voyage \textbf{en} Europe \textbf{en} train.}
+\frtext{\textbf{En}} is also used for time when you're saying how long it takes to do something.
+\frtext{Je peux construire une maison \textbf{en} 6 mois.}
+It is also used for months, years, and seasons (except \frtext{printemps} which uses \frtext{\textbf{au}}).
 
-\textbf{Dans} is used when you are literally in something.
-Tu peux être \textbf{dans} le bus, \textbf{dans} l'avion, \textbf{dans} un bar, \textbf{dans} une maison.
+\frtext{\textbf{Dans}} is used when you are literally in something.
+\frtext{Tu peux être \textbf{dans} le bus, \textbf{dans} l'avion, \textbf{dans} un bar, \textbf{dans} une maison.}
 % Les choses et les gens peuvent être dans un état.
-\textbf{Dans} is also used for time when you're saying when something in the future will happen.
-J'arrive \textbf{dans} un quart d'heure (I'll be there in 15 minutes).
+\frtext{\textbf{Dans}} is also used for time when you're saying when something in the future will happen.
+\frtext{J'arrive \textbf{dans} un quart d'heure (I'll be there in 15 minutes).}
 
 
 \section{Time}
@@ -502,8 +508,6 @@ england
 
 \section{City}
 
-\lexicon
-
 \noundef{hôpital}{hôpitaux}{m}{hospital}
 \noundef{pharmacie}{pharmacies}{f}{pharmacy, drugstore}
 \noundef{plante}{plantes}{f}{plant}
@@ -512,8 +516,6 @@ england
 \noundef{ville}{villes}{f}{city}
 
 \noundecl{vert}{verte}{verts}{vertes}
-
-\phrases
 
 \phrase{Il est au supermarché.}{He is at the supermarket.}
 \phrase{Il mange de la salade verte.}{He is eating green salad.}
