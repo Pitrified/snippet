@@ -39,11 +39,19 @@
 \author{Pietro}
 \date{February 2020}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% phrases with translation
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \newcommand{\phrasea}[2]{\noindent#1\\#2}
 \newcommand{\phraseb}[2]{\noindent\textbf{#1}\\#2}
 \newcommand{\phrasec}[2]{\noindent\textbf{#1}\\\textit{#2}}
 \newcommand{\phrased}[2]{\noindent\textbf{#1}\\\-\hspace{0.5cm}\textit{#2}}
 \newcommand{\phrasee}[2]{\noindent\textbf{#1}\\*\-\hspace{0.5cm}\textit{#2}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% verbs conjugation with tense
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newcommand{\verbconja}[8]{
 \begin{tabular}{rl}
@@ -95,6 +103,56 @@ ils/elles & \textbf{#8}
 \end{tabular}
 }
 
+% column with declination only
+
+\newcommand{\verbconjcol}[7]{
+\begin{tabular}{l}
+\MakeUppercase{#1} \\ 
+\textbf{#2} \\  
+\textbf{#3} \\
+\textbf{#4} \\  
+\textbf{#5} \\  
+\textbf{#6} \\  
+\textbf{#7}  
+\end{tabular}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% verbs conjugation with tense and model
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\verbconjma}[9]{
+\begin{tabular}{rl}
+#1 & \MakeUppercase{#2} \\ 
+\textit{model} & \textit{#9} \\  
+je & \textbf{#3} \\  
+tu & \textbf{#4} \\
+il/elle & \textbf{#5} \\  
+nous & \textbf{#6} \\  
+vous & \textbf{#7} \\  
+ils/elles & \textbf{#8}  
+\end{tabular}
+}
+
+% column with model, declination only
+
+\newcommand{\verbconjcolma}[8]{
+\begin{tabular}{l}
+\MakeUppercase{#1} \\ 
+\textit{#8} \\  
+\textbf{#2} \\  
+\textbf{#3} \\
+\textbf{#4} \\  
+\textbf{#5} \\  
+\textbf{#6} \\  
+\textbf{#7}  
+\end{tabular}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% table with MFxSP
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \newcommand{\noundecla}[4]{
 \begin{tabular}{rcc}
  & masculine & feminine \\
@@ -118,6 +176,10 @@ plur. & #3 & #4
  plur. & \textbf{#3} & \textbf{#4}
 \end{tabular}
 }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% table with MFxSP and translations
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newcommand{\noundecltra}[8]{
 \begin{tabular}{rcc}
@@ -155,6 +217,10 @@ plur. & \textbf{#5} & \textbf{#6} \\
 & \textit{#7} & \textit{#8}
 \end{tabular}
 }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% noun definition
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newcommand{\noundefa}[4]{#1 (#3) (pl. #2): #4}
 \newcommand{\noundefb}[4]{\textbf{#1} (#3) (pl. #2): \textit{#4}}

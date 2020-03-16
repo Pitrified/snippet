@@ -63,9 +63,35 @@ ils/elles & \textbf{#8}
 \end{tabular}
 }
 
+\newcommand{\verbconjm}[9]{
+\begin{tabular}{rl}
+#1 & \MakeUppercase{#2} \\ 
+\textit{model} & \textit{#9} \\  
+je & \textbf{#3} \\  
+tu & \textbf{#4} \\
+il/elle & \textbf{#5} \\  
+nous & \textbf{#6} \\  
+vous & \textbf{#7} \\  
+ils/elles & \textbf{#8}  
+\end{tabular}
+}
+
 \newcommand{\verbconjcol}[7]{
 \begin{tabular}{l}
 \MakeUppercase{#1} \\ 
+\textbf{#2} \\  
+\textbf{#3} \\
+\textbf{#4} \\  
+\textbf{#5} \\  
+\textbf{#6} \\  
+\textbf{#7}  
+\end{tabular}
+}
+
+\newcommand{\verbconjcolm}[8]{
+\begin{tabular}{l}
+\MakeUppercase{#1} \\ 
+\textit{#8} \\  
 \textbf{#2} \\  
 \textbf{#3} \\
 \textbf{#4} \\  
@@ -208,6 +234,14 @@ Possessive pronouns can substitute a noun (\textit{le pronom possessif}), that h
 spain
 england
 
+\subsubsection{Colors}
+
+TODO
+
+blanc
+vert
+
+
 \section{Special chars}
 
 à
@@ -251,8 +285,8 @@ england
 \phrase{Un garçon mange un croissant.}{A boy is eating a croissant.}
 
 \begin{center}
-\verbconj{Présent}{être}{suis}{es}{est}{sommes}{êtes}{sont}
-\verbconjcol{manger}{mange}{manges}{mange}{mangeons}{mangez}{mangent}
+\verbconjm{Présent}{être}{suis}{es}{est}{sommes}{êtes}{sont}{être}
+\verbconjcolm{manger}{mange}{manges}{mange}{mangeons}{mangez}{mangent}{manger}
 \end{center}
 
 \section{Greetings}
@@ -299,7 +333,7 @@ england
 \phrase{Paul parle français.}{Paul speaks French.}
 
 \begin{center}
-\verbconj{Présent}{parler}{parle}{parles}{parle}{parlons}{parlez}{parlent}
+\verbconjm{Présent}{parler}{parle}{parles}{parle}{parlons}{parlez}{parlent}{marcher}
 \end{center}
 
 \section{People}
@@ -320,9 +354,9 @@ england
 \phrase{Tu habites à Bordeaux?}{Do you live in Bordeaux?}
 
 \begin{center}
-\verbconj{Présent}{travailler}{travaille}{travailles}{travaille}{travaillons}{travaillez}{travaillent}
-\verbconjcol{étudier}{étudie}{étudies}{étudie}{étudions}{étudiez}{étudient}
-\verbconjcol{habiter}{habite}{habites}{habite}{habitons}{habitez}{habitent}
+\verbconjm{Présent}{travailler}{travaille}{travailles}{travaille}{travaillons}{travaillez}{travaillent}{marcher}
+\verbconjcolm{étudier}{étudie}{étudies}{étudie}{étudions}{étudiez}{étudient}{marcher}
+\verbconjcolm{habiter}{habite}{habites}{habite}{habitons}{habitez}{habitent}{marcher}
 \end{center}
 
 \section{Travel}
@@ -353,8 +387,8 @@ england
 \phrase{Tu vas à la gare en taxi?}{Are you going to the train station by taxi?}
 
 \begin{center}
-\verbconj{Présent}{aller}{vais}{vas}{va}{allons}{allez}{vont}
-\verbconjcol{avoir}{ai}{as}{a}{avons}{avez}{ont}
+\verbconjm{Présent}{aller}{vais}{vas}{va}{allons}{allez}{vont}{aller}
+\verbconjcolm{avoir}{ai}{as}{a}{avons}{avez}{ont}{avoir}
 \end{center}
 
 \section{Family}
@@ -391,7 +425,7 @@ england
 \phrase{Vous avez une fille?}{Do you have a daughter?}
 
 \begin{center}
-\verbconj{Présent}{vouloir}{veux}{veux}{veut}{voulons}{voulez}{veulent}
+\verbconjm{Présent}{vouloir}{veux}{veux}{veut}{voulons}{voulez}{veulent}{vouloir}
 \end{center}
 
 \section{Activities}
@@ -405,7 +439,6 @@ england
 \noundef{métro}{métros}{m}{subway, underground}
 \noundef{zoo}{zoos}{m}{zoo}
 \noundef{école}{écoles}{f}{school}
-
 
 \phrase{Je vais au travail en métro.}{I go to work by subway.}
 \phrase{Je vais à la banque en voiture.}{I am going to the bank by car.}
@@ -425,7 +458,7 @@ england
 \phrase{Tu veux une orange?}{Do you want an orange?}
 
 \begin{center}
-\verbconj{Présent}{lire}{lis}{lis}{lit}{lisons}{lisez}{lisent}
+\verbconjm{Présent}{lire}{lis}{lis}{lit}{lisons}{lisez}{lisent}{lire}
 \end{center}
 
 \section{People 2}
@@ -443,7 +476,7 @@ england
 \phrase{Les professeurs habitent ici.}{The professors live here.}
 
 \begin{center}
-\verbconj{Présent}{prendre}{prends}{prends}{prend}{prenons}{prenez}{prennent}
+\verbconjm{Présent}{prendre}{prends}{prends}{prend}{prenons}{prenez}{prennent}{prendre}
 \end{center}
 
 \section{Family 2}
@@ -473,7 +506,7 @@ england
 
 
 \begin{center}
-\verbconj{Présent}{aimer}{aime}{aimes}{aime}{aimons}{aimez}{aiment}
+\verbconjm{Présent}{aimer}{aime}{aimes}{aime}{aimons}{aimez}{aiment}{marcher}
 \end{center}
 
 \section{Restaurant}
@@ -514,8 +547,11 @@ england
 \noundef{supermarché}{supermarchés}{m}{supermarket}
 \noundef{vert}{verts}{m}{green}
 \noundef{ville}{villes}{f}{city}
+\noundef{magasin}{magasins}{m}{shop, store}
 
+\begin{center}
 \noundecl{vert}{verte}{verts}{vertes}
+\end{center}
 
 \phrase{Il est au supermarché.}{He is at the supermarket.}
 \phrase{Il mange de la salade verte.}{He is eating green salad.}
@@ -551,9 +587,41 @@ england
 \phrase{Tu voyages avec ta sœur?}{Are you traveling with your sister?}
 \phrase{Tu voyages beaucoup?}{Do you travel a lot?}
 
-\verbconj{Présent}{visiter}{voyage}{voyages}{voyage}{voyageons}{voyagez}{voyagent}
+\begin{center}
+\verbconjm{Présent}{visiter}{voyage}{voyages}{voyage}{voyageons}{voyagez}{voyagent}{marcher}
+\end{center}
 
 \section{At Home}
+
+\noundef{pièce}{pièces}{f}{room}
+\noundef{vache}{vaches}{f}{cow}
+\noundef{chaise}{chaises}{f}{chair, seat}
+\noundef{voisin}{voisins}{m, feminine voisine}{neighbor}
+\noundef{arbre}{arbres}{m}{tree}
+\noundef{table}{tables}{f}{table (furniture)}
+\noundef{fenêtre}{fenêtres}{f}{window}
+
+\begin{center}
+\noundecl{gentil}{gentille}{gentils}{gentilles}
+\noundecl{aimable}{aimable}{aimables}{aimables}
+
+\noundecl{sympa}{sympa}{sympas}{sympas}
+\end{center}
+
+\phrase{Mes voisines sont gentilles.}{My neighbors are kind.}
+\phrase{J'ouvre la porte de la voiture.}{I am opening the car door.}
+\phrase{Julia et Marie sont voisines.}{Julia and Marie are neighbors.}
+\phrase{J'aime les arbres.}{I like trees.}
+\phrase{Ma voisine est gentille.}{My neighbor is kind.}
+\phrase{Le bus est blanc.}{The bus is white.}
+\phrase{Les chaises sont vertes.}{The chairs are green.}
+\phrase{Il y a trois arbres.}{There are three trees.}
+\phrase{Elles ouvrent les fenêtres.}{They are opening the windows.}
+
+\begin{center}
+\verbconjm{Présent}{ouvrir}{ouvre}{ouvres}{ouvre}{ouvrons}{ouvrez}{ouvrent}{ouvrir}
+\end{center}
+
 \section{At Work}
 \section{Food}
 \section{Habits}
