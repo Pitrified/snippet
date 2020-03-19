@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>We5! Il blog della guida HTML5</title>
+    <meta charset="utf-8">
+
+    <!-- media query to pick different css for different devices -->
+    <!-- https://www.html.it/pag/19268/panoramica-sui-content-model-e-presentazione-del-primo-progetto-guida/ -->
+    <link rel="stylesheet" href="monitor.css" media="screen">
+    <link rel="stylesheet" href="printer.css" media="print">
+    <link rel="stylesheet" href="phone_landscape.css" media="screen and (max-device-width: 480px) and (orientation: landscape)">
+    <link rel="stylesheet" href="phone_portrait.css" media="screen and (max-device-width: 480px) and (orientation: portrait)">
+</head>
+
+<body>
+    <!-- https://www.html.it/pag/19269/tag-header/ -->
+    <header>
+        <!-- https://www.html.it/pag/19275/hgroup/ -->
+        <!-- the hgroup tag marks the heading of a section, only the higher hN
+            is marked by the outliner -->
+        <hgroup>
+            <h1>La metaguida a HTML5!</h1>
+            <h2>Commenti nel sorgente spiegano magie nella pagina</h2>
+        </hgroup>
+        <nav>
+            <h1>Navigazione:</h1>
+            <ul>
+                <li><a href="/home">Home</a></li>
+                <li><a href="/about">Autori</a></li>
+                <li><a href="/archives">Archivio</a></li>
+            </ul>
+        </nav>
+    </header>
+    <!-- this section hosts the main page content, but if does NOT substitute
+        the div to graphically organize the page -->
+    <section>
+        <h1>L'ultimo post</h1>
+        <!-- each post structure is defined with an article tag -->
+        <article>
+            <header>
+                <!-- title and date are the header of each post, collect all introductory elements in a header -->
+                <time datetime="2010-11-22" pubdate>Lunedì 22 Novembre</time>
+                <h2>Nuove scoperte sul tag video!</h2>
+            </header>
+            <!-- there can be articles inside sections and sections inside articles -->
+            <section>
+                <!-- note that sections reset <hN> tags -->
+                <h1>Titolo 1</h1>
+                <p>Testo correlato al titolo 1.</p>
+                <p>In questo paragrafo ci sono <mark>contenuti importanti</mark></p>
+            </section>
+            <section>
+                <h1>Titolo 2</h1>
+                <p>Testo correlato al titolo 2.</p>
+            </section>
+            <section>
+                <h3>Commenti</h3>
+                <!-- this looks bonkers but is semantically correct: comments
+                    are in a section, with each comment in it being a different
+                    article; the new comment form is another section -->
+                <!-- https://www.html.it/pag/19271/section/ -->
+                <article>
+                    <h4>
+                        <time datetime="2010-11-22" pubdate>Lunedì 22 Novembre</time>
+                        Pallino ha scritto:
+                    </h4>
+                    <p>C'è un bell'esempio sulla rete: effetto ambi-light!</p>
+                    <footer>
+                        <address><a href="mailto:pallino@example.it">Pallino</a></address>
+                    </footer>
+                </article>
+                <article>
+                    <h4>
+                        <time datetime="2010-11-23" pubdate>Martedì 23 Novembre</time>
+                        Pinco ha scritto:
+                    </h4>
+                    <p>Bellissimo! Grazie per la segnalazione!</p>
+                    <footer>
+                        <address><a href="mailto:mail@example.com">Pinco</a></address>
+                    </footer>
+                </article>
+                <section>
+                    <h4>Inserisci un nuovo commento:</h4>
+                    <form name="commenti" method="post" action="/141/comments">
+                        [...]
+                        <!-- a lot of validation options -->
+                        <label>Nick:
+                            <input type="text" name="nickname" autocomplete="on" required pattern="[a-z]{1}[a-z_]{2,19}" title="Un nickname è composto da lettere minuscole e '_'; Sono consentiti da 3 a 20 caratteri." placeholder="your_nickname">
+                        </label>
+                        <label>Età:
+                            <input type="number" name="age" min="13" max="130" step="1">
+                        </label>
+                        <label>Messaggio:
+                            <textarea name="messaggio" placeholder="Scrivi qui il tuo messaggio (max 300 caratteri)" maxlength="300" required></textarea>
+                        </label>
+                        [...]
+                        <input type="reset" value="Resetta il form">
+                        <input type="submit" value="Invia il commento">
+                    </form>
+                </section>
+            </section>
+            <footer>
+                <!-- the footer of each article will hold metadata about the article -->
+                <dl>
+                    <dt>autore:</dt>
+                    <dd>
+                        <address><a href="mailto:mail@example.com">Pitrified</a></address>
+                    </dd>
+                    <dt>categoria: </dt>
+                    <dd><a href="categoria/multimedia">multimedia</a></dd>
+                    <dt>tags: </dt>
+                    <dd><a href="tags/video">video</a></dd>
+                    <dd><a href="tags/canvas">canvas</a></dd>
+                    <dt>permalink: </dt>
+                    <dd><a href="2010/22/11/nuove-scoperte-sul-tag-video">permalink</a></dd>
+                    <dt>rank:</dt>
+                    <!-- https://www.html.it/pag/19278/meter/ -->
+                    <!-- meter can have value, min, max, optimum, low, high
+                        values; it is NOT a progress bar -->
+                    <dd><meter value="3.0" min="0.0" max="5.0" optimum="5.0">ranked 3/5</meter></dd>
+
+                </dl>
+            </footer>
+        </article>
+    </section>
+
+    <!-- here is another section of the page -->
+    <section>
+        <h1>Post meno recenti</h1>
+        <article>
+            [contenuto del post...]
+        </article>
+        <article>
+            [contenuto del post...]
+        </article>
+        <article>
+            [contenuto del post...]
+        </article>
+    </section>
+
+    <section>
+        <!-- https://www.html.it/pag/19279/progress/ -->
+        <!-- the progress element shows max and value relative to a task being executed -->
+        <p>Caricamento: <progress id="mioLoader" max="100" value="30"><span>30</span>%</progress></p>
+    </section>
+
+    <!-- aside contains info marginally correlated with the content of the
+        father element that contains it -->
+    <aside>
+        <h1>Sidebar</h1>
+        <section>
+            <h2>Ricerca nel form:</h2>
+            <form name="ricerca" method="post" action="/search">
+                <label> Parola chiave:
+                    <input type="search" autocomplete="on" placeholder="article, section, ..." name="keyword" required maxlength="50">
+                </label>
+                <input type="submit" value="ricerca">
+            </form>
+        </section>
+        <nav>
+            <h2>Categorie</h2>
+            <ul>
+                <li><a href="/categoria/multimedia">multimedia</a></li>
+                <li><a href="/categoria/text">marcatori testuali</a></li>
+                <li><a href="/categoria/form">forms</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <footer>
+        <dl>
+            <dt>Creato da</dt>
+            <dd>
+                <address><a href="mailto:mail@example.com">Pitrified</a></address>
+            </dd>
+            <dt>Ultimo aggiornamento</dt>
+            <!-- the pubdate boolean flag specifies the pubdate of the father article -->
+            <dd><time datetime="2020-03-19" pubdate>Oggi</time></dd>
+        </dl>
+        <!-- https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-small-element -->
+        <small>Tutti i contenuti sono prottetti da una licenza</small>
+    </footer>
+</body>
+
+</html>
