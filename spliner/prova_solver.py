@@ -2,9 +2,12 @@ import argparse
 import logging
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from random import seed as rseed
 from timeit import default_timer as timer
+
+import utils
 
 
 def parse_arguments():
@@ -87,16 +90,9 @@ def setup_env():
     return args
 
 
-def run_prova_solver(args):
-    """
-    """
-    logg = logging.getLogger(f"c.{__name__}.run_prova_solver")
-    logg.debug(f"Starting run_prova_solver")
-
-    x0, y0, y0p = 1, 1, 0
-    #  x1, y1, y1p = 3, 2, 1
-    #  x1, y1, y1p = 3, 2, 0
-    x1, y1, y1p = 3, 2, 100
+def cubic_curve(x0, y0, y0p, x1, y1, y1p):
+    logg = logging.getLogger(f"c.{__name__}.cubic_curve")
+    logg.debug(f"Starting cubic_curve")
 
     A = np.array(
         [
@@ -108,9 +104,46 @@ def run_prova_solver(args):
     )
     b = np.array([y0, y0p, y1, y1p])
     x = np.linalg.solve(A, b)
+
     logg.debug(f"x: {x}")
     logg.debug(f"y = {x[0]:.4f}*x^3 + {x[1]:.4f}*x^2 + {x[2]:.4f}*x + {x[3]:.4f}")
-    
+
+    return x
+
+
+def run_prova_solver(args):
+    """
+    """
+    logg = logging.getLogger(f"c.{__name__}.run_prova_solver")
+    logg.debug(f"Starting run_prova_solver")
+
+    # create the plot
+    fig, ax = plt.subplots()
+    # sample per segment
+    num_samples = 100
+
+    # first segment
+    x0, y0, y0p = 1, 1, 0
+    x1, y1, y1p = 3, 2, 1
+    coeff = cubic_curve(x0, y0, y0p, x1, y1, y1p)
+
+    x_sample = np.linspace(x0, x1, num_samples)
+    y_segment = utils.poly_model(x_sample, np.flip(coeff))
+    utils.add_points(x_sample, y_segment, ax)
+
+    # second segment
+    x0, y0, y0p = 3, 2, 1
+    #  x1, y1, y1p = 4, 4, 2
+    x1, y1, y1p = 3.5, 3.5, 6
+    coeff = cubic_curve(x0, y0, y0p, x1, y1, y1p)
+
+    x_sample = np.linspace(x0, x1, num_samples)
+    y_segment = utils.poly_model(x_sample, np.flip(coeff))
+    utils.add_points(x_sample, y_segment, ax, color="r")
+
+    # plot everything
+    utils.plot_build(fig, ax)
+    plt.show()
 
 
 if __name__ == "__main__":
