@@ -91,8 +91,18 @@ def setup_env():
 
 
 def cubic_curve(x0, y0, y0p, x1, y1, y1p):
+    """Find the coefficient for a cubic curve passing through two points
+
+    Tangents are the slope of the curve on the point
+    p0 = (x0, y0) with tangent y0p
+    p1 = (x1, y1) with tangent y1p
+
+    y = a*x^3 + b*x^2 + c*x + d
+    y' = 3*a*x^2 + 2*b*x + c
+    """
     logg = logging.getLogger(f"c.{__name__}.cubic_curve")
     logg.debug(f"Starting cubic_curve")
+    #  logg.setLevel("INFO")
 
     A = np.array(
         [
@@ -103,6 +113,7 @@ def cubic_curve(x0, y0, y0p, x1, y1, y1p):
         ]
     )
     b = np.array([y0, y0p, y1, y1p])
+    # x are the coefficients of the curve
     x = np.linalg.solve(A, b)
 
     logg.debug(f"x: {x}")
