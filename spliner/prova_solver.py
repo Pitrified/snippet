@@ -140,7 +140,7 @@ def setup_env():
     return args
 
 
-def compute_segment(x_start, x_end, coeff, num_samples=50):
+def compute_segment_points(x_start, x_end, coeff, num_samples=50):
     """
     """
     x_sample = np.linspace(x_start, x_end, num_samples)
@@ -198,14 +198,14 @@ def cubic_curve_example():
     # compute the coeff to fit the points
     coeff = cubic_curve(p0, p1)
     # add the segment
-    x_sample, y_segment = compute_segment(p0.x, p1.x, coeff)
+    x_sample, y_segment = compute_segment_points(p0.x, p1.x, coeff)
     utils.add_points(x_sample, y_segment, ax)
 
     # second segment
     p0 = SPoint(3, 2, 45)
     p1 = SPoint(3.5, 3.5, 80)
     coeff = cubic_curve(p0, p1)
-    x_sample, y_segment = compute_segment(p0.x, p1.x, coeff)
+    x_sample, y_segment = compute_segment_points(p0.x, p1.x, coeff)
     utils.add_points(x_sample, y_segment, ax, "r")
 
     # plot everything
@@ -213,27 +213,11 @@ def cubic_curve_example():
     plt.show()
 
 
-def run_prova_solver(args):
+def compute_spline(p0, p1, num_samples=100):
     """
     """
-    logg = logging.getLogger(f"c.{__name__}.run_prova_solver")
-    logg.debug(f"Starting run_prova_solver")
-
-    # create the plot
-    fig, ax = plt.subplots()
-    ax.set_xlim(0, 4)
-    ax.set_ylim(-3, 4)
-
-    # sample per segment
-    num_samples = 100
-
-    # first segment
-    p0 = SPoint(1, 1, 30)
-    p1 = SPoint(3, 2, 45)
-    #  p1 = SPoint(2.6, 3, 60)
-    logg.debug(f"p0: {p0} p1: {p1}")
-    utils.add_vector(p0, ax, color="k")
-    utils.add_vector(p1, ax, color="k")
+    logg = logging.getLogger(f"c.{__name__}.compute_spline")
+    logg.debug(f"Starting compute_spline")
 
     # direction from point 0 to 1
     dir_01 = degrees(atan2(p1.y - p0.y, p1.x - p0.x))
@@ -249,13 +233,13 @@ def run_prova_solver(args):
     rot_p1 = SPoint(rototran_p1[0], rototran_p1[1], p1.ori_deg - dir_01)
     logg.debug(f"rot_p0: {rot_p0} rot_p1: {rot_p1}")
     # plot the rotated vectors
-    utils.add_vector(rot_p0, ax, color="r")
-    utils.add_vector(rot_p1, ax, color="r")
+    #  utils.add_vector(rot_p0, ax, color="r")
+    #  utils.add_vector(rot_p1, ax, color="r")
 
     # compute the spline points
     coeff = cubic_curve(rot_p0, rot_p1)
-    x_sample, y_segment = compute_segment(rot_p0.x, rot_p1.x, coeff)
-    utils.add_points(x_sample, y_segment, ax, color="g")
+    x_sample, y_segment = compute_segment_points(rot_p0.x, rot_p1.x, coeff)
+    #  utils.add_points(x_sample, y_segment, ax, color="g")
 
     # rotate the points back
     all_segment = np.array([x_sample, y_segment]).transpose()
@@ -270,10 +254,78 @@ def run_prova_solver(args):
     rototran_x = tran_segment[0]
     rototran_y = tran_segment[1]
 
+    return rototran_x, rototran_y
+
+
+def example_spline():
+    """
+    """
+    logg = logging.getLogger(f"c.{__name__}.example_spline")
+    logg.debug(f"Starting example_spline")
+
+    # create the plot
+    fig, ax = plt.subplots()
+    ax.set_xlim(0, 4)
+    ax.set_ylim(-3, 4)
+
+    # sample per segment
+    num_samples = 100
+
+    # first segment
+    p0 = SPoint(1, 1, 30)
+    #  p1 = SPoint(3, 2, 45)
+    p1 = SPoint(2.6, 3, 60)
+    logg.debug(f"p0: {p0} p1: {p1}")
+    utils.add_vector(p0, ax, color="k")
+    utils.add_vector(p1, ax, color="k")
+
+    # compute the spline
+    spline_x, spline_y = compute_spline(p0, p1)
+
     # plot the finished spline
-    utils.add_points(rototran_x, rototran_y, ax, color="y")
+    utils.add_points(spline_x, spline_y, ax, color="y")
 
     # plot everything
+    utils.plot_build(fig, ax)
+    plt.show()
+
+
+def long_spline():
+    """
+    """
+    logg = logging.getLogger(f"c.{__name__}.long_spline")
+    logg.debug(f"Starting long_spline")
+
+    fig, ax = plt.subplots()
+    ax.set_xlim(-4, 4)
+    ax.set_ylim(-1, 7)
+
+    all_points = [
+        SPoint(0, 0, 0),
+        SPoint(2, 1, 45),
+        SPoint(3, 3, 90),
+        SPoint(2, 5, 135),
+        SPoint(0, 6, 180),
+        SPoint(-2, 5, -135),
+        SPoint(-3, 3, -90),
+        SPoint(-2, 1, -45),
+        SPoint(0, 0, 0),
+    ]
+    all_points = [
+        SPoint(0, 0, 0),
+        SPoint(3, 3, 90),
+        SPoint(0, 6, 180),
+        SPoint(-3, 3, -90),
+        SPoint(0, 0, 0),
+    ]
+
+    for i in range(len(all_points) - 1):
+        p0 = all_points[i]
+        p1 = all_points[i + 1]
+
+        spline_x, spline_y = compute_spline(p0, p1)
+        utils.add_points(spline_x, spline_y, ax, color="y")
+
     utils.plot_build(fig, ax)
     plt.show()
 
@@ -281,4 +333,5 @@ def run_prova_solver(args):
 if __name__ == "__main__":
     args = setup_env()
     #  cubic_curve_example()
-    run_prova_solver(args)
+    #  example_spline()
+    long_spline()
