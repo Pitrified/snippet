@@ -229,8 +229,8 @@ def run_prova_solver(args):
 
     # first segment
     p0 = SPoint(1, 1, 30)
-    #  p1 = SPoint(3, 2, 45)
-    p1 = SPoint(2.6, 3, 60)
+    p1 = SPoint(3, 2, 45)
+    #  p1 = SPoint(2.6, 3, 60)
     logg.debug(f"p0: {p0} p1: {p1}")
     utils.add_vector(p0, ax, color="k")
     utils.add_vector(p1, ax, color="k")
@@ -248,13 +248,30 @@ def run_prova_solver(args):
     rototran_p1 = utils.rotate_point(np.array([tran_p1x, tran_p1y]), dir_01)
     rot_p1 = SPoint(rototran_p1[0], rototran_p1[1], p1.ori_deg - dir_01)
     logg.debug(f"rot_p0: {rot_p0} rot_p1: {rot_p1}")
-
+    # plot the rotated vectors
     utils.add_vector(rot_p0, ax, color="r")
     utils.add_vector(rot_p1, ax, color="r")
 
+    # compute the spline points
     coeff = cubic_curve(rot_p0, rot_p1)
     x_sample, y_segment = compute_segment(rot_p0.x, rot_p1.x, coeff)
     utils.add_points(x_sample, y_segment, ax, color="g")
+
+    # rotate the points back
+    all_segment = np.array([x_sample, y_segment]).transpose()
+    logg.debug(f"all_segment.shape: {all_segment.shape}")
+    rotated_segment = utils.rotate_point(all_segment, -dir_01)
+    logg.debug(f"rotated_segment.shape: {rotated_segment.shape}")
+
+    # translate them
+    tran_segment = rotated_segment + np.array([p0.x, p0.y])
+    tran_segment = tran_segment.transpose()
+    logg.debug(f"tran_segment.shape: {tran_segment.shape}")
+    rototran_x = tran_segment[0]
+    rototran_y = tran_segment[1]
+
+    # plot the finished spline
+    utils.add_points(rototran_x, rototran_y, ax, color="y")
 
     # plot everything
     utils.plot_build(fig, ax)
@@ -263,5 +280,5 @@ def run_prova_solver(args):
 
 if __name__ == "__main__":
     args = setup_env()
-    cubic_curve_example()
+    #  cubic_curve_example()
     run_prova_solver(args)

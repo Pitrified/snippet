@@ -91,9 +91,9 @@ def compute_rot_matrix(theta):
 
     return rot_mat
 
+
 def rotate_point(point, theta):
-    '''Rotate a point by theta degree
-    '''
+    """Rotate a point by theta degree
+    """
     rot_mat = compute_rot_matrix(theta)
     return np.matmul(point, rot_mat)
-
