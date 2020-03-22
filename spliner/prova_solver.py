@@ -290,16 +290,34 @@ def example_spline():
     plt.show()
 
 
+def draw_long_spline(all_points, xlim, ylim):
+    """
+    """
+    fig, ax = plt.subplots()
+    ax.set_xlim(*xlim)
+    ax.set_ylim(*ylim)
+
+    for i in range(len(all_points) - 1):
+        p0 = all_points[i]
+        p1 = all_points[i + 1]
+        #  utils.add_vector(p0, ax, color="k", vec_len=20)
+
+        spline_x, spline_y = compute_spline(p0, p1)
+        utils.add_points(spline_x, spline_y, ax, color="y")
+
+    #  utils.add_vector(p1, ax, color="k", vec_len=20)
+    utils.plot_build(fig, ax)
+    plt.show()
+
+
 def long_spline():
     """
     """
     logg = logging.getLogger(f"c.{__name__}.long_spline")
     logg.debug(f"Starting long_spline")
 
-    fig, ax = plt.subplots()
-    ax.set_xlim(-4, 4)
-    ax.set_ylim(-1, 7)
-
+    xlim = -4, 4
+    ylim = -1, 7
     all_points = [
         SPoint(0, 0, 0),
         SPoint(2, 1, 45),
@@ -311,6 +329,7 @@ def long_spline():
         SPoint(-2, 1, -45),
         SPoint(0, 0, 0),
     ]
+    #  draw_long_spline(all_points, xlim, ylim)
     all_points = [
         SPoint(0, 0, 0),
         SPoint(3, 3, 90),
@@ -318,16 +337,52 @@ def long_spline():
         SPoint(-3, 3, -90),
         SPoint(0, 0, 0),
     ]
+    #  draw_long_spline(all_points, xlim, ylim)
 
-    for i in range(len(all_points) - 1):
-        p0 = all_points[i]
-        p1 = all_points[i + 1]
-
-        spline_x, spline_y = compute_spline(p0, p1)
-        utils.add_points(spline_x, spline_y, ax, color="y")
-
-    utils.plot_build(fig, ax)
-    plt.show()
+    xlim = 0, 124
+    ylim = -250, 0
+    all_points = [
+        SPoint(10, -223, 19),
+        SPoint(36.5, -205.5, 43),
+        SPoint(55.8, -181, 57.28),
+        SPoint(68.5, -160, 61.09),
+        SPoint(80.6, -136.5, 64),
+        SPoint(94, -107.8, 66.3),
+        SPoint(103, -85, 71),
+        SPoint(109.6, -63, 77),
+        SPoint(112.6, -48, 81),
+        SPoint(113.8, -38.6, 88),
+        SPoint(113.5, -32, 98),
+        SPoint(111, -24.1, 115.6),
+        SPoint(108.8, -21.4, 142),
+        SPoint(106, -20, 164),
+        SPoint(102.7, -19.6, 180),
+        SPoint(97.2, -21, -153.7),
+        SPoint(91.5, -24.8, -139),
+        SPoint(84, -33, -127.85),
+        SPoint(78.2, -41.2, -122.1),
+        SPoint(67.5, -60.6, -117),
+        SPoint(57, -84.8, -110.5),
+        SPoint(47.8, -113, -104.85),
+        SPoint(42, -137.5, -100.81),
+        SPoint(38.7, -156, -97.7),
+        SPoint(37, -172.6, -94.1),
+        SPoint(36.2, -189.2, -91.7),
+        SPoint(36.2, -199, -88.9),
+        SPoint(37.8, -217.6, -80.9),
+        SPoint(38.6, -221.9, -78.15),
+        SPoint(40.4, -228, -66.22),
+        SPoint(42.8, -231.9, -50.40),
+        SPoint(45.3, -234, -33.24),
+        SPoint(48.7, -235, -1.52),
+        SPoint(52.8, -234.3, 18),
+        SPoint(58, -231.2, 37.66),
+        SPoint(64, -225.4, 48.75),
+        SPoint(70, -217.8, 55),
+        SPoint(77, -207.8, 58.4),
+        SPoint(88, -189.5, 57.9),
+    ]
+    draw_long_spline(all_points, xlim, ylim)
 
 
 if __name__ == "__main__":
