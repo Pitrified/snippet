@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 from random import seed as rseed
 from timeit import default_timer as timer
 
+from pathlib import Path
+
 from math import atan2
 from math import degrees
 from math import radians
@@ -107,8 +109,8 @@ def setup_logger(logLevel="DEBUG"):
     # logroot.log(5, 'Exceedingly verbose debug')
 
     # example log line
-    logg = logging.getLogger(f"c.{__name__}.setup_logger")
-    logg.debug(f"Done setting up logger")
+    #  logg = logging.getLogger(f"c.{__name__}.setup_logger")
+    #  logg.debug(f"Done setting up logger")
 
 
 def setup_env():
@@ -163,7 +165,7 @@ def cubic_curve(p0, p1):
     """
     logg = logging.getLogger(f"c.{__name__}.cubic_curve")
     #  logg.debug(f"Starting cubic_curve")
-    #  logg.setLevel("INFO")
+    logg.setLevel("INFO")
     x0 = p0.x
     y0 = p0.y
     y0p = p0.ori_slo
@@ -221,6 +223,7 @@ def compute_spline(p0, p1, num_samples=100):
     """
     logg = logging.getLogger(f"c.{__name__}.compute_spline")
     logg.debug(f"Starting compute_spline")
+    logg.setLevel("INFO")
 
     # direction from point 0 to 1
     dir_01 = degrees(atan2(p1.y - p0.y, p1.x - p0.x))
@@ -246,14 +249,14 @@ def compute_spline(p0, p1, num_samples=100):
 
     # rotate the points back
     all_segment = np.array([x_sample, y_segment]).transpose()
-    logg.debug(f"all_segment.shape: {all_segment.shape}")
+    #  logg.debug(f"all_segment.shape: {all_segment.shape}")
     rotated_segment = utils.rotate_point(all_segment, -dir_01)
-    logg.debug(f"rotated_segment.shape: {rotated_segment.shape}")
+    #  logg.debug(f"rotated_segment.shape: {rotated_segment.shape}")
 
     # translate them
     tran_segment = rotated_segment + np.array([p0.x, p0.y])
     tran_segment = tran_segment.transpose()
-    logg.debug(f"tran_segment.shape: {tran_segment.shape}")
+    #  logg.debug(f"tran_segment.shape: {tran_segment.shape}")
     rototran_x = tran_segment[0]
     rototran_y = tran_segment[1]
 
@@ -388,8 +391,26 @@ def example_long_spline():
     draw_long_spline(all_points, xlim, ylim)
 
 
+def example_load_letter():
+    """
+    """
+    logg = logging.getLogger(f"c.{__name__}.example_load_letter")
+    logg.debug(f"Starting example_load_letter")
+
+    letter_dir = Path(__file__).resolve().parent / "letters"
+    logg.debug(f"letter_dir: {letter_dir}")
+    letter_file_path = letter_dir / "l_lower.tsv"
+
+    all_points = utils.load_points(letter_file_path)
+
+    xlim = 0, 124
+    ylim = -250, 0
+    draw_long_spline(all_points, xlim, ylim)
+
+
 if __name__ == "__main__":
     args = setup_env()
     #  cubic_curve_example()
     #  example_spline()
-    example_long_spline()
+    #  example_long_spline()
+    example_load_letter()
