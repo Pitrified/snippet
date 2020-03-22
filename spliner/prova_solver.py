@@ -1,13 +1,63 @@
 import argparse
 import logging
-
 import numpy as np
 import matplotlib.pyplot as plt
-
 from random import seed as rseed
 from timeit import default_timer as timer
 
+from math import atan2
+from math import degrees
+from math import radians
+from math import tan
+
 import utils
+
+
+class SPoint:
+    def __init__(self, x, y, ori_deg):
+        """Create a spline point
+
+        point (x,y) with orientation yp in degrees, ranging [-180, 180]
+        """
+        self.x = x
+        self.y = y
+        self.ori_deg = ori_deg
+        self.ori_rad = radians(self.ori_deg)
+        self.ori_slo = tan(self.ori_rad)
+
+    def __add__(self, other):
+        """
+        """
+        r_x = self.x + other.x
+        r_y = self.y + other.y
+        r_ori = self.ori_deg + other.ori_deg
+        if r_ori > 180:
+            r_ori -= 360
+        if r_ori < -180:
+            r_ori += 360
+        result = SPoint(r_x, r_y, r_ori)
+        return result
+
+    def __sub__(self, other):
+        """
+        """
+        r_x = self.x - other.x
+        r_y = self.y - other.y
+        r_ori = self.ori_deg - other.ori_deg
+        if r_ori > 180:
+            r_ori -= 360
+        if r_ori < -180:
+            r_ori += 360
+        result = SPoint(r_x, r_y, r_ori)
+        return result
+
+    def __repr__(self):
+        the_repr_str = ""
+        #  the_repr_str += f"x {self.x:.4f}"
+        #  the_repr_str += f" y {self.y:.4f}"
+        the_repr_str += f"({self.x:.4f}, {self.y:.4f})"
+        the_repr_str += f" # {self.ori_deg:.4f}"
+        return the_repr_str
 
 
 def parse_arguments():
@@ -90,7 +140,15 @@ def setup_env():
     return args
 
 
-def cubic_curve(x0, y0, y0p, x1, y1, y1p):
+def compute_segment(x_start, x_end, coeff, num_samples=50):
+    """
+    """
+    x_sample = np.linspace(x_start, x_end, num_samples)
+    y_segment = utils.poly_model(x_sample, np.flip(coeff))
+    return x_sample, y_segment
+
+
+def cubic_curve(p0, p1):
     """Find the coefficient for a cubic curve passing through two points
 
     Tangents are the slope of the curve on the point
@@ -101,8 +159,14 @@ def cubic_curve(x0, y0, y0p, x1, y1, y1p):
     y' = 3*a*x^2 + 2*b*x + c
     """
     logg = logging.getLogger(f"c.{__name__}.cubic_curve")
-    logg.debug(f"Starting cubic_curve")
+    #  logg.debug(f"Starting cubic_curve")
     #  logg.setLevel("INFO")
+    x0 = p0.x
+    y0 = p0.y
+    y0p = p0.ori_slo
+    x1 = p1.x
+    y1 = p1.y
+    y1p = p1.ori_slo
 
     A = np.array(
         [
@@ -116,10 +180,37 @@ def cubic_curve(x0, y0, y0p, x1, y1, y1p):
     # x are the coefficients of the curve
     x = np.linalg.solve(A, b)
 
-    logg.debug(f"x: {x}")
+    #  logg.debug(f"x: {x}")
     logg.debug(f"y = {x[0]:.4f}*x^3 + {x[1]:.4f}*x^2 + {x[2]:.4f}*x + {x[3]:.4f}")
 
     return x
+
+
+def cubic_curve_example():
+    # create the plot
+    fig, ax = plt.subplots()
+    # sample per segment
+    num_samples = 100
+
+    # first segment
+    p0 = SPoint(1, 1, 0)
+    p1 = SPoint(3, 2, 45)
+    # compute the coeff to fit the points
+    coeff = cubic_curve(p0, p1)
+    # add the segment
+    x_sample, y_segment = compute_segment(p0.x, p1.x, coeff)
+    utils.add_points(x_sample, y_segment, ax)
+
+    # second segment
+    p0 = SPoint(3, 2, 45)
+    p1 = SPoint(3.5, 3.5, 80)
+    coeff = cubic_curve(p0, p1)
+    x_sample, y_segment = compute_segment(p0.x, p1.x, coeff)
+    utils.add_points(x_sample, y_segment, ax, "r")
+
+    # plot everything
+    utils.plot_build(fig, ax)
+    plt.show()
 
 
 def run_prova_solver(args):
@@ -130,27 +221,40 @@ def run_prova_solver(args):
 
     # create the plot
     fig, ax = plt.subplots()
+    ax.set_xlim(0, 4)
+    ax.set_ylim(-3, 4)
+
     # sample per segment
     num_samples = 100
 
     # first segment
-    x0, y0, y0p = 1, 1, 0
-    x1, y1, y1p = 3, 2, 1
-    coeff = cubic_curve(x0, y0, y0p, x1, y1, y1p)
+    p0 = SPoint(1, 1, 30)
+    #  p1 = SPoint(3, 2, 45)
+    p1 = SPoint(2.6, 3, 60)
+    logg.debug(f"p0: {p0} p1: {p1}")
+    utils.add_vector(p0, ax, color="k")
+    utils.add_vector(p1, ax, color="k")
 
-    x_sample = np.linspace(x0, x1, num_samples)
-    y_segment = utils.poly_model(x_sample, np.flip(coeff))
-    utils.add_points(x_sample, y_segment, ax)
+    # direction from point 0 to 1
+    dir_01 = degrees(atan2(p1.y - p0.y, p1.x - p0.x))
+    logg.debug(f"dir_01: {dir_01}")
 
-    # second segment
-    x0, y0, y0p = 3, 2, 1
-    #  x1, y1, y1p = 4, 4, 2
-    x1, y1, y1p = 3.5, 3.5, 6
-    coeff = cubic_curve(x0, y0, y0p, x1, y1, y1p)
+    # rotate the point and translate them in the origin
+    rot_p0 = SPoint(0, 0, p0.ori_deg - dir_01)
+    # tranlsate p1 towards origin by p0
+    tran_p1x = p1.x - p0.x
+    tran_p1y = p1.y - p0.y
+    # rotate p1 position by dir_01
+    rototran_p1 = utils.rotate_point(np.array([tran_p1x, tran_p1y]), dir_01)
+    rot_p1 = SPoint(rototran_p1[0], rototran_p1[1], p1.ori_deg - dir_01)
+    logg.debug(f"rot_p0: {rot_p0} rot_p1: {rot_p1}")
 
-    x_sample = np.linspace(x0, x1, num_samples)
-    y_segment = utils.poly_model(x_sample, np.flip(coeff))
-    utils.add_points(x_sample, y_segment, ax, color="r")
+    utils.add_vector(rot_p0, ax, color="r")
+    utils.add_vector(rot_p1, ax, color="r")
+
+    coeff = cubic_curve(rot_p0, rot_p1)
+    x_sample, y_segment = compute_segment(rot_p0.x, rot_p1.x, coeff)
+    utils.add_points(x_sample, y_segment, ax, color="g")
 
     # plot everything
     utils.plot_build(fig, ax)
@@ -159,4 +263,5 @@ def run_prova_solver(args):
 
 if __name__ == "__main__":
     args = setup_env()
+    cubic_curve_example()
     run_prova_solver(args)
