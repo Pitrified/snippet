@@ -141,7 +141,7 @@ def setup_env():
 
 
 def compute_segment_points(x_start, x_end, coeff, num_samples=50):
-    """
+    """Sample a poly_model in the [x_start, x_end] range
     """
     x_sample = np.linspace(x_start, x_end, num_samples)
     y_segment = utils.poly_model(x_sample, np.flip(coeff))
@@ -157,6 +157,9 @@ def cubic_curve(p0, p1):
 
     y = a*x^3 + b*x^2 + c*x + d
     y' = 3*a*x^2 + 2*b*x + c
+
+    Small tangent change is suggested to avoid deep min/max bedtween the points
+    Both tangents should be smallish, in the [-1, 1] range
     """
     logg = logging.getLogger(f"c.{__name__}.cubic_curve")
     #  logg.debug(f"Starting cubic_curve")
@@ -310,11 +313,11 @@ def draw_long_spline(all_points, xlim, ylim):
     plt.show()
 
 
-def long_spline():
+def example_long_spline():
     """
     """
-    logg = logging.getLogger(f"c.{__name__}.long_spline")
-    logg.debug(f"Starting long_spline")
+    logg = logging.getLogger(f"c.{__name__}.example_long_spline")
+    logg.debug(f"Starting example_long_spline")
 
     xlim = -4, 4
     ylim = -1, 7
@@ -389,4 +392,4 @@ if __name__ == "__main__":
     args = setup_env()
     #  cubic_curve_example()
     #  example_spline()
-    long_spline()
+    example_long_spline()
