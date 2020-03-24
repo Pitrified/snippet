@@ -218,8 +218,12 @@ def cubic_curve_example():
     plt.show()
 
 
-def compute_spline(p0, p1, num_samples=100):
-    """
+def compute_spline(p0, p1, num_samples=100, ax=None):
+    """Compute the cubic spline between two points
+
+    * translate to the origin and rotate the points to have both on the x axis
+    * compute the spline
+    * rotate and translate to original position
     """
     logg = logging.getLogger(f"c.{__name__}.compute_spline")
     logg.debug(f"Starting compute_spline")
@@ -239,13 +243,15 @@ def compute_spline(p0, p1, num_samples=100):
     rot_p1 = SPoint(rototran_p1[0], rototran_p1[1], p1.ori_deg - dir_01)
     logg.debug(f"rot_p0: {rot_p0} rot_p1: {rot_p1}")
     # plot the rotated vectors
-    #  utils.add_vector(rot_p0, ax, color="r")
-    #  utils.add_vector(rot_p1, ax, color="r")
+    if not ax is None:
+        utils.add_vector(rot_p0, ax, color="r")
+        utils.add_vector(rot_p1, ax, color="r")
 
     # compute the spline points
     coeff = cubic_curve(rot_p0, rot_p1)
     x_sample, y_segment = compute_segment_points(rot_p0.x, rot_p1.x, coeff)
-    #  utils.add_points(x_sample, y_segment, ax, color="g")
+    if not ax is None:
+        utils.add_points(x_sample, y_segment, ax, color="g")
 
     # rotate the points back
     all_segment = np.array([x_sample, y_segment]).transpose()
@@ -282,11 +288,12 @@ def example_spline():
     #  p1 = SPoint(3, 2, 45)
     p1 = SPoint(2.6, 3, 60)
     logg.debug(f"p0: {p0} p1: {p1}")
+    # plot the points
     utils.add_vector(p0, ax, color="k")
     utils.add_vector(p1, ax, color="k")
 
     # compute the spline
-    spline_x, spline_y = compute_spline(p0, p1)
+    spline_x, spline_y = compute_spline(p0, p1, ax=ax)
 
     # plot the finished spline
     utils.add_points(spline_x, spline_y, ax, color="y")
@@ -296,22 +303,28 @@ def example_spline():
     plt.show()
 
 
-def draw_long_spline(all_points, xlim, ylim):
-    """
+def draw_long_spline(spline_sequence, xlim, ylim, plot_vectors=False):
+    """Draw a spline_sequence on a plot
+
+    spline_sequence = [all_points, all_points, ...]
     """
     fig, ax = plt.subplots()
     ax.set_xlim(*xlim)
     ax.set_ylim(*ylim)
 
-    for i in range(len(all_points) - 1):
-        p0 = all_points[i]
-        p1 = all_points[i + 1]
-        #  utils.add_vector(p0, ax, color="k", vec_len=20)
+    for all_points in spline_sequence:
+        for i in range(len(all_points) - 1):
+            p0 = all_points[i]
+            p1 = all_points[i + 1]
+            if plot_vectors:
+                utils.add_vector(p0, ax, color="k", vec_len=20)
 
-        spline_x, spline_y = compute_spline(p0, p1)
-        utils.add_points(spline_x, spline_y, ax, color="y")
+            spline_x, spline_y = compute_spline(p0, p1)
+            utils.add_points(spline_x, spline_y, ax, color="y")
 
-    #  utils.add_vector(p1, ax, color="k", vec_len=20)
+    if plot_vectors:
+        utils.add_vector(p1, ax, color="k", vec_len=20)
+
     utils.plot_build(fig, ax)
     plt.show()
 
@@ -324,71 +337,81 @@ def example_long_spline():
 
     xlim = -4, 4
     ylim = -1, 7
-    all_points = [
-        SPoint(0, 0, 0),
-        SPoint(2, 1, 45),
-        SPoint(3, 3, 90),
-        SPoint(2, 5, 135),
-        SPoint(0, 6, 180),
-        SPoint(-2, 5, -135),
-        SPoint(-3, 3, -90),
-        SPoint(-2, 1, -45),
-        SPoint(0, 0, 0),
+    spline_sequence = [
+        [
+            SPoint(0, 0, 0),
+            SPoint(2, 1, 45),
+            SPoint(3, 3, 90),
+            SPoint(2, 5, 135),
+            SPoint(0, 6, 180),
+            SPoint(-2, 5, -135),
+            SPoint(-3, 3, -90),
+            SPoint(-2, 1, -45),
+            SPoint(0, 0, 0),
+        ]
     ]
-    #  draw_long_spline(all_points, xlim, ylim)
-    all_points = [
-        SPoint(0, 0, 0),
-        SPoint(3, 3, 90),
-        SPoint(0, 6, 180),
-        SPoint(-3, 3, -90),
-        SPoint(0, 0, 0),
+    draw_long_spline(spline_sequence, xlim, ylim)
+
+    xlim = -4, 4
+    ylim = -1, 8
+    spline_sequence = [
+        [
+            SPoint(0, 0, 0),
+            SPoint(3, 3, 90),
+            SPoint(0, 6, 180),
+            SPoint(-3, 3, -90),
+            SPoint(0, 0, 0),
+        ],
+        [SPoint(0, 6, 0), SPoint(2, 7, 30),],
     ]
-    #  draw_long_spline(all_points, xlim, ylim)
+    draw_long_spline(spline_sequence, xlim, ylim)
 
     xlim = 0, 124
     ylim = -250, 0
-    all_points = [
-        SPoint(10, -223, 19),
-        SPoint(36.5, -205.5, 43),
-        SPoint(55.8, -181, 57.28),
-        SPoint(68.5, -160, 61.09),
-        SPoint(80.6, -136.5, 64),
-        SPoint(94, -107.8, 66.3),
-        SPoint(103, -85, 71),
-        SPoint(109.6, -63, 77),
-        SPoint(112.6, -48, 81),
-        SPoint(113.8, -38.6, 88),
-        SPoint(113.5, -32, 98),
-        SPoint(111, -24.1, 115.6),
-        SPoint(108.8, -21.4, 142),
-        SPoint(106, -20, 164),
-        SPoint(102.7, -19.6, 180),
-        SPoint(97.2, -21, -153.7),
-        SPoint(91.5, -24.8, -139),
-        SPoint(84, -33, -127.85),
-        SPoint(78.2, -41.2, -122.1),
-        SPoint(67.5, -60.6, -117),
-        SPoint(57, -84.8, -110.5),
-        SPoint(47.8, -113, -104.85),
-        SPoint(42, -137.5, -100.81),
-        SPoint(38.7, -156, -97.7),
-        SPoint(37, -172.6, -94.1),
-        SPoint(36.2, -189.2, -91.7),
-        SPoint(36.2, -199, -88.9),
-        SPoint(37.8, -217.6, -80.9),
-        SPoint(38.6, -221.9, -78.15),
-        SPoint(40.4, -228, -66.22),
-        SPoint(42.8, -231.9, -50.40),
-        SPoint(45.3, -234, -33.24),
-        SPoint(48.7, -235, -1.52),
-        SPoint(52.8, -234.3, 18),
-        SPoint(58, -231.2, 37.66),
-        SPoint(64, -225.4, 48.75),
-        SPoint(70, -217.8, 55),
-        SPoint(77, -207.8, 58.4),
-        SPoint(88, -189.5, 57.9),
+    spline_sequence = [
+        [
+            SPoint(10, -223, 19),
+            SPoint(36.5, -205.5, 43),
+            SPoint(55.8, -181, 57.28),
+            SPoint(68.5, -160, 61.09),
+            SPoint(80.6, -136.5, 64),
+            SPoint(94, -107.8, 66.3),
+            SPoint(103, -85, 71),
+            SPoint(109.6, -63, 77),
+            SPoint(112.6, -48, 81),
+            SPoint(113.8, -38.6, 88),
+            SPoint(113.5, -32, 98),
+            SPoint(111, -24.1, 115.6),
+            SPoint(108.8, -21.4, 142),
+            SPoint(106, -20, 164),
+            SPoint(102.7, -19.6, 180),
+            SPoint(97.2, -21, -153.7),
+            SPoint(91.5, -24.8, -139),
+            SPoint(84, -33, -127.85),
+            SPoint(78.2, -41.2, -122.1),
+            SPoint(67.5, -60.6, -117),
+            SPoint(57, -84.8, -110.5),
+            SPoint(47.8, -113, -104.85),
+            SPoint(42, -137.5, -100.81),
+            SPoint(38.7, -156, -97.7),
+            SPoint(37, -172.6, -94.1),
+            SPoint(36.2, -189.2, -91.7),
+            SPoint(36.2, -199, -88.9),
+            SPoint(37.8, -217.6, -80.9),
+            SPoint(38.6, -221.9, -78.15),
+            SPoint(40.4, -228, -66.22),
+            SPoint(42.8, -231.9, -50.40),
+            SPoint(45.3, -234, -33.24),
+            SPoint(48.7, -235, -1.52),
+            SPoint(52.8, -234.3, 18),
+            SPoint(58, -231.2, 37.66),
+            SPoint(64, -225.4, 48.75),
+            SPoint(70, -217.8, 55),
+            SPoint(77, -207.8, 58.4),
+            SPoint(88, -189.5, 57.9),
+        ]
     ]
-    draw_long_spline(all_points, xlim, ylim)
+    draw_long_spline(spline_sequence, xlim, ylim)
 
 
 def example_load_letter():
@@ -401,16 +424,16 @@ def example_load_letter():
     logg.debug(f"letter_dir: {letter_dir}")
     letter_file_path = letter_dir / "l_lower.tsv"
 
-    all_points = utils.load_points(letter_file_path)
+    spline_sequence = utils.load_points(letter_file_path)
 
     xlim = 0, 124
     ylim = -250, 0
-    draw_long_spline(all_points, xlim, ylim)
+    draw_long_spline(spline_sequence, xlim, ylim, plot_vectors=True)
 
 
 if __name__ == "__main__":
     args = setup_env()
-    #  cubic_curve_example()
-    #  example_spline()
-    #  example_long_spline()
+    cubic_curve_example()
+    example_spline()
+    example_long_spline()
     example_load_letter()

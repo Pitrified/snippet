@@ -45,7 +45,7 @@ def plot_build(fig, ax):
 
 
 def add_vector(sp, ax, color="b", vec_len=0.3):
-    """
+    """Add a point with direction to the plot
     """
     logg = logging.getLogger(f"c.{__name__}.add_vector")
     logg.setLevel("INFO")
@@ -97,27 +97,61 @@ def compute_rot_matrix(theta):
 
 
 def rotate_point(point, theta):
-    """Rotate a point by theta degree
+    """Rotate a point (or array of points) by theta degree
+
+    MAYBE automagically transpose the point mat if it is 2xN instead of Nx2
     """
     rot_mat = compute_rot_matrix(theta)
     return np.matmul(point, rot_mat)
 
 
 def load_points(letter_file_path):
-    """
+    """Load a spline_sequence from a file
+
+    File format:
+    # offset_x offset_y
+    x   y   ori_deg
+    x   y   ori_deg
+    # offset_x offset_y
+    x   y   ori_deg
+    x   y   ori_deg
     """
     logg = logging.getLogger(f"c.{__name__}.load_points")
-    logg.debug(f"Starting load_points")
+    logg.setLevel("INFO")
+    logg.info(f"Starting load_points")
 
-    all_points = []
+    spline_sequence = []
 
     with letter_file_path.open() as f:
+        # prepare the first header
+        first_line = f.readline().rstrip()
+        logg.debug(f"first_line: {first_line}")
+        pezzi = first_line.rstrip().split("\t")
+        offset_x = float(pezzi[1])
+        offset_y = float(pezzi[2])
+        all_points = []
+
         for line in f:
             pezzi = line.rstrip().split("\t")
-            x = float(pezzi[0])
-            y = float(pezzi[1])
-            ori_deg = float(pezzi[2])
-            point = spliner.SPoint(x, y, ori_deg)
-            all_points.append(point)
 
-    return all_points
+            # new spline found
+            if pezzi[0] == "#":
+                # append the old one
+                spline_sequence.append(all_points)
+                # prepare the new one
+                all_points = []
+                offset_x = float(pezzi[1])
+                offset_y = float(pezzi[2])
+
+            # old spline continues
+            else:
+                x = float(pezzi[0]) + offset_x
+                y = float(pezzi[1]) + offset_y
+                ori_deg = float(pezzi[2])
+                point = spliner.SPoint(x, y, ori_deg)
+                all_points.append(point)
+
+        # append the last one
+        spline_sequence.append(all_points)
+
+    return spline_sequence
