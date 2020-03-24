@@ -23,9 +23,10 @@ def poly_model(x, beta):
     return y_true
 
 
-def add_points(x, y, ax, color="b"):
+def add_points(x, y, ax, color="b", ls="-", marker=""):
     #  ax.plot(x, y, color=color, ls="", marker=".")
-    ax.plot(x, y, color=color, ls="-")
+    #  ax.plot(x, y, color=color, ls="-")
+    ax.plot(x, y, color=color, ls=ls, marker=marker)
 
 
 def add_segment(x_start, x_end, coeff, ax, num_samples=50, color="b"):
