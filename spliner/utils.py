@@ -106,7 +106,7 @@ def rotate_point(point, theta):
     return np.matmul(point, rot_mat)
 
 
-def load_points(letter_file_path):
+def load_points(letter_file_path, scale):
     """Load a spline_sequence from a file
 
     File format:
@@ -148,6 +148,8 @@ def load_points(letter_file_path):
             else:
                 x = float(pezzi[0]) + offset_x
                 y = float(pezzi[1]) + offset_y
+                x *= scale
+                y *= scale
                 ori_deg = float(pezzi[2])
                 point = spliner.SPoint(x, y, ori_deg)
                 all_points.append(point)
