@@ -101,7 +101,7 @@ def setup_logger(logLevel="DEBUG"):
     #  log_format_module = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     #  log_format_module = "%(name)s - %(levelname)s: %(message)s"
     #  log_format_module = '%(levelname)s: %(message)s'
-    #  log_format_module = '%(name)s: %(message)s'
+    #  log_format_module = "%(name)s: %(message)s"
     log_format_module = "%(message)s"
 
     formatter = logging.Formatter(log_format_module)
@@ -212,7 +212,7 @@ def sample_segment_points(x_start, x_end, coeff):
     """Sample a poly_model in the [x_start, x_end] range on natural numbers
     """
     logg = logging.getLogger(f"c.{__name__}.sample_segment_points")
-    logg.setLevel("INFO")
+    #  logg.setLevel("INFO")
     logg.debug(f"Starting sample_segment_points")
 
     if x_start > x_end:
@@ -384,6 +384,169 @@ def example_spline():
     plt.show()
 
 
+def build_contour(
+    p0t,
+    p0b,
+    p1t,
+    p1b,
+    coeff_l,
+    coeff_r,
+    x_sample_t,
+    y_segment_t,
+    x_sample_b,
+    y_segment_b,
+    ax,
+):
+    """TODO: Docstring for build_contour.
+
+    :p0t: TODO
+    :p0b: TODO
+    :p1t: TODO
+    :p1b: TODO
+    :coeff_l: TODO
+    :coeff_r: TODO
+    :x_sample_t: TODO
+    :y_segment_t: TODO
+    :x_sample_b: TODO
+    :y_segment_b: TODO
+    :returns: TODO
+
+    """
+    logg = logging.getLogger(f"c.{__name__}.build_contour")
+    #  logg.setLevel("INFO")
+    logg.debug(f"Starting build_contour")
+
+    # regular case, no overlaps
+    if p0t.x <= p1t.x and p0b.x <= p1b.x:
+        # sample the whole line
+        x_sample_l, y_segment_l = sample_segment_points(p0t.x, p0b.x, coeff_l)
+        x_sample_r, y_segment_r = sample_segment_points(p1t.x, p1b.x, coeff_r)
+        logg.debug(f"x_sample_l.shape: {x_sample_l.shape}")
+        logg.debug(f"x_sample_r.shape: {x_sample_r.shape}")
+
+        # plot everything to debug things
+        if not ax is None:
+            # plot left and right segments
+            utils.add_points(x_sample_l, y_segment_l, ax, color="g", marker=".", ls="")
+            utils.add_points(x_sample_r, y_segment_r, ax, color="g", marker=".", ls="")
+
+        # /\
+        if coeff_l[0] >= 0 and coeff_r[0] <= 0:
+            logg.debug(f"/\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            x_sample = np.hstack((x_sample_l, x_sample_t, x_sample_r))
+            contour_t = np.hstack((y_segment_l, y_segment_t, y_segment_r))
+            contour_b = y_segment_b
+
+        # //
+        elif coeff_l[0] >= 0 and coeff_r[0] >= 0:
+            logg.debug(f"// coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            x_sample = np.hstack((x_sample_l, x_sample_t))
+            contour_t = np.hstack((y_segment_l, y_segment_t))
+            contour_b = np.hstack((y_segment_b, y_segment_r))
+
+        # \\
+        elif coeff_l[0] <= 0 and coeff_r[0] <= 0:
+            logg.debug(f"\\\\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            x_sample = np.hstack((x_sample_l, x_sample_b))
+            contour_t = np.hstack((y_segment_t, y_segment_r))
+            contour_b = np.hstack((y_segment_l, y_segment_b))
+
+        # \/
+        elif coeff_l[0] <= 0 and coeff_r[0] >= 0:
+            logg.debug(f"\\/ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            x_sample = np.hstack((x_sample_l, x_sample_b, x_sample_r))
+            contour_t = y_segment_t
+            contour_b = np.hstack((y_segment_l, y_segment_b, y_segment_r))
+
+        return contour_t, contour_b, x_sample
+
+    # both ends of p1tb are left of p0bt, this should not happen
+    elif p0t.x <= p1t.x and p0b.x <= p1b.x:
+        # MAYBE call this again with them swapped
+        raise ValueError(f"Swap the points and try again {p0t} {p0b} {p1t} {p1b}")
+
+    # compute the intersection between the two lines
+    # x = (b2-b1)/(a1-a2)
+    i_x = (coeff_l[1] - coeff_r[1]) / (coeff_r[0] - coeff_l[0])
+    i_y = coeff_l[0] * i_x + coeff_l[1]
+    logg.debug(f"i_x: {i_x} i_y: {i_y}")
+
+    # /\ // \\ type, keep the lower part
+    if p0t.x > p1t.x and p0b.x <= p1b.x:
+        x_sample = 0
+        contour_t = 0
+        contour_b = 0
+        x_sample_l, y_segment_l = sample_segment_points(p0b.x, i_x, coeff_l)
+        x_sample_r, y_segment_r = sample_segment_points(p1b.x, i_x, coeff_r)
+
+        # /\
+        if coeff_l[0] >= 0 and coeff_r[0] <= 0:
+            logg.debug(f"/\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            x_sample = np.hstack((x_sample_l, x_sample_r))
+            contour_t = np.hstack((y_segment_l, y_segment_r))
+            contour_b = y_segment_b
+
+        # //
+        elif coeff_l[0] >= 0 and coeff_r[0] >= 0:
+            logg.debug(f"// coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            x_sample = np.hstack((x_sample_l))
+            contour_t = np.hstack((y_segment_l))
+            contour_b = np.hstack((y_segment_b, y_segment_r))
+
+        # \\
+        elif coeff_l[0] <= 0 and coeff_r[0] <= 0:
+            logg.debug(f"\\\\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            x_sample = np.hstack((x_sample_r))
+            contour_t = np.hstack((y_segment_r))
+            contour_b = np.hstack((y_segment_l, y_segment_b))
+
+    # \/ // \\ type, keep the upper part
+    elif p0t.x <= p1t.x and p0b.x > p1b.x:
+        x_sample = 0
+        contour_t = 0
+        contour_b = 0
+        x_sample_l, y_segment_l = sample_segment_points(p0t.x, i_x, coeff_l)
+        x_sample_r, y_segment_r = sample_segment_points(p1t.x, i_x, coeff_r)
+
+        # //
+        if coeff_l[0] >= 0 and coeff_r[0] >= 0:
+            logg.debug(f"// coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            x_sample = np.hstack((x_sample_l, x_sample_t))
+            contour_t = np.hstack((y_segment_l, y_segment_t))
+            contour_b = np.hstack((y_segment_r))
+
+        # \\
+        elif coeff_l[0] <= 0 and coeff_r[0] <= 0:
+            logg.debug(f"\\\\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            x_sample = np.hstack((x_sample_l))
+            contour_t = np.hstack((y_segment_t, y_segment_r))
+            contour_b = np.hstack((y_segment_l))
+
+        # \/
+        elif coeff_l[0] <= 0 and coeff_r[0] >= 0:
+            logg.debug(f"\\/ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            x_sample = np.hstack((x_sample_l, x_sample_r))
+            contour_t = y_segment_t
+            contour_b = np.hstack((y_segment_l, y_segment_r))
+
+    # plot everything to debug things
+    if not ax is None:
+        ## plot left and right segments
+        utils.add_points(x_sample_l, y_segment_l, ax, color="g", marker=".", ls="")
+        utils.add_points(x_sample_r, y_segment_r, ax, color="g", marker=".", ls="")
+        ## intersection point
+        utils.add_points([i_x], [i_y], ax, color="g", marker="x", ls="")
+        ## plot the segments
+        utils.add_points(
+            [p0t.x, p0b.x], [p0t.y, p0b.y], ax, color="b", marker="", ls="-"
+        )
+        utils.add_points(
+            [p1t.x, p1b.x], [p1t.y, p1b.y], ax, color="b", marker="", ls="-"
+        )
+
+    return contour_t, contour_b, x_sample
+
+
 def compute_thick_spline(p0, p1, thickness, num_samples=100, ax=None):
     """Compute the thick cubic spline between two points
 
@@ -407,11 +570,13 @@ def compute_thick_spline(p0, p1, thickness, num_samples=100, ax=None):
     # compute the corner points of the thick spline
     offset_x_0 = cos(np0_ori_rad) * thickness
     offset_y_0 = sin(np0_ori_rad) * thickness
+    logg.debug(f"offset_x_0: {offset_x_0} offset_y_0: {offset_y_0}")
     p0t = SPoint(rot_p0.x + offset_x_0, rot_p0.y + offset_y_0, rot_p0.ori_deg)
     p0b = SPoint(rot_p0.x - offset_x_0, rot_p0.y - offset_y_0, rot_p0.ori_deg)
     logg.debug(f"p0t: {p0t} p0b: {p0b}")
     offset_x_1 = cos(np1_ori_rad) * thickness
     offset_y_1 = sin(np1_ori_rad) * thickness
+    logg.debug(f"offset_x_1: {offset_x_1} offset_y_1: {offset_y_1}")
     p1t = SPoint(rot_p1.x + offset_x_1, rot_p1.y + offset_y_1, rot_p1.ori_deg)
     p1b = SPoint(rot_p1.x - offset_x_1, rot_p1.y - offset_y_1, rot_p1.ori_deg)
     logg.debug(f"p1t: {p1t} p1b: {p1b}")
@@ -420,11 +585,6 @@ def compute_thick_spline(p0, p1, thickness, num_samples=100, ax=None):
     coeff_l = line_curve(p0t, p0b)
     coeff_r = line_curve(p1t, p1b)
     logg.debug(f"coeff_l: {coeff_l} coeff_r: {coeff_r}")
-    # sample the line
-    x_sample_l, y_segment_l = sample_segment_points(p0t.x, p0b.x, coeff_l)
-    x_sample_r, y_segment_r = sample_segment_points(p1t.x, p1b.x, coeff_r)
-    logg.debug(f"x_sample_l.shape: {x_sample_l.shape}")
-    logg.debug(f"x_sample_r.shape: {x_sample_r.shape}")
 
     # compute the spline points
     coeff_t = cubic_curve(p0t, p1t)
@@ -434,32 +594,21 @@ def compute_thick_spline(p0, p1, thickness, num_samples=100, ax=None):
     logg.debug(f"x_sample_t.shape: {x_sample_t.shape}")
     logg.debug(f"x_sample_b.shape: {x_sample_b.shape}")
 
-    # compute the top and bottom contours
-    if coeff_l[0] > 0 and coeff_r[0] < 0:
-        # /\
-        logg.debug(f"/\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
-        x_sample = np.hstack((x_sample_l, x_sample_t, x_sample_r))
-        contour_t = np.hstack((y_segment_l, y_segment_t, y_segment_r))
-        contour_b = y_segment_b
-    elif coeff_l[0] > 0 and coeff_r[0] > 0:
-        # //
-        logg.debug(f"// coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
-        x_sample = np.hstack((x_sample_l, x_sample_t))
-        contour_t = np.hstack((y_segment_l, y_segment_t))
-        contour_b = np.hstack((y_segment_b, y_segment_r))
-    elif coeff_l[0] < 0 and coeff_r[0] < 0:
-        # \\
-        logg.debug(f"\\\\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
-        x_sample = np.hstack((x_sample_l, x_sample_b))
-        contour_t = np.hstack((y_segment_t, y_segment_r))
-        contour_b = np.hstack((y_segment_l, y_segment_b))
-    elif coeff_l[0] < 0 and coeff_r[0] > 0:
-        # \/
-        logg.debug(f"\\/ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
-        x_sample = np.hstack((x_sample_l, x_sample_b, x_sample_r))
-        contour_t = y_segment_t
-        contour_b = np.hstack((y_segment_l, y_segment_b, y_segment_r))
+    contour_t, contour_b, x_sample = build_contour(
+        p0t,
+        p0b,
+        p1t,
+        p1b,
+        coeff_l,
+        coeff_r,
+        x_sample_t,
+        y_segment_t,
+        x_sample_b,
+        y_segment_b,
+        ax,
+    )
 
+    # compute the top and bottom contours
     logg.debug(f"x_sample.shape: {x_sample.shape}")
     logg.debug(f"contour_t.shape: {contour_t.shape}")
     logg.debug(f"contour_b.shape: {contour_b.shape}")
@@ -473,49 +622,46 @@ def compute_thick_spline(p0, p1, thickness, num_samples=100, ax=None):
     logg.debug(f"max_y_aligned: {max_y_aligned} min_y_aligned: {min_y_aligned}")
 
     #  sample all the points inside the spline, aligned on the grid
-    #  on_points_x = []
-    #  on_points_y = []
-    #  for i, x_curr in enumerate(x_sample):
-        #  for y_curr in range(min_y_aligned, max_y_aligned + 1):
-            #  if contour_b[i] <= y_curr <= contour_t[i]:
-                #  on_points_x.append(x_curr)
-                #  on_points_y.append(y_curr)
+    if True:
+        on_points_x = []
+        on_points_y = []
+        for i, x_curr in enumerate(x_sample):
+            for y_curr in range(min_y_aligned, max_y_aligned + 1):
+                if contour_b[i] <= y_curr <= contour_t[i]:
+                    on_points_x.append(x_curr)
+                    on_points_y.append(y_curr)
 
     # plot everything to debug things
     if not ax is None:
         vec_len = 3
-        # plot the rotated vectors
-        #  utils.add_vector(rot_p0, ax, color="r", vec_len=vec_len)
-        #  utils.add_vector(rot_p1, ax, color="r", vec_len=vec_len)
-        # plot the corner of the spline
-        #  utils.add_vector(p0t, ax, color="r", vec_len=vec_len)
-        #  utils.add_vector(p1t, ax, color="r", vec_len=vec_len)
-        #  utils.add_vector(p0b, ax, color="r", vec_len=vec_len)
-        #  utils.add_vector(p1b, ax, color="r", vec_len=vec_len)
-        # plot top and bottom splines
+        ## plot the rotated vectors
+        utils.add_vector(rot_p0, ax, color="k", vec_len=vec_len)
+        utils.add_vector(rot_p1, ax, color="k", vec_len=vec_len)
+        ## plot the corner of the spline
+        utils.add_vector(p0t, ax, color="k", vec_len=vec_len)
+        utils.add_vector(p1t, ax, color="k", vec_len=vec_len)
+        utils.add_vector(p0b, ax, color="k", vec_len=vec_len)
+        utils.add_vector(p1b, ax, color="k", vec_len=vec_len)
+        ## plot top and bottom splines
         #  utils.add_points(x_sample_t, y_segment_t, ax, color="b", marker=".", ls="")
         #  utils.add_points(x_sample_b, y_segment_b, ax, color="b", marker=".", ls="")
         utils.add_points(x_sample_t, y_segment_t, ax, color="r", marker="", ls="-")
         utils.add_points(x_sample_b, y_segment_b, ax, color="r", marker="", ls="-")
-        # plot left and right segments
-        utils.add_points(x_sample_l, y_segment_l, ax, color="g", marker=".", ls="")
-        utils.add_points(x_sample_r, y_segment_r, ax, color="g", marker=".", ls="")
-        # plot top and bottom contours
-        #  utils.add_points(x_sample, contour_t, ax, color="r", marker=".", ls="")
-        #  utils.add_points(x_sample, contour_b, ax, color="r", marker=".", ls="")
-        # plot on point
-        #  utils.add_points(on_points_x, on_points_y, ax, color="b", marker=".", ls="")
-        #  utils.add_points(on_points_x, on_points_y, ax, color="b", marker=".", ls="")
+        ## plot top and bottom contours
+        utils.add_points(x_sample, contour_t, ax, color="r", marker=".", ls="")
+        utils.add_points(x_sample, contour_b, ax, color="r", marker=".", ls="")
+        ## plot on point
+        utils.add_points(on_points_x, on_points_y, ax, color="b", marker=".", ls="")
+        utils.add_points(on_points_x, on_points_y, ax, color="b", marker=".", ls="")
 
-    #  return on_points_x, on_points_y
-    return 0, 0
+    return on_points_x, on_points_y
 
 
 def example_thick_spline(p0, p1, thickness, scale):
     """
     """
-    logg = logging.getLogger(f"c.{__name__}.example_spline")
-    logg.debug(f"Starting example_spline")
+    logg = logging.getLogger(f"c.{__name__}.example_thick_spline")
+    logg.debug(f"\nStarting example_thick_spline")
 
     logg.debug(f"p0: {p0} p1: {p1}")
 
@@ -523,6 +669,8 @@ def example_thick_spline(p0, p1, thickness, scale):
     fig, ax = plt.subplots()
     ax.set_xlim(-2 * scale, 5 * scale)
     ax.set_ylim(-3 * scale, 5 * scale)
+    #  ax.set_xlim(-1 * scale, 1.5 * scale)
+    #  ax.set_ylim(-2.5 * scale, 2.5 * scale)
 
     # plot the points
     #  utils.add_vector(p0, ax, color="k")
@@ -533,7 +681,7 @@ def example_thick_spline(p0, p1, thickness, scale):
     #  spline_x, spline_y = compute_thick_spline(p0, p1, thickness)
 
     # plot the finished spline
-    utils.add_points(spline_x, spline_y, ax, color="k")
+    utils.add_points(spline_x, spline_y, ax, color="k", marker=".", ls="")
 
     # plot everything
     utils.plot_build(fig, ax)
@@ -546,30 +694,52 @@ def examples_thick_spline():
     # spline thickness
     thickness = 20
     scale = 10
+    plot_scale = 10
 
     # this point with thickness 20 shows where the error is: the left/right
     # segment cross each other so the bottom spline has less points than left
     # segment + top spline + right segment
-    p0 = SPoint(0, 0, 0)
-    p1 = SPoint(2, 1, 45)
-    example_thick_spline(p0, p1, thickness, scale)
+    p0 = SPoint(0, 0, -10)
+    p1 = SPoint(2, 1, 35)
+    example_thick_spline(p0, p1, thickness, plot_scale)
+
+    p0 = SPoint(1, 1, 45)
+    p1 = SPoint(4, 2, -45)
+    example_thick_spline(p0, p1, thickness, plot_scale)
+
+    p0 = SPoint(1, 1, 55)
+    p1 = SPoint(2, 2, 65)
+    example_thick_spline(p0, p1, thickness, plot_scale)
+
+    p0 = SPoint(1, 1, 25)
+    p1 = SPoint(2, 2, 35)
+    example_thick_spline(p0, p1, thickness, plot_scale)
+
+    # both segments are vertical
+    p0 = SPoint(1, 1, 45)
+    p1 = SPoint(2, 2, 45)
+    example_thick_spline(p0, p1, thickness, plot_scale)
+
+    # one of the segments is vertical
+    p0 = SPoint(1 , 1 , 45)
+    p1 = SPoint(4 , 4 , 55)
+    example_thick_spline(p0, p1, thickness, plot_scale)
 
     p0 = SPoint(1 * scale, 1 * scale, 30)
-    #  p1 = SPoint(3, 2, 45)
-    p1 = SPoint(2.6 * scale, 3 * scale, 60)
-    example_thick_spline(p0, p1, thickness, scale)
+    p1 = SPoint(3 * scale, 3 * scale, 60)
+    example_thick_spline(p0, p1, thickness, plot_scale)
 
     p0 = SPoint(1 * scale, 1 * scale, 45)
     p1 = SPoint(3 * scale, 2 * scale, 45)
-    example_thick_spline(p0, p1, thickness, scale)
+    example_thick_spline(p0, p1, thickness, plot_scale)
 
     p0 = SPoint(1 * scale, 1 * scale, -45)
     p1 = SPoint(3 * scale, 2 * scale, -45)
-    example_thick_spline(p0, p1, thickness, scale)
+    example_thick_spline(p0, p1, thickness, plot_scale)
 
     p0 = SPoint(1 * scale, 1 * scale, 45)
-    p1 = SPoint(3 * scale, 2 * scale, -45)
-    example_thick_spline(p0, p1, thickness, scale)
+    p1 = SPoint(4 * scale, 2 * scale, -45)
+    example_thick_spline(p0, p1, thickness, plot_scale)
 
 
 def draw_long_spline(spline_sequence, xlim, ylim, plot_vectors=False):
@@ -700,8 +870,8 @@ def example_load_letter():
     scale = 10
     spline_sequence = utils.load_points(letter_file_path, scale)
 
-    xlim = 0*scale, 124*scale
-    ylim = -250*scale, 0*scale
+    xlim = 0 * scale, 124 * scale
+    ylim = -250 * scale, 0 * scale
     draw_long_spline(spline_sequence, xlim, ylim, plot_vectors=True)
 
 
