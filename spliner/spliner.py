@@ -683,8 +683,8 @@ def example_thick_spline(p0, p1, thickness, scale):
     #  ax.set_ylim(-2.5 * scale, 2.5 * scale)
 
     # compute the spline
-    #  spline_x, spline_y = compute_thick_spline(p0, p1, thickness, ax=ax)
-    spline_x, spline_y = compute_thick_spline(p0, p1, thickness)
+    spline_x, spline_y = compute_thick_spline(p0, p1, thickness, ax=ax)
+    #  spline_x, spline_y = compute_thick_spline(p0, p1, thickness)
 
     # plot the finished spline
     utils.add_points(spline_x, spline_y, ax, color="k", marker=".", ls="")
@@ -727,8 +727,8 @@ def examples_thick_spline():
     example_thick_spline(p0, p1, thickness, plot_scale)
 
     # one of the segments is vertical
-    p0 = SPoint(1 , 1 , 45)
-    p1 = SPoint(4 , 4 , 55)
+    p0 = SPoint(1, 1, 45)
+    p1 = SPoint(4, 4, 55)
     example_thick_spline(p0, p1, thickness, plot_scale)
 
     p0 = SPoint(1 * scale, 1 * scale, 30)
@@ -770,7 +770,7 @@ def draw_long_spline(spline_sequence, xlim, ylim, plot_vectors=False):
 
             #  spline_x, spline_y = compute_spline(p0, p1)
             spline_x, spline_y = compute_thick_spline(p0, p1, 40)
-            utils.add_points(spline_x, spline_y, ax, color="y")
+            utils.add_points(spline_x, spline_y, ax, color="y", marker=".", ls="")
 
     if plot_vectors:
         utils.add_vector(p1, ax, color="k", vec_len=20)
