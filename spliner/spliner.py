@@ -151,8 +151,8 @@ def translate_points_to_origin(p0, p1):
     """Translate to the origin and rotate the points to have both on the x axis
     """
     logg = logging.getLogger(f"c.{__name__}.translate_points_to_origin")
-    logg.debug(f"Starting translate_points_to_origin")
     logg.setLevel("INFO")
+    logg.debug(f"Starting translate_points_to_origin")
 
     # direction from point 0 to 1
     dir_01 = degrees(atan2(p1.y - p0.y, p1.x - p0.x))
@@ -212,7 +212,7 @@ def sample_segment_points(x_start, x_end, coeff):
     """Sample a poly_model in the [x_start, x_end] range on natural numbers
     """
     logg = logging.getLogger(f"c.{__name__}.sample_segment_points")
-    #  logg.setLevel("INFO")
+    logg.setLevel("INFO")
     logg.debug(f"Starting sample_segment_points")
 
     if x_start > x_end:
@@ -354,6 +354,7 @@ def example_spline():
     """
     """
     logg = logging.getLogger(f"c.{__name__}.example_spline")
+    logg.setLevel("INFO")
     logg.debug(f"Starting example_spline")
 
     # create the plot
@@ -413,7 +414,7 @@ def build_contour(
 
     """
     logg = logging.getLogger(f"c.{__name__}.build_contour")
-    #  logg.setLevel("INFO")
+    logg.setLevel("INFO")
     logg.debug(f"Starting build_contour")
 
     # regular case, no overlaps
@@ -556,7 +557,7 @@ def compute_thick_spline(p0, p1, thickness, num_samples=100, ax=None):
     * rotate and translate to original position
     """
     logg = logging.getLogger(f"c.{__name__}.compute_spline")
-    #  logg.setLevel("INFO")
+    logg.setLevel("INFO")
     logg.debug(f"Starting compute_spline")
 
     # translate and rotate the point to the origin
@@ -622,18 +623,25 @@ def compute_thick_spline(p0, p1, thickness, num_samples=100, ax=None):
     logg.debug(f"max_y_aligned: {max_y_aligned} min_y_aligned: {min_y_aligned}")
 
     #  sample all the points inside the spline, aligned on the grid
-    if True:
-        on_points_x = []
-        on_points_y = []
-        for i, x_curr in enumerate(x_sample):
-            for y_curr in range(min_y_aligned, max_y_aligned + 1):
-                if contour_b[i] <= y_curr <= contour_t[i]:
-                    on_points_x.append(x_curr)
-                    on_points_y.append(y_curr)
+    on_points_x = []
+    on_points_y = []
+    for i, x_curr in enumerate(x_sample):
+        for y_curr in range(min_y_aligned, max_y_aligned + 1):
+            if contour_b[i] <= y_curr <= contour_t[i]:
+                on_points_x.append(x_curr)
+                on_points_y.append(y_curr)
+
+    # rototranslate points to the original position
+    rototran_x, rototran_y = rototranslate_points(
+        on_points_x, on_points_y, -dir_01, p0.x, p0.y,
+    )
 
     # plot everything to debug things
     if not ax is None:
         vec_len = 3
+        ## plot the points
+        utils.add_vector(p0, ax, color="r", vec_len=vec_len)
+        utils.add_vector(p1, ax, color="r", vec_len=vec_len)
         ## plot the rotated vectors
         utils.add_vector(rot_p0, ax, color="k", vec_len=vec_len)
         utils.add_vector(rot_p1, ax, color="k", vec_len=vec_len)
@@ -652,15 +660,17 @@ def compute_thick_spline(p0, p1, thickness, num_samples=100, ax=None):
         utils.add_points(x_sample, contour_b, ax, color="r", marker=".", ls="")
         ## plot on point
         utils.add_points(on_points_x, on_points_y, ax, color="b", marker=".", ls="")
-        utils.add_points(on_points_x, on_points_y, ax, color="b", marker=".", ls="")
+        ## plot on point translated back to original position
+        utils.add_points(rototran_x, rototran_y, ax, color="b", marker=".", ls="")
 
-    return on_points_x, on_points_y
+    return rototran_x, rototran_y
 
 
 def example_thick_spline(p0, p1, thickness, scale):
     """
     """
     logg = logging.getLogger(f"c.{__name__}.example_thick_spline")
+    logg.setLevel("INFO")
     logg.debug(f"\nStarting example_thick_spline")
 
     logg.debug(f"p0: {p0} p1: {p1}")
@@ -672,13 +682,9 @@ def example_thick_spline(p0, p1, thickness, scale):
     #  ax.set_xlim(-1 * scale, 1.5 * scale)
     #  ax.set_ylim(-2.5 * scale, 2.5 * scale)
 
-    # plot the points
-    #  utils.add_vector(p0, ax, color="k")
-    #  utils.add_vector(p1, ax, color="k")
-
     # compute the spline
-    spline_x, spline_y = compute_thick_spline(p0, p1, thickness, ax=ax)
-    #  spline_x, spline_y = compute_thick_spline(p0, p1, thickness)
+    #  spline_x, spline_y = compute_thick_spline(p0, p1, thickness, ax=ax)
+    spline_x, spline_y = compute_thick_spline(p0, p1, thickness)
 
     # plot the finished spline
     utils.add_points(spline_x, spline_y, ax, color="k", marker=".", ls="")
@@ -748,6 +754,7 @@ def draw_long_spline(spline_sequence, xlim, ylim, plot_vectors=False):
     spline_sequence = [all_points, all_points, ...]
     """
     logg = logging.getLogger(f"c.{__name__}.draw_long_spline")
+    #  logg.setLevel("INFO")
     logg.debug(f"Starting draw_long_spline")
 
     fig, ax = plt.subplots()
@@ -761,8 +768,8 @@ def draw_long_spline(spline_sequence, xlim, ylim, plot_vectors=False):
             if plot_vectors:
                 utils.add_vector(p0, ax, color="k", vec_len=20)
 
-            spline_x, spline_y = compute_spline(p0, p1)
-            #  spline_x, spline_y = compute_thick_spline(p0, p1, 20)
+            #  spline_x, spline_y = compute_spline(p0, p1)
+            spline_x, spline_y = compute_thick_spline(p0, p1, 40)
             utils.add_points(spline_x, spline_y, ax, color="y")
 
     if plot_vectors:
@@ -776,6 +783,7 @@ def example_long_spline():
     """
     """
     logg = logging.getLogger(f"c.{__name__}.example_long_spline")
+    logg.setLevel("INFO")
     logg.debug(f"Starting example_long_spline")
 
     xlim = -4, 4
@@ -872,7 +880,8 @@ def example_load_letter():
 
     xlim = 0 * scale, 124 * scale
     ylim = -250 * scale, 0 * scale
-    draw_long_spline(spline_sequence, xlim, ylim, plot_vectors=True)
+    #  draw_long_spline(spline_sequence, xlim, ylim, plot_vectors=True)
+    draw_long_spline(spline_sequence, xlim, ylim, plot_vectors=False)
 
 
 if __name__ == "__main__":
@@ -880,5 +889,5 @@ if __name__ == "__main__":
     #  cubic_curve_example()
     #  example_spline()
     #  example_long_spline()
-    #  example_load_letter()
-    examples_thick_spline()
+    example_load_letter()
+    #  examples_thick_spline()
