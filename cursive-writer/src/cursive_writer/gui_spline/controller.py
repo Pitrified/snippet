@@ -17,7 +17,8 @@ class Controller:
         self.model = Model()
 
         # register callbacks on the model observables
-        self.model.pf_input_image.add_callback(self.updated_input_image)
+        self.model.pf_input_image.add_callback(self.updated_pf_input_image)
+        self.model.crop_input_image.add_callback(self.updated_crop_input_image)
 
         ### VIEW  ###
         self.view = View(self.root)
@@ -25,10 +26,13 @@ class Controller:
         # bind callbacks from user input
 
         # general keypress
-        self.root.bind("<KeyRelease>", self.KeyReleased)
+        self.root.bind("<KeyRelease>", self.key_released)
+
+        # react to canvas resize
+        self.view.frame_image.image_canvas.bind("<Configure>", self.canvas_resized)
 
         # initialize the values in the model
-        self.model.set_input_image(pf_input_image)
+        self.model.set_pf_input_image(pf_input_image)
 
     def run(self):
         """Start the app and run the mainloop
@@ -38,7 +42,7 @@ class Controller:
 
         self.root.mainloop()
 
-    def KeyReleased(self, event):
+    def key_released(self, event):
         """Bind Key to functions
         """
         keysym = event.keysym
@@ -47,7 +51,21 @@ class Controller:
         if keysym == "Escape":
             self.view.exit()
 
-    def updated_input_image(self, data):
-        logg = logging.getLogger(f"c.{__class__.__name__}.updated_input_image")
+    def updated_pf_input_image(self, data):
+        logg = logging.getLogger(f"c.{__class__.__name__}.updated_pf_input_image")
         logg.info(f"New values received for pf_input_image: {data}")
-        self.view.update_input_image(data)
+        self.view.update_pf_input_image(data)
+
+    def canvas_resized(self, event):
+        logg = logging.getLogger(f"c.{__class__.__name__}.canvas_resized")
+        logg.info(f"Resized image_canvas")
+        widget_wid = event.widget.winfo_width()
+        widget_hei = event.widget.winfo_height()
+        self.model.do_canvas_resize(widget_wid, widget_hei)
+
+    def updated_crop_input_image(self, data):
+        logg = logging.getLogger(f"c.{__name__}.updated_crop_input_image")
+        logg.debug(f"Start updated_crop_input_image")
+        self.view.frame_image.update_crop_input_image(data)
+        
+        

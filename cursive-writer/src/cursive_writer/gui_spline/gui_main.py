@@ -127,7 +127,9 @@ def run_gui_main(args):
     path_input = args.path_input
     main_dir = Path(__file__).resolve().parent
     logg.debug(f"main_dir: {main_dir}")
-    pf_input_image = main_dir / path_input
+    image_dir = main_dir.parent / "images"
+    logg.debug(f"image_dir: {image_dir}")
+    pf_input_image = image_dir / path_input
     logg.debug(f"pf_input_image: {pf_input_image}")
 
     c = Controller(pf_input_image)
