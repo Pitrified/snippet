@@ -40,8 +40,8 @@ class Controller:
         self.view.frame_image.bind_canvas("<ButtonRelease-1>", self.released_canvas)
 
         # moved mouse
-        self.view.frame_image.bind_canvas("<B1-Motion>", self.moved_canvas_mouse)
-        #  self.view.frame_image.bind_canvas("<Motion>", self.moved_canvas_mouse)
+        #  self.view.frame_image.bind_canvas("<B1-Motion>", self.moved_canvas_mouse)
+        self.view.frame_image.bind_canvas("<Motion>", self.moved_canvas_mouse)
 
         # initialize the values in the model
         self.model.set_pf_input_image(pf_input_image)
@@ -54,6 +54,8 @@ class Controller:
 
         self.root.mainloop()
 
+    ###### INPUT ACTIONS ######
+
     def key_released(self, event):
         """Bind Key to functions
         """
@@ -63,22 +65,12 @@ class Controller:
         if keysym == "Escape":
             self.view.exit()
 
-    def updated_pf_input_image(self, data):
-        logg = logging.getLogger(f"c.{__class__.__name__}.updated_pf_input_image")
-        logg.info(f"New values received for pf_input_image: {data}")
-        self.view.update_pf_input_image(data)
-
     def canvas_resized(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.canvas_resized")
         logg.info(f"{fmt_cn('Resized', 'start')} image_canvas")
         widget_wid = event.widget.winfo_width()
         widget_hei = event.widget.winfo_height()
         self.model.do_canvas_resize(widget_wid, widget_hei)
-
-    def updated_crop_input_image(self, data):
-        logg = logging.getLogger(f"c.{__name__}.updated_crop_input_image")
-        logg.debug(f"{fmt_cn('Start', 'start')} updated_crop_input_image")
-        self.view.frame_image.update_crop_input_image(data)
 
     def clicked_canvas(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_canvas")
@@ -98,11 +90,24 @@ class Controller:
 
     def moved_canvas_mouse(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.moved_canvas_mouse")
-        logg.setLevel("TRACE")
-        logg.info(f"{fmt_cn('Moved', 'start')} mouse on canvas")
+        #  logg.setLevel("TRACE")
+        logg.setLevel("INFO")
+        logg.debug(f"{fmt_cn('Moved', 'start')} mouse on canvas")
         logg.trace(f"event.x: {event.x} event.y: {event.y}")
 
         self.model.move_canvas_mouse(event.x, event.y)
+
+    ###### OBSERVABLE CALLBACKS ######
+
+    def updated_pf_input_image(self, data):
+        logg = logging.getLogger(f"c.{__class__.__name__}.updated_pf_input_image")
+        logg.info(f"New values received for pf_input_image: {data}")
+        self.view.update_pf_input_image(data)
+
+    def updated_crop_input_image(self, data):
+        logg = logging.getLogger(f"c.{__name__}.updated_crop_input_image")
+        logg.debug(f"{fmt_cn('Start', 'start')} updated_crop_input_image")
+        self.view.frame_image.update_crop_input_image(data)
 
     def updated_free_line(self, data):
         logg = logging.getLogger(f"c.{__name__}.updated_free_line")
@@ -113,5 +118,7 @@ class Controller:
         """
         """
         logg = logging.getLogger(f"c.{__name__}.updated_curr_mouse_pos")
+        logg.setLevel("INFO")
         logg.debug(f"{fmt_cn('Start', 'start')} updated_curr_mouse_pos")
-        # TODO update some label in the view
+
+        self.view.frame_info.update_curr_mouse_pos(data)

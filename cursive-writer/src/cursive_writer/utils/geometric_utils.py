@@ -5,6 +5,7 @@ from timeit import default_timer as timer
 from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
 
+
 def line_curve(x0, y0, x1, y1):
     """Find the coefficient for a linear curve passing through two points
 
@@ -95,3 +96,25 @@ def collide_line_box(left, top, right, bot, line_coeff):
         admissible_inter.append(bot_inter)
 
     return admissible_inter
+
+
+def translate_line(line_coeff, shift_x, shift_y):
+    """Translate a line by changing the b coeff
+
+    y = ax + b
+    Remember that tkinter has y axis toward the bottom
+    """
+    logg = logging.getLogger(f"c.{__name__}.translate_line")
+    #  logg.setLevel("INFO")
+    logg.debug(
+        f"{fmt_cn('Starting', 'start')} translate_line {line_coeff} {shift_x} {shift_y}"
+    )
+
+    a, b = line_coeff
+
+    b += shift_y
+    b += -a * shift_x
+
+    logg.debug(f"shifted: {[a, b]}")
+
+    return [a, b]

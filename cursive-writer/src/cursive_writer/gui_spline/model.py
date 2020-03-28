@@ -70,6 +70,8 @@ class Model:
         }
         self.crop_input_image.set(data)
 
+        # TODO update also lines drawn
+
     def save_click_canvas(self, mouse_x, mouse_y):
         logg = logging.getLogger(f"c.{__class__.__name__}.save_click_canvas")
 
@@ -102,6 +104,8 @@ class Model:
 
     def move_canvas_mouse(self, mouse_x, mouse_y):
         logg = logging.getLogger(f"c.{__class__.__name__}.move_canvas_mouse")
+        logg.setLevel("INFO")
+        logg.debug(f"{fmt_cn('Start', 'start')} move_canvas_mouse")
 
         img_mouse_x = mouse_x - self._image_cropper.widget_shift_x
         img_mouse_y = mouse_y - self._image_cropper.widget_shift_y

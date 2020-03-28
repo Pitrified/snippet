@@ -2,6 +2,7 @@ import logging
 import tkinter as tk
 
 from cursive_writer.utils.geometric_utils import collide_line_box
+from cursive_writer.utils.geometric_utils import translate_line
 from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
 
@@ -72,20 +73,20 @@ class FrameInfo(tk.Frame):
         self.grid_columnconfigure(0, weight=1)
 
         # frame for font measurement related buttons
-        self.fm_frame = tk.Frame(self, background="burlywood2")
+        self.font_measurement_frame = tk.Frame(self, background="burlywood2")
 
-        # setup grid for fm_frame
-        self.fm_frame.grid_columnconfigure(0, weight=1)
+        # setup grid for font_measurement_frame
+        self.font_measurement_frame.grid_columnconfigure(0, weight=1)
 
-        # build the objects in fm_frame
+        # build the objects in font_measurement_frame
         self.fm_title = tk.Label(
-            self.fm_frame,
+            self.font_measurement_frame,
             text="Font Measurement",
-            background=self.fm_frame.cget("background"),
+            background=self.font_measurement_frame.cget("background"),
         )
 
         self.fm_btn_set_base_mean = tk.Button(
-            self.fm_frame,
+            self.font_measurement_frame,
             text="Set base to mean dist",
             borderwidth=0,
             highlightthickness=0,
@@ -94,7 +95,7 @@ class FrameInfo(tk.Frame):
         )
 
         self.fm_btn_set_base_ascent = tk.Button(
-            self.fm_frame,
+            self.font_measurement_frame,
             text="Set base to ascent dist",
             borderwidth=0,
             highlightthickness=0,
@@ -102,27 +103,47 @@ class FrameInfo(tk.Frame):
             activebackground="wheat1",
         )
 
-        # grid the objects in fm_frame
+        # grid the objects in font_measurement_frame
         self.fm_title.grid(row=0, column=0, sticky="ew")
         self.fm_btn_set_base_mean.grid(row=1, column=0, sticky="ew")
         self.fm_btn_set_base_ascent.grid(row=2, column=0, sticky="ew")
 
         # frame for mouse pos / line orientation informations
-        self.mouse_info_frame = tk.Frame(self)
+        self.mouse_info_frame = tk.Frame(self, background="burlywood2")
 
-        # create mockup label
-        self.tmp_label = tk.Label(
+        # setup grid for mouse_info_frame
+        self.mouse_info_frame.grid_columnconfigure(0, weight=1)
+
+        # mouse_info_frame title label
+        self.mi_title = tk.Label(
             self.mouse_info_frame,
-            text="Mock up mouse_info_frame",
-            background=self.cget("background"),
+            text="Mouse info",
+            background=self.font_measurement_frame.cget("background"),
         )
 
-        # grid it
-        self.tmp_label.grid(row=0, column=0, sticky="ew")
+        # create mouse pos info label
+        self.mi_var_pos = tk.StringVar(self.mouse_info_frame)
+        self.mi_label_pos = tk.Label(
+            self.mouse_info_frame,
+            textvariable=self.mi_var_pos,
+            background=self.cget("background"),
+        )
+        self.mi_var_pos.set("Mouse at (0, 0)")
+
+        # grid mouse_info_frame elements
+        self.mi_title.grid(row=0, column=0, sticky="ew")
+        self.mi_label_pos.grid(row=1, column=0, sticky="ew")
 
         # grid the frames
-        self.fm_frame.grid(row=0, column=0, sticky="ew")
+        self.font_measurement_frame.grid(row=0, column=0, sticky="ew")
         self.mouse_info_frame.grid(row=1, column=0, sticky="ew")
+
+    def update_curr_mouse_pos(self, pos):
+        logg = logging.getLogger(f"c.{__name__}.update_curr_mouse_pos")
+        logg.setLevel("INFO")
+        pos_str = f"Mouse at ({pos[0]}, {pos[1]})"
+        logg.debug(f"{fmt_cn('Start', 'start')} update_curr_mouse_pos - {pos_str}")
+        self.mi_var_pos.set(pos_str)
 
 
 class FrameImage(tk.Frame):
@@ -183,7 +204,9 @@ class FrameImage(tk.Frame):
         logg.debug(f"left: {left} top: {top} right: {right} bot: {bot}")
 
         # the line_coeff are in the image coordinate
-        line_coeff[1] += self.widget_shift_y
+        line_coeff = translate_line(
+            line_coeff, self.widget_shift_x, self.widget_shift_y
+        )
 
         # compute the intersections
         admissible_inter = collide_line_box(left, top, right, bot, line_coeff)
