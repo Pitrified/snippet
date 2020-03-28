@@ -24,11 +24,23 @@ def line_curve(x0, y0, x1, y1):
 
 
 def collide_line_box(left, top, right, bot, line_coeff):
-    """
+    """Collide a line with a rectangular box
+
+    line_coeff = [a, b]
+    y = ax + b
+
+          top
+          ---
+    left |   | right
+         |   |
+          ---
+         bottom
+
+    Note that the y axis is reversed in tkinter
     """
     logg = logging.getLogger(f"c.{__name__}.collide_line_box")
     logg.debug(f"Start collide_line_box")
-    logg.debug(f"left: {left} top: {top} right: {right} bot: {bot}")
+    logg.debug(f"left: {left} top: {top} right: {right} bot: {bot} coeff: {line_coeff}")
 
     a = line_coeff[0]
     b = line_coeff[1]
@@ -41,7 +53,7 @@ def collide_line_box(left, top, right, bot, line_coeff):
             return [left_inter, right_inter]
         else:
             logg.debug(f"Horizontal outside")
-            return None
+            return []
 
     # vertical line
     elif a == float("inf"):
@@ -52,28 +64,32 @@ def collide_line_box(left, top, right, bot, line_coeff):
             return [top_inter, bot_inter]
         else:
             logg.debug(f"Vertical outside")
-            return None
+            return []
 
     # regular line, find intersections
-    top_inter = (top - b) / a
-    bot_inter = (bot - b) / a
-    left_inter = a * left + b
-    right_inter = a * right + b
-    logg.debug(f"Intersections left: {left_inter} top: {top_inter} right: {right_inter} bot: {bot_inter}")
+    left_inter = (left, a * left + b)
+    top_inter = ((top - b) / a, top)
+    right_inter = (right, a * right + b)
+    bot_inter = ((bot - b) / a, bot)
+    logg.debug(
+        f"Intersections left: {left_inter} top: {top_inter} right: {right_inter} bot: {bot_inter}"
+    )
 
+    # more readable tuple coefficient
+    x, y = 0, 1
     # select admissible intersections
     admissible_inter = []
-    if left < top_inter < right:
-        logg.debug(f"left < top_inter < right")
-        admissible_inter.append((top_inter, top))
-    if left < bot_inter < right:
-        logg.debug(f"left < bot_inter < right")
-        admissible_inter.append((bot_inter, bot))
-    if top < left_inter < bot:
+    if top < left_inter[y] < bot:
         logg.debug(f"top < left_inter < bot")
-        admissible_inter.append((left, left_inter))
-    if top < right_inter < bot:
+        admissible_inter.append(left_inter)
+    if left < top_inter[x] < right:
+        logg.debug(f"left < top_inter < right")
+        admissible_inter.append(top_inter)
+    if top < right_inter[y] < bot:
         logg.debug(f"top < right_inter < bot")
-        admissible_inter.append((right, right_inter))
+        admissible_inter.append(right_inter)
+    if left < bot_inter[x] < right:
+        logg.debug(f"left < bot_inter < right")
+        admissible_inter.append(bot_inter)
 
     return admissible_inter

@@ -8,7 +8,7 @@ from PIL import Image
 from PIL import ImageTk
 
 from observable import Observable
-from utils import line_curve
+from cursive_writer.utils.geometric_utils import line_curve
 
 
 class Model:

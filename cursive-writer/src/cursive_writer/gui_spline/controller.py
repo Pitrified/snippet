@@ -113,4 +113,3 @@ class Controller:
         logg = logging.getLogger(f"c.{__name__}.updated_curr_mouse_pos")
         logg.debug(f"Start updated_curr_mouse_pos")
         # TODO update some label in the view
-

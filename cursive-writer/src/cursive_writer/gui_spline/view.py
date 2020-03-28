@@ -1,7 +1,10 @@
 import logging
 import tkinter as tk
 
-from utils import collide_line_box
+from cursive_writer.utils.geometric_utils import collide_line_box
+from cursive_writer.utils.color_utils import fmt_c
+from cursive_writer.utils.color_utils import fmt_cn
+
 
 class View:
     def __init__(self, root):
@@ -169,21 +172,24 @@ class FrameImage(tk.Frame):
         """
         """
         logg = logging.getLogger(f"c.{__name__}.update_free_line")
-        logg.debug(f"Start update_free_line {line_coeff}")
+        logg.debug(f"{fmt_cn('Start', 'start')} update_free_line {line_coeff}")
 
-        #  canvas_wid = self.image_canvas.winfo_width()
-        #  canvas_hei = self.image_canvas.winfo_height()
-        #  logg.debug(f"canvas_wid: {canvas_wid} canvas_hei: {canvas_hei}")
+        # get bbox of the image in the canvas
+        # MAYBE save this when putting the image on the canvas...
         left = self.widget_shift_x
         top = self.widget_shift_y
         right = left + self.resized_wid
         bot = top + self.resized_hei
         logg.debug(f"left: {left} top: {top} right: {right} bot: {bot}")
 
+        # the line_coeff are in the image coordinate
+        line_coeff[1] += self.widget_shift_y
+
+        # compute the intersections
         admissible_inter = collide_line_box(left, top, right, bot, line_coeff)
 
-        if admissible_inter is None:
-            logg.debug(f"No line found inside the canvas")
+        if len(admissible_inter) == 0:
+            logg.debug(f"No line found inside the image")
             return
         elif len(admissible_inter) != 2:
             logg.debug(f"Weird amount of intersections found {len(admissible_inter)}")
@@ -192,9 +198,11 @@ class FrameImage(tk.Frame):
         # delete the old free_line in the canvas
         self.image_canvas.delete("free_line")
 
-        self.image_canvas.create_line(
-            *admissible_inter[0], *admissible_inter[1], tags="free_line"
-        )
+        x0 = admissible_inter[0][0]
+        y0 = admissible_inter[0][1]
+        x1 = admissible_inter[1][0]
+        y1 = admissible_inter[1][1]
+        self.image_canvas.create_line(x0, y0, x1, y1, tags="free_line", fill="red")
 
     def bind_canvas(self, kind, func):
         """Bind event 'kind' to func *only* on image_canvas
