@@ -11,6 +11,8 @@ from observable import Observable
 from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.geometric_utils import line_curve_point
+from cursive_writer.utils.geometric_utils import translate_point_dir
+from cursive_writer.utils.geometric_utils import dist2D
 from cursive_writer.utils.oriented_point import OrientedPoint
 
 
@@ -29,6 +31,9 @@ class Model:
         # save the SPoint with normalized x,y on descent-base-mean-ascent
         # send the position scaled for display
         self.display_font_measurements = Observable()
+        # proportion between the line
+        self.prop_mean_ascent = 0.7
+        self.prop_desc_base = 0.6
 
         # current mouse position
         self.curr_mouse_pos = Observable()
@@ -175,10 +180,23 @@ class Model:
             )
             mean_point = OrientedPoint(curr_pos_x, curr_pos_y, vert_point.ori_deg + 90)
 
+            dist_base_mean = dist2D(base_point, mean_point)
+
+            dist_base_ascent = dist_base_mean * (1 + self.prop_mean_ascent)
+            ascent_point = translate_point_dir(
+                base_point, vert_point.ori_deg, dist_base_ascent
+            )
+            dist_desc_base = dist_base_mean * self.prop_desc_base
+            descent_point = translate_point_dir(
+                base_point, vert_point.ori_deg, -dist_desc_base
+            )
+
         fm_lines = {
             "vert_point": vert_point,
             "base_point": base_point,
             "mean_point": mean_point,
+            "ascent_point": ascent_point,
+            "descent_point": descent_point,
         }
         return fm_lines
 

@@ -7,7 +7,11 @@ from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.oriented_point import OrientedPoint
 
 from math import degrees
+from math import radians
 from math import atan2
+from math import sqrt
+from math import cos
+from math import sin
 
 
 def line_curve_ab_coeff(x0, y0, x1, y1):
@@ -134,9 +138,23 @@ def translate_line(line_coeff, shift_x, shift_y):
     return [a, b]
 
 
-def translate_point(orig_point, shift_x, shift_y):
-    """Translate the orig_point and return a new one
+def translate_point_dxy(orig_point, shift_x, shift_y):
+    """Translate the orig_point of dx, dy and return a new one
     """
     return OrientedPoint(
         orig_point.x + shift_x, orig_point.y + shift_y, orig_point.ori_deg
     )
+
+
+def translate_point_dir(orig_point, dir_deg, shift):
+    """Translate the point along a direction of a certain amount
+    """
+    new_x = orig_point.x + shift * cos(radians(dir_deg))
+    new_y = orig_point.y + shift * sin(radians(dir_deg))
+    return OrientedPoint(new_x, new_y, orig_point.ori_deg)
+
+
+def dist2D(p0, p1):
+    """Distance between two points
+    """
+    return sqrt((p0.x - p1.x) ** 2 + (p0.y - p1.y) ** 2)

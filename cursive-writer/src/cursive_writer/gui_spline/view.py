@@ -4,7 +4,7 @@ import tkinter as tk
 from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.geometric_utils import collide_line_box
-from cursive_writer.utils.geometric_utils import translate_point
+from cursive_writer.utils.geometric_utils import translate_point_dxy
 
 
 class View:
@@ -244,14 +244,19 @@ class FrameImage(tk.Frame):
         )
         self.draw_line(fm_lines["base_point"], tag="base_point", fill="red")
         self.draw_line(fm_lines["mean_point"], tag="mean_point", fill="red")
+        self.draw_line(fm_lines["ascent_point"], tag="ascent_point", fill="red")
+        self.draw_line(fm_lines["descent_point"], tag="descent_point", fill="red")
 
     def draw_line(self, image_point, tag, **kwargs):
         """Add a line on the point
         """
+        logg = logging.getLogger(f"c.{__name__}.draw_line")
+        logg.debug(f"{fmt_cn('Start', 'start')} draw_line")
+
         # the line_point are in the image coordinate
         # shift them to canvas coordinate
         #  line_point.translate(self.widget_shift_x, self.widget_shift_y)
-        canv_point = translate_point(
+        canv_point = translate_point_dxy(
             image_point, self.widget_shift_x, self.widget_shift_y
         )
 
