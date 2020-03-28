@@ -2,7 +2,6 @@ import logging
 import tkinter as tk
 
 from cursive_writer.utils.geometric_utils import collide_line_box
-from cursive_writer.utils.geometric_utils import translate_line
 from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
 
@@ -189,11 +188,11 @@ class FrameImage(tk.Frame):
             tags="image",
         )
 
-    def update_free_line(self, line_coeff):
+    def update_free_line(self, line_point):
         """
         """
         logg = logging.getLogger(f"c.{__name__}.update_free_line")
-        logg.debug(f"{fmt_cn('Start', 'start')} update_free_line {line_coeff}")
+        logg.debug(f"{fmt_cn('Start', 'start')} update_free_line {line_point}")
 
         # get bbox of the image in the canvas
         # MAYBE save this when putting the image on the canvas...
@@ -203,14 +202,12 @@ class FrameImage(tk.Frame):
         bot = top + self.resized_hei
         logg.debug(f"left: {left} top: {top} right: {right} bot: {bot}")
 
-        # the line_coeff are in the image coordinate
+        # the line_point are in the image coordinate
         # shift them to canvas coordinate
-        line_coeff = translate_line(
-            line_coeff, self.widget_shift_x, self.widget_shift_y
-        )
+        line_point.translate(self.widget_shift_x, self.widget_shift_y)
 
         # compute the intersections
-        admissible_inter = collide_line_box(left, top, right, bot, line_coeff)
+        admissible_inter = collide_line_box((left, top, right, bot), line_point)
 
         if len(admissible_inter) == 0:
             logg.debug(f"No line found inside the image")

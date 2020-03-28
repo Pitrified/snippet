@@ -8,7 +8,7 @@ from PIL import Image
 from PIL import ImageTk
 
 from observable import Observable
-from cursive_writer.utils.geometric_utils import line_curve
+from cursive_writer.utils.geometric_utils import line_curve_point
 from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
 
@@ -102,10 +102,10 @@ class Model:
         if current_state == "free":
             pass
         elif current_state == "free_clicked":
-            line_coeff = line_curve(
+            line_point = line_curve_point(
                 img_mouse_x, img_mouse_y, self.start_img_x, self.start_img_y
             )
-            self.free_line.set(line_coeff)
+            self.free_line.set(line_point)
         elif current_state == "setting_base_mean":
             fm_lines = {}
             self.fm_lines.set(fm_lines)

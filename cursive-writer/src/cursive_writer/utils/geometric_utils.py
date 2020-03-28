@@ -4,9 +4,13 @@ from timeit import default_timer as timer
 
 from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
+from cursive_writer.utils.oriented_point import OrientedPoint
+
+from math import degrees
+from math import atan2
 
 
-def line_curve(x0, y0, x1, y1):
+def line_curve_ab_coeff(x0, y0, x1, y1):
     """Find the coefficient for a linear curve passing through two points
 
     y = ax + b
@@ -26,7 +30,14 @@ def line_curve(x0, y0, x1, y1):
     return [a, b]
 
 
-def collide_line_box(left, top, right, bot, line_coeff):
+def line_curve_point(x0, y0, x1, y1):
+    """Find a point on the line with appropriate orientation
+    """
+    ori_deg = degrees(atan2(y1 - y0, x1 - x0))
+    return OrientedPoint(x0, y0, ori_deg)
+
+
+def collide_line_box(bbox, line_point):
     """Collide a line with a rectangular box
 
     line_coeff = [a, b]
@@ -43,6 +54,9 @@ def collide_line_box(left, top, right, bot, line_coeff):
     """
     logg = logging.getLogger(f"c.{__name__}.collide_line_box")
     logg.debug(f"{fmt_cn('Start', 'start')} collide_line_box")
+
+    left, top, right, bot = bbox
+    line_coeff = line_point.to_ab_line()
     logg.debug(f"left: {left} top: {top} right: {right} bot: {bot} coeff: {line_coeff}")
 
     a = line_coeff[0]
