@@ -204,6 +204,7 @@ class FrameImage(tk.Frame):
         logg.debug(f"left: {left} top: {top} right: {right} bot: {bot}")
 
         # the line_coeff are in the image coordinate
+        # shift them to canvas coordinate
         line_coeff = translate_line(
             line_coeff, self.widget_shift_x, self.widget_shift_y
         )

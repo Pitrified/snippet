@@ -27,7 +27,7 @@ class Controller:
         ### VIEW  ###
         self.view = View(self.root)
 
-        # bind callbacks from user input
+        ### bind callbacks from user input
 
         # general keypress
         self.root.bind("<KeyRelease>", self.key_released)
@@ -42,6 +42,11 @@ class Controller:
         # moved mouse
         #  self.view.frame_image.bind_canvas("<B1-Motion>", self.moved_canvas_mouse)
         self.view.frame_image.bind_canvas("<Motion>", self.moved_canvas_mouse)
+
+        ### button clicks
+        self.view.frame_info.fm_btn_set_base_mean.config(
+            command=self.clicked_btn_set_base_mean
+        )
 
         # initialize the values in the model
         self.model.set_pf_input_image(pf_input_image)
@@ -96,6 +101,14 @@ class Controller:
         logg.trace(f"event.x: {event.x} event.y: {event.y}")
 
         self.model.move_canvas_mouse(event.x, event.y)
+
+    def clicked_btn_set_base_mean(self):
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_base_mean")
+        #  logg.setLevel("TRACE")
+        #  logg.setLevel("INFO")
+        logg.debug(f"{fmt_cn('Start', 'start')} clicked_btn_set_base_mean")
+
+        self.model.click_set_base_mean()
 
     ###### OBSERVABLE CALLBACKS ######
 

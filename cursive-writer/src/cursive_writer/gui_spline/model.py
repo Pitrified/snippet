@@ -41,6 +41,8 @@ class Model:
 
         # info on the line from clicked point to current
         self.free_line = Observable()
+        # info on all font measurement lines
+        self.fm_lines = Observable()
 
     def set_pf_input_image(self, pf_input_image):
         logg = logging.getLogger(f"c.{__class__.__name__}.set_pf_input_image")
@@ -82,8 +84,31 @@ class Model:
             f"{fmt_cn('Clicked', 'start')} - pos in image {self.start_img_x}x{self.start_img_y}"
         )
 
-        if self.state.get() == "free":
+        current_state = self.state.get()
+        if current_state == "free":
             self.state.set("free_clicked")
+
+    def move_canvas_mouse(self, mouse_x, mouse_y):
+        logg = logging.getLogger(f"c.{__class__.__name__}.move_canvas_mouse")
+        logg.setLevel("INFO")
+        logg.debug(f"{fmt_cn('Start', 'start')} move_canvas_mouse")
+
+        img_mouse_x = mouse_x - self._image_cropper.widget_shift_x
+        img_mouse_y = mouse_y - self._image_cropper.widget_shift_y
+
+        self.curr_mouse_pos.set((img_mouse_x, img_mouse_y))
+
+        current_state = self.state.get()
+        if current_state == "free":
+            pass
+        elif current_state == "free_clicked":
+            line_coeff = line_curve(
+                img_mouse_x, img_mouse_y, self.start_img_x, self.start_img_y
+            )
+            self.free_line.set(line_coeff)
+        elif current_state == "setting_base_mean":
+            fm_lines = {}
+            self.fm_lines.set(fm_lines)
 
     def release_click_canvas(self, mouse_x, mouse_y):
         logg = logging.getLogger(f"c.{__class__.__name__}.release_click_canvas")
@@ -99,26 +124,20 @@ class Model:
         # - adjust baseline
         # - create new point
 
-        if self.state.get() == "free_clicked":
+        current_state = self.state.get()
+        if current_state == "free_clicked":
+            # MAYBE add the spline point
             self.state.set("free")
-
-    def move_canvas_mouse(self, mouse_x, mouse_y):
-        logg = logging.getLogger(f"c.{__class__.__name__}.move_canvas_mouse")
-        logg.setLevel("INFO")
-        logg.debug(f"{fmt_cn('Start', 'start')} move_canvas_mouse")
-
-        img_mouse_x = mouse_x - self._image_cropper.widget_shift_x
-        img_mouse_y = mouse_y - self._image_cropper.widget_shift_y
-
-        self.curr_mouse_pos.set((img_mouse_x, img_mouse_y))
-
-        if self.state.get() == "free":
+        elif current_state == "setting_base_mean":
+            # compute and save the font measurement info
             pass
-        elif self.state.get() == "free_clicked":
-            line_coeff = line_curve(
-                img_mouse_x, img_mouse_y, self.start_img_x, self.start_img_y
-            )
-            self.free_line.set(line_coeff)
+
+    def click_set_base_mean(self):
+        logg = logging.getLogger(f"c.{__class__.__name__}.click_set_base_mean")
+        #  logg.setLevel("INFO")
+        logg.debug(f"{fmt_cn('Start', 'start')} click_set_base_mean")
+
+        self.state.set("setting_base_mean")
 
 
 class ImageCropper:
