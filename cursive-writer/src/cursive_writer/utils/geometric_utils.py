@@ -2,6 +2,8 @@ import logging
 import numpy as np
 from timeit import default_timer as timer
 
+from cursive_writer.utils.color_utils import fmt_c
+from cursive_writer.utils.color_utils import fmt_cn
 
 def line_curve(x0, y0, x1, y1):
     """Find the coefficient for a linear curve passing through two points
@@ -10,7 +12,7 @@ def line_curve(x0, y0, x1, y1):
     """
     logg = logging.getLogger(f"c.{__name__}.line_curve")
     logg.setLevel("INFO")
-    logg.debug(f"Starting line_curve")
+    logg.debug(f"{fmt_cn('Starting', 'start')} line_curve")
 
     if x1 == x0:
         return [float("inf"), x0]
@@ -39,7 +41,7 @@ def collide_line_box(left, top, right, bot, line_coeff):
     Note that the y axis is reversed in tkinter
     """
     logg = logging.getLogger(f"c.{__name__}.collide_line_box")
-    logg.debug(f"Start collide_line_box")
+    logg.debug(f"{fmt_cn('Start', 'start')} collide_line_box")
     logg.debug(f"left: {left} top: {top} right: {right} bot: {bot} coeff: {line_coeff}")
 
     a = line_coeff[0]

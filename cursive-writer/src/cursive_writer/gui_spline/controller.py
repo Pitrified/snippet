@@ -3,13 +3,15 @@ import tkinter as tk
 
 from view import View
 from model import Model
+from cursive_writer.utils.color_utils import fmt_c
+from cursive_writer.utils.color_utils import fmt_cn
 
 
 class Controller:
     def __init__(self, pf_input_image):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         logg.setLevel("TRACE")
-        logg.info("Start init")
+        logg.info(f"{fmt_cn('Start', 'start')} init")
 
         self.root = tk.Tk()
 
@@ -38,8 +40,8 @@ class Controller:
         self.view.frame_image.bind_canvas("<ButtonRelease-1>", self.released_canvas)
 
         # moved mouse
-        #  self.view.frame_image.bind_canvas("<B1-Motion>", self.moved_canvas_mouse)
-        self.view.frame_image.bind_canvas("<Motion>", self.moved_canvas_mouse)
+        self.view.frame_image.bind_canvas("<B1-Motion>", self.moved_canvas_mouse)
+        #  self.view.frame_image.bind_canvas("<Motion>", self.moved_canvas_mouse)
 
         # initialize the values in the model
         self.model.set_pf_input_image(pf_input_image)
@@ -48,7 +50,7 @@ class Controller:
         """Start the app and run the mainloop
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.run")
-        logg.info("Running controller\n")
+        logg.info("{fmt_cn('Running', 'start')} controller\n")
 
         self.root.mainloop()
 
@@ -68,14 +70,14 @@ class Controller:
 
     def canvas_resized(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.canvas_resized")
-        logg.info(f"Resized image_canvas")
+        logg.info(f"{fmt_cn('Resized', 'start')} image_canvas")
         widget_wid = event.widget.winfo_width()
         widget_hei = event.widget.winfo_height()
         self.model.do_canvas_resize(widget_wid, widget_hei)
 
     def updated_crop_input_image(self, data):
         logg = logging.getLogger(f"c.{__name__}.updated_crop_input_image")
-        logg.debug(f"Start updated_crop_input_image")
+        logg.debug(f"{fmt_cn('Start', 'start')} updated_crop_input_image")
         self.view.frame_image.update_crop_input_image(data)
 
     def clicked_canvas(self, event):
@@ -89,7 +91,7 @@ class Controller:
     def released_canvas(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.released_canvas")
         logg.setLevel("TRACE")
-        logg.info(f"Released mouse on canvas")
+        logg.info(f"{fmt_cn('Released', 'start')} mouse on canvas")
         logg.trace(f"event.x: {event.x} event.y: {event.y}")
 
         self.model.release_click_canvas(event.x, event.y)
@@ -97,19 +99,19 @@ class Controller:
     def moved_canvas_mouse(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.moved_canvas_mouse")
         logg.setLevel("TRACE")
-        logg.info(f"Moved mouse on canvas")
+        logg.info(f"{fmt_cn('Moved', 'start')} mouse on canvas")
         logg.trace(f"event.x: {event.x} event.y: {event.y}")
 
         self.model.move_canvas_mouse(event.x, event.y)
 
     def updated_free_line(self, data):
         logg = logging.getLogger(f"c.{__name__}.updated_free_line")
-        logg.debug(f"Start updated_free_line")
+        logg.debug(f"{fmt_cn('Start', 'start')} updated_free_line")
         self.view.frame_image.update_free_line(data)
 
     def updated_curr_mouse_pos(self, data):
         """
         """
         logg = logging.getLogger(f"c.{__name__}.updated_curr_mouse_pos")
-        logg.debug(f"Start updated_curr_mouse_pos")
+        logg.debug(f"{fmt_cn('Start', 'start')} updated_curr_mouse_pos")
         # TODO update some label in the view

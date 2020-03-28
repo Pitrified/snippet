@@ -10,7 +10,7 @@ class View:
     def __init__(self, root):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         logg.setLevel("TRACE")
-        logg.info("Start init")
+        logg.info(f"{fmt_cn('Start', 'start')} init")
 
         self.root = root
 
@@ -53,7 +53,7 @@ class View:
 
     def update_pf_input_image(self, pf_input_image):
         logg = logging.getLogger(f"c.{__class__.__name__}.update_pf_input_image")
-        logg.info(f"Updating pf_input_image '{pf_input_image}'")
+        logg.info(f"{fmt_cn('Updating', 'start')} pf_input_image '{pf_input_image}'")
         # TODO write this name somewhere LOL
 
 
@@ -61,7 +61,7 @@ class FrameInfo(tk.Frame):
     def __init__(self, parent, name, *args, **kwargs):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         logg.setLevel("TRACE")
-        logg.info(f"Start init")
+        logg.info(f"{fmt_cn('Start', 'start')} init")
 
         self.name = name
         super().__init__(parent, *args, **kwargs)
@@ -129,7 +129,7 @@ class FrameImage(tk.Frame):
     def __init__(self, parent, name, *args, **kwargs):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         logg.setLevel("TRACE")
-        logg.info(f"Start init")
+        logg.info(f"{fmt_cn('Start', 'start')} init")
 
         self.name = name
         super().__init__(parent, *args, **kwargs)
@@ -214,7 +214,7 @@ class FrameSpline(tk.Frame):
     def __init__(self, parent, name, *args, **kwargs):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         logg.setLevel("TRACE")
-        logg.info(f"Start init")
+        logg.info(f"{fmt_cn('Start', 'start')} init")
 
         self.name = name
         super().__init__(parent, *args, **kwargs)

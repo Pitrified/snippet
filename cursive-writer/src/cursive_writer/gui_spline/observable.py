@@ -1,20 +1,22 @@
 import logging
 
+from cursive_writer.utils.color_utils import fmt_cn
+
 
 class Observable:
     """A wrapper around data, to link callbacks to it
     """
 
     def __init__(self, initialValue=None):
-        log = logging.getLogger(f"c.{__class__.__name__}.init")
-        log.info("Start init")
+        logg = logging.getLogger(f"c.{__class__.__name__}.init")
+        logg.info(f"{fmt_cn('Start', 'start')} init")
 
         self.data = initialValue
         self.callbacks = {}
 
     def add_callback(self, func):
-        log = logging.getLogger(f"c.{__class__.__name__}.add_callback")
-        log.info("Adding callback")
+        logg = logging.getLogger(f"c.{__class__.__name__}.add_callback")
+        logg.info(f"{fmt_cn('Adding', 'start')} callback")
 
         self.callbacks[func] = 1
 
@@ -26,9 +28,9 @@ class Observable:
             func(self.data)
 
     def set(self, data):
-        log = logging.getLogger(f"c.{__class__.__name__}.set")
-        log.setLevel("INFO")
-        log.debug("Setting data")
+        logg = logging.getLogger(f"c.{__class__.__name__}.set")
+        logg.setLevel("INFO")
+        logg.debug(f"{fmt_cn('Setting', 'start')} data")
 
         self.data = data
         self._docallbacks()

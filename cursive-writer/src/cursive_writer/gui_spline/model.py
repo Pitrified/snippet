@@ -9,13 +9,15 @@ from PIL import ImageTk
 
 from observable import Observable
 from cursive_writer.utils.geometric_utils import line_curve
+from cursive_writer.utils.color_utils import fmt_c
+from cursive_writer.utils.color_utils import fmt_cn
 
 
 class Model:
     def __init__(self):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         logg.setLevel("TRACE")
-        logg.info("Start init")
+        logg.info(f"{fmt_cn('Start', 'start')} init")
 
         # full path of the current image
         self.pf_input_image = Observable()
@@ -42,7 +44,7 @@ class Model:
 
     def set_pf_input_image(self, pf_input_image):
         logg = logging.getLogger(f"c.{__class__.__name__}.set_pf_input_image")
-        logg.info(f"Setting pf_input_image '{pf_input_image}'")
+        logg.info(f"{fmt_cn('Setting', 'start')} pf_input_image '{pf_input_image}'")
 
         self.pf_input_image.set(pf_input_image)
 
@@ -50,7 +52,7 @@ class Model:
 
     def do_canvas_resize(self, widget_wid, widget_hei):
         logg = logging.getLogger(f"c.{__class__.__name__}.do_canvas_resize")
-        logg.info(f"New canvas is {widget_wid}x{widget_hei}")
+        logg.info(f"{fmt_cn('New', 'start')} canvas is {widget_wid}x{widget_hei}")
 
         self._widget_wid = widget_wid
         self._widget_hei = widget_hei
@@ -74,7 +76,9 @@ class Model:
         # mouse pos relative to image corner
         self.start_img_x = mouse_x - self._image_cropper.widget_shift_x
         self.start_img_y = mouse_y - self._image_cropper.widget_shift_y
-        logg.info(f"Clicked - pos in image {self.start_img_x}x{self.start_img_y}")
+        logg.info(
+            f"{fmt_cn('Clicked', 'start')} - pos in image {self.start_img_x}x{self.start_img_y}"
+        )
 
         if self.state.get() == "free":
             self.state.set("free_clicked")
@@ -85,7 +89,9 @@ class Model:
         # mouse pos relative to image corner
         self.end_img_x = mouse_x - self._image_cropper.widget_shift_x
         self.end_img_y = mouse_y - self._image_cropper.widget_shift_y
-        logg.info(f"Released - pos in image {self.end_img_x}x{self.end_img_y}")
+        logg.info(
+            f"{fmt_cn('Released', 'start')} - pos in image {self.end_img_x}x{self.end_img_y}"
+        )
 
         # TODO depending on self.state
         # - adjust baseline
@@ -115,7 +121,7 @@ class ImageCropper:
     def __init__(self, photo_name_full):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         #  logg.setLevel("TRACE")
-        logg.info("Start init")
+        logg.info(f"{fmt_cn('Start', 'start')} init")
 
         # load the image
         self._photo_name_full = photo_name_full
@@ -126,7 +132,7 @@ class ImageCropper:
         self.upscaling_mode = Image.NEAREST
         self.downscaling_mode = Image.LANCZOS
 
-        # zoom saved in logg scale, actual zoom: zoom_base**zoom_level
+        # zoom saved in log scale, actual zoom: zoom_base**zoom_level
         self._zoom_base = sqrt(2)
         self._zoom_level = None
 
@@ -153,7 +159,7 @@ class ImageCropper:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.reset_image")
         logg.setLevel("TRACE")
-        logg.trace(f"Resetting image")
+        logg.trace(f"{fmt_cn('Resetting', 'start')} image")
         if widget_wid != -1:
             self.widget_wid = widget_wid
             self.widget_hei = widget_hei
@@ -183,7 +189,7 @@ class ImageCropper:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_crop")
         logg.setLevel("TRACE")
-        logg.trace(f"Updating crop zoom {self._zoom_level:.4f}")
+        logg.trace(f"{fmt_cn('Updating', 'start')} crop zoom {self._zoom_level:.4f}")
 
         # zoom in linear scale
         zoom = self._zoom_base ** self._zoom_level
@@ -194,7 +200,7 @@ class ImageCropper:
 
         # the zoomed photo fits inside the widget
         if zoom_wid < self.widget_wid and zoom_hei < self.widget_hei:
-            logg.trace(f"The zoomed photo fits inside the widget")
+            logg.trace(f"The zoomed photo fits {fmt_cn('inside', 'a1')} the widget")
             # resize the pic, don't cut it
             resized_dim = (zoom_wid, zoom_hei)
             # take the entire image
@@ -205,7 +211,7 @@ class ImageCropper:
 
         # the zoomed photo is wider than the widget
         elif zoom_wid >= self.widget_wid and zoom_hei < self.widget_hei:
-            logg.trace(f"The zoomed photo is wider than the widget")
+            logg.trace(f"The zoomed photo is {fmt_cn('wider', 'a1')} than the widget")
             # target dimension as wide as the widget
             resized_dim = (self.widget_wid, zoom_hei)
             # from top to bottom, only keep a vertical stripe
@@ -221,7 +227,7 @@ class ImageCropper:
 
         # the zoomed photo is taller than the widget
         elif zoom_wid < self.widget_wid and zoom_hei >= self.widget_hei:
-            logg.trace(f"The zoomed photo is taller than the widget")
+            logg.trace(f"The zoomed photo is {fmt_cn('taller', 'a1')} than the widget")
             resized_dim = (zoom_wid, self.widget_hei)
             region = (
                 0,
@@ -235,7 +241,7 @@ class ImageCropper:
 
         # the zoomed photo is bigger than the widget
         elif zoom_wid >= self.widget_wid and zoom_hei >= self.widget_hei:
-            logg.trace(f"The zoomed photo is bigger than the widget")
+            logg.trace(f"The zoomed photo is {fmt_cn('bigger', 'a1')} than the widget")
             resized_dim = (self.widget_wid, self.widget_hei)
             region = (
                 self._mov_x / zoom,
