@@ -11,10 +11,10 @@ class View:
         self.root = root
 
         self.frame_info = FrameInfo(
-            self.root, name="frame_info", background="burlywood1"
+            self.root, name="frame_info", background="burlywood1",
         )
         self.frame_image = FrameImage(
-            self.root, name="frame_image", background="burlywood2"
+            self.root, name="frame_image", background="burlywood1"
         )
         self.frame_spline = FrameSpline(
             self.root, name="frame_spline", background="burlywood1"
@@ -34,6 +34,8 @@ class View:
     def setup_layout(self):
         # row 0 expands
         self.root.grid_rowconfigure(0, weight=1)
+        # column 0 does not expand but has min width
+        #  self.root.grid_columnconfigure(0, weight=0)
         # column 1 expands
         self.root.grid_columnconfigure(1, weight=1)
 
@@ -48,6 +50,7 @@ class View:
     def update_pf_input_image(self, pf_input_image):
         logg = logging.getLogger(f"c.{__class__.__name__}.update_pf_input_image")
         logg.info(f"Updating pf_input_image '{pf_input_image}'")
+        # TODO write this name somewhere LOL
 
 
 class FrameInfo(tk.Frame):
@@ -60,16 +63,62 @@ class FrameInfo(tk.Frame):
         super().__init__(parent, *args, **kwargs)
 
         # setup grid for the frame
-        self.grid_rowconfigure(0, weight=1)
+        #  self.grid_rowconfigure(0, weight=1)
+        #  self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        # create mockup label
-        self.image_label = tk.Label(
-            self, text="Mock up FrameInfo", background=self.cget("background")
+        # frame for font measurement related buttons
+        self.fm_frame = tk.Frame(self, background="burlywood2")
+
+        # setup grid for fm_frame
+        self.fm_frame.grid_columnconfigure(0, weight=1)
+
+        # build the objects in fm_frame
+        self.fm_title = tk.Label(
+            self.fm_frame,
+            text="Font Measurement",
+            background=self.fm_frame.cget("background"),
         )
 
-        # grid it, do not expand
-        self.image_label.grid(row=0, column=0)
+        self.fm_btn_set_base_mean = tk.Button(
+            self.fm_frame,
+            text="Set base to mean dist",
+            borderwidth=0,
+            highlightthickness=0,
+            background="wheat2",
+            activebackground="wheat1",
+        )
+
+        self.fm_btn_set_base_ascent = tk.Button(
+            self.fm_frame,
+            text="Set base to ascent dist",
+            borderwidth=0,
+            highlightthickness=0,
+            background="wheat2",
+            activebackground="wheat1",
+        )
+
+        # grid the objects in fm_frame
+        self.fm_title.grid(row=0, column=0, sticky="ew")
+        self.fm_btn_set_base_mean.grid(row=1, column=0, sticky="ew")
+        self.fm_btn_set_base_ascent.grid(row=2, column=0, sticky="ew")
+
+        # frame for mouse pos / line orientation informations
+        self.mouse_info_frame = tk.Frame(self)
+
+        # create mockup label
+        self.tmp_label = tk.Label(
+            self.mouse_info_frame,
+            text="Mock up mouse_info_frame",
+            background=self.cget("background"),
+        )
+
+        # grid it
+        self.tmp_label.grid(row=0, column=0, sticky="ew")
+
+        # grid the frames
+        self.fm_frame.grid(row=0, column=0, sticky="ew")
+        self.mouse_info_frame.grid(row=1, column=0, sticky="ew")
 
 
 class FrameImage(tk.Frame):
@@ -85,12 +134,10 @@ class FrameImage(tk.Frame):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        self.image_label = tk.Label(
-            self, text="Mock up FrameImage", bg=self.cget("background")
-        )
-
+        #  # mockup label to draw the frame
+        #  self.image_label = tk.Label( self, text="Mock up FrameImage", bg=self.cget("background"))
         #  # grid it, do not expand
-        self.image_label.grid(row=0, column=0)
+        #  self.image_label.grid(row=0, column=0)
 
         # create the canvas, size in pixels, width=300, height=200
         # the size is not needed, because is gridded with sticky option
@@ -99,18 +146,19 @@ class FrameImage(tk.Frame):
         # pack the canvas into a frame/form
         self.image_canvas.grid(row=0, column=0, sticky="nsew")
 
-        #  # load the .gif image file
-        #  gif1 = PhotoImage(file='small_globe.gif')
-
-        #  # put gif image on canvas
-        #  # pic's upper left corner (NW) on the canvas is at x=50 y=10
-        #  canvas.create_image(50, 10, image=gif1, anchor=NW)
-
     def update_crop_input_image(self, data):
         image = data["image_res"]
         x = data["widget_shift_x"]
         y = data["widget_shift_y"]
-        self.image_canvas.create_image(x, y, image=image, anchor="nw")
+        # delete the old image in the canvas
+        self.image_canvas.delete("image")
+        # draw the new one
+        self.image_canvas.create_image(x, y, image=image, anchor="nw", tags="image")
+
+    def bind_canvas(self, kind, func):
+        """Bind event 'kind' to func *only* on image_canvas
+        """
+        self.image_canvas.bind(kind, func)
 
 
 class FrameSpline(tk.Frame):

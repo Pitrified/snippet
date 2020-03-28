@@ -31,6 +31,11 @@ class Controller:
         # react to canvas resize
         self.view.frame_image.image_canvas.bind("<Configure>", self.canvas_resized)
 
+        # clicked on canvas
+        self.view.frame_image.bind_canvas("<Button-1>", self.clicked_canvas)
+        # moved mouse
+        self.view.frame_image.bind_canvas("<B1-Motion>", self.moved_canvas_mouse)
+
         # initialize the values in the model
         self.model.set_pf_input_image(pf_input_image)
 
@@ -67,5 +72,19 @@ class Controller:
         logg = logging.getLogger(f"c.{__name__}.updated_crop_input_image")
         logg.debug(f"Start updated_crop_input_image")
         self.view.frame_image.update_crop_input_image(data)
-        
-        
+
+    def clicked_canvas(self, event):
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_canvas")
+        logg.setLevel("TRACE")
+        logg.info(f"Clicked mouse on canvas")
+        logg.trace(f"event.x: {event.x} event.y: {event.y}")
+
+        self.model.save_click_canvas(event.x, event.y)
+
+    def moved_canvas_mouse(self, event):
+        logg = logging.getLogger(f"c.{__class__.__name__}.moved_canvas_mouse")
+        logg.setLevel("TRACE")
+        logg.info(f"Moved mouse on canvas")
+        logg.trace(f"event.x: {event.x} event.y: {event.y}")
+
+        #  self.model.saveMousePos(event.x, event.y)

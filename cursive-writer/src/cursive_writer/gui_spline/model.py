@@ -21,6 +21,11 @@ class Model:
         # ImageTk that holds the cropped picture
         self.crop_input_image = Observable(None)
 
+        # font measurement
+        # save the SPoint with normalized x,y on descent-base-mean-ascent
+        # send the position scaled for display
+        self.display_font_measurements = Observable(None)
+
         self._widget_wid = -1
         self._widget_hei = -1
 
@@ -49,6 +54,14 @@ class Model:
             "widget_shift_y": self._image_cropper.widget_shift_y,
         }
         self.crop_input_image.set(data)
+
+    def save_click_canvas(self, mouse_x, mouse_y):
+        logg = logging.getLogger(f"c.{__class__.__name__}.save_click_canvas")
+
+        # gtm mouse pos relative to image corner
+        self.img_x = mouse_x - self._image_cropper.widget_shift_x
+        self.img_y = mouse_y - self._image_cropper.widget_shift_y
+        logg.info(f"Pos in image {self.img_x}x{self.img_y}")
 
 
 class ImageCropper:
