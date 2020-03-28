@@ -19,6 +19,8 @@ class Controller:
         # register callbacks on the model observables
         self.model.pf_input_image.add_callback(self.updated_pf_input_image)
         self.model.crop_input_image.add_callback(self.updated_crop_input_image)
+        self.model.free_line.add_callback(self.updated_free_line)
+        self.model.curr_mouse_pos.add_callback(self.updated_curr_mouse_pos)
 
         ### VIEW  ###
         self.view = View(self.root)
@@ -33,8 +35,11 @@ class Controller:
 
         # clicked on canvas
         self.view.frame_image.bind_canvas("<Button-1>", self.clicked_canvas)
+        self.view.frame_image.bind_canvas("<ButtonRelease-1>", self.released_canvas)
+
         # moved mouse
-        self.view.frame_image.bind_canvas("<B1-Motion>", self.moved_canvas_mouse)
+        #  self.view.frame_image.bind_canvas("<B1-Motion>", self.moved_canvas_mouse)
+        self.view.frame_image.bind_canvas("<Motion>", self.moved_canvas_mouse)
 
         # initialize the values in the model
         self.model.set_pf_input_image(pf_input_image)
@@ -81,10 +86,31 @@ class Controller:
 
         self.model.save_click_canvas(event.x, event.y)
 
+    def released_canvas(self, event):
+        logg = logging.getLogger(f"c.{__class__.__name__}.released_canvas")
+        logg.setLevel("TRACE")
+        logg.info(f"Released mouse on canvas")
+        logg.trace(f"event.x: {event.x} event.y: {event.y}")
+
+        self.model.release_click_canvas(event.x, event.y)
+
     def moved_canvas_mouse(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.moved_canvas_mouse")
         logg.setLevel("TRACE")
         logg.info(f"Moved mouse on canvas")
         logg.trace(f"event.x: {event.x} event.y: {event.y}")
 
-        #  self.model.saveMousePos(event.x, event.y)
+        self.model.move_canvas_mouse(event.x, event.y)
+
+    def updated_free_line(self, data):
+        logg = logging.getLogger(f"c.{__name__}.updated_free_line")
+        logg.debug(f"Start updated_free_line")
+        self.view.frame_image.update_free_line(data)
+
+    def updated_curr_mouse_pos(self, data):
+        """
+        """
+        logg = logging.getLogger(f"c.{__name__}.updated_curr_mouse_pos")
+        logg.debug(f"Start updated_curr_mouse_pos")
+        # TODO update some label in the view
+

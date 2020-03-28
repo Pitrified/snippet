@@ -1,6 +1,7 @@
 import logging
 import tkinter as tk
 
+from utils import collide_line_box
 
 class View:
     def __init__(self, root):
@@ -148,12 +149,52 @@ class FrameImage(tk.Frame):
 
     def update_crop_input_image(self, data):
         image = data["image_res"]
-        x = data["widget_shift_x"]
-        y = data["widget_shift_y"]
+        self.widget_shift_x = data["widget_shift_x"]
+        self.widget_shift_y = data["widget_shift_y"]
+        self.resized_wid = data["resized_wid"]
+        self.resized_hei = data["resized_hei"]
+
         # delete the old image in the canvas
         self.image_canvas.delete("image")
         # draw the new one
-        self.image_canvas.create_image(x, y, image=image, anchor="nw", tags="image")
+        self.image_canvas.create_image(
+            self.widget_shift_x,
+            self.widget_shift_y,
+            image=image,
+            anchor="nw",
+            tags="image",
+        )
+
+    def update_free_line(self, line_coeff):
+        """
+        """
+        logg = logging.getLogger(f"c.{__name__}.update_free_line")
+        logg.debug(f"Start update_free_line {line_coeff}")
+
+        #  canvas_wid = self.image_canvas.winfo_width()
+        #  canvas_hei = self.image_canvas.winfo_height()
+        #  logg.debug(f"canvas_wid: {canvas_wid} canvas_hei: {canvas_hei}")
+        left = self.widget_shift_x
+        top = self.widget_shift_y
+        right = left + self.resized_wid
+        bot = top + self.resized_hei
+        logg.debug(f"left: {left} top: {top} right: {right} bot: {bot}")
+
+        admissible_inter = collide_line_box(left, top, right, bot, line_coeff)
+
+        if admissible_inter is None:
+            logg.debug(f"No line found inside the canvas")
+            return
+        elif len(admissible_inter) != 2:
+            logg.debug(f"Weird amount of intersections found {len(admissible_inter)}")
+            return
+
+        # delete the old free_line in the canvas
+        self.image_canvas.delete("free_line")
+
+        self.image_canvas.create_line(
+            *admissible_inter[0], *admissible_inter[1], tags="free_line"
+        )
 
     def bind_canvas(self, kind, func):
         """Bind event 'kind' to func *only* on image_canvas

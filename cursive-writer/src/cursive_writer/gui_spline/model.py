@@ -8,6 +8,7 @@ from PIL import Image
 from PIL import ImageTk
 
 from observable import Observable
+from utils import line_curve
 
 
 class Model:
@@ -17,17 +18,27 @@ class Model:
         logg.info("Start init")
 
         # full path of the current image
-        self.pf_input_image = Observable(None)
+        self.pf_input_image = Observable()
         # ImageTk that holds the cropped picture
-        self.crop_input_image = Observable(None)
+        self.crop_input_image = Observable()
 
         # font measurement
         # save the SPoint with normalized x,y on descent-base-mean-ascent
         # send the position scaled for display
-        self.display_font_measurements = Observable(None)
+        self.display_font_measurements = Observable()
 
+        # current mouse position
+        self.curr_mouse_pos = Observable()
+
+        # canvas width
         self._widget_wid = -1
         self._widget_hei = -1
+
+        # how to react to a mouse movement
+        self.state = Observable("free")
+
+        # info on the line from clicked point to current
+        self.free_line = Observable()
 
     def set_pf_input_image(self, pf_input_image):
         logg = logging.getLogger(f"c.{__class__.__name__}.set_pf_input_image")
@@ -52,16 +63,52 @@ class Model:
             "image_res": self._image_cropper.image_res,
             "widget_shift_x": self._image_cropper.widget_shift_x,
             "widget_shift_y": self._image_cropper.widget_shift_y,
+            "resized_wid": self._image_cropper.resized_dim[0],
+            "resized_hei": self._image_cropper.resized_dim[1],
         }
         self.crop_input_image.set(data)
 
     def save_click_canvas(self, mouse_x, mouse_y):
         logg = logging.getLogger(f"c.{__class__.__name__}.save_click_canvas")
 
-        # gtm mouse pos relative to image corner
-        self.img_x = mouse_x - self._image_cropper.widget_shift_x
-        self.img_y = mouse_y - self._image_cropper.widget_shift_y
-        logg.info(f"Pos in image {self.img_x}x{self.img_y}")
+        # mouse pos relative to image corner
+        self.start_img_x = mouse_x - self._image_cropper.widget_shift_x
+        self.start_img_y = mouse_y - self._image_cropper.widget_shift_y
+        logg.info(f"Clicked - pos in image {self.start_img_x}x{self.start_img_y}")
+
+        if self.state.get() == "free":
+            self.state.set("free_clicked")
+
+    def release_click_canvas(self, mouse_x, mouse_y):
+        logg = logging.getLogger(f"c.{__class__.__name__}.release_click_canvas")
+
+        # mouse pos relative to image corner
+        self.end_img_x = mouse_x - self._image_cropper.widget_shift_x
+        self.end_img_y = mouse_y - self._image_cropper.widget_shift_y
+        logg.info(f"Released - pos in image {self.end_img_x}x{self.end_img_y}")
+
+        # TODO depending on self.state
+        # - adjust baseline
+        # - create new point
+
+        if self.state.get() == "free_clicked":
+            self.state.set("free")
+
+    def move_canvas_mouse(self, mouse_x, mouse_y):
+        logg = logging.getLogger(f"c.{__class__.__name__}.move_canvas_mouse")
+
+        img_mouse_x = mouse_x - self._image_cropper.widget_shift_x
+        img_mouse_y = mouse_y - self._image_cropper.widget_shift_y
+
+        self.curr_mouse_pos.set((img_mouse_x, img_mouse_y))
+
+        if self.state.get() == "free":
+            pass
+        elif self.state.get() == "free_clicked":
+            line_coeff = line_curve(
+                img_mouse_x, img_mouse_y, self.start_img_x, self.start_img_y
+            )
+            self.free_line.set(line_coeff)
 
 
 class ImageCropper:
@@ -201,7 +248,10 @@ class ImageCropper:
             self.widget_shift_y = 0
 
         logg.trace(f"resized_dim {resized_dim} region {region}")
-        logg.trace(f"widget_shift_x {self.widget_shift_x} widget_shift_y {self.widget_shift_y}")
+        logg.trace(
+            f"widget_shift_x {self.widget_shift_x} widget_shift_y {self.widget_shift_y}"
+        )
+        self.resized_dim = resized_dim
 
         # decide what method to use when resizing
         if zoom > 1:
