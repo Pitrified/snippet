@@ -23,6 +23,7 @@ class Controller:
         self.model.crop_input_image.add_callback(self.updated_crop_input_image)
         self.model.free_line.add_callback(self.updated_free_line)
         self.model.curr_mouse_pos.add_callback(self.updated_curr_mouse_pos)
+        self.model.fm_lines.add_callback(self.updated_fm_lines)
 
         ### VIEW  ###
         self.view = View(self.root)
@@ -55,7 +56,7 @@ class Controller:
         """Start the app and run the mainloop
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.run")
-        logg.info("{fmt_cn('Running', 'start')} controller\n")
+        logg.info(f"{fmt_cn('Running', 'start')} controller\n")
 
         self.root.mainloop()
 
@@ -135,3 +136,8 @@ class Controller:
         logg.debug(f"{fmt_cn('Start', 'start')} updated_curr_mouse_pos")
 
         self.view.frame_info.update_curr_mouse_pos(data)
+
+    def updated_fm_lines(self, data):
+        logg = logging.getLogger(f"c.{__name__}.updated_fm_lines")
+        logg.debug(f"{fmt_cn('Start', 'start')} updated_fm_lines")
+        self.view.frame_image.update_fm_lines(data)

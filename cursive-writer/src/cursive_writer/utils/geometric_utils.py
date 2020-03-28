@@ -132,3 +132,11 @@ def translate_line(line_coeff, shift_x, shift_y):
     logg.debug(f"shifted: {[a, b]}")
 
     return [a, b]
+
+
+def translate_point(orig_point, shift_x, shift_y):
+    """Translate the orig_point and return a new one
+    """
+    return OrientedPoint(
+        orig_point.x + shift_x, orig_point.y + shift_y, orig_point.ori_deg
+    )

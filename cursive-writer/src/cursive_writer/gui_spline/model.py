@@ -8,9 +8,10 @@ from PIL import Image
 from PIL import ImageTk
 
 from observable import Observable
-from cursive_writer.utils.geometric_utils import line_curve_point
 from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
+from cursive_writer.utils.geometric_utils import line_curve_point
+from cursive_writer.utils.oriented_point import OrientedPoint
 
 
 class Model:
@@ -75,6 +76,8 @@ class Model:
         # TODO update also lines drawn
 
     def save_click_canvas(self, mouse_x, mouse_y):
+        """Save the pos clicked on the canvas
+        """
         logg = logging.getLogger(f"c.{__class__.__name__}.save_click_canvas")
 
         # mouse pos relative to image corner
@@ -85,20 +88,26 @@ class Model:
         )
 
         current_state = self.state.get()
+        logg.debug(f"Clicked current_state: {current_state}")
         if current_state == "free":
             self.state.set("free_clicked")
+        elif current_state == "setting_base_mean":
+            self.state.set("setting_base_mean_clicked")
 
     def move_canvas_mouse(self, mouse_x, mouse_y):
+        """React to mouse movement on Canvas
+        """
         logg = logging.getLogger(f"c.{__class__.__name__}.move_canvas_mouse")
         logg.setLevel("INFO")
         logg.debug(f"{fmt_cn('Start', 'start')} move_canvas_mouse")
 
+        # save the current pos in the image
         img_mouse_x = mouse_x - self._image_cropper.widget_shift_x
         img_mouse_y = mouse_y - self._image_cropper.widget_shift_y
-
         self.curr_mouse_pos.set((img_mouse_x, img_mouse_y))
 
         current_state = self.state.get()
+        logg.debug(f"Moved current_state: {current_state}")
         if current_state == "free":
             pass
         elif current_state == "free_clicked":
@@ -107,7 +116,9 @@ class Model:
             )
             self.free_line.set(line_point)
         elif current_state == "setting_base_mean":
-            fm_lines = {}
+            pass
+        elif current_state == "setting_base_mean_clicked":
+            fm_lines = self.build_fm_lines("base_mean")
             self.fm_lines.set(fm_lines)
 
     def release_click_canvas(self, mouse_x, mouse_y):
@@ -125,19 +136,51 @@ class Model:
         # - create new point
 
         current_state = self.state.get()
+        logg.debug(f"Released current_state: {current_state}")
         if current_state == "free_clicked":
             # MAYBE add the spline point
             self.state.set("free")
-        elif current_state == "setting_base_mean":
+        elif current_state == "setting_base_mean_clicked":
             # compute and save the font measurement info
-            pass
+            # TODO
+            # after you release the mouse, go back to free state
+            self.state.set("free")
+        else:
+            logg.error(f"Unrecognized current_state released: {current_state}")
 
     def click_set_base_mean(self):
+        """Clicked the button or base mean
+        """
         logg = logging.getLogger(f"c.{__class__.__name__}.click_set_base_mean")
         #  logg.setLevel("INFO")
         logg.debug(f"{fmt_cn('Start', 'start')} click_set_base_mean")
 
         self.state.set("setting_base_mean")
+
+    def build_fm_lines(self, input_type):
+        """Build the font measurement line
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.build_fm_lines")
+        #  logg.setLevel("INFO")
+        logg.debug(f"{fmt_cn('Start', 'start')} build_fm_lines type {input_type}")
+
+        curr_pos_x, curr_pos_y = self.curr_mouse_pos.get()
+
+        if input_type == "base_mean":
+            vert_point = line_curve_point(
+                self.start_img_x, self.start_img_y, curr_pos_x, curr_pos_y
+            )
+            base_point = OrientedPoint(
+                self.start_img_x, self.start_img_y, vert_point.ori_deg + 90
+            )
+            mean_point = OrientedPoint(curr_pos_x, curr_pos_y, vert_point.ori_deg + 90)
+
+        fm_lines = {
+            "vert_point": vert_point,
+            "base_point": base_point,
+            "mean_point": mean_point,
+        }
+        return fm_lines
 
 
 class ImageCropper:

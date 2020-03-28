@@ -1,9 +1,10 @@
 import logging
 import tkinter as tk
 
-from cursive_writer.utils.geometric_utils import collide_line_box
 from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
+from cursive_writer.utils.geometric_utils import collide_line_box
+from cursive_writer.utils.geometric_utils import translate_point
 
 
 class View:
@@ -171,6 +172,10 @@ class FrameImage(tk.Frame):
         self.image_canvas.grid(row=0, column=0, sticky="nsew")
 
     def update_crop_input_image(self, data):
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_crop_input_image")
+        #  logg.setLevel("INFO")
+        logg.debug(f"{fmt_cn('Start', 'start')} update_crop_input_image")
+
         image = data["image_res"]
         self.widget_shift_x = data["widget_shift_x"]
         self.widget_shift_y = data["widget_shift_y"]
@@ -188,12 +193,6 @@ class FrameImage(tk.Frame):
             tags="image",
         )
 
-    def update_free_line(self, line_point):
-        """
-        """
-        logg = logging.getLogger(f"c.{__name__}.update_free_line")
-        logg.debug(f"{fmt_cn('Start', 'start')} update_free_line {line_point}")
-
         # get bbox of the image in the canvas
         # MAYBE save this when putting the image on the canvas...
         left = self.widget_shift_x
@@ -201,13 +200,63 @@ class FrameImage(tk.Frame):
         right = left + self.resized_wid
         bot = top + self.resized_hei
         logg.debug(f"left: {left} top: {top} right: {right} bot: {bot}")
+        self.image_bbox = (left, top, right, bot)
 
+    def update_free_line(self, line_point):
+        """
+        """
+        logg = logging.getLogger(f"c.{__name__}.update_free_line")
+        logg.debug(f"{fmt_cn('Start', 'start')} update_free_line {line_point}")
+
+        #  # the line_point are in the image coordinate
+        #  # shift them to canvas coordinate
+        #  line_point.translate(self.widget_shift_x, self.widget_shift_y)
+
+        #  # compute the intersections
+        #  admissible_inter = collide_line_box(self.image_bbox, line_point)
+
+        #  if len(admissible_inter) == 0:
+        #  logg.debug(f"No line found inside the image")
+        #  return
+        #  elif len(admissible_inter) != 2:
+        #  logg.debug(f"Weird amount of intersections found {len(admissible_inter)}")
+        #  return
+
+        #  # delete the old free_line in the canvas
+        #  self.image_canvas.delete("free_line")
+
+        #  x0 = admissible_inter[0][0]
+        #  y0 = admissible_inter[0][1]
+        #  x1 = admissible_inter[1][0]
+        #  y1 = admissible_inter[1][1]
+        #  self.image_canvas.create_line(x0, y0, x1, y1, tags="free_line", fill="red")
+
+        self.draw_line(line_point, tag="free_line", fill="red")
+
+    def update_fm_lines(self, fm_lines):
+        """
+        """
+        logg = logging.getLogger(f"c.{__name__}.update_fm_lines")
+        logg.debug(f"{fmt_cn('Start', 'start')} update_fm_lines {fm_lines}")
+
+        self.draw_line(
+            fm_lines["vert_point"], tag="vert_point", dash=(6, 6), fill="red"
+        )
+        self.draw_line(fm_lines["base_point"], tag="base_point", fill="red")
+        self.draw_line(fm_lines["mean_point"], tag="mean_point", fill="red")
+
+    def draw_line(self, image_point, tag, **kwargs):
+        """Add a line on the point
+        """
         # the line_point are in the image coordinate
         # shift them to canvas coordinate
-        line_point.translate(self.widget_shift_x, self.widget_shift_y)
+        #  line_point.translate(self.widget_shift_x, self.widget_shift_y)
+        canv_point = translate_point(
+            image_point, self.widget_shift_x, self.widget_shift_y
+        )
 
         # compute the intersections
-        admissible_inter = collide_line_box((left, top, right, bot), line_point)
+        admissible_inter = collide_line_box(self.image_bbox, canv_point)
 
         if len(admissible_inter) == 0:
             logg.debug(f"No line found inside the image")
@@ -217,13 +266,13 @@ class FrameImage(tk.Frame):
             return
 
         # delete the old free_line in the canvas
-        self.image_canvas.delete("free_line")
+        self.image_canvas.delete(tag)
 
         x0 = admissible_inter[0][0]
         y0 = admissible_inter[0][1]
         x1 = admissible_inter[1][0]
         y1 = admissible_inter[1][1]
-        self.image_canvas.create_line(x0, y0, x1, y1, tags="free_line", fill="red")
+        self.image_canvas.create_line(x0, y0, x1, y1, tags=tag, **kwargs)
 
     def bind_canvas(self, kind, func):
         """Bind event 'kind' to func *only* on image_canvas
