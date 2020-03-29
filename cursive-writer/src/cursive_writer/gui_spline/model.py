@@ -48,7 +48,7 @@ class Model:
         # info on the line from clicked point to current
         self.free_line = Observable()
         # info on where you clicked the canvas
-        self.click_start_pos = Observable()
+        self.click_left_start_pos = Observable()
 
     def set_pf_input_image(self, pf_input_image):
         logg = logging.getLogger(f"c.{__class__.__name__}.set_pf_input_image")
@@ -80,27 +80,54 @@ class Model:
 
         # TODO update also lines drawn
 
-    def save_click_canvas(self, mouse_x, mouse_y):
+    def save_click_canvas(self, click_type, mouse_x, mouse_y):
         """Save the pos clicked on the canvas
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.save_click_canvas")
 
         # mouse pos relative to image corner
+        # do this for all click_type and states
         self.start_img_x = mouse_x - self._image_cropper.widget_shift_x
         self.start_img_y = mouse_y - self._image_cropper.widget_shift_y
         logg.info(
-            f"{fmt_cn('Clicked', 'start')} - pos in image {self.start_img_x}x{self.start_img_y}"
+            f"{fmt_cn('Clicked', 'start')}: pos in image {self.start_img_x}x{self.start_img_y}"
         )
 
         current_state = self.state.get()
         logg.debug(f"Clicked current_state: {current_state}")
-        if current_state == "free":
-            self.state.set("free_clicked")
-            self.click_start_pos.set((self.start_img_x, self.start_img_y))
-        elif current_state == "setting_base_mean":
-            self.state.set("setting_base_mean_clicked")
 
-    def move_canvas_mouse(self, mouse_x, mouse_y):
+        # handle left click
+        if click_type == "left_click":
+            # was free
+            if current_state == "free":
+                self.state.set("free_clicked_left")
+                self.click_left_start_pos.set((self.start_img_x, self.start_img_y))
+
+            # was ready to set BM
+            elif current_state == "setting_base_mean":
+                self.state.set("setting_base_mean_clicked")
+
+        # handle right click
+        elif click_type == "right_click":
+            # regardless of state, start moving the image
+            # this resets a state like setting_base_mean
+            self.state.set("free_clicked_right")
+
+        # handle scroll up
+        elif click_type == "scroll_up":
+            # TODO zoom the image
+            pass
+
+        # handle scroll down
+        elif click_type == "scroll_down":
+            # TODO zoom the image
+            pass
+
+        # very weird things
+        else:
+            logg.error(f"{fmt_cn('Unrecognized', 'error')} click_type {click_type}")
+
+    def move_canvas_mouse(self, move_type, mouse_x, mouse_y):
         """React to mouse movement on Canvas
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.move_canvas_mouse")
@@ -114,20 +141,41 @@ class Model:
 
         current_state = self.state.get()
         logg.debug(f"Moved current_state: {current_state}")
-        if current_state == "free":
-            pass
-        elif current_state == "free_clicked":
-            line_point = line_curve_point(
-                img_mouse_x, img_mouse_y, self.start_img_x, self.start_img_y
-            )
-            self.free_line.set(line_point)
-        elif current_state == "setting_base_mean":
-            pass
-        elif current_state == "setting_base_mean_clicked":
-            fm_lines = self.build_fm_lines("base_mean")
-            self.fm_lines.set(fm_lines)
 
-    def release_click_canvas(self, mouse_x, mouse_y):
+        # mouse moved over the canvas
+        if move_type == "move_free":
+            # nothing specific to this case
+            pass
+
+        # moved the mouse while left button clicked
+        elif move_type == "move_left_clicked":
+            # draw the tangent for the SPoint
+            if current_state == "free_clicked_left":
+                line_point = line_curve_point(
+                    img_mouse_x, img_mouse_y, self.start_img_x, self.start_img_y
+                )
+                self.free_line.set(line_point)
+
+            # setting BM
+            elif current_state == "setting_base_mean_clicked":
+                fm_lines = self.build_fm_lines("base_mean")
+                self.fm_lines.set(fm_lines)
+
+        # moved the mouse while right button clicked
+        elif move_type == "move_right_clicked":
+            if current_state == "free_clicked_right":
+                # TODO move the image
+                pass
+
+        # very weird things
+        else:
+            logg.error(f"{fmt_cn('Unrecognized', 'error')} move_type {move_type}")
+
+    def release_click_canvas(self, click_type, mouse_x, mouse_y):
+        """The mouse has been released: depending on self.state
+            - adjust baseline
+            - create new point
+        """
         logg = logging.getLogger(f"c.{__class__.__name__}.release_click_canvas")
 
         # mouse pos relative to image corner
@@ -137,33 +185,44 @@ class Model:
             f"{fmt_cn('Released', 'start')} - pos in image {self.end_img_x}x{self.end_img_y}"
         )
 
-        # TODO depending on self.state
-        # - adjust baseline
-        # - create new point
-
         current_state = self.state.get()
         logg.debug(f"Released current_state: {current_state}")
-        if current_state == "free_clicked":
-            # MAYBE add the spline point
-            self.state.set("free")
-            self.free_line.set(None)
-            self.click_start_pos.set(None)
-        elif current_state == "setting_base_mean_clicked":
-            # compute and save the font measurement info
-            fm_lines = self.build_fm_lines("base_mean")
-            self.fm_lines.set(fm_lines)
-            # after you release the mouse, go back to free state
-            self.state.set("free")
+
+        # handle left click
+        if click_type == "left_click":
+            # was clicked left, add the spline point
+            # TODO add the spline point
+            if current_state == "free_clicked_left":
+                self.state.set("free")
+                self.free_line.set(None)
+                self.click_left_start_pos.set(None)
+
+            # was clicked SBM: set the font measurements
+            elif current_state == "setting_base_mean_clicked":
+                # compute and save the font measurement info
+                fm_lines = self.build_fm_lines("base_mean")
+                self.fm_lines.set(fm_lines)
+                # after you release the mouse, go back to free state
+                self.state.set("free")
+
+        # handle right click
+        elif click_type == "right_click":
+            if current_state == "free_clicked_right":
+                # TODO move the image
+                self.state.set("free")
+
+        # very weird things
         else:
-            logg.error(f"Unrecognized current_state released: {current_state}")
+            logg.error(f"{fmt_cn('Unrecognized', 'error')} click_type {click_type}")
 
     def click_set_base_mean(self):
-        """Clicked the button or base mean
+        """Clicked the button of base mean
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.click_set_base_mean")
         #  logg.setLevel("INFO")
         logg.debug(f"{fmt_cn('Start', 'start')} click_set_base_mean")
 
+        # TODO check current state and toggle setting/free
         self.state.set("setting_base_mean")
 
     def build_fm_lines(self, input_type):
@@ -362,3 +421,133 @@ class ImageCropper:
         image_res = ImageTk.PhotoImage(image_res)
         # save it as attribute of the object, not garbage collected
         self.image_res = image_res
+
+    def zoom_image(self, direction, rel_x=-1, rel_y=-1):
+        """Change zoom level, keep (rel_x, rel_y) still
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.zoom_image")
+        #  logg.setLevel("TRACE")
+        logg.info(f"{fmt_cn('Zooming', 'start')} image {direction}")
+
+        old_zoom = self._zoom_base ** self._zoom_level
+        old_zoom_wid = self._image_wid * old_zoom
+        old_zoom_hei = self._image_hei * old_zoom
+
+        if direction == "in":
+            self._zoom_level += 1
+        elif direction == "out":
+            self._zoom_level -= 1
+        elif direction == "reset":
+            self.reset_image()
+            return 0
+        else:
+            logg.error(f"Unrecognized zooming direction {direction}")
+            return 1
+
+        new_zoom = self._zoom_base ** self._zoom_level
+        new_zoom_wid = self._image_wid * new_zoom
+        new_zoom_hei = self._image_hei * new_zoom
+        logg.trace(f"old_zoom {old_zoom} new_zoom {new_zoom}")
+        recap = f"image ({self._image_wid}, {self._image_hei})"
+        recap += f" old_zoom ({old_zoom_wid}, {old_zoom_hei})"
+        recap += f" new_zoom ({new_zoom_wid}, {new_zoom_hei})"
+        logg.trace(recap)
+
+        # find the center of the photo on the screen if not set
+        if rel_x == -1 or rel_y == -1:
+            if old_zoom_wid < self.widget_wid and old_zoom_hei < self.widget_hei:
+                rel_x = old_zoom_wid / 2
+                rel_y = old_zoom_hei / 2
+            elif old_zoom_wid >= self.widget_wid and old_zoom_hei < self.widget_hei:
+                rel_x = self.widget_wid / 2
+                rel_y = old_zoom_hei / 2
+            elif old_zoom_wid < self.widget_wid and old_zoom_hei >= self.widget_hei:
+                rel_x = old_zoom_wid / 2
+                rel_y = self.widget_hei / 2
+            elif old_zoom_wid >= self.widget_wid and old_zoom_hei >= self.widget_hei:
+                rel_x = self.widget_wid / 2
+                rel_y = self.widget_hei / 2
+        recap = f"rel_x {rel_x} rel_y {rel_y}"
+        recap += f" widget ({self.widget_wid}, {self.widget_hei})"
+        logg.trace(recap)
+        recap = f"mov_x/old_zoom {self._mov_x / old_zoom}"
+        recap += f" mov_x/new_zoom {self._mov_x / new_zoom}"
+        recap += f" rel_x/old_zoom {rel_x / old_zoom}"
+        recap += f" rel_x/new_zoom {rel_x / new_zoom}"
+        logg.trace(recap)
+        recap = f"(mov_x+rel_x)*new_z/old_z {(self._mov_x+rel_x)*new_zoom/old_zoom}"
+        recap += f" (mov_y+rel_y)*new_z/old_z {(self._mov_y+rel_y)*new_zoom/old_zoom}"
+        logg.trace(recap)
+
+        # source of hell was that the formula *is* right, but sometimes to keep
+        # a point fixed you need *negative* mov_x, implemented by moving the
+        # Label around; this will not happen, and mov can be set to 0.
+        # the same happens on the other side, the region should go out of the image
+        new_mov_x = (self._mov_x + rel_x) * new_zoom / old_zoom - rel_x
+        new_mov_y = (self._mov_y + rel_y) * new_zoom / old_zoom - rel_y
+
+        if new_zoom_wid < self.widget_wid and new_zoom_hei < self.widget_hei:
+            logg.trace(f'new_zoom photo {format_color("smaller", "green")} than frame')
+            self._mov_x = 0
+            self._mov_y = 0
+        elif new_zoom_wid >= self.widget_wid and new_zoom_hei < self.widget_hei:
+            logg.trace(f'new_zoom photo {format_color("wider", "green")} than frame')
+            self._mov_x = new_mov_x
+            self._mov_y = 0
+        elif new_zoom_wid < self.widget_wid and new_zoom_hei >= self.widget_hei:
+            logg.trace(f'new_zoom photo {format_color("taller", "green")} than frame')
+            self._mov_x = 0
+            self._mov_y = new_mov_y
+        elif new_zoom_wid >= self.widget_wid and new_zoom_hei >= self.widget_hei:
+            logg.trace(f'new_zoom photo {format_color("larger", "green")} than frame')
+            self._mov_x = new_mov_x
+            self._mov_y = new_mov_y
+
+        self._validate_mov()
+
+        recap = f"mov_x {self._mov_x} mov_y {self._mov_y}"
+        logg.trace(recap)
+
+        self.update_crop()
+
+    def move_image(self, delta_x, delta_y):
+        """Move image of specified delta
+        """
+        self._mov_x += delta_x
+        self._mov_y += delta_y
+        self._validate_mov()
+        self.update_crop()
+
+    def _validate_mov(self):
+        """Check that mov is reasonable for the current widget/image/zoom
+        """
+        zoom = self._zoom_base ** self._zoom_level
+        zoom_wid = self._image_wid * zoom
+        zoom_hei = self._image_hei * zoom
+
+        # in any case they can't be negative
+        if self._mov_x < 0:
+            self._mov_x = 0
+        if self._mov_y < 0:
+            self._mov_y = 0
+
+        # the zoomed photo fits inside the widget
+        if zoom_wid < self.widget_wid and zoom_hei < self.widget_hei:
+            self._mov_x = 0
+            self._mov_y = 0
+        # the zoomed photo is wider than the widget
+        elif zoom_wid >= self.widget_wid and zoom_hei < self.widget_hei:
+            if self._mov_x + self.widget_wid > zoom_wid:
+                self._mov_x = zoom_wid - self.widget_wid
+            self._mov_y = 0
+        # the zoomed photo is taller than the widget
+        elif zoom_wid < self.widget_wid and zoom_hei >= self.widget_hei:
+            self._mov_x = 0
+            if self._mov_y + self.widget_hei > zoom_hei:
+                self._mov_y = zoom_hei - self.widget_hei
+        # the zoomed photo is bigger than the widget
+        elif zoom_wid >= self.widget_wid and zoom_hei >= self.widget_hei:
+            if self._mov_x + self.widget_wid > zoom_wid:
+                self._mov_x = zoom_wid - self.widget_wid
+            if self._mov_y + self.widget_hei > zoom_hei:
+                self._mov_y = zoom_hei - self.widget_hei

@@ -37,12 +37,13 @@ class View:
         self.width = 900
         self.height = 600
         self.root.geometry(f"{self.width}x{self.height}")
+        self.root.title(f"Spline builder GUI")
 
     def setup_layout(self):
         # row 0 expands
         self.root.grid_rowconfigure(0, weight=1)
         # column 0 does not expand but has min width
-        #  self.root.grid_columnconfigure(0, weight=0)
+        #  self.root.grid_columnconfigure(0, weight=1, minsize=200)
         # column 1 expands
         self.root.grid_columnconfigure(1, weight=1)
 
@@ -83,10 +84,12 @@ class FrameInfo(tk.Frame):
         self.font_measurement_frame.grid_columnconfigure(0, weight=1)
 
         # build the objects in font_measurement_frame
+        # NOTE that the width is in CHARACTERS and not pixels
         self.fm_title = tk.Label(
             self.font_measurement_frame,
             text="Font Measurement",
             background=self.font_measurement_frame.cget("background"),
+            width=25,
         )
 
         self.fm_btn_set_base_mean = tk.Button(
@@ -134,9 +137,19 @@ class FrameInfo(tk.Frame):
         )
         self.mi_var_pos.set("Mouse at (0, 0)")
 
+        # create state info label
+        self.mi_var_state = tk.StringVar(self.mouse_info_frame)
+        self.mi_label_state = tk.Label(
+            self.mouse_info_frame,
+            textvariable=self.mi_var_state,
+            background=self.cget("background"),
+        )
+        self.mi_var_state.set("State: FREE")
+
         # grid mouse_info_frame elements
         self.mi_title.grid(row=0, column=0, sticky="ew")
         self.mi_label_pos.grid(row=1, column=0, sticky="ew")
+        self.mi_label_state.grid(row=2, column=0, sticky="ew")
 
         # grid the frames
         self.font_measurement_frame.grid(row=0, column=0, sticky="ew")
@@ -150,6 +163,26 @@ class FrameInfo(tk.Frame):
         pos_str = f"Mouse at ({pos[0]}, {pos[1]})"
         logg.debug(f"{fmt_cn('Start', 'start')} update_curr_mouse_pos - {pos_str}")
         self.mi_var_pos.set(pos_str)
+
+    def update_state(self, state):
+        """Update the label with the current state
+        """
+        logg = logging.getLogger(f"c.{__name__}.update_state")
+        logg.debug(f"{fmt_cn('Start', 'start')} update_state {state}")
+        if state == "free":
+            state_str = f"State: FREE"
+        elif state == "free_clicked_left":
+            state_str = f"State: FREE_CLICK_L"
+        elif state == "free_clicked_right":
+            state_str = f"State: FREE_CLICK_R"
+        elif state == "setting_base_mean":
+            state_str = f"State: SET_BM"
+        elif state == "setting_base_mean_clicked":
+            state_str = f"State: SET_BM_CLICK"
+        else:
+            logg.error(f"{fmt_cn('Unrecognized', 'error')} system state {state}")
+            return
+        self.mi_var_state.set(state_str)
 
 
 class FrameImage(tk.Frame):
@@ -236,15 +269,17 @@ class FrameImage(tk.Frame):
         self.draw_line(fm_lines["ascent_point"], tag="ascent_point", fill="red")
         self.draw_line(fm_lines["descent_point"], tag="descent_point", fill="red")
 
-    def update_click_start_pos(self, start_pos):
+    def update_click_left_start_pos(self, start_pos):
         """
         """
-        logg = logging.getLogger(f"c.{__name__}.update_click_start_pos")
-        logg.debug(f"{fmt_cn('Start', 'start')} update_click_start_pos {start_pos}")
+        logg = logging.getLogger(f"c.{__name__}.update_click_left_start_pos")
+        logg.debug(
+            f"{fmt_cn('Start', 'start')} update_click_left_start_pos {start_pos}"
+        )
 
         # if the Observable has been emptied remove the circle
         if start_pos is None:
-            self.image_canvas.delete("click_start_pos")
+            self.image_canvas.delete("click_left_start_pos")
             return
 
         # translate the point from image to canvas
@@ -260,7 +295,7 @@ class FrameImage(tk.Frame):
         )
         logg.debug(f"circ_bbox: {circ_bbox}")
         self.image_canvas.create_oval(
-            *circ_bbox, tag="click_start_pos", fill="red", width=1
+            *circ_bbox, tag="click_left_start_pos", fill="red", width=1
         )
 
     ### HELPERS ###

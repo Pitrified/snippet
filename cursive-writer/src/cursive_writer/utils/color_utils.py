@@ -6,8 +6,12 @@ def fmt_cn(string, name):
     """
     if name == "start":
         color = "red1"
+    elif name == "error":
+        color = "Magenta"
     elif name == "a1":
         color = "Green"
+    elif name == "a2":
+        color = "Cyan"
     else:
         color = "White"
     return fmt_c(string, color)
