@@ -29,6 +29,8 @@ class View:
 
         self.setup_layout()
 
+    ### HELPERS ###
+
     def setup_main_window(self):
         """Setup main window aesthetics
         """
@@ -51,6 +53,8 @@ class View:
     def exit(self):
         # TODO ask confirmation
         self.root.destroy()
+
+    ### REACTIONS TO OBSERVABLES ###
 
     def update_pf_input_image(self, pf_input_image):
         logg = logging.getLogger(f"c.{__class__.__name__}.update_pf_input_image")
@@ -138,6 +142,8 @@ class FrameInfo(tk.Frame):
         self.font_measurement_frame.grid(row=0, column=0, sticky="ew")
         self.mouse_info_frame.grid(row=1, column=0, sticky="ew")
 
+    ### REACTIONS TO OBSERVABLES ###
+
     def update_curr_mouse_pos(self, pos):
         logg = logging.getLogger(f"c.{__name__}.update_curr_mouse_pos")
         logg.setLevel("INFO")
@@ -170,6 +176,8 @@ class FrameImage(tk.Frame):
 
         # pack the canvas into a frame/form
         self.image_canvas.grid(row=0, column=0, sticky="nsew")
+
+    ### REACTIONS TO OBSERVABLES ###
 
     def update_crop_input_image(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.update_crop_input_image")
@@ -208,28 +216,9 @@ class FrameImage(tk.Frame):
         logg = logging.getLogger(f"c.{__name__}.update_free_line")
         logg.debug(f"{fmt_cn('Start', 'start')} update_free_line {line_point}")
 
-        #  # the line_point are in the image coordinate
-        #  # shift them to canvas coordinate
-        #  line_point.translate(self.widget_shift_x, self.widget_shift_y)
-
-        #  # compute the intersections
-        #  admissible_inter = collide_line_box(self.image_bbox, line_point)
-
-        #  if len(admissible_inter) == 0:
-        #  logg.debug(f"No line found inside the image")
-        #  return
-        #  elif len(admissible_inter) != 2:
-        #  logg.debug(f"Weird amount of intersections found {len(admissible_inter)}")
-        #  return
-
-        #  # delete the old free_line in the canvas
-        #  self.image_canvas.delete("free_line")
-
-        #  x0 = admissible_inter[0][0]
-        #  y0 = admissible_inter[0][1]
-        #  x1 = admissible_inter[1][0]
-        #  y1 = admissible_inter[1][1]
-        #  self.image_canvas.create_line(x0, y0, x1, y1, tags="free_line", fill="red")
+        if line_point is None:
+            self.image_canvas.delete("free_line")
+            return
 
         self.draw_line(line_point, tag="free_line", fill="red")
 
@@ -246,6 +235,35 @@ class FrameImage(tk.Frame):
         self.draw_line(fm_lines["mean_point"], tag="mean_point", fill="red")
         self.draw_line(fm_lines["ascent_point"], tag="ascent_point", fill="red")
         self.draw_line(fm_lines["descent_point"], tag="descent_point", fill="red")
+
+    def update_click_start_pos(self, start_pos):
+        """
+        """
+        logg = logging.getLogger(f"c.{__name__}.update_click_start_pos")
+        logg.debug(f"{fmt_cn('Start', 'start')} update_click_start_pos {start_pos}")
+
+        # if the Observable has been emptied remove the circle
+        if start_pos is None:
+            self.image_canvas.delete("click_start_pos")
+            return
+
+        # translate the point from image to canvas
+        canv_point_x = start_pos[0] + self.widget_shift_x
+        canv_point_y = start_pos[1] + self.widget_shift_y
+        circ_dim = 2
+        # get the circle dimension
+        circ_bbox = (
+            canv_point_x - circ_dim,
+            canv_point_y - circ_dim,
+            canv_point_x + circ_dim,
+            canv_point_y + circ_dim,
+        )
+        logg.debug(f"circ_bbox: {circ_bbox}")
+        self.image_canvas.create_oval(
+            *circ_bbox, tag="click_start_pos", fill="red", width=1
+        )
+
+    ### HELPERS ###
 
     def draw_line(self, image_point, tag, **kwargs):
         """Add a line on the point

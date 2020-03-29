@@ -27,14 +27,6 @@ class Model:
         # ImageTk that holds the cropped picture
         self.crop_input_image = Observable()
 
-        # font measurement
-        # save the SPoint with normalized x,y on descent-base-mean-ascent
-        # send the position scaled for display
-        self.display_font_measurements = Observable()
-        # proportion between the line
-        self.prop_mean_ascent = 0.7
-        self.prop_desc_base = 0.6
-
         # current mouse position
         self.curr_mouse_pos = Observable()
 
@@ -45,10 +37,18 @@ class Model:
         # how to react to a mouse movement
         self.state = Observable("free")
 
-        # info on the line from clicked point to current
-        self.free_line = Observable()
+        # font measurement: save the SPoint with normalized x,y on
+        # descent-base-mean-ascent send the position scaled for display
         # info on all font measurement lines
         self.fm_lines = Observable()
+        # proportion between the line
+        self.prop_mean_ascent = 0.7
+        self.prop_desc_base = 0.6
+
+        # info on the line from clicked point to current
+        self.free_line = Observable()
+        # info on where you clicked the canvas
+        self.click_start_pos = Observable()
 
     def set_pf_input_image(self, pf_input_image):
         logg = logging.getLogger(f"c.{__class__.__name__}.set_pf_input_image")
@@ -96,6 +96,7 @@ class Model:
         logg.debug(f"Clicked current_state: {current_state}")
         if current_state == "free":
             self.state.set("free_clicked")
+            self.click_start_pos.set((self.start_img_x, self.start_img_y))
         elif current_state == "setting_base_mean":
             self.state.set("setting_base_mean_clicked")
 
@@ -145,9 +146,12 @@ class Model:
         if current_state == "free_clicked":
             # MAYBE add the spline point
             self.state.set("free")
+            self.free_line.set(None)
+            self.click_start_pos.set(None)
         elif current_state == "setting_base_mean_clicked":
             # compute and save the font measurement info
-            # TODO
+            fm_lines = self.build_fm_lines("base_mean")
+            self.fm_lines.set(fm_lines)
             # after you release the mouse, go back to free state
             self.state.set("free")
         else:
@@ -172,31 +176,31 @@ class Model:
         curr_pos_x, curr_pos_y = self.curr_mouse_pos.get()
 
         if input_type == "base_mean":
-            vert_point = line_curve_point(
+            self.vert_point = line_curve_point(
                 self.start_img_x, self.start_img_y, curr_pos_x, curr_pos_y
             )
-            base_point = OrientedPoint(
-                self.start_img_x, self.start_img_y, vert_point.ori_deg + 90
+            self.base_point = OrientedPoint(
+                self.start_img_x, self.start_img_y, self.vert_point.ori_deg + 90
             )
-            mean_point = OrientedPoint(curr_pos_x, curr_pos_y, vert_point.ori_deg + 90)
+            self.mean_point = OrientedPoint(curr_pos_x, curr_pos_y, self.vert_point.ori_deg + 90)
 
-            dist_base_mean = dist2D(base_point, mean_point)
+            dist_base_mean = dist2D(self.base_point, self.mean_point)
 
             dist_base_ascent = dist_base_mean * (1 + self.prop_mean_ascent)
-            ascent_point = translate_point_dir(
-                base_point, vert_point.ori_deg, dist_base_ascent
+            self.ascent_point = translate_point_dir(
+                self.base_point, self.vert_point.ori_deg, dist_base_ascent
             )
             dist_desc_base = dist_base_mean * self.prop_desc_base
-            descent_point = translate_point_dir(
-                base_point, vert_point.ori_deg, -dist_desc_base
+            self.descent_point = translate_point_dir(
+                self.base_point, self.vert_point.ori_deg, -dist_desc_base
             )
 
         fm_lines = {
-            "vert_point": vert_point,
-            "base_point": base_point,
-            "mean_point": mean_point,
-            "ascent_point": ascent_point,
-            "descent_point": descent_point,
+            "vert_point": self.vert_point,
+            "base_point": self.base_point,
+            "mean_point": self.mean_point,
+            "ascent_point": self.ascent_point,
+            "descent_point": self.descent_point,
         }
         return fm_lines
 
@@ -248,7 +252,8 @@ class ImageCropper:
             self.widget_wid = widget_wid
             self.widget_hei = widget_hei
 
-        if self._image_wid < self.widget_wid and self._image_hei < self.widget_hei:
+        #  if self._image_wid < self.widget_wid and self._image_hei < self.widget_hei:
+        if False:
             # the original photo is smaller than the widget
             self._zoom_level = 0
         else:

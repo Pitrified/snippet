@@ -24,6 +24,7 @@ class Controller:
         self.model.free_line.add_callback(self.updated_free_line)
         self.model.curr_mouse_pos.add_callback(self.updated_curr_mouse_pos)
         self.model.fm_lines.add_callback(self.updated_fm_lines)
+        self.model.click_start_pos.add_callback(self.updated_click_start_pos)
 
         ### VIEW  ###
         self.view = View(self.root)
@@ -141,3 +142,8 @@ class Controller:
         logg = logging.getLogger(f"c.{__name__}.updated_fm_lines")
         logg.debug(f"{fmt_cn('Start', 'start')} updated_fm_lines")
         self.view.frame_image.update_fm_lines(data)
+
+    def updated_click_start_pos(self, data):
+        logg = logging.getLogger(f"c.{__name__}.updated_click_start_pos")
+        logg.debug(f"{fmt_cn('Start', 'start')} updated_click_start_pos")
+        self.view.frame_image.update_click_start_pos(data)
