@@ -322,3 +322,7 @@ class FrameSpline(tk.Frame):
 
         # grid it, do not expand
         self.image_label.grid(row=0, column=0)
+
+    ### REACTIONS TO OBSERVABLES ###
+
+    ### HELPERS ###

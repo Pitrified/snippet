@@ -182,7 +182,9 @@ class Model:
             self.base_point = OrientedPoint(
                 self.start_img_x, self.start_img_y, self.vert_point.ori_deg + 90
             )
-            self.mean_point = OrientedPoint(curr_pos_x, curr_pos_y, self.vert_point.ori_deg + 90)
+            self.mean_point = OrientedPoint(
+                curr_pos_x, curr_pos_y, self.vert_point.ori_deg + 90
+            )
 
             dist_base_mean = dist2D(self.base_point, self.mean_point)
 
