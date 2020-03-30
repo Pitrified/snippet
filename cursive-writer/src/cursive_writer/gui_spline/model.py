@@ -68,17 +68,7 @@ class Model:
         # compute the new image
         self._image_cropper.reset_image(self._widget_wid, self._widget_hei)
 
-        # update the image in the observable, with info on where to put it
-        data = {
-            "image_res": self._image_cropper.image_res,
-            "widget_shift_x": self._image_cropper.widget_shift_x,
-            "widget_shift_y": self._image_cropper.widget_shift_y,
-            "resized_wid": self._image_cropper.resized_dim[0],
-            "resized_hei": self._image_cropper.resized_dim[1],
-        }
-        self.crop_input_image.set(data)
-
-        # TODO update also lines drawn
+        self.update_image_obs()
 
     def save_click_canvas(self, click_type, mouse_x, mouse_y):
         """Save the pos clicked on the canvas
@@ -112,16 +102,17 @@ class Model:
             # regardless of state, start moving the image
             # this resets a state like setting_base_mean
             self.state.set("free_clicked_right")
+            # save the old mouse pos
+            self.old_img_x = self.start_img_x
+            self.old_img_y = self.start_img_y
 
         # handle scroll up
         elif click_type == "scroll_up":
-            # TODO zoom the image
-            pass
+            self.zoom_image("in", self.start_img_x, self.start_img_y)
 
         # handle scroll down
         elif click_type == "scroll_down":
-            # TODO zoom the image
-            pass
+            self.zoom_image("out", self.start_img_x, self.start_img_y)
 
         # very weird things
         else:
@@ -164,8 +155,7 @@ class Model:
         # moved the mouse while right button clicked
         elif move_type == "move_right_clicked":
             if current_state == "free_clicked_right":
-                # TODO move the image
-                pass
+                self.move_image(img_mouse_x, img_mouse_y)
 
         # very weird things
         else:
@@ -215,12 +205,12 @@ class Model:
         else:
             logg.error(f"{fmt_cn('Unrecognized', 'error')} click_type {click_type}")
 
-    def click_set_base_mean(self):
+    def clicked_btn_set_base_mean(self):
         """Clicked the button of base mean
         """
-        logg = logging.getLogger(f"c.{__class__.__name__}.click_set_base_mean")
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_base_mean")
         #  logg.setLevel("INFO")
-        logg.debug(f"{fmt_cn('Start', 'start')} click_set_base_mean")
+        logg.debug(f"{fmt_cn('Start', 'start')} click_btn_set_base_mean")
 
         # TODO check current state and toggle setting/free
         self.state.set("setting_base_mean")
@@ -264,6 +254,54 @@ class Model:
             "descent_point": self.descent_point,
         }
         return fm_lines
+
+    def zoom_image(self, direction, img_x, img_y):
+        """Zoom the image
+
+        img_x, img_y are relative to the image corner in the widget
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.zoom_image")
+        #  logg.setLevel("INFO")
+        logg.debug(f"{fmt_cn('Start', 'start')} zoom_image {direction}")
+
+        # compute the new image
+        self._image_cropper.zoom_image(direction, img_x, img_y)
+
+        self.update_image_obs()
+
+    def move_image(self, new_x, new_y):
+        """
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.move_image")
+        #  logg.setLevel("INFO")
+        logg.debug(f"{fmt_cn('Start', 'start')} move_image")
+
+        delta_x = self.old_img_x - new_x
+        delta_y = self.old_img_y - new_y
+
+        self.old_img_x = new_x
+        self.old_img_y = new_y
+
+        self._image_cropper.move_image(delta_x, delta_y)
+        self.update_image_obs()
+
+    def update_image_obs(self):
+        """
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_image_obs")
+        #  logg.setLevel("INFO")
+        logg.debug(f"{fmt_cn('Start', 'start')} update_image_obs")
+        # update the image in the observable, with info on where to put it
+        data = {
+            "image_res": self._image_cropper.image_res,
+            "widget_shift_x": self._image_cropper.widget_shift_x,
+            "widget_shift_y": self._image_cropper.widget_shift_y,
+            "resized_wid": self._image_cropper.resized_dim[0],
+            "resized_hei": self._image_cropper.resized_dim[1],
+        }
+        self.crop_input_image.set(data)
+
+        # TODO update also lines drawn
 
 
 class ImageCropper:
@@ -487,19 +525,19 @@ class ImageCropper:
         new_mov_y = (self._mov_y + rel_y) * new_zoom / old_zoom - rel_y
 
         if new_zoom_wid < self.widget_wid and new_zoom_hei < self.widget_hei:
-            logg.trace(f'new_zoom photo {format_color("smaller", "green")} than frame')
+            logg.trace(f'new_zoom photo {fmt_cn("smaller", "a1")} than frame')
             self._mov_x = 0
             self._mov_y = 0
         elif new_zoom_wid >= self.widget_wid and new_zoom_hei < self.widget_hei:
-            logg.trace(f'new_zoom photo {format_color("wider", "green")} than frame')
+            logg.trace(f'new_zoom photo {fmt_cn("wider", "a1")} than frame')
             self._mov_x = new_mov_x
             self._mov_y = 0
         elif new_zoom_wid < self.widget_wid and new_zoom_hei >= self.widget_hei:
-            logg.trace(f'new_zoom photo {format_color("taller", "green")} than frame')
+            logg.trace(f'new_zoom photo {fmt_cn("taller", "a1")} than frame')
             self._mov_x = 0
             self._mov_y = new_mov_y
         elif new_zoom_wid >= self.widget_wid and new_zoom_hei >= self.widget_hei:
-            logg.trace(f'new_zoom photo {format_color("larger", "green")} than frame')
+            logg.trace(f'new_zoom photo {fmt_cn("larger", "a1")} than frame')
             self._mov_x = new_mov_x
             self._mov_y = new_mov_y
 

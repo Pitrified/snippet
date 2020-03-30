@@ -175,7 +175,7 @@ class Controller:
         #  logg.setLevel("INFO")
         logg.debug(f"{fmt_cn('Start', 'start')} clicked_btn_set_base_mean")
 
-        self.model.click_set_base_mean()
+        self.model.clicked_btn_set_base_mean()
 
     ###### OBSERVABLE CALLBACKS ######
 
