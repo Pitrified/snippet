@@ -76,6 +76,8 @@ class Model:
 
         self.update_image_obs()
 
+        self.recompute_fm_lines_view()
+
     def save_click_canvas(self, click_type, mouse_x, mouse_y):
         """Save the pos clicked on the canvas
         """
@@ -210,7 +212,9 @@ class Model:
         # handle right click
         elif click_type == "right_click":
             if current_state == "free_clicked_right":
-                # TODO move the image
+                # move the image
+                self.move_image(self.end_img_x, self.end_img_y)
+                # go back to free state
                 self.state.set("free")
 
         # very weird things
@@ -224,8 +228,15 @@ class Model:
         #  logg.setLevel("INFO")
         logg.debug(f"Start {fmt_cn('click_btn_set_base_mean', 'start')}")
 
-        # TODO check current state and toggle setting/free
-        self.state.set("setting_base_mean")
+        current_state = self.state.get()
+
+        # if it was already in SBM, go back to free
+        if current_state == "setting_base_mean":
+            self.state.set("free")
+
+        # else go to state SBM
+        else:
+            self.state.set("setting_base_mean")
 
     def build_fm_lines_abs(self, input_type):
         """Build the font measurement line
@@ -322,37 +333,49 @@ class Model:
         logg.setLevel("TRACE")
         logg.debug(f"Start {fmt_cn('rescale_point', 'start')}")
 
-        # position in the image, scaled for viewing
-        view_x = point.x
-        view_y = point.y
-        logg.trace(f"view_x: {view_x} view_y: {view_y}")
+        # current zoom value
+        zoom = self._image_cropper.zoom
+        logg.trace(f"zoom: {zoom}")
 
         # position of the cropped region inside the zoomed image
         mov_x = self._image_cropper._mov_x
         mov_y = self._image_cropper._mov_y
         logg.trace(f"mov_x: {mov_x} mov_y: {mov_y}")
 
-        # compute position in zoomed image
-        zoom_x = mov_x + view_x
-        zoom_y = mov_y + view_y
-        logg.trace(f"zoom_x: {zoom_x} zoom_y: {zoom_y}")
-
-        # current zoom value
-        zoom = self._image_cropper.zoom
-        logg.trace(f"zoom: {zoom}")
-
         if direction == "view2abs":
+            # position in the image, scaled for viewing
+            view_x = point.x
+            view_y = point.y
+            logg.trace(f"view_x: {view_x} view_y: {view_y}")
+
+            # compute position in zoomed image
+            zoom_x = mov_x + view_x
+            zoom_y = mov_y + view_y
+            logg.trace(f"zoom_x: {zoom_x} zoom_y: {zoom_y}")
+
             # rescale from zoomed to absolute
             abs_x = zoom_x / zoom
             abs_y = zoom_y / zoom
-        elif direction == "abs2view":
-            # rescale from absolute to zoomed
-            abs_x = zoom_x * zoom
-            abs_y = zoom_y * zoom
-        logg.trace(f"abs_x: {abs_x} abs_y: {abs_y}")
+            logg.trace(f"abs_x: {abs_x} abs_y: {abs_y}")
 
-        # create a new point
-        return OrientedPoint(abs_x, abs_y, point.ori_deg)
+            # create a new point
+            return OrientedPoint(abs_x, abs_y, point.ori_deg)
+
+        elif direction == "abs2view":
+            # position in the image, in absolute coord
+            abs_x = point.x
+            abs_y = point.y
+
+            # rescale from absolute to zoomed
+            zoom_x = abs_x * zoom
+            zoom_y = abs_y * zoom
+
+            # compute position in the visible image
+            view_x = zoom_x - mov_x
+            view_y = zoom_y - mov_y
+
+            # create a new point
+            return OrientedPoint(view_x, view_y, point.ori_deg)
 
     def zoom_image(self, direction, img_x, img_y):
         """Zoom the image
@@ -404,7 +427,7 @@ class Model:
         }
         self.crop_input_image.set(data)
 
-        # TODO update also lines drawn
+        # MAYBE update also lines drawn? recompute_fm_lines_view is always called after
 
 
 class ImageCropper:
