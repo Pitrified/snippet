@@ -8,12 +8,12 @@ from PIL import Image
 from PIL import ImageTk
 
 from observable import Observable
-from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.geometric_utils import line_curve_point
 from cursive_writer.utils.geometric_utils import translate_point_dir
 from cursive_writer.utils.geometric_utils import dist2D
 from cursive_writer.utils.oriented_point import OrientedPoint
+from cursive_writer.utils.spline_point import SplinePoint
 
 
 class Model:
@@ -27,7 +27,7 @@ class Model:
         # ImageTk that holds the cropped picture
         self.crop_input_image = Observable()
 
-        # current mouse position
+        # current mouse position in the image coordinate
         self.curr_mouse_pos = Observable()
 
         # canvas width
@@ -54,6 +54,15 @@ class Model:
         # info on where you clicked the canvas
         self.click_left_start_pos = Observable()
 
+        # all the SplinePoint generated, dict {spid: SP(x, y, od, id), ... }
+        self.all_SP = Observable({})
+        # id of the NEXT spid to assign
+        self.next_spid = 0
+        # visible SP, in view coord
+        self.visible_SP = Observable({})
+
+    ### OPERATIONS ON CANVAS ###
+
     def set_pf_input_image(self, pf_input_image):
         logg = logging.getLogger(f"c.{__class__.__name__}.set_pf_input_image")
         logg.info(f"{fmt_cn('Setting', 'start')} pf_input_image '{pf_input_image}'")
@@ -74,9 +83,7 @@ class Model:
         # compute the new image
         self._image_cropper.reset_image(self._widget_wid, self._widget_hei)
 
-        self.update_image_obs()
-
-        self.recompute_fm_lines_view()
+        self.redraw_canvas()
 
     def save_click_canvas(self, click_type, mouse_x, mouse_y):
         """Save the pos clicked on the canvas
@@ -192,8 +199,8 @@ class Model:
         # handle left click
         if click_type == "left_click":
             # was clicked left, add the spline point
-            # TODO add the spline point
             if current_state == "free_clicked_left":
+                self.add_spline_point()
                 self.state.set("free")
                 self.free_line.set(None)
                 self.click_left_start_pos.set(None)
@@ -221,6 +228,52 @@ class Model:
         else:
             logg.error(f"{fmt_cn('Unrecognized', 'error')} click_type {click_type}")
 
+    def zoom_image(self, direction, img_x, img_y):
+        """Zoom the image
+
+        img_x, img_y are relative to the image corner in the widget
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.zoom_image")
+        #  logg.setLevel("INFO")
+        logg.debug(f"Start {fmt_cn('zoom_image', 'start')} {direction}")
+
+        # compute the new image
+        self._image_cropper.zoom_image(direction, img_x, img_y)
+
+        self.redraw_canvas()
+
+    def move_image(self, new_x, new_y):
+        """
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.move_image")
+        #  logg.setLevel("INFO")
+        logg.debug(f"Start {fmt_cn('move_image', 'start')}")
+
+        delta_x = self.old_img_x - new_x
+        delta_y = self.old_img_y - new_y
+
+        self.old_img_x = new_x
+        self.old_img_y = new_y
+
+        self._image_cropper.move_image(delta_x, delta_y)
+        self.redraw_canvas()
+
+    def update_image_obs(self):
+        """
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_image_obs")
+        #  logg.setLevel("INFO")
+        logg.debug(f"Start {fmt_cn('update_image_obs', 'start')}")
+        # update the image in the observable, with info on where to put it
+        data = {
+            "image_res": self._image_cropper.image_res,
+            "widget_shift_x": self._image_cropper.widget_shift_x,
+            "widget_shift_y": self._image_cropper.widget_shift_y,
+            "resized_wid": self._image_cropper.resized_dim[0],
+            "resized_hei": self._image_cropper.resized_dim[1],
+        }
+        self.crop_input_image.set(data)
+
     def clicked_btn_set_base_mean(self):
         """Clicked the button of base mean
         """
@@ -237,6 +290,15 @@ class Model:
         # else go to state SBM
         else:
             self.state.set("setting_base_mean")
+
+    def redraw_canvas(self):
+        """
+        """
+        self.update_image_obs()
+        self.recompute_fm_lines_view()
+        self.compute_visible_spline_points()
+
+    ### FONT MEASUREMENTS ###
 
     def build_fm_lines_abs(self, input_type):
         """Build the font measurement line
@@ -327,7 +389,7 @@ class Model:
             * view2abs
             * abs2view
 
-        Returns a new point
+        Returns a new OrientedPoint
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.rescale_point")
         logg.setLevel("TRACE")
@@ -377,57 +439,58 @@ class Model:
             # create a new point
             return OrientedPoint(view_x, view_y, point.ori_deg)
 
-    def zoom_image(self, direction, img_x, img_y):
-        """Zoom the image
+    ### SPLINE ###
 
-        img_x, img_y are relative to the image corner in the widget
+    def add_spline_point(self):
+        """Add the new SplinePoint to the dict
         """
-        logg = logging.getLogger(f"c.{__class__.__name__}.zoom_image")
-        #  logg.setLevel("INFO")
-        logg.debug(f"Start {fmt_cn('zoom_image', 'start')} {direction}")
+        logg = logging.getLogger(f"c.{__class__.__name__}.add_spline_point")
+        logg.debug(f"Start {fmt_cn('add_spline_point', 'start')}")
 
-        # compute the new image
-        self._image_cropper.zoom_image(direction, img_x, img_y)
+        # mouse position in the image, scaled for viewing
+        view_x, view_y = self.curr_mouse_pos.get()
 
-        self.update_image_obs()
+        # TODO flip this to draw spline orientation in the other direction
+        view_op = line_curve_point(self.start_img_x, self.start_img_y, view_x, view_y)
 
-        self.recompute_fm_lines_view()
+        # RESCALE the point from view to absolute coordinates
+        abs_op = self.rescale_point(view_op, "view2abs")
 
-    def move_image(self, new_x, new_y):
-        """
-        """
-        logg = logging.getLogger(f"c.{__class__.__name__}.move_image")
-        #  logg.setLevel("INFO")
-        logg.debug(f"Start {fmt_cn('move_image', 'start')}")
+        # create the SplinePoint
+        new_sp = SplinePoint(abs_op.x, abs_op.y, abs_op.ori_deg, self.next_spid)
 
-        delta_x = self.old_img_x - new_x
-        delta_y = self.old_img_y - new_y
+        all_SP = self.all_SP.get()
+        all_SP[new_sp.spid] = new_sp
+        self.all_SP.set(all_SP)
 
-        self.old_img_x = new_x
-        self.old_img_y = new_y
+        # prepare for the next spid
+        self.next_spid += 1
+        logg.debug(f"There are now {self.next_spid} SplinePoint")
 
-        self._image_cropper.move_image(delta_x, delta_y)
-        self.update_image_obs()
+        self.compute_visible_spline_points()
 
-        self.recompute_fm_lines_view()
-
-    def update_image_obs(self):
+    def compute_visible_spline_points(self):
         """
         """
-        logg = logging.getLogger(f"c.{__class__.__name__}.update_image_obs")
-        #  logg.setLevel("INFO")
-        logg.debug(f"Start {fmt_cn('update_image_obs', 'start')}")
-        # update the image in the observable, with info on where to put it
-        data = {
-            "image_res": self._image_cropper.image_res,
-            "widget_shift_x": self._image_cropper.widget_shift_x,
-            "widget_shift_y": self._image_cropper.widget_shift_y,
-            "resized_wid": self._image_cropper.resized_dim[0],
-            "resized_hei": self._image_cropper.resized_dim[1],
-        }
-        self.crop_input_image.set(data)
+        logg = logging.getLogger(
+            f"c.{__class__.__name__}.compute_visible_spline_points"
+        )
+        logg.debug(f"Start {fmt_cn('compute_visible_spline_points', 'start')}")
 
-        # MAYBE update also lines drawn? recompute_fm_lines_view is always called after
+        # region showed in the view, in abs image coordinate
+        region = self._image_cropper.region
+
+        all_SP = self.all_SP.get()
+        visible_SP = {}
+        for spid in all_SP:
+            curr_sp = all_SP[spid]
+
+            # check that the point is in the region cropped
+            if region[0] < curr_sp.x < region[2] and region[1] < curr_sp.y < region[3]:
+                view_op = self.rescale_point(curr_sp, "abs2view")
+                visible_SP[spid] = view_op
+
+        self.visible_SP.set(visible_SP)
 
 
 class ImageCropper:
@@ -576,6 +639,7 @@ class ImageCropper:
         self.zoom = zoom
         self.zoom_wid = zoom_wid
         self.zoom_hei = zoom_hei
+        self.region = region
 
         # decide what method to use when resizing
         if zoom > 1:

@@ -1,10 +1,14 @@
 import logging
 import tkinter as tk
 
+from math import cos
+from math import sin
+
 from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.geometric_utils import collide_line_box
 from cursive_writer.utils.geometric_utils import translate_point_dxy
+from cursive_writer.gui_spline.spoint_frame import FrameSPoint
 
 
 class View:
@@ -61,6 +65,16 @@ class View:
         logg = logging.getLogger(f"c.{__class__.__name__}.update_pf_input_image")
         logg.info(f"{fmt_cn('Updating', 'start')} pf_input_image '{pf_input_image}'")
         # TODO write this name somewhere LOL
+
+    def update_visible_SP(self, data):
+        """TODO: what are you changing when updating visible_SP?
+
+        MAYBE change background of the visible SP?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_visible_SP")
+        logg.debug(f"Start {fmt_cn('update_visible_SP', 'start')}")
+
+        self.frame_image.do_update_visible_SP(data)
 
 
 class FrameInfo(tk.Frame):
@@ -158,7 +172,7 @@ class FrameInfo(tk.Frame):
     ### REACTIONS TO OBSERVABLES ###
 
     def update_curr_mouse_pos(self, pos):
-        logg = logging.getLogger(f"c.{__name__}.update_curr_mouse_pos")
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_curr_mouse_pos")
         logg.setLevel("INFO")
         pos_str = f"Mouse at ({pos[0]}, {pos[1]})"
         logg.debug(f"Start {fmt_cn('update_curr_mouse_pos', 'start')} - {pos_str}")
@@ -167,7 +181,7 @@ class FrameInfo(tk.Frame):
     def update_state(self, state):
         """Update the label with the current state
         """
-        logg = logging.getLogger(f"c.{__name__}.update_state")
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_state")
         logg.debug(f"Start {fmt_cn('update_state', 'start')} {state}")
         if state == "free":
             state_str = f"State: FREE"
@@ -246,7 +260,7 @@ class FrameImage(tk.Frame):
     def update_free_line(self, line_point):
         """
         """
-        logg = logging.getLogger(f"c.{__name__}.update_free_line")
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_free_line")
         logg.debug(f"Start {fmt_cn('update_free_line', 'start')} {line_point}")
 
         if line_point is None:
@@ -258,7 +272,7 @@ class FrameImage(tk.Frame):
     def update_fm_lines(self, fm_lines):
         """
         """
-        logg = logging.getLogger(f"c.{__name__}.update_fm_lines")
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_fm_lines")
         logg.debug(f"Start {fmt_cn('update_fm_lines', 'start')} {fm_lines}")
 
         self.draw_line(
@@ -272,7 +286,7 @@ class FrameImage(tk.Frame):
     def update_click_left_start_pos(self, start_pos):
         """
         """
-        logg = logging.getLogger(f"c.{__name__}.update_click_left_start_pos")
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_click_left_start_pos")
         logg.debug(
             f"Start {fmt_cn('update_click_left_start_pos', 'start')} {start_pos}"
         )
@@ -300,10 +314,36 @@ class FrameImage(tk.Frame):
 
     ### HELPERS ###
 
+    def do_update_visible_SP(self, data):
+        """TODO: what are you changing when updating visible_SP?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.do_update_visible_SP")
+        logg.debug(f"Start {fmt_cn('do_update_visible_SP', 'start')}")
+
+        self.image_canvas.delete("spline_point")
+
+        for spid in data:
+            self.draw_point(data[spid], "spline_point")
+
+    def draw_point(self, view_op, tag, length=-1):
+        """Draw a point on the canvas
+        """
+        if length == -1:
+            min_dim = min(self.resized_wid, self.resized_hei)
+            length = min_dim * 0.10
+
+        canv_x = view_op.x + self.widget_shift_x
+        canv_y = view_op.y + self.widget_shift_y
+        end_x = canv_x + length * cos(view_op.ori_rad)
+        end_y = canv_y + length * sin(view_op.ori_rad)
+        self.image_canvas.create_line(
+            canv_x, canv_y, end_x, end_y, tags=tag, arrow=tk.LAST, fill="cyan"
+        )
+
     def draw_line(self, image_point, tag, **kwargs):
         """Add a line on the point
         """
-        logg = logging.getLogger(f"c.{__name__}.draw_line")
+        logg = logging.getLogger(f"c.{__class__.__name__}.draw_line")
         logg.setLevel("INFO")
         logg.debug(f"Start {fmt_cn('draw_line', 'start')}")
 
@@ -359,6 +399,28 @@ class FrameSpline(tk.Frame):
         # grid it, do not expand
         self.image_label.grid(row=0, column=0)
 
+        self.all_SP_frames = {}
+
     ### REACTIONS TO OBSERVABLES ###
+
+    def update_all_SP(self, data):
+        """Create a frame for each SP received
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_all_SP")
+        logg.debug(f"Start {fmt_cn('update_all_SP', 'start')}")
+
+        for spid in data:
+            if not spid in self.all_SP_frames:
+                name = f"frame_sp_{spid}"
+                sp_frame = FrameSPoint(self, name, data[spid])
+                self.all_SP_frames[spid] = sp_frame
+
+    def do_update_visible_SP(self, data):
+        """TODO: what are you changing when updating visible_SP?
+
+        MAYBE change background of the visible SP?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.do_update_visible_SP")
+        logg.debug(f"Start {fmt_cn('do_update_visible_SP', 'start')}")
 
     ### HELPERS ###

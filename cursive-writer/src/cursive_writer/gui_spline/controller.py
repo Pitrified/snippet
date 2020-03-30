@@ -26,6 +26,8 @@ class Controller:
         self.model.fm_lines_view.add_callback(self.updated_fm_lines)
         self.model.click_left_start_pos.add_callback(self.updated_click_left_start_pos)
         self.model.state.add_callback(self.updated_state)
+        self.model.all_SP.add_callback(self.updated_all_SP)
+        self.model.visible_SP.add_callback(self.updated_visible_SP)
 
         ### VIEW  ###
         self.view = View(self.root)
@@ -149,6 +151,8 @@ class Controller:
         logg.trace(f"event: {event} event.state: {event.state}")
         logg.trace(f"event.x: {event.x} event.y: {event.y}")
 
+        # TODO Shift+LeftMove (273): fm_lines with forced horizontal base
+
         the_state = event.state
         # these were brutally harvested by reading the logs...
         if the_state == 16:
@@ -220,3 +224,13 @@ class Controller:
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_state")
         logg.debug(f"Start {fmt_cn('updated_state', 'start')}")
         self.view.frame_info.update_state(data)
+
+    def updated_all_SP(self, data):
+        logg = logging.getLogger(f"c.{__class__.__name__}.updated_all_SP")
+        logg.debug(f"Start {fmt_cn('updated_all_SP', 'start')}")
+        self.view.frame_spline.update_all_SP(data)
+
+    def updated_visible_SP(self, data):
+        logg = logging.getLogger(f"c.{__class__.__name__}.updated_visible_SP")
+        logg.debug(f"Start {fmt_cn('updated_visible_SP', 'start')}")
+        self.view.update_visible_SP(data)
