@@ -20,7 +20,7 @@ class Model:
     def __init__(self):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         logg.setLevel("TRACE")
-        logg.info(f"{fmt_cn('Start', 'start')} init")
+        logg.info(f"Start {fmt_cn('init', 'start')}")
 
         # full path of the current image
         self.pf_input_image = Observable()
@@ -40,7 +40,11 @@ class Model:
         # font measurement: save the SPoint with normalized x,y on
         # descent-base-mean-ascent send the position scaled for display
         # info on all font measurement lines
-        self.fm_lines = Observable()
+        # in VIEWING coordinates
+        self.fm_lines_view = Observable()
+        # in ABSOLUTE coordinates
+        self.fm_lines_abs = Observable()
+
         # proportion between the line
         self.prop_mean_ascent = 0.7
         self.prop_desc_base = 0.6
@@ -56,7 +60,9 @@ class Model:
 
         self.pf_input_image.set(pf_input_image)
 
+        # create the new image cropper
         self._image_cropper = ImageCropper(self.pf_input_image.get())
+        # NOTE if a new image is loaded, noone redraws it but a configure event
 
     def do_canvas_resize(self, widget_wid, widget_hei):
         logg = logging.getLogger(f"c.{__class__.__name__}.do_canvas_resize")
@@ -123,7 +129,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.move_canvas_mouse")
         logg.setLevel("INFO")
-        logg.debug(f"{fmt_cn('Start', 'start')} move_canvas_mouse")
+        logg.debug(f"Start {fmt_cn('move_canvas_mouse', 'start')}")
 
         # save the current pos in the image
         img_mouse_x = mouse_x - self._image_cropper.widget_shift_x
@@ -149,8 +155,11 @@ class Model:
 
             # setting BM
             elif current_state == "setting_base_mean_clicked":
-                fm_lines = self.build_fm_lines("base_mean")
-                self.fm_lines.set(fm_lines)
+                # compute and save the font measurement info:
+                # get the new abs lines with current mouse pos
+                self.build_fm_lines_abs("base_mean")
+                # update the fm_lines_view with the current abs/mov/zoom
+                self.recompute_fm_lines_view()
 
         # moved the mouse while right button clicked
         elif move_type == "move_right_clicked":
@@ -189,9 +198,12 @@ class Model:
 
             # was clicked SBM: set the font measurements
             elif current_state == "setting_base_mean_clicked":
-                # compute and save the font measurement info
-                fm_lines = self.build_fm_lines("base_mean")
-                self.fm_lines.set(fm_lines)
+                # compute and save the font measurement info:
+                # get the new abs lines with current mouse pos
+                self.build_fm_lines_abs("base_mean")
+                # update the fm_lines_view with the current abs/mov/zoom
+                self.recompute_fm_lines_view()
+
                 # after you release the mouse, go back to free state
                 self.state.set("free")
 
@@ -210,18 +222,22 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_base_mean")
         #  logg.setLevel("INFO")
-        logg.debug(f"{fmt_cn('Start', 'start')} click_btn_set_base_mean")
+        logg.debug(f"Start {fmt_cn('click_btn_set_base_mean', 'start')}")
 
         # TODO check current state and toggle setting/free
         self.state.set("setting_base_mean")
 
-    def build_fm_lines(self, input_type):
+    def build_fm_lines_abs(self, input_type):
         """Build the font measurement line
-        """
-        logg = logging.getLogger(f"c.{__class__.__name__}.build_fm_lines")
-        #  logg.setLevel("INFO")
-        logg.debug(f"{fmt_cn('Start', 'start')} build_fm_lines type {input_type}")
 
+        Given the current values of mouse pos and the start_pos, compute the
+        new fm_lines_abs
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.build_fm_lines_abs")
+        #  logg.setLevel("INFO")
+        logg.debug(f"Start {fmt_cn('build_fm_lines_abs', 'start')} type {input_type}")
+
+        # mouse position in the image, scaled for viewing
         curr_pos_x, curr_pos_y = self.curr_mouse_pos.get()
 
         if input_type == "base_mean":
@@ -246,14 +262,97 @@ class Model:
                 self.base_point, self.vert_point.ori_deg, -dist_desc_base
             )
 
-        fm_lines = {
+        # these are in VIEWING coord
+        fm_lines_view = {
             "vert_point": self.vert_point,
             "base_point": self.base_point,
             "mean_point": self.mean_point,
             "ascent_point": self.ascent_point,
             "descent_point": self.descent_point,
         }
-        return fm_lines
+        # rescale them to ABSOLUTE
+        fm_lines_abs = self.rescale_fm_lines_to_abs(fm_lines_view)
+        # save them
+        self.fm_lines_abs.set(fm_lines_abs)
+
+    def recompute_fm_lines_view(self):
+        """Updats the value in fm_lines_view to match the current abs/mov/zoom
+        """
+        curr_abs_lines = self.fm_lines_abs.get()
+        if not curr_abs_lines is None:
+            new_view_lines = self.rescale_fm_lines_to_view(curr_abs_lines)
+            self.fm_lines_view.set(new_view_lines)
+
+    def rescale_fm_lines_to_abs(self, fm_lines_view):
+        """Rescale the points from VIEWING coord to ABSOLUTE img coord
+
+        Returns a new dict of points
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.rescale_fm_lines_to_abs")
+        #  logg.setLevel("INFO")
+        logg.debug(f"Start {fmt_cn('rescale_fm_lines_to_abs', 'start')}")
+
+        abs_lines = {}
+        for line_name in fm_lines_view:
+            abs_point = self.rescale_point(fm_lines_view[line_name], "view2abs")
+            abs_lines[line_name] = abs_point
+        return abs_lines
+
+    def rescale_fm_lines_to_view(self, fm_lines_abs):
+        """Rescale the points from ABSOLUTE img coord to VIEWING coord
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.rescale_fm_lines_to_view")
+        #  logg.setLevel("INFO")
+        logg.debug(f"Start {fmt_cn('rescale_fm_lines_to_view', 'start')}")
+
+        view_lines = {}
+        for line_name in fm_lines_abs:
+            view_point = self.rescale_point(fm_lines_abs[line_name], "abs2view")
+            view_lines[line_name] = view_point
+        return view_lines
+
+    def rescale_point(self, point, direction):
+        """Rescale a point in the specified direction
+            * view2abs
+            * abs2view
+
+        Returns a new point
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.rescale_point")
+        logg.setLevel("TRACE")
+        logg.debug(f"Start {fmt_cn('rescale_point', 'start')}")
+
+        # position in the image, scaled for viewing
+        view_x = point.x
+        view_y = point.y
+        logg.trace(f"view_x: {view_x} view_y: {view_y}")
+
+        # position of the cropped region inside the zoomed image
+        mov_x = self._image_cropper._mov_x
+        mov_y = self._image_cropper._mov_y
+        logg.trace(f"mov_x: {mov_x} mov_y: {mov_y}")
+
+        # compute position in zoomed image
+        zoom_x = mov_x + view_x
+        zoom_y = mov_y + view_y
+        logg.trace(f"zoom_x: {zoom_x} zoom_y: {zoom_y}")
+
+        # current zoom value
+        zoom = self._image_cropper.zoom
+        logg.trace(f"zoom: {zoom}")
+
+        if direction == "view2abs":
+            # rescale from zoomed to absolute
+            abs_x = zoom_x / zoom
+            abs_y = zoom_y / zoom
+        elif direction == "abs2view":
+            # rescale from absolute to zoomed
+            abs_x = zoom_x * zoom
+            abs_y = zoom_y * zoom
+        logg.trace(f"abs_x: {abs_x} abs_y: {abs_y}")
+
+        # create a new point
+        return OrientedPoint(abs_x, abs_y, point.ori_deg)
 
     def zoom_image(self, direction, img_x, img_y):
         """Zoom the image
@@ -262,19 +361,21 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.zoom_image")
         #  logg.setLevel("INFO")
-        logg.debug(f"{fmt_cn('Start', 'start')} zoom_image {direction}")
+        logg.debug(f"Start {fmt_cn('zoom_image', 'start')} {direction}")
 
         # compute the new image
         self._image_cropper.zoom_image(direction, img_x, img_y)
 
         self.update_image_obs()
 
+        self.recompute_fm_lines_view()
+
     def move_image(self, new_x, new_y):
         """
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.move_image")
         #  logg.setLevel("INFO")
-        logg.debug(f"{fmt_cn('Start', 'start')} move_image")
+        logg.debug(f"Start {fmt_cn('move_image', 'start')}")
 
         delta_x = self.old_img_x - new_x
         delta_y = self.old_img_y - new_y
@@ -285,12 +386,14 @@ class Model:
         self._image_cropper.move_image(delta_x, delta_y)
         self.update_image_obs()
 
+        self.recompute_fm_lines_view()
+
     def update_image_obs(self):
         """
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_image_obs")
         #  logg.setLevel("INFO")
-        logg.debug(f"{fmt_cn('Start', 'start')} update_image_obs")
+        logg.debug(f"Start {fmt_cn('update_image_obs', 'start')}")
         # update the image in the observable, with info on where to put it
         data = {
             "image_res": self._image_cropper.image_res,
@@ -308,7 +411,7 @@ class ImageCropper:
     def __init__(self, photo_name_full):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         #  logg.setLevel("TRACE")
-        logg.info(f"{fmt_cn('Start', 'start')} init")
+        logg.info(f"Start {fmt_cn('init', 'start')}")
 
         # load the image
         self._photo_name_full = photo_name_full
@@ -445,7 +548,11 @@ class ImageCropper:
         logg.trace(
             f"widget_shift_x {self.widget_shift_x} widget_shift_y {self.widget_shift_y}"
         )
+        # save the positions
         self.resized_dim = resized_dim
+        self.zoom = zoom
+        self.zoom_wid = zoom_wid
+        self.zoom_hei = zoom_hei
 
         # decide what method to use when resizing
         if zoom > 1:

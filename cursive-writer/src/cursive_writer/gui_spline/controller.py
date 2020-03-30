@@ -11,7 +11,7 @@ class Controller:
     def __init__(self, pf_input_image):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         logg.setLevel("TRACE")
-        logg.info(f"{fmt_cn('Start', 'start')} init")
+        logg.info(f"Start {fmt_cn('init', 'start')}")
 
         self.root = tk.Tk()
 
@@ -23,7 +23,7 @@ class Controller:
         self.model.crop_input_image.add_callback(self.updated_crop_input_image)
         self.model.free_line.add_callback(self.updated_free_line)
         self.model.curr_mouse_pos.add_callback(self.updated_curr_mouse_pos)
-        self.model.fm_lines.add_callback(self.updated_fm_lines)
+        self.model.fm_lines_view.add_callback(self.updated_fm_lines)
         self.model.click_left_start_pos.add_callback(self.updated_click_left_start_pos)
         self.model.state.add_callback(self.updated_state)
 
@@ -143,6 +143,7 @@ class Controller:
     def moved_canvas_mouse(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.moved_canvas_mouse")
         #  logg.setLevel("TRACE")
+        #  logg.setLevel("DEBUG")
         logg.setLevel("INFO")
         logg.debug(f"{fmt_cn('Moved', 'start')} mouse on canvas")
         logg.trace(f"event: {event} event.state: {event.state}")
@@ -173,7 +174,7 @@ class Controller:
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_base_mean")
         #  logg.setLevel("TRACE")
         #  logg.setLevel("INFO")
-        logg.debug(f"{fmt_cn('Start', 'start')} clicked_btn_set_base_mean")
+        logg.debug(f"Start {fmt_cn('clicked_btn_set_base_mean', 'start')}")
 
         self.model.clicked_btn_set_base_mean()
 
@@ -187,35 +188,35 @@ class Controller:
         self.view.update_pf_input_image(data)
 
     def updated_crop_input_image(self, data):
-        logg = logging.getLogger(f"c.{__name__}.updated_crop_input_image")
-        logg.debug(f"{fmt_cn('Start', 'start')} updated_crop_input_image")
+        logg = logging.getLogger(f"c.{__class__.__name__}.updated_crop_input_image")
+        logg.debug(f"Start {fmt_cn('updated_crop_input_image', 'start')}")
         self.view.frame_image.update_crop_input_image(data)
 
     def updated_free_line(self, data):
-        logg = logging.getLogger(f"c.{__name__}.updated_free_line")
-        logg.debug(f"{fmt_cn('Start', 'start')} updated_free_line")
+        logg = logging.getLogger(f"c.{__class__.__name__}.updated_free_line")
+        logg.debug(f"Start {fmt_cn('updated_free_line', 'start')}")
         self.view.frame_image.update_free_line(data)
 
     def updated_curr_mouse_pos(self, data):
         """
         """
-        logg = logging.getLogger(f"c.{__name__}.updated_curr_mouse_pos")
+        logg = logging.getLogger(f"c.{__class__.__name__}.updated_curr_mouse_pos")
         logg.setLevel("INFO")
-        logg.debug(f"{fmt_cn('Start', 'start')} updated_curr_mouse_pos")
+        logg.debug(f"Start {fmt_cn('updated_curr_mouse_pos', 'start')}")
 
         self.view.frame_info.update_curr_mouse_pos(data)
 
     def updated_fm_lines(self, data):
-        logg = logging.getLogger(f"c.{__name__}.updated_fm_lines")
-        logg.debug(f"{fmt_cn('Start', 'start')} updated_fm_lines")
+        logg = logging.getLogger(f"c.{__class__.__name__}.updated_fm_lines")
+        logg.debug(f"Start {fmt_cn('updated_fm_lines', 'start')}")
         self.view.frame_image.update_fm_lines(data)
 
     def updated_click_left_start_pos(self, data):
-        logg = logging.getLogger(f"c.{__name__}.updated_click_left_start_pos")
-        logg.debug(f"{fmt_cn('Start', 'start')} updated_click_left_start_pos")
+        logg = logging.getLogger(f"c.{__class__.__name__}.updated_click_left_start_pos")
+        logg.debug(f"Start {fmt_cn('updated_click_left_start_pos', 'start')}")
         self.view.frame_image.update_click_left_start_pos(data)
 
     def updated_state(self, data):
-        logg = logging.getLogger(f"c.{__name__}.updated_state")
-        logg.debug(f"{fmt_cn('Start', 'start')} updated_state")
+        logg = logging.getLogger(f"c.{__class__.__name__}.updated_state")
+        logg.debug(f"Start {fmt_cn('updated_state', 'start')}")
         self.view.frame_info.update_state(data)

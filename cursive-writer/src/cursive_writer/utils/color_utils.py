@@ -5,7 +5,7 @@ def fmt_cn(string, name):
     """Assign a color to a name, to keep it consistent
     """
     if name == "start":
-        color = "red1"
+        color = "aqua"
     elif name == "error":
         color = "Magenta"
     elif name == "a1":

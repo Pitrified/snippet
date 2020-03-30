@@ -57,6 +57,7 @@ def collide_line_box(bbox, line_point):
     Note that the y axis is reversed in tkinter
     """
     logg = logging.getLogger(f"c.{__name__}.collide_line_box")
+    logg.setLevel("INFO")
     logg.debug(f"{fmt_cn('Start', 'start')} collide_line_box")
 
     left, top, right, bot = bbox
