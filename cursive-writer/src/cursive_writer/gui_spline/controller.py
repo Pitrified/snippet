@@ -184,6 +184,8 @@ class Controller:
 
         self.model.clicked_btn_set_base_mean()
 
+        self.view.reset_focus()
+
     ###### OBSERVABLE CALLBACKS ######
 
     def updated_pf_input_image(self, data):

@@ -84,20 +84,29 @@ class View:
         s.configure("group.TFrame", background="burlywood2")
 
         s.configure("TLabel", anchor=tk.CENTER)
-        s.configure("title.TLabel", background="burlywood3", font=(the_font, 14))
+        s.configure(
+            "title.TLabel",
+            background="burlywood3",
+            font=(the_font, 14),
+            padding=(0, 6, 0, 6),
+        )
         s.configure("info.TLabel", background="burlywood2")
 
         s.configure(
             "settings.TButton",
-            background="wheat3",
+            background="wheat2",
             borderwidth=0,
             highlightthickness=0,
         )
         s.map(
             "settings.TButton",
-            background=[("pressed", "wheat1"), ("active", "wheat2"),],
+            background=[("pressed", "wheat1"), ("active", "wheat1"),],
         )
-        # the buttons also needed this, lets see the default in ttk TODO
+
+    def reset_focus(self):
+        """
+        """
+        self.root.focus_set()
 
     def exit(self):
         # TODO ask confirmation
@@ -192,7 +201,9 @@ class FrameInfo(ttk.Frame):
         self.mi_label_state.grid(row=2, column=0, sticky="ew")
 
         # grid the frames
-        self.font_measurement_frame.grid(row=0, column=0, sticky="new", padx=10, pady=10)
+        self.font_measurement_frame.grid(
+            row=0, column=0, sticky="new", padx=10, pady=10
+        )
         self.mouse_info_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
 
     ### REACTIONS TO OBSERVABLES ###
@@ -415,15 +426,41 @@ class FrameSpline(ttk.Frame):
         super().__init__(parent, *args, **kwargs)
 
         # setup grid for the frame
-        self.grid_rowconfigure(0, weight=1)
+        #  self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        self.image_label = ttk.Label(
-            self, text="Mock up FrameSpline", style="title.TLabel"
+        ### frame for spline buttons and info ###
+
+        self.spline_header_frame = ttk.Frame(self, style="group.TFrame")
+        # setup grid for spline_header_frame
+        self.spline_header_frame.grid_columnconfigure(0, weight=1)
+
+        self.sh_title = ttk.Label(
+            self.spline_header_frame, text="Title INFO", style="title.TLabel"
+        )
+        self.sh_btn_new_spline = ttk.Button(
+            self.spline_header_frame, text="New spline", style="settings.TButton",
         )
 
-        # grid it, do not expand
-        self.image_label.grid(row=0, column=0)
+        # grid the elements in spline_header_frame
+        self.sh_title.grid(row=0, column=0, sticky="ew")
+        self.sh_btn_new_spline.grid(row=1, column=0, pady=4)
+
+        ### frame for spline points ###
+        self.spline_list_frame = ttk.Frame(self, style="group.TFrame")
+        # setup grid for spline_list_frame
+        self.spline_list_frame.grid_columnconfigure(0, weight=1)
+
+        self.sl_title = ttk.Label(
+            self.spline_list_frame, text="Title SPlist", style="title.TLabel"
+        )
+
+        # grid the element in spline_list_frame
+        self.sl_title.grid(row=0, column=0, sticky="ew")
+
+        # grid the frames
+        self.spline_header_frame.grid(row=0, column=0, sticky="new", padx=10, pady=10)
+        self.spline_list_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
 
         self.all_SP_frames = {}
 
