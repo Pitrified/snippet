@@ -28,6 +28,8 @@ class Controller:
         self.model.state.add_callback(self.updated_state)
         self.model.all_SP.add_callback(self.updated_all_SP)
         self.model.visible_SP.add_callback(self.updated_visible_SP)
+        self.model.active_SP.add_callback(self.updated_active_SP)
+        self.model.selected_SP.add_callback(self.updated_selected_SP)
 
         ### VIEW  ###
         self.view = View(self.root)
@@ -234,3 +236,13 @@ class Controller:
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_visible_SP")
         logg.debug(f"Start {fmt_cn('updated_visible_SP', 'start')}")
         self.view.update_visible_SP(data)
+
+    def updated_active_SP(self, data):
+        logg = logging.getLogger(f"c.{__class__.__name__}.updated_active_SP")
+        logg.debug(f"Start {fmt_cn('updated_active_SP', 'start')}")
+        self.view.frame_spline.update_active_SP(data)
+
+    def updated_selected_SP(self, data):
+        logg = logging.getLogger(f"c.{__class__.__name__}.updated_selected_SP")
+        logg.debug(f"Start {fmt_cn('updated_selected_SP', 'start')}")
+        self.view.frame_spline.update_selected_SP(data)

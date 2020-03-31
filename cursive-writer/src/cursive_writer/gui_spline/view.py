@@ -423,4 +423,16 @@ class FrameSpline(tk.Frame):
         logg = logging.getLogger(f"c.{__class__.__name__}.do_update_visible_SP")
         logg.debug(f"Start {fmt_cn('do_update_visible_SP', 'start')}")
 
+    def update_active_SP(self, data):
+        """TODO: what are you changing when updating active_SP?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_active_SP")
+        logg.debug(f"Start {fmt_cn('update_active_SP', 'start')} {data}")
+
+    def update_selected_SP(self, data):
+        """TODO: what are you changing when updating selected_SP?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_selected_SP")
+        logg.debug(f"Start {fmt_cn('update_selected_SP', 'start')} {data}")
+
     ### HELPERS ###

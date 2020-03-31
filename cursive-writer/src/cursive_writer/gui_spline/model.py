@@ -60,6 +60,10 @@ class Model:
         self.next_spid = 0
         # visible SP, in view coord
         self.visible_SP = Observable({})
+        # how to actually build the spline path, as list of lists
+        self.active_SP = Observable([[]])
+        # indexes of the current active_SP, where to put the next one in the path
+        self.selected_SP = Observable([0, -1])
 
     ### OPERATIONS ON CANVAS ###
 
@@ -450,18 +454,30 @@ class Model:
         # mouse position in the image, scaled for viewing
         view_x, view_y = self.curr_mouse_pos.get()
 
-        # TODO flip this to draw spline orientation in the other direction
         view_op = line_curve_point(self.start_img_x, self.start_img_y, view_x, view_y)
+
+        # MAYBE add button to flip this behaviour
+        # flip this to draw spline orientation in the other direction
+        view_op.set_ori_deg(view_op.ori_deg + 180)
 
         # RESCALE the point from view to absolute coordinates
         abs_op = self.rescale_point(view_op, "view2abs")
 
         # create the SplinePoint
         new_sp = SplinePoint(abs_op.x, abs_op.y, abs_op.ori_deg, self.next_spid)
-
+        
+        # save the point
         all_SP = self.all_SP.get()
         all_SP[new_sp.spid] = new_sp
         self.all_SP.set(all_SP)
+
+        # put the point in the active ones
+        path = self.active_SP.get()
+        selected = self.selected_SP.get()
+        path[selected[0]].insert(selected[1] + 1, new_sp.spid)
+        selected[1] += 1
+        self.active_SP.set(path)
+        self.selected_SP.set(selected)
 
         # prepare for the next spid
         self.next_spid += 1
@@ -492,6 +508,19 @@ class Model:
 
         self.visible_SP.set(visible_SP)
 
+    def find_spid_in_active_SP(self, spid):
+        '''
+        '''
+        # whole letter
+        path = self.active_SP.get()
+        # get each glyph
+        for i, glyph in enumerate(path):
+            # get each point
+            for j, sp in enumerate(glyph):
+                if sp.spid == spid:
+                    return [i, j]
+        return [0, -1]
+        # MAYBE return [len(path), len(path[-1]) - 1] to point at the last element 
 
 class ImageCropper:
     def __init__(self, photo_name_full):
