@@ -451,6 +451,10 @@ class Model:
         logg = logging.getLogger(f"c.{__class__.__name__}.add_spline_point")
         logg.debug(f"Start {fmt_cn('add_spline_point', 'start')}")
 
+        if self.start_img_x < 0 or self.start_img_y < 0:
+            logg.warn(f"Point {fmt_cn('outside', 'warn')} image")
+            return
+
         # mouse position in the image, scaled for viewing
         view_x, view_y = self.curr_mouse_pos.get()
 
@@ -498,8 +502,7 @@ class Model:
 
         all_SP = self.all_SP.get()
         visible_SP = {}
-        for spid in all_SP:
-            curr_sp = all_SP[spid]
+        for spid, curr_sp in all_SP.items():
 
             # check that the point is in the region cropped
             if region[0] < curr_sp.x < region[2] and region[1] < curr_sp.y < region[3]:

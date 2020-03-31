@@ -8,6 +8,8 @@ def fmt_cn(string, name):
         color = "aqua"
     elif name == "error":
         color = "Magenta"
+    elif name == "warn":
+        color = "dark orange"
     elif name == "a1":
         color = "Green"
     elif name == "a2":

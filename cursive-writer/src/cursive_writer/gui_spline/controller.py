@@ -154,6 +154,7 @@ class Controller:
         logg.trace(f"event.x: {event.x} event.y: {event.y}")
 
         # TODO Shift+LeftMove (273): fm_lines with forced horizontal base
+        # TODO add entry to set degrees of vertical line
 
         the_state = event.state
         # these were brutally harvested by reading the logs...

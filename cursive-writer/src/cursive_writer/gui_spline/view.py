@@ -10,6 +10,7 @@ from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.geometric_utils import collide_line_box
 from cursive_writer.utils.geometric_utils import translate_point_dxy
 from cursive_writer.gui_spline.spoint_frame import FrameSPoint
+from cursive_writer.gui_spline.scrollable_frame import ScrollableFrame
 
 
 class View:
@@ -91,6 +92,15 @@ class View:
             padding=(0, 6, 0, 6),
         )
         s.configure("info.TLabel", background="burlywood2")
+        s.configure(
+            "sp_pos.TLabel",
+            background="burlywood2",
+            #  anchor=tk.W,
+            anchor=tk.E,
+            #  font=("Consolas", 12),
+            font=("Courier", 12),
+            #  font="TkFixedFont",
+        )
 
         s.configure(
             "settings.TButton",
@@ -120,7 +130,7 @@ class View:
         # TODO write this name somewhere LOL
 
     def update_visible_SP(self, data):
-        """TODO: what are you changing when updating visible_SP?
+        """Update the drawn arrows
 
         MAYBE change background of the visible SP?
         """
@@ -352,7 +362,7 @@ class FrameImage(ttk.Frame):
     ### HELPERS ###
 
     def do_update_visible_SP(self, data):
-        """TODO: what are you changing when updating visible_SP?
+        """Update the drawn arrows
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.do_update_visible_SP")
         logg.debug(f"Start {fmt_cn('do_update_visible_SP', 'start')}")
@@ -475,22 +485,32 @@ class FrameSpline(ttk.Frame):
         for spid in data:
             if not spid in self.all_SP_frames:
                 name = f"frame_sp_{spid}"
-                sp_frame = FrameSPoint(self, name, data[spid])
+                sp_frame = FrameSPoint(self.spline_list_frame, name, data[spid])
                 self.all_SP_frames[spid] = sp_frame
 
     def do_update_visible_SP(self, data):
-        """TODO: what are you changing when updating visible_SP?
+        """MAYBE change background of the visible SP?
 
-        MAYBE change background of the visible SP?
+        This is never called
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.do_update_visible_SP")
         logg.debug(f"Start {fmt_cn('do_update_visible_SP', 'start')}")
 
     def update_active_SP(self, data):
-        """TODO: what are you changing when updating active_SP?
+        """Grid the frames relative to the active SplinePoints
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_active_SP")
         logg.debug(f"Start {fmt_cn('update_active_SP', 'start')} {data}")
+
+        # remove all frames from grid
+        for spid, sp_frame in self.all_SP_frames.items():
+            sp_frame.grid_forget()
+
+        row = 1
+        for glyph in data:
+            for spid in glyph:
+                self.all_SP_frames[spid].grid(row=row, column=0, sticky="ew")
+                row += 1
 
     def update_selected_SP(self, data):
         """TODO: what are you changing when updating selected_SP?
