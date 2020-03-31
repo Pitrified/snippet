@@ -1,5 +1,6 @@
 import logging
 import tkinter as tk
+from tkinter import ttk
 
 from math import cos
 from math import sin
@@ -19,19 +20,29 @@ class View:
 
         self.root = root
 
+        self.sidebar_width = 250
+
         self.frame_info = FrameInfo(
-            self.root, name="frame_info", background="burlywood1",
+            self.root,
+            name="frame_info",
+            style="container.TFrame",
+            width=self.sidebar_width,
         )
         self.frame_image = FrameImage(
-            self.root, name="frame_image", background="burlywood1"
+            self.root, name="frame_image", style="container.TFrame"
         )
         self.frame_spline = FrameSpline(
-            self.root, name="frame_spline", background="burlywood1"
+            self.root,
+            name="frame_spline",
+            style="container.TFrame",
+            width=self.sidebar_width,
         )
 
         self.setup_main_window()
 
         self.setup_layout()
+
+        self.setup_style()
 
     ### HELPERS ###
 
@@ -46,14 +57,47 @@ class View:
     def setup_layout(self):
         # row 0 expands
         self.root.grid_rowconfigure(0, weight=1)
-        # column 0 does not expand but has min width
-        #  self.root.grid_columnconfigure(0, weight=1, minsize=200)
         # column 1 expands
         self.root.grid_columnconfigure(1, weight=1)
 
         self.frame_info.grid(row=0, column=0, sticky="ns")
+        # DO NOT let children widget influence the frame dimension
+        self.frame_info.grid_propagate(False)
         self.frame_image.grid(row=0, column=1, sticky="nsew")
         self.frame_spline.grid(row=0, column=2, sticky="ns")
+        self.frame_spline.grid_propagate(False)
+
+    def setup_style(self):
+        logg = logging.getLogger(f"c.{__class__.__name__}.setup_style")
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('init', 'setup_style')}")
+
+        s = ttk.Style()
+
+        the_font = "Helvetica"
+
+        # configure root style
+        s.configure(".", font=(the_font, 12))
+
+        #  s.configure("TFrame", relief="sunken", borderwidth=5)
+        s.configure("container.TFrame", background="burlywood1")
+        s.configure("group.TFrame", background="burlywood2")
+
+        s.configure("TLabel", anchor=tk.CENTER)
+        s.configure("title.TLabel", background="burlywood3", font=(the_font, 14))
+        s.configure("info.TLabel", background="burlywood2")
+
+        s.configure(
+            "settings.TButton",
+            background="wheat3",
+            borderwidth=0,
+            highlightthickness=0,
+        )
+        s.map(
+            "settings.TButton",
+            background=[("pressed", "wheat1"), ("active", "wheat2"),],
+        )
+        # the buttons also needed this, lets see the default in ttk TODO
 
     def exit(self):
         # TODO ask confirmation
@@ -77,7 +121,7 @@ class View:
         self.frame_image.do_update_visible_SP(data)
 
 
-class FrameInfo(tk.Frame):
+class FrameInfo(ttk.Frame):
     def __init__(self, parent, name, *args, **kwargs):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         logg.setLevel("TRACE")
@@ -87,76 +131,58 @@ class FrameInfo(tk.Frame):
         super().__init__(parent, *args, **kwargs)
 
         # setup grid for the frame
-        #  self.grid_rowconfigure(0, weight=1)
-        #  self.grid_rowconfigure(1, weight=1)
+        self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
         # frame for font measurement related buttons
-        self.font_measurement_frame = tk.Frame(self, background="burlywood2")
+        self.font_measurement_frame = ttk.Frame(self, style="group.TFrame")
 
         # setup grid for font_measurement_frame
         self.font_measurement_frame.grid_columnconfigure(0, weight=1)
+        self.font_measurement_frame.grid_columnconfigure(1, weight=1)
 
         # build the objects in font_measurement_frame
-        # NOTE that the width is in CHARACTERS and not pixels
-        self.fm_title = tk.Label(
-            self.font_measurement_frame,
-            text="Font Measurement",
-            background=self.font_measurement_frame.cget("background"),
-            width=25,
+        self.fm_title = ttk.Label(
+            self.font_measurement_frame, text="Font Measurement", style="title.TLabel"
         )
 
-        self.fm_btn_set_base_mean = tk.Button(
-            self.font_measurement_frame,
-            text="Set base to mean dist",
-            borderwidth=0,
-            highlightthickness=0,
-            background="wheat2",
-            activebackground="wheat1",
+        self.fm_btn_set_base_mean = ttk.Button(
+            self.font_measurement_frame, text="Set BM", style="settings.TButton",
         )
 
-        self.fm_btn_set_base_ascent = tk.Button(
-            self.font_measurement_frame,
-            text="Set base to ascent dist",
-            borderwidth=0,
-            highlightthickness=0,
-            background="wheat2",
-            activebackground="wheat1",
+        self.fm_btn_set_base_ascent = ttk.Button(
+            self.font_measurement_frame, text="Set BA", style="settings.TButton",
         )
 
         # grid the objects in font_measurement_frame
-        self.fm_title.grid(row=0, column=0, sticky="ew")
-        self.fm_btn_set_base_mean.grid(row=1, column=0, sticky="ew")
-        self.fm_btn_set_base_ascent.grid(row=2, column=0, sticky="ew")
+        self.fm_title.grid(row=0, column=0, sticky="ew", columnspan=2)
+        #  self.fm_btn_set_base_mean.grid(row=1, column=0, sticky="ew")
+        #  self.fm_btn_set_base_ascent.grid(row=2, column=0, sticky="ew")
+        self.fm_btn_set_base_mean.grid(row=1, column=0, pady=4)
+        self.fm_btn_set_base_ascent.grid(row=1, column=1, pady=4)
 
         # frame for mouse pos / line orientation informations
-        self.mouse_info_frame = tk.Frame(self, background="burlywood2")
+        self.mouse_info_frame = ttk.Frame(self, style="group.TFrame")
 
         # setup grid for mouse_info_frame
         self.mouse_info_frame.grid_columnconfigure(0, weight=1)
 
         # mouse_info_frame title label
-        self.mi_title = tk.Label(
-            self.mouse_info_frame,
-            text="Mouse info",
-            background=self.font_measurement_frame.cget("background"),
+        self.mi_title = ttk.Label(
+            self.mouse_info_frame, text="Mouse info", style="title.TLabel"
         )
 
         # create mouse pos info label
         self.mi_var_pos = tk.StringVar(self.mouse_info_frame)
-        self.mi_label_pos = tk.Label(
-            self.mouse_info_frame,
-            textvariable=self.mi_var_pos,
-            background=self.cget("background"),
+        self.mi_label_pos = ttk.Label(
+            self.mouse_info_frame, textvariable=self.mi_var_pos, style="info.TLabel",
         )
         self.mi_var_pos.set("Mouse at (0, 0)")
 
         # create state info label
         self.mi_var_state = tk.StringVar(self.mouse_info_frame)
-        self.mi_label_state = tk.Label(
-            self.mouse_info_frame,
-            textvariable=self.mi_var_state,
-            background=self.cget("background"),
+        self.mi_label_state = ttk.Label(
+            self.mouse_info_frame, textvariable=self.mi_var_state, style="info.TLabel",
         )
         self.mi_var_state.set("State: FREE")
 
@@ -166,8 +192,8 @@ class FrameInfo(tk.Frame):
         self.mi_label_state.grid(row=2, column=0, sticky="ew")
 
         # grid the frames
-        self.font_measurement_frame.grid(row=0, column=0, sticky="ew")
-        self.mouse_info_frame.grid(row=1, column=0, sticky="ew")
+        self.font_measurement_frame.grid(row=0, column=0, sticky="new", padx=10, pady=10)
+        self.mouse_info_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
 
     ### REACTIONS TO OBSERVABLES ###
 
@@ -199,7 +225,7 @@ class FrameInfo(tk.Frame):
         self.mi_var_state.set(state_str)
 
 
-class FrameImage(tk.Frame):
+class FrameImage(ttk.Frame):
     def __init__(self, parent, name, *args, **kwargs):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         logg.setLevel("TRACE")
@@ -213,7 +239,7 @@ class FrameImage(tk.Frame):
         self.grid_columnconfigure(0, weight=1)
 
         #  # mockup label to draw the frame
-        #  self.image_label = tk.Label( self, text="Mock up FrameImage", bg=self.cget("background"))
+        #  self.image_label = ttk.Label( self, text="Mock up FrameImage", bg=self.cget("background"))
         #  # grid it, do not expand
         #  self.image_label.grid(row=0, column=0)
 
@@ -379,7 +405,7 @@ class FrameImage(tk.Frame):
         self.image_canvas.bind(kind, func)
 
 
-class FrameSpline(tk.Frame):
+class FrameSpline(ttk.Frame):
     def __init__(self, parent, name, *args, **kwargs):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         logg.setLevel("TRACE")
@@ -392,8 +418,8 @@ class FrameSpline(tk.Frame):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        self.image_label = tk.Label(
-            self, text="Mock up FrameSpline", background=self.cget("background")
+        self.image_label = ttk.Label(
+            self, text="Mock up FrameSpline", style="title.TLabel"
         )
 
         # grid it, do not expand

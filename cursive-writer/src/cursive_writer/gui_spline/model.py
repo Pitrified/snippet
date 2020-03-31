@@ -465,7 +465,7 @@ class Model:
 
         # create the SplinePoint
         new_sp = SplinePoint(abs_op.x, abs_op.y, abs_op.ori_deg, self.next_spid)
-        
+
         # save the point
         all_SP = self.all_SP.get()
         all_SP[new_sp.spid] = new_sp
@@ -509,8 +509,8 @@ class Model:
         self.visible_SP.set(visible_SP)
 
     def find_spid_in_active_SP(self, spid):
-        '''
-        '''
+        """
+        """
         # whole letter
         path = self.active_SP.get()
         # get each glyph
@@ -520,7 +520,8 @@ class Model:
                 if sp.spid == spid:
                     return [i, j]
         return [0, -1]
-        # MAYBE return [len(path), len(path[-1]) - 1] to point at the last element 
+        # MAYBE return [len(path), len(path[-1]) - 1] to point at the last element
+
 
 class ImageCropper:
     def __init__(self, photo_name_full):
