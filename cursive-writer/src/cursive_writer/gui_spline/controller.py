@@ -56,6 +56,12 @@ class Controller:
         self.view.frame_info.fm_btn_set_base_mean.config(
             command=self.clicked_btn_set_base_mean
         )
+        self.view.frame_info.fm_btn_set_base_ascent.config(
+            command=self.clicked_btn_set_base_ascent
+        )
+        self.view.frame_spline.sh_btn_new_spline.config(
+            command=self.clicked_sh_btn_new_spline
+        )
 
         # initialize the values in the model
         self.model.set_pf_input_image(pf_input_image)
@@ -192,6 +198,26 @@ class Controller:
 
         self.view.reset_focus()
 
+    def clicked_btn_set_base_ascent(self):
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_base_ascent")
+        #  logg.setLevel("TRACE")
+        #  logg.setLevel("INFO")
+        logg.debug(f"Start {fmt_cn('clicked_btn_set_base_ascent', 'start')}")
+
+        self.model.clicked_btn_set_base_ascent()
+
+        self.view.reset_focus()
+
+    def clicked_sh_btn_new_spline(self):
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_sh_btn_new_spline")
+        #  logg.setLevel("TRACE")
+        #  logg.setLevel("INFO")
+        logg.debug(f"Start {fmt_cn('clicked_sh_btn_new_spline', 'start')}")
+
+        self.model.clicked_sh_btn_new_spline()
+
+        self.view.reset_focus()
+
     def sp_frame_entered(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_entered")
         #  logg.setLevel("TRACE")
@@ -219,12 +245,16 @@ class Controller:
 
     ###### OBSERVABLE CALLBACKS ######
 
+    ### MISC ###
+
     def updated_pf_input_image(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_pf_input_image")
         logg.info(
             f"New values {fmt_cn('received', 'start')} for pf_input_image: {data}"
         )
         self.view.update_pf_input_image(data)
+
+    ### IMAGE CANVAS ###
 
     def updated_crop_input_image(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_crop_input_image")
@@ -259,6 +289,8 @@ class Controller:
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_state")
         logg.debug(f"Start {fmt_cn('updated_state', 'start')}")
         self.view.frame_info.update_state(data)
+
+    ### SPLINE INFO ###
 
     def updated_all_SP(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_all_SP")

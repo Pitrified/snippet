@@ -60,11 +60,11 @@ class Model:
         self.next_spid = 0
         # visible SP, in view coord
         self.visible_SP = Observable({})
-        # how to actually build the spline path, as list of lists
+        # how to actually build the spline path, as list of lists [[0,1,2], [4,6,7,8]]
         self.active_SP = Observable([[]])
         # id of the selected SP
         self.selected_spid_SP = Observable(None)
-        # indexes of the current active_SP, where to put the next one in the path
+        # indexes of the current selected SP, where to put the next one in the path
         self.selected_indexes = [0, -1]
         # id of the SP under the mouse
         self.hovered_SP = -1
@@ -299,6 +299,48 @@ class Model:
         else:
             self.state.set("setting_base_mean")
 
+    def clicked_btn_set_base_ascent(self):
+        """TODO: what is clicked_btn_set_base_ascent doing?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_base_ascent")
+        logg.setLevel("TRACE")
+        logg.debug(f"Start {fmt_cn('clicked_btn_set_base_ascent', 'start')}")
+
+    def clicked_sh_btn_new_spline(self):
+        """TODO: what is clicked_sh_btn_new_spline doing?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_sh_btn_new_spline")
+        logg.setLevel("TRACE")
+        logg.debug(f"Start {fmt_cn('clicked_sh_btn_new_spline', 'a2')}")
+
+        path = self.active_SP.get()
+
+        sel_idxs = self.selected_indexes
+        current_glyph = path[sel_idxs[0]]
+
+        logg.debug(f"sel_idxs: {sel_idxs}")
+        logg.debug(f"path[{sel_idxs[0]}]: {current_glyph}")
+
+        # the current_glyph is empty, do nothing
+        if len(current_glyph) == 0:
+            logg.info(f"Current glyph is {fmt_cn('empty', 'warn')}")
+            return
+
+        split_left = current_glyph[: sel_idxs[1] + 1]
+        split_right = current_glyph[sel_idxs[1] + 1 :]
+        logg.debug(f"split_left: {split_left} split_right: {split_right}")
+
+        path[sel_idxs[0]] = split_left
+        path.insert(sel_idxs[0] + 1, split_right)
+        logg.debug(f"path: {path}")
+
+        # cursor at the end of current_glyph: point to NEXT list
+        if len(current_glyph) == sel_idxs[1] + 1:
+            logg.debug(f"Pointing at the end of the line")
+            self.selected_indexes = [sel_idxs[0] + 1, -1]
+
+        logg.debug(f"self.selected_indexes: {self.selected_indexes}")
+
     def redraw_canvas(self):
         """
         """
@@ -457,7 +499,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.add_spline_point")
         #  logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('add_spline_point', 'a2')}")
+        logg.info(f"Start {fmt_cn('add_spline_point', 'start')}")
 
         if (
             self.start_img_x < 0
@@ -575,6 +617,8 @@ class Model:
 
         self.selected_indexes = self.find_spid_in_active_SP(spid)
         logg.trace(f"selected_indexes: {self.selected_indexes}")
+
+        logg.trace(f"self.active_SP.get(): {self.active_SP.get()}")
 
         self.selected_spid_SP.set(spid)
 
