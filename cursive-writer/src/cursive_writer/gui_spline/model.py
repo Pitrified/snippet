@@ -398,8 +398,8 @@ class Model:
         Returns a new OrientedPoint
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.rescale_point")
-        logg.setLevel("TRACE")
-        logg.debug(f"Start {fmt_cn('rescale_point', 'start')}")
+        #  logg.setLevel("TRACE")
+        logg.trace(f"Start {fmt_cn('rescale_point', 'start')}")
 
         # current zoom value
         zoom = self._image_cropper.zoom
@@ -456,7 +456,12 @@ class Model:
         logg = logging.getLogger(f"c.{__class__.__name__}.add_spline_point")
         logg.debug(f"Start {fmt_cn('add_spline_point', 'start')}")
 
-        if self.start_img_x < 0 or self.start_img_y < 0:
+        if (
+            self.start_img_x < 0
+            or self.start_img_y < 0
+            or self.start_img_x > self._image_cropper.zoom_wid
+            or self.start_img_y > self._image_cropper.zoom_hei
+        ):
             logg.warn(f"Point {fmt_cn('outside', 'warn')} image")
             return
 
@@ -548,7 +553,7 @@ class Model:
 
         selected_indexes = self.find_spid_in_active_SP(spid)
         logg.trace(f"selected_indexes: {selected_indexes}")
-        
+
         self.selected_spid_SP.set(spid)
 
 
@@ -595,6 +600,8 @@ class ImageCropper:
         logg = logging.getLogger(f"c.{__class__.__name__}.reset_image")
         logg.setLevel("TRACE")
         logg.trace(f"{fmt_cn('Resetting', 'start')} image")
+        logg.trace(f"widget_wid: {widget_wid} widget_hei: {widget_hei}")
+
         if widget_wid != -1:
             self.widget_wid = widget_wid
             self.widget_hei = widget_hei
@@ -629,66 +636,73 @@ class ImageCropper:
 
         # zoom in linear scale
         zoom = self._zoom_base ** self._zoom_level
+        logg.trace(f"Linear zoom: {zoom}")
 
         # dimension of the virtual zoomed image
         zoom_wid = ceil(self._image_wid * zoom)
         zoom_hei = ceil(self._image_hei * zoom)
 
         # the zoomed photo fits inside the widget
-        if zoom_wid < self.widget_wid and zoom_hei < self.widget_hei:
+        if zoom_wid <= self.widget_wid and zoom_hei <= self.widget_hei:
             logg.trace(f"The zoomed photo fits {fmt_cn('inside', 'a1')} the widget")
             # resize the pic, don't cut it
             resized_dim = (zoom_wid, zoom_hei)
             # take the entire image
-            region = (0, 0, self._image_wid, self._image_hei)
+            region = [0, 0, self._image_wid, self._image_hei]
             # center the photo in the widget
             self.widget_shift_x = (self.widget_wid - zoom_wid) // 2
             self.widget_shift_y = (self.widget_hei - zoom_hei) // 2
 
         # the zoomed photo is wider than the widget
-        elif zoom_wid >= self.widget_wid and zoom_hei < self.widget_hei:
+        elif zoom_wid > self.widget_wid and zoom_hei <= self.widget_hei:
             logg.trace(f"The zoomed photo is {fmt_cn('wider', 'a1')} than the widget")
             # target dimension as wide as the widget
             resized_dim = (self.widget_wid, zoom_hei)
             # from top to bottom, only keep a vertical stripe
-            region = (
+            region = [
                 self._mov_x / zoom,
                 0,
                 (self._mov_x + self.widget_wid) / zoom,
                 self._image_hei,
-            )
+            ]
             # center the photo in the widget
             self.widget_shift_x = 0
             self.widget_shift_y = (self.widget_hei - zoom_hei) // 2
 
         # the zoomed photo is taller than the widget
-        elif zoom_wid < self.widget_wid and zoom_hei >= self.widget_hei:
+        elif zoom_wid <= self.widget_wid and zoom_hei > self.widget_hei:
             logg.trace(f"The zoomed photo is {fmt_cn('taller', 'a1')} than the widget")
             resized_dim = (zoom_wid, self.widget_hei)
-            region = (
+            region = [
                 0,
                 self._mov_y / zoom,
                 self._image_wid,
                 (self._mov_y + self.widget_hei) / zoom,
-            )
+            ]
             # center the photo in the widget
             self.widget_shift_x = (self.widget_wid - zoom_wid) // 2
             self.widget_shift_y = 0
 
         # the zoomed photo is bigger than the widget
-        elif zoom_wid >= self.widget_wid and zoom_hei >= self.widget_hei:
+        elif zoom_wid > self.widget_wid and zoom_hei > self.widget_hei:
             logg.trace(f"The zoomed photo is {fmt_cn('bigger', 'a1')} than the widget")
             resized_dim = (self.widget_wid, self.widget_hei)
-            region = (
+            region = [
                 self._mov_x / zoom,
                 self._mov_y / zoom,
                 (self._mov_x + self.widget_wid) / zoom,
                 (self._mov_y + self.widget_hei) / zoom,
-            )
+            ]
             # center the photo in the widget
             self.widget_shift_x = 0
             self.widget_shift_y = 0
 
+        self._validate_region(region)
+
+        logg.trace(
+            f"self._image_wid {self._image_wid} self._image_hei {self._image_hei}"
+        )
+        logg.trace(f"zoom_wid {zoom_wid} zoom_hei {zoom_hei}")
         logg.trace(f"resized_dim {resized_dim} region {region}")
         logg.trace(
             f"widget_shift_x {self.widget_shift_x} widget_shift_y {self.widget_shift_y}"
@@ -842,3 +856,27 @@ class ImageCropper:
                 self._mov_x = zoom_wid - self.widget_wid
             if self._mov_y + self.widget_hei > zoom_hei:
                 self._mov_y = zoom_hei - self.widget_hei
+
+    def _validate_region(self, region):
+        """region (left, top, right, bottom) must fit inside the image
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}._validate_region")
+        logg.setLevel("TRACE")
+        logg.debug(f"Start {fmt_cn('_validate_region', 'start')}")
+
+        # left
+        if region[0] < 0:
+            logg.warn(f"region[0] {region[0]} is less than 0")
+            region[0] = 0
+        # top
+        if region[1] < 0:
+            logg.warn(f"region[1] {region[1]} is less than 0")
+            region[1] = 0
+        # right
+        if region[2] > self._image_wid:
+            logg.warn(f"region[2] {region[2]} is more than img_wid {self._image_wid}")
+            region[2] = self._image_wid
+        # bottom
+        if region[3] > self._image_hei:
+            logg.warn(f"region[3] {region[3]} is more than img_hei {self._image_hei}")
+            region[3] = self._image_hei

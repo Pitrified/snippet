@@ -55,24 +55,30 @@ class FrameSPoint(ttk.Frame):
     def on_enter(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.on_enter")
         #  logg.setLevel("TRACE")
-        logg.debug(f"{fmt_cn('Enter', 'start')} FrameSPoint")
+        logg.debug(f"{fmt_cn('Enter', 'start')} FrameSPoint {self.spoint.spid}")
         logg.trace(f"Event {event} fired by {event.widget}")
         spid = event.widget.spoint.spid
         logg.trace(f"event.widget.spoint.spid: {spid}")
 
-        self.event_generate("<<sp_frame_enter>>")
+        # the virtual event is left for future needs, MAYBE compute some things
+        # on the fly between active and selected? Who knows. Draw a spline?
+        #  self.event_generate("<<sp_frame_enter>>")
+        self.set_state("active")
 
     def on_leave(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.on_leave")
         #  logg.setLevel("TRACE")
-        logg.debug(f"{fmt_cn('Leave', 'start')} FrameSPoint")
+        logg.debug(f"{fmt_cn('Leave', 'start')} FrameSPoint {self.spoint.spid}")
 
-        self.event_generate("<<sp_frame_leave>>")
+        #  self.event_generate("<<sp_frame_leave>>")
+        self.set_state("!active")
 
     def on_button1_press(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.on_button1_press")
         #  logg.setLevel("TRACE")
-        logg.debug(f"Clicked {fmt_cn('Button-1', 'start')} on FrameSPoint")
+        logg.debug(
+            f"Clicked {fmt_cn('Button-1', 'start')} on FrameSPoint {self.spoint.spid}"
+        )
 
         self.event_generate("<<sp_frame_btn1_press>>")
 
