@@ -75,3 +75,18 @@ class FrameSPoint(ttk.Frame):
         logg.debug(f"Clicked {fmt_cn('Button-1', 'start')} on FrameSPoint")
 
         self.event_generate("<<sp_frame_btn1_press>>")
+
+    def set_state(self, the_state):
+        """Sets the state of the internal frame elements
+
+        For weird reasons you cannot pass a string directly, as it will raise
+        '_tkinter.TclError: Invalid state name a' where a is the first letter
+        of the string, so it is iterating over it
+        Apparently some documentations are wrong, only iterables can be sent as
+        statespec
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.set_state")
+        logg.setLevel("TRACE")
+        logg.debug(f"Start {fmt_cn('set_state', 'start')} {the_state}")
+
+        self.pos_lab.state([the_state])

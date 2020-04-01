@@ -112,11 +112,11 @@ class View:
         s.configure(
             "sp_pos.TLabel",
             background="burlywood2",
-            #  anchor=tk.W,
-            anchor=tk.E,
-            #  font=("Consolas", 12),
+            anchor=tk.CENTER,
             font=("Courier", 12),
-            #  font="TkFixedFont",
+        )
+        s.map(
+            "sp_pos.TLabel", background=[("selected", "tan2"), ("active", "wheat1"),],
         )
 
         ### BUTTONS ###
@@ -450,6 +450,7 @@ class FrameSpline(ttk.Frame):
         super().__init__(parent, *args, **kwargs)
 
         self.all_SP_frames = {}
+        self.old_selected = 0
 
         ########################
         ### SETUP this frame ###
@@ -534,6 +535,8 @@ class FrameSpline(ttk.Frame):
                 name = f"frame_sp_{spid}"
 
                 # create the sp_frame inside the ScrollableFrame
+                # MAYBE this should have style set? The frame is completely
+                # filled anyway by the element inside, so it doesn't show much
                 sp_frame = FrameSPoint(
                     self.sl_scrollable.scroll_frame, name, data[spid],
                 )
@@ -574,10 +577,20 @@ class FrameSpline(ttk.Frame):
                 #  self.all_SP_frames[spid].grid(row=row, column=0, sticky="nsew")
                 row += 1
 
-    def update_selected_SP(self, data):
-        """TODO: what are you changing when updating selected_SP?
+    def update_selected_spid_SP(self, data):
+        """TODO: what are you changing when updating selected_spid_SP?
+
+            - selected: the widget is selected
+            - active: the mouse is inside
         """
-        logg = logging.getLogger(f"c.{__class__.__name__}.update_selected_SP")
-        logg.debug(f"Start {fmt_cn('update_selected_SP', 'start')} {data}")
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_selected_spid_SP")
+        logg.debug(f"Start {fmt_cn('update_selected_spid_SP', 'start')} {data}")
+
+        # clear old selected state
+        self.all_SP_frames[self.old_selected].set_state("!selected")
+        self.old_selected = data
+
+        # set new one
+        self.all_SP_frames[data].set_state("selected")
 
     ### HELPERS ###

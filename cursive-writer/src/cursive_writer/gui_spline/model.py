@@ -62,8 +62,10 @@ class Model:
         self.visible_SP = Observable({})
         # how to actually build the spline path, as list of lists
         self.active_SP = Observable([[]])
+        # id of the selected SP
+        self.selected_spid_SP = Observable(None)
         # indexes of the current active_SP, where to put the next one in the path
-        self.selected_SP = Observable([0, -1])
+        self.selected_indexes = [0, -1]
 
     ### OPERATIONS ON CANVAS ###
 
@@ -446,7 +448,10 @@ class Model:
     ### SPLINE ###
 
     def add_spline_point(self):
-        """Add the new SplinePoint to the dict
+        """Add the new SplinePoint
+            
+            - to the dict active_SP
+            - update the selected_spid
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.add_spline_point")
         logg.debug(f"Start {fmt_cn('add_spline_point', 'start')}")
@@ -477,11 +482,12 @@ class Model:
 
         # put the point in the active ones
         path = self.active_SP.get()
-        selected = self.selected_SP.get()
-        path[selected[0]].insert(selected[1] + 1, new_sp.spid)
-        selected[1] += 1
+        path[self.selected_indexes[0]].insert(self.selected_indexes[1] + 1, new_sp.spid)
+        self.selected_indexes[1] += 1
         self.active_SP.set(path)
-        self.selected_SP.set(selected)
+
+        # update the id of the selected SP
+        self.selected_spid_SP.set(new_sp.spid)
 
         # prepare for the next spid
         self.next_spid += 1
@@ -512,7 +518,7 @@ class Model:
         self.visible_SP.set(visible_SP)
 
     def find_spid_in_active_SP(self, spid):
-        """
+        """Find the indexes of the given spid in the path
         """
         # whole letter
         path = self.active_SP.get()
@@ -520,16 +526,15 @@ class Model:
         for i, glyph in enumerate(path):
             # get each point
             for j, sp in enumerate(glyph):
-                if sp.spid == spid:
+                if sp == spid:
                     return [i, j]
         return [0, -1]
-        # MAYBE return [len(path), len(path[-1]) - 1] to point at the last element
+        # MAYBE return [len(path) - 1, len(path[-1]) - 1] to point at the last element
 
     def sp_frame_entered(self, spid):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_entered")
         logg.setLevel("TRACE")
         logg.debug(f"Start {fmt_cn('sp_frame_entered', 'start')}")
-
 
     def sp_frame_left(self, spid):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_left")
@@ -539,7 +544,13 @@ class Model:
     def sp_frame_btn1_pressed(self, spid):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_btn1_pressed")
         logg.setLevel("TRACE")
-        logg.debug(f"Start {fmt_cn('sp_frame_btn1_pressed', 'start')}")
+        logg.debug(f"Start {fmt_cn('sp_frame_btn1_pressed', 'start')} {spid}")
+
+        selected_indexes = self.find_spid_in_active_SP(spid)
+        logg.trace(f"selected_indexes: {selected_indexes}")
+        
+        self.selected_spid_SP.set(spid)
+
 
 class ImageCropper:
     def __init__(self, photo_name_full):
