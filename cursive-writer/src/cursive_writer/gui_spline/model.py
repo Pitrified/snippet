@@ -68,6 +68,9 @@ class Model:
         self.selected_indexes = [0, -1]
         # id of the SP under the mouse
         self.hovered_SP = -1
+        # the index of the selected header, only active when no points are in
+        # that glyph or you want to insert a SP at the beginning of a glyph
+        self.selected_header_SP = Observable(0)
 
     ### OPERATIONS ON CANVAS ###
 
@@ -333,11 +336,13 @@ class Model:
         path[sel_idxs[0]] = split_left
         path.insert(sel_idxs[0] + 1, split_right)
         logg.debug(f"path: {path}")
+        self.active_SP.set(path)
 
         # cursor at the end of current_glyph: point to NEXT list
         if len(current_glyph) == sel_idxs[1] + 1:
             logg.debug(f"Pointing at the end of the line")
-            self.selected_indexes = [sel_idxs[0] + 1, -1]
+            #  self.selected_indexes = [sel_idxs[0] + 1, -1]
+            self.sp_header_btn1_pressed(sel_idxs[0] + 1)
 
         logg.debug(f"self.selected_indexes: {self.selected_indexes}")
 
@@ -543,6 +548,9 @@ class Model:
         self.next_spid += 1
         logg.debug(f"There are now {self.next_spid} SplinePoint")
 
+        # reset the header
+        self.selected_header_SP.set(None)
+
         self.compute_visible_spline_points()
 
     def compute_visible_spline_points(self):
@@ -611,6 +619,8 @@ class Model:
         self.compute_visible_spline_points()
 
     def sp_frame_btn1_pressed(self, spid):
+        """React to mouse button 1 pressed on the FrameSPoint with id spid
+        """
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_btn1_pressed")
         logg.setLevel("TRACE")
         logg.debug(f"Start {fmt_cn('sp_frame_btn1_pressed', 'start')} {spid}")
@@ -620,8 +630,32 @@ class Model:
 
         logg.trace(f"self.active_SP.get(): {self.active_SP.get()}")
 
+        # highlight point
         self.selected_spid_SP.set(spid)
 
+        # remove highlight from header
+        self.selected_header_SP.set(None)
+
+        # recompute colors
+        self.compute_visible_spline_points()
+
+    def sp_header_btn1_pressed(self, hid):
+        """React to mouse button 1 pressed on the header with id hid
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.sp_header_btn1_pressed")
+        logg.setLevel("TRACE")
+        logg.debug(f"Start {fmt_cn('sp_header_btn1_pressed', 'start')} {hid}")
+
+        # remove highlight from point
+        self.selected_spid_SP.set(None)
+
+        # tell the view to highlight this header
+        self.selected_header_SP.set(hid)
+
+        # set the indexes to point before the first point in the clicked glyph
+        self.selected_indexes = [hid, -1]
+
+        # redraw the visible points: now no one will be highlighted
         self.compute_visible_spline_points()
 
 

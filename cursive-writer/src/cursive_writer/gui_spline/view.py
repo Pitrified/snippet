@@ -460,8 +460,12 @@ class FrameSpline(ttk.Frame):
         self.name = name
         super().__init__(parent, *args, **kwargs)
 
+        # list of labels to keep track of spline headers
+        self.all_SP_headers = []
+        # dict of FrameSPoint
         self.all_SP_frames = {}
-        self.old_selected = 0
+        self.old_selected_spid = None
+        self.old_selected_header = None
 
         ########################
         ### SETUP this frame ###
@@ -520,7 +524,7 @@ class FrameSpline(ttk.Frame):
         self.sl_title.grid(row=0, column=0, sticky="ew")
         self.sl_scrollable.grid(row=1, column=0, sticky="nsew")
 
-        # create a fake label to force the scroll_frame to be wide
+        # create a fake frame to force the scroll_frame to be wide
         # this is shady as hell
         # should be (frame_spline - 2*padx)
         sp_frames_width = 230
@@ -572,17 +576,49 @@ class FrameSpline(ttk.Frame):
         logg.trace(f"Start {fmt_cn('do_update_visible_SP', 'start')}")
 
     def update_active_SP(self, data):
-        """Grid the frames relative to the active SplinePoints
+        """Grid the frames relative to the path/glyphs/points
+
+        Grid
+            - Headers
+            - FrameSPoint
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_active_SP")
-        logg.debug(f"Start {fmt_cn('update_active_SP', 'start')} {data}")
+        logg.debug(f"Start {fmt_cn('update_active_SP', 'a2')} {data}")
+
+        ### create headers
+        # how many glyphs there are
+        glyph_tot_num = len(data)
+        for i in range(len(self.all_SP_headers), glyph_tot_num):
+            logg.debug(f"Create header for i: {i}")
+
+            # create the header label
+            header_title = f"Glyph {i}"
+            sp_header = LabelId(
+                self.sl_scrollable.scroll_frame,
+                i,
+                text=header_title,
+                style="sp_pos.TLabel",
+            )
+
+            # bind click to the header
+            sp_header.bind("<Button-1>", sp_header.on_button1_press)
+
+            # bind mouse scroll on header
+            sp_header.register_scroll_func(self.sl_scrollable.on_list_scroll)
+
+            # save it
+            self.all_SP_headers.append(sp_header)
 
         # remove all frames from grid
         for spid, sp_frame in self.all_SP_frames.items():
             sp_frame.grid_forget()
+        for sp_header in self.all_SP_headers:
+            sp_header.grid_forget()
 
         row = 0
-        for glyph in data:
+        for i, glyph in enumerate(data):
+            self.all_SP_headers[i].grid(row=row, column=0, sticky="ew")
+            row += 1
             for spid in glyph:
                 self.all_SP_frames[spid].grid(row=row, column=0, sticky="ew")
                 #  self.all_SP_frames[spid].grid(row=row, column=0, sticky="nsew")
@@ -597,11 +633,67 @@ class FrameSpline(ttk.Frame):
         logg = logging.getLogger(f"c.{__class__.__name__}.update_selected_spid_SP")
         logg.debug(f"Start {fmt_cn('update_selected_spid_SP', 'start')} {data}")
 
-        # clear old selected state
-        self.all_SP_frames[self.old_selected].set_state("!selected")
-        self.old_selected = data
+        # if the old selected was a point
+        if not self.old_selected_spid is None:
+            # clear old selected state
+            self.all_SP_frames[self.old_selected_spid].set_state("!selected")
 
-        # set new one
-        self.all_SP_frames[data].set_state("selected")
+        # save the point you will set
+        self.old_selected_spid = data
+
+        # if the new point is valid
+        if not data is None:
+            # set new one
+            self.all_SP_frames[data].set_state("selected")
+
+    def update_selected_header_SP(self, data):
+        """TODO: what are you changing when updating selected_header_SP?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_selected_header_SP")
+        logg.debug(f"Start {fmt_cn('update_selected_header_SP', 'start')} {data}")
+
+        if not self.old_selected_header is None:
+            self.all_SP_headers[self.old_selected_header].set_state("!selected")
+
+        self.old_selected_header = data
+
+        if not data is None:
+            self.all_SP_headers[data].set_state("selected")
 
     ### HELPERS ###
+
+
+class LabelId(ttk.Label):
+    def __init__(self, parent, id_, *args, **kwargs):
+        """TODO: what is __init__ doing?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.__init__")
+        logg.setLevel("TRACE")
+        logg.debug(f"Start {fmt_cn('__init__', 'start')}")
+
+        self.id_ = id_
+        super().__init__(parent, *args, **kwargs)
+
+    def register_scroll_func(self, func):
+        logg = logging.getLogger(f"c.{__class__.__name__}.register_scroll_func")
+        #  logg.setLevel("TRACE")
+        logg.trace(f"{fmt_cn('Register', 'start')} scroll function")
+
+        self.bind("<4>", func)
+        self.bind("<5>", func)
+        self.bind("<MouseWheel>", func)
+
+    def on_button1_press(self, event):
+        logg = logging.getLogger(f"c.{__class__.__name__}.on_button1_press")
+        logg.setLevel("TRACE")
+        logg.trace(f"Clicked {fmt_cn('Button-1', 'start')} on LabelId {self.id_}")
+        self.event_generate("<<sp_header_btn1_press>>")
+
+    def set_state(self, the_state):
+        """Sets the state of the label
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.set_state")
+        logg.setLevel("TRACE")
+        logg.trace(f"Start {fmt_cn('set_state', 'start')} {the_state}")
+
+        self.state([the_state])

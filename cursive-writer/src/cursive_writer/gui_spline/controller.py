@@ -30,6 +30,7 @@ class Controller:
         self.model.visible_SP.add_callback(self.updated_visible_SP)
         self.model.active_SP.add_callback(self.updated_active_SP)
         self.model.selected_spid_SP.add_callback(self.updated_selected_spid_SP)
+        self.model.selected_header_SP.add_callback(self.updated_selected_header_SP)
 
         ### VIEW  ###
         self.view = View(self.root)
@@ -51,6 +52,7 @@ class Controller:
         self.view.root.bind("<<sp_frame_enter>>", self.sp_frame_entered)
         self.view.root.bind("<<sp_frame_leave>>", self.sp_frame_left)
         self.view.root.bind("<<sp_frame_btn1_press>>", self.sp_frame_btn1_pressed)
+        self.view.root.bind("<<sp_header_btn1_press>>", self.sp_header_btn1_pressed)
 
         ### button clicks
         self.view.frame_info.fm_btn_set_base_mean.config(
@@ -65,6 +67,9 @@ class Controller:
 
         # initialize the values in the model
         self.model.set_pf_input_image(pf_input_image)
+
+        self.model.active_SP.set([[]])
+        self.model.selected_header_SP.set(0)
 
     def run(self):
         """Start the app and run the mainloop
@@ -243,6 +248,14 @@ class Controller:
         spid = event.widget.spoint.spid
         self.model.sp_frame_btn1_pressed(spid)
 
+    def sp_header_btn1_pressed(self, event):
+        logg = logging.getLogger(f"c.{__class__.__name__}.sp_header_btn1_pressed")
+        logg.setLevel("TRACE")
+        logg.debug(f"Start {fmt_cn('sp_header_btn1_pressed', 'start')}")
+        #  logg.trace(f"Event {event} fired by {event.widget}")
+        hid = event.widget._id
+        self.model.sp_header_btn1_pressed(hid)
+
     ###### OBSERVABLE CALLBACKS ######
 
     ### MISC ###
@@ -311,3 +324,8 @@ class Controller:
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_selected_spid_SP")
         logg.debug(f"Start {fmt_cn('updated_selected_spid_SP', 'start')}")
         self.view.frame_spline.update_selected_spid_SP(data)
+
+    def updated_selected_header_SP(self, data):
+        logg = logging.getLogger(f"c.{__class__.__name__}.updated_selected_header_SP")
+        logg.debug(f"Start {fmt_cn('updated_selected_header_SP', 'start')}")
+        self.view.frame_spline.update_selected_header_SP(data)
