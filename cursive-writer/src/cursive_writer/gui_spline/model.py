@@ -525,6 +525,21 @@ class Model:
         return [0, -1]
         # MAYBE return [len(path), len(path[-1]) - 1] to point at the last element
 
+    def sp_frame_entered(self, spid):
+        logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_entered")
+        logg.setLevel("TRACE")
+        logg.debug(f"Start {fmt_cn('sp_frame_entered', 'start')}")
+
+
+    def sp_frame_left(self, spid):
+        logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_left")
+        logg.setLevel("TRACE")
+        logg.debug(f"Start {fmt_cn('sp_frame_left', 'start')}")
+
+    def sp_frame_btn1_pressed(self, spid):
+        logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_btn1_pressed")
+        logg.setLevel("TRACE")
+        logg.debug(f"Start {fmt_cn('sp_frame_btn1_pressed', 'start')}")
 
 class ImageCropper:
     def __init__(self, photo_name_full):

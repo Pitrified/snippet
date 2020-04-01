@@ -80,9 +80,26 @@ class View:
         # configure root style
         s.configure(".", font=(the_font, 12))
 
-        #  s.configure("TFrame", relief="sunken", borderwidth=5)
+        ### FRAMES ###
+
         s.configure("container.TFrame", background="burlywood1")
         s.configure("group.TFrame", background="burlywood2")
+
+        # ScrollableFrame
+        s.configure("sf.TFrame", background="burlywood2")
+        s.configure(
+            "sf.Vertical.TScrollbar",
+            background="red",
+            borderwidth=0,
+            troughcolor="blue",
+            highlightthickness=0,
+        )
+        s.map(
+            "sf.Vertical.TScrollbar",
+            background=[("active", "green"), ("pressed", "yellow"),],
+        )
+
+        ### LABELS ###
 
         s.configure("TLabel", anchor=tk.CENTER)
         s.configure(
@@ -101,6 +118,8 @@ class View:
             font=("Courier", 12),
             #  font="TkFixedFont",
         )
+
+        ### BUTTONS ###
 
         s.configure(
             "settings.TButton",
@@ -255,18 +274,13 @@ class FrameImage(ttk.Frame):
         self.name = name
         super().__init__(parent, *args, **kwargs)
 
-        # setup grid for the frame
+        # setup grid for this frame
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        #  # mockup label to draw the frame
-        #  self.image_label = ttk.Label( self, text="Mock up FrameImage", bg=self.cget("background"))
-        #  # grid it, do not expand
-        #  self.image_label.grid(row=0, column=0)
-
         # create the canvas, size in pixels, width=300, height=200
         # the size is not needed, because is gridded with sticky option
-        self.image_canvas = tk.Canvas(self, bg="black")
+        self.image_canvas = tk.Canvas(self, bg="black", highlightthickness=0)
 
         # pack the canvas into a frame/form
         self.image_canvas.grid(row=0, column=0, sticky="nsew")
@@ -435,16 +449,31 @@ class FrameSpline(ttk.Frame):
         self.name = name
         super().__init__(parent, *args, **kwargs)
 
+        self.all_SP_frames = {}
+
+        ########################
+        ### SETUP this frame ###
+        ########################
+
         # setup grid for the frame
-        #  self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        ### frame for spline buttons and info ###
-
+        # create the child frames
         self.spline_header_frame = ttk.Frame(self, style="group.TFrame")
+        self.spline_list_frame = ttk.Frame(self, style="group.TFrame")
+        # grid the frames
+        self.spline_header_frame.grid(row=0, column=0, sticky="new", padx=10, pady=10)
+        self.spline_list_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
+
+        ###############################################
+        ### SETUP frame for spline buttons and info ###
+        ###############################################
+
         # setup grid for spline_header_frame
         self.spline_header_frame.grid_columnconfigure(0, weight=1)
 
+        # create the elements
         self.sh_title = ttk.Label(
             self.spline_header_frame, text="Title INFO", style="title.TLabel"
         )
@@ -456,23 +485,38 @@ class FrameSpline(ttk.Frame):
         self.sh_title.grid(row=0, column=0, sticky="ew")
         self.sh_btn_new_spline.grid(row=1, column=0, pady=4)
 
-        ### frame for spline points ###
-        self.spline_list_frame = ttk.Frame(self, style="group.TFrame")
+        #####################################
+        ### SETUP frame for spline points ###
+        #####################################
+
         # setup grid for spline_list_frame
+        self.spline_list_frame.grid_rowconfigure(1, weight=1)
         self.spline_list_frame.grid_columnconfigure(0, weight=1)
 
+        # header for this frame
         self.sl_title = ttk.Label(
             self.spline_list_frame, text="Title SPlist", style="title.TLabel"
         )
+        # create the ScrollableFrame
+        #  cv_bg = "blue"
+        cv_bg = "burlywood2"
+        self.sl_scrollable = ScrollableFrame(
+            self.spline_list_frame, style="sf.TFrame", cv_bg=cv_bg
+        )
 
-        # grid the element in spline_list_frame
+        # grid the elements in spline_list_frame
         self.sl_title.grid(row=0, column=0, sticky="ew")
+        self.sl_scrollable.grid(row=1, column=0, sticky="nsew")
 
-        # grid the frames
-        self.spline_header_frame.grid(row=0, column=0, sticky="new", padx=10, pady=10)
-        self.spline_list_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
-
-        self.all_SP_frames = {}
+        # create a fake label to force the scroll_frame to be wide
+        # this is shady as hell
+        # should be (frame_spline - 2*padx)
+        sp_frames_width = 230
+        sp_frames_height = 0
+        self.sl_mock = ttk.Frame(
+            self.sl_scrollable.scroll_frame, width=sp_frames_width, style="sf.TFrame",
+        )
+        self.sl_mock.grid(row=0, column=0)
 
     ### REACTIONS TO OBSERVABLES ###
 
@@ -482,10 +526,27 @@ class FrameSpline(ttk.Frame):
         logg = logging.getLogger(f"c.{__class__.__name__}.update_all_SP")
         logg.debug(f"Start {fmt_cn('update_all_SP', 'start')}")
 
+        sp_frames_width = 220
+        sp_frames_height = 50
+
         for spid in data:
             if not spid in self.all_SP_frames:
                 name = f"frame_sp_{spid}"
-                sp_frame = FrameSPoint(self.spline_list_frame, name, data[spid])
+
+                # create the sp_frame inside the ScrollableFrame
+                sp_frame = FrameSPoint(
+                    self.sl_scrollable.scroll_frame, name, data[spid],
+                )
+
+                # bind the mouse scroll on the FrameSPoint
+                sp_frame.register_scroll_func(self.sl_scrollable.on_list_scroll)
+
+                # bind events to the frame
+                sp_frame.bind("<Enter>", sp_frame.on_enter)
+                sp_frame.bind("<Leave>", sp_frame.on_leave)
+                sp_frame.register_on_content("<Button-1>", sp_frame.on_button1_press)
+
+                # save the frame
                 self.all_SP_frames[spid] = sp_frame
 
     def do_update_visible_SP(self, data):
@@ -506,10 +567,11 @@ class FrameSpline(ttk.Frame):
         for spid, sp_frame in self.all_SP_frames.items():
             sp_frame.grid_forget()
 
-        row = 1
+        row = 0
         for glyph in data:
             for spid in glyph:
                 self.all_SP_frames[spid].grid(row=row, column=0, sticky="ew")
+                #  self.all_SP_frames[spid].grid(row=row, column=0, sticky="nsew")
                 row += 1
 
     def update_selected_SP(self, data):

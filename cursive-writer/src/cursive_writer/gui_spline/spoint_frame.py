@@ -8,7 +8,7 @@ from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.spline_point import SplinePoint
 
 
-class FrameSPoint(tk.Frame):
+class FrameSPoint(ttk.Frame):
     def __init__(self, parent, name, spoint, *args, **kwargs):
         """Shows info for a spline point
 
@@ -33,3 +33,45 @@ class FrameSPoint(tk.Frame):
 
         # grid the element in the frame
         self.pos_lab.grid(row=0, column=0, sticky="nsew")
+
+    def register_scroll_func(self, func):
+        logg = logging.getLogger(f"c.{__class__.__name__}.register_scroll_func")
+        #  logg.setLevel("TRACE")
+        logg.trace(f"{fmt_cn('Register', 'start')} scroll function")
+
+        self.pos_lab.bind("<4>", func)
+        self.pos_lab.bind("<5>", func)
+        self.pos_lab.bind("<MouseWheel>", func)
+
+    def register_on_content(self, kind, func):
+        """Bind event kind to func, on the label inside the frame
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.register_on_content")
+        logg.setLevel("TRACE")
+        logg.debug(f"Start {fmt_cn('register_on_content', 'start')}")
+
+        self.pos_lab.bind(kind, func)
+
+    def on_enter(self, event):
+        logg = logging.getLogger(f"c.{__class__.__name__}.on_enter")
+        #  logg.setLevel("TRACE")
+        logg.debug(f"{fmt_cn('Enter', 'start')} FrameSPoint")
+        logg.trace(f"Event {event} fired by {event.widget}")
+        spid = event.widget.spoint.spid
+        logg.trace(f"event.widget.spoint.spid: {spid}")
+
+        self.event_generate("<<sp_frame_enter>>")
+
+    def on_leave(self, event):
+        logg = logging.getLogger(f"c.{__class__.__name__}.on_leave")
+        #  logg.setLevel("TRACE")
+        logg.debug(f"{fmt_cn('Leave', 'start')} FrameSPoint")
+
+        self.event_generate("<<sp_frame_leave>>")
+
+    def on_button1_press(self, event):
+        logg = logging.getLogger(f"c.{__class__.__name__}.on_button1_press")
+        #  logg.setLevel("TRACE")
+        logg.debug(f"Clicked {fmt_cn('Button-1', 'start')} on FrameSPoint")
+
+        self.event_generate("<<sp_frame_btn1_press>>")

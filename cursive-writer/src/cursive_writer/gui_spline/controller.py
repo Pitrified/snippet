@@ -47,6 +47,11 @@ class Controller:
         self.view.frame_image.bind_canvas("<ButtonRelease>", self.released_canvas)
         self.view.frame_image.bind_canvas("<Motion>", self.moved_canvas_mouse)
 
+        # moved in/out, click on FrameSPoint
+        self.view.root.bind("<<sp_frame_enter>>", self.sp_frame_entered)
+        self.view.root.bind("<<sp_frame_leave>>", self.sp_frame_left)
+        self.view.root.bind("<<sp_frame_btn1_press>>", self.sp_frame_btn1_pressed)
+
         ### button clicks
         self.view.frame_info.fm_btn_set_base_mean.config(
             command=self.clicked_btn_set_base_mean
@@ -186,6 +191,31 @@ class Controller:
         self.model.clicked_btn_set_base_mean()
 
         self.view.reset_focus()
+
+    def sp_frame_entered(self, event):
+        logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_entered")
+        logg.setLevel("TRACE")
+        logg.debug(f"Start {fmt_cn('sp_frame_entered', 'start')}")
+        #  logg.trace(f"Event {event} fired by {event.widget}")
+
+        spid = event.widget.spoint.spid
+        self.model.sp_frame_entered(spid)
+
+    def sp_frame_left(self, event):
+        logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_left")
+        logg.setLevel("TRACE")
+        logg.debug(f"Start {fmt_cn('sp_frame_left', 'start')}")
+        #  logg.trace(f"Event {event} fired by {event.widget}")
+        spid = event.widget.spoint.spid
+        self.model.sp_frame_left(spid)
+
+    def sp_frame_btn1_pressed(self, event):
+        logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_btn1_pressed")
+        logg.setLevel("TRACE")
+        logg.debug(f"Start {fmt_cn('sp_frame_btn1_pressed', 'start')}")
+        #  logg.trace(f"Event {event} fired by {event.widget}")
+        spid = event.widget.spoint.spid
+        self.model.sp_frame_btn1_pressed(spid)
 
     ###### OBSERVABLE CALLBACKS ######
 
