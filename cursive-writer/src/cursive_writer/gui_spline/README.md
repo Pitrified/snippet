@@ -8,6 +8,7 @@
 * Rescale from abs (image) to normalized (FM coord)
 * Button to delete FSP
 * Button in FrameSPoint to delete that point
+* After deleting a point set as selected the previous one, handle the first in some way
 
 ##### Done
 

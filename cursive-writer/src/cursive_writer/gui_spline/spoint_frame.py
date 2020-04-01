@@ -62,7 +62,7 @@ class FrameSPoint(ttk.Frame):
 
         # the virtual event is left for future needs, MAYBE compute some things
         # on the fly between active and selected? Who knows. Draw a spline?
-        #  self.event_generate("<<sp_frame_enter>>")
+        self.event_generate("<<sp_frame_enter>>")
         self.set_state("active")
 
     def on_leave(self, event):
@@ -70,7 +70,7 @@ class FrameSPoint(ttk.Frame):
         #  logg.setLevel("TRACE")
         logg.debug(f"{fmt_cn('Leave', 'start')} FrameSPoint {self.spoint.spid}")
 
-        #  self.event_generate("<<sp_frame_leave>>")
+        self.event_generate("<<sp_frame_leave>>")
         self.set_state("!active")
 
     def on_button1_press(self, event):

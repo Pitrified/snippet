@@ -66,6 +66,8 @@ class Model:
         self.selected_spid_SP = Observable(None)
         # indexes of the current active_SP, where to put the next one in the path
         self.selected_indexes = [0, -1]
+        # id of the SP under the mouse
+        self.hovered_SP = -1
 
     ### OPERATIONS ON CANVAS ###
 
@@ -518,7 +520,15 @@ class Model:
             # check that the point is in the region cropped
             if region[0] < curr_sp.x < region[2] and region[1] < curr_sp.y < region[3]:
                 view_op = self.rescale_point(curr_sp, "abs2view")
-                visible_SP[spid] = view_op
+
+                # assign a type to the point
+                if spid == self.selected_spid_SP.get():
+                    arrow_type = "selected"
+                elif spid == self.hovered_SP:
+                    arrow_type = "active"
+                else:
+                    arrow_type = "standard"
+                visible_SP[spid] = [view_op, arrow_type]
 
         self.visible_SP.set(visible_SP)
 
@@ -541,10 +551,21 @@ class Model:
         logg.setLevel("TRACE")
         logg.debug(f"Start {fmt_cn('sp_frame_entered', 'start')}")
 
+        # save the id of the point that the mouse is hovering
+        self.hovered_SP = spid
+
+        self.compute_visible_spline_points()
+
     def sp_frame_left(self, spid):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_left")
         logg.setLevel("TRACE")
         logg.debug(f"Start {fmt_cn('sp_frame_left', 'start')}")
+
+        # reset the id
+        #  self.hovered_SP = spid
+        self.hovered_SP = -1
+
+        self.compute_visible_spline_points()
 
     def sp_frame_btn1_pressed(self, spid):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_btn1_pressed")
@@ -555,6 +576,8 @@ class Model:
         logg.trace(f"selected_indexes: {selected_indexes}")
 
         self.selected_spid_SP.set(spid)
+
+        self.compute_visible_spline_points()
 
 
 class ImageCropper:

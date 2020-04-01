@@ -384,9 +384,19 @@ class FrameImage(ttk.Frame):
         self.image_canvas.delete("spline_point")
 
         for spid in data:
-            self.draw_point(data[spid], "spline_point")
+            view_op, arrow_type = data[spid]
+            if arrow_type == "selected":
+                color = "red"
+            elif arrow_type == "active":
+                color = "green"
+            elif arrow_type == "standard":
+                color = "cyan"
+            else:
+                logg.warn(f"{fmt_cn('Unrecognized', 'error')} arrow_type: {arrow_type}")
+                color = "cyan"
+            self.draw_point(view_op, "spline_point", color)
 
-    def draw_point(self, view_op, tag, length=-1):
+    def draw_point(self, view_op, tag, color="cyan", length=-1):
         """Draw a point on the canvas
         """
         if length == -1:
@@ -398,7 +408,7 @@ class FrameImage(ttk.Frame):
         end_x = canv_x + length * cos(view_op.ori_rad)
         end_y = canv_y + length * sin(view_op.ori_rad)
         self.image_canvas.create_line(
-            canv_x, canv_y, end_x, end_y, tags=tag, arrow=tk.LAST, fill="cyan"
+            canv_x, canv_y, end_x, end_y, tags=tag, arrow=tk.LAST, fill=color
         )
 
     def draw_line(self, image_point, tag, **kwargs):
