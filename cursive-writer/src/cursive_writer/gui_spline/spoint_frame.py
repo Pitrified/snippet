@@ -15,7 +15,7 @@ class FrameSPoint(ttk.Frame):
         spoint: the point, saved in absolute coordinate
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
-        logg.setLevel("TRACE")
+        #  logg.setLevel("TRACE")
         logg.info(f"{fmt_cn('Start', 'start')} init")
 
         super().__init__(parent, *args, **kwargs)
@@ -28,7 +28,7 @@ class FrameSPoint(ttk.Frame):
         self.grid_columnconfigure(0, weight=1)
 
         # create the element
-        pos_str = f"{spoint.ori_deg:6.1f} @ ({spoint.x:5.1f}, {spoint.y:5.1f})"
+        pos_str = f"{spoint.ori_deg:6.1f} @ ({spoint.x:6.1f}, {spoint.y:6.1f})"
         self.pos_lab = ttk.Label(self, text=pos_str, style="sp_pos.TLabel")
 
         # grid the element in the frame
@@ -47,7 +47,7 @@ class FrameSPoint(ttk.Frame):
         """Bind event kind to func, on the label inside the frame
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.register_on_content")
-        logg.setLevel("TRACE")
+        #  logg.setLevel("TRACE")
         logg.debug(f"Start {fmt_cn('register_on_content', 'start')}")
 
         self.pos_lab.bind(kind, func)
@@ -55,7 +55,7 @@ class FrameSPoint(ttk.Frame):
     def on_enter(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.on_enter")
         #  logg.setLevel("TRACE")
-        logg.debug(f"{fmt_cn('Enter', 'start')} FrameSPoint {self.spoint.spid}")
+        logg.trace(f"{fmt_cn('Enter', 'start')} FrameSPoint {self.spoint.spid}")
         logg.trace(f"Event {event} fired by {event.widget}")
         spid = event.widget.spoint.spid
         logg.trace(f"event.widget.spoint.spid: {spid}")
@@ -68,7 +68,7 @@ class FrameSPoint(ttk.Frame):
     def on_leave(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.on_leave")
         #  logg.setLevel("TRACE")
-        logg.debug(f"{fmt_cn('Leave', 'start')} FrameSPoint {self.spoint.spid}")
+        logg.trace(f"{fmt_cn('Leave', 'start')} FrameSPoint {self.spoint.spid}")
 
         self.event_generate("<<sp_frame_leave>>")
         self.set_state("!active")
@@ -76,7 +76,7 @@ class FrameSPoint(ttk.Frame):
     def on_button1_press(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.on_button1_press")
         #  logg.setLevel("TRACE")
-        logg.debug(
+        logg.trace(
             f"Clicked {fmt_cn('Button-1', 'start')} on FrameSPoint {self.spoint.spid}"
         )
 
@@ -92,7 +92,7 @@ class FrameSPoint(ttk.Frame):
         statespec
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.set_state")
-        logg.setLevel("TRACE")
-        logg.debug(f"Start {fmt_cn('set_state', 'start')} {the_state}")
+        #  logg.setLevel("TRACE")
+        logg.trace(f"Start {fmt_cn('set_state', 'start')} {the_state}")
 
         self.pos_lab.state([the_state])

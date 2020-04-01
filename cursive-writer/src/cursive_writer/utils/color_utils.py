@@ -13,7 +13,7 @@ def fmt_cn(string, name):
     elif name == "a1":
         color = "Green"
     elif name == "a2":
-        color = "Cyan"
+        color = "orange"
     else:
         color = "White"
     return fmt_c(string, color)

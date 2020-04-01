@@ -194,8 +194,8 @@ class Controller:
 
     def sp_frame_entered(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_entered")
-        logg.setLevel("TRACE")
-        logg.debug(f"Start {fmt_cn('sp_frame_entered', 'start')}")
+        #  logg.setLevel("TRACE")
+        logg.trace(f"Start {fmt_cn('sp_frame_entered', 'start')}")
         #  logg.trace(f"Event {event} fired by {event.widget}")
 
         spid = event.widget.spoint.spid
@@ -203,8 +203,8 @@ class Controller:
 
     def sp_frame_left(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_left")
-        logg.setLevel("TRACE")
-        logg.debug(f"Start {fmt_cn('sp_frame_left', 'start')}")
+        #  logg.setLevel("TRACE")
+        logg.trace(f"Start {fmt_cn('sp_frame_left', 'start')}")
         #  logg.trace(f"Event {event} fired by {event.widget}")
         spid = event.widget.spoint.spid
         self.model.sp_frame_left(spid)
@@ -233,7 +233,7 @@ class Controller:
 
     def updated_free_line(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_free_line")
-        logg.debug(f"Start {fmt_cn('updated_free_line', 'start')}")
+        logg.trace(f"Start {fmt_cn('updated_free_line', 'start')}")
         self.view.frame_image.update_free_line(data)
 
     def updated_curr_mouse_pos(self, data):
@@ -267,7 +267,7 @@ class Controller:
 
     def updated_visible_SP(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_visible_SP")
-        logg.debug(f"Start {fmt_cn('updated_visible_SP', 'start')}")
+        logg.trace(f"Start {fmt_cn('updated_visible_SP', 'start')}")
         self.view.update_visible_SP(data)
 
     def updated_active_SP(self, data):

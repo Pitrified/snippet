@@ -456,7 +456,8 @@ class Model:
             - update the selected_spid
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.add_spline_point")
-        logg.debug(f"Start {fmt_cn('add_spline_point', 'start')}")
+        #  logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('add_spline_point', 'a2')}")
 
         if (
             self.start_img_x < 0
@@ -508,7 +509,7 @@ class Model:
         logg = logging.getLogger(
             f"c.{__class__.__name__}.compute_visible_spline_points"
         )
-        logg.debug(f"Start {fmt_cn('compute_visible_spline_points', 'start')}")
+        logg.trace(f"Start {fmt_cn('compute_visible_spline_points', 'start')}")
 
         # region showed in the view, in abs image coordinate
         region = self._image_cropper.region
@@ -548,8 +549,8 @@ class Model:
 
     def sp_frame_entered(self, spid):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_entered")
-        logg.setLevel("TRACE")
-        logg.debug(f"Start {fmt_cn('sp_frame_entered', 'start')}")
+        #  logg.setLevel("TRACE")
+        logg.trace(f"Start {fmt_cn('sp_frame_entered', 'start')}")
 
         # save the id of the point that the mouse is hovering
         self.hovered_SP = spid
@@ -558,8 +559,8 @@ class Model:
 
     def sp_frame_left(self, spid):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_left")
-        logg.setLevel("TRACE")
-        logg.debug(f"Start {fmt_cn('sp_frame_left', 'start')}")
+        #  logg.setLevel("TRACE")
+        logg.trace(f"Start {fmt_cn('sp_frame_left', 'start')}")
 
         # reset the id
         #  self.hovered_SP = spid
@@ -572,8 +573,8 @@ class Model:
         logg.setLevel("TRACE")
         logg.debug(f"Start {fmt_cn('sp_frame_btn1_pressed', 'start')} {spid}")
 
-        selected_indexes = self.find_spid_in_active_SP(spid)
-        logg.trace(f"selected_indexes: {selected_indexes}")
+        self.selected_indexes = self.find_spid_in_active_SP(spid)
+        logg.trace(f"selected_indexes: {self.selected_indexes}")
 
         self.selected_spid_SP.set(spid)
 

@@ -113,7 +113,8 @@ class View:
             "sp_pos.TLabel",
             background="burlywood2",
             anchor=tk.CENTER,
-            font=("Courier", 12),
+            #  font=("Courier", 12),
+            font=("Consolas", 10),
         )
         s.map(
             "sp_pos.TLabel", background=[("selected", "tan2"), ("active", "wheat1"),],
@@ -154,7 +155,7 @@ class View:
         MAYBE change background of the visible SP?
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_visible_SP")
-        logg.debug(f"Start {fmt_cn('update_visible_SP', 'start')}")
+        logg.trace(f"Start {fmt_cn('update_visible_SP', 'start')}")
 
         self.frame_image.do_update_visible_SP(data)
 
@@ -322,7 +323,7 @@ class FrameImage(ttk.Frame):
         """
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_free_line")
-        logg.debug(f"Start {fmt_cn('update_free_line', 'start')} {line_point}")
+        logg.trace(f"Start {fmt_cn('update_free_line', 'start')} {line_point}")
 
         if line_point is None:
             self.image_canvas.delete("free_line")
@@ -379,7 +380,7 @@ class FrameImage(ttk.Frame):
         """Update the drawn arrows
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.do_update_visible_SP")
-        logg.debug(f"Start {fmt_cn('do_update_visible_SP', 'start')}")
+        logg.trace(f"Start {fmt_cn('do_update_visible_SP', 'start')}")
 
         self.image_canvas.delete("spline_point")
 
@@ -568,7 +569,7 @@ class FrameSpline(ttk.Frame):
         This is never called
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.do_update_visible_SP")
-        logg.debug(f"Start {fmt_cn('do_update_visible_SP', 'start')}")
+        logg.trace(f"Start {fmt_cn('do_update_visible_SP', 'start')}")
 
     def update_active_SP(self, data):
         """Grid the frames relative to the active SplinePoints
