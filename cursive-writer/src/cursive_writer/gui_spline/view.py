@@ -16,7 +16,7 @@ from cursive_writer.utils.geometric_utils import translate_point_dxy
 class View:
     def __init__(self, root):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
-        logg.setLevel("TRACE")
+        #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('init', 'start')}")
 
         self.root = root
@@ -70,7 +70,7 @@ class View:
 
     def setup_style(self):
         logg = logging.getLogger(f"c.{__class__.__name__}.setup_style")
-        logg.setLevel("TRACE")
+        #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('init', 'setup_style')}")
 
         s = ttk.Style()
@@ -162,6 +162,7 @@ class View:
         MAYBE change background of the visible SP?
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_visible_SP")
+        #  logg.setLevel("TRACE")
         logg.trace(f"Start {fmt_cn('update_visible_SP', 'start')}")
 
         self.frame_image.do_update_visible_SP(data)
@@ -170,7 +171,7 @@ class View:
 class FrameInfo(ttk.Frame):
     def __init__(self, parent, name, *args, **kwargs):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
-        logg.setLevel("TRACE")
+        #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('init', 'start')}")
 
         self.name = name
@@ -222,7 +223,7 @@ class FrameInfo(ttk.Frame):
         """Build the elements inside mouse_info_frame and grid them
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.build_mouse_info_frame")
-        logg.debug(f"Start {fmt_cn('build_mouse_info_frame', 'start')}")
+        logg.info(f"Start {fmt_cn('build_mouse_info_frame', 'start')}")
 
         # mouse_info_frame title label
         self.mi_title = ttk.Label(
@@ -264,14 +265,14 @@ class FrameInfo(ttk.Frame):
 
     def update_curr_mouse_pos_info(self, pos_info):
         logg = logging.getLogger(f"c.{__class__.__name__}.update_curr_mouse_pos_info")
-        logg.setLevel("TRACE")
+        #  logg.setLevel("TRACE")
         logg.trace(f"Start {fmt_cn('update_curr_mouse_pos_info', 'start')}")
 
-        for pos_type in ["view",  "canvas"]:
+        for pos_type in ["view", "canvas"]:
             pos_str = f"{pos_type.capitalize()} ({pos_info[pos_type][0]}, {pos_info[pos_type][1]})"
             logg.trace(f"pos_str: {pos_str}")
             self.mi_var_pos_info[pos_type].set(pos_str)
-        for pos_type in [ "abs", "fm"]:
+        for pos_type in ["abs", "fm"]:
             pos_str = f"{pos_type.capitalize()} ({pos_info[pos_type][0]:.4f}, {pos_info[pos_type][1]:.4f})"
             logg.trace(f"pos_str: {pos_str}")
             self.mi_var_pos_info[pos_type].set(pos_str)
@@ -280,7 +281,7 @@ class FrameInfo(ttk.Frame):
         """Update the label with the current state
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_state")
-        logg.debug(f"Start {fmt_cn('update_state', 'start')} {state}")
+        logg.info(f"Start {fmt_cn('update_state', 'start')} {state}")
         if state == "free":
             state_str = f"State: FREE"
         elif state == "free_clicked_left":
@@ -292,7 +293,7 @@ class FrameInfo(ttk.Frame):
         elif state == "setting_base_mean_clicked":
             state_str = f"State: SET_BM_CLICK"
         else:
-            logg.error(f"{fmt_cn('Unrecognized', 'error')} system state {state}")
+            logg.info(f"{fmt_cn('Unrecognized', 'alert')} system state {state}")
             return
         self.mi_var_state.set(state_str)
 
@@ -300,7 +301,7 @@ class FrameInfo(ttk.Frame):
 class FrameImage(ttk.Frame):
     def __init__(self, parent, name, *args, **kwargs):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
-        logg.setLevel("TRACE")
+        #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('init', 'start')}")
 
         self.name = name
@@ -322,7 +323,7 @@ class FrameImage(ttk.Frame):
     def update_crop_input_image(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.update_crop_input_image")
         #  logg.setLevel("INFO")
-        logg.debug(f"Start {fmt_cn('update_crop_input_image', 'start')}")
+        logg.trace(f"Start {fmt_cn('update_crop_input_image', 'start')}")
 
         image = data["image_res"]
         self.widget_shift_x = data["widget_shift_x"]
@@ -347,7 +348,7 @@ class FrameImage(ttk.Frame):
         top = self.widget_shift_y
         right = left + self.resized_wid
         bot = top + self.resized_hei
-        logg.debug(f"left: {left} top: {top} right: {right} bot: {bot}")
+        logg.trace(f"left: {left} top: {top} right: {right} bot: {bot}")
         self.image_bbox = (left, top, right, bot)
 
     def update_free_line(self, line_point):
@@ -366,7 +367,7 @@ class FrameImage(ttk.Frame):
         """
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_fm_lines")
-        logg.debug(f"Start {fmt_cn('update_fm_lines', 'start')} {fm_lines}")
+        logg.trace(f"Start {fmt_cn('update_fm_lines', 'start')} {fm_lines}")
 
         self.draw_line(
             fm_lines["vert_point"], tag="vert_point", dash=(6, 6), fill="red"
@@ -424,7 +425,7 @@ class FrameImage(ttk.Frame):
             elif arrow_type == "standard":
                 color = "cyan"
             else:
-                logg.warn(f"{fmt_cn('Unrecognized', 'error')} arrow_type: {arrow_type}")
+                logg.warn(f"{fmt_cn('Unrecognized', 'alert')} arrow_type: {arrow_type}")
                 color = "cyan"
             self.draw_point(view_op, "spline_point", color)
 
@@ -447,8 +448,11 @@ class FrameImage(ttk.Frame):
         """Add a line on the point
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.draw_line")
-        logg.setLevel("INFO")
-        logg.debug(f"Start {fmt_cn('draw_line', 'start')}")
+        #  logg.setLevel("TRACE")
+        logg.trace(f"Start {fmt_cn('draw_line', 'start')}")
+
+        # delete the old free_line in the canvas
+        self.image_canvas.delete(tag)
 
         # the line_point are in the image coordinate
         # shift them to canvas coordinate
@@ -461,14 +465,11 @@ class FrameImage(ttk.Frame):
         admissible_inter = collide_line_box(self.image_bbox, canv_point)
 
         if len(admissible_inter) == 0:
-            logg.debug(f"No line found inside the image")
+            logg.trace(f"No line found inside the image")
             return
         elif len(admissible_inter) != 2:
-            logg.debug(f"Weird amount of intersections found {len(admissible_inter)}")
+            logg.warn(f"Weird amount of intersections found {len(admissible_inter)}")
             return
-
-        # delete the old free_line in the canvas
-        self.image_canvas.delete(tag)
 
         x0 = admissible_inter[0][0]
         y0 = admissible_inter[0][1]
@@ -485,7 +486,7 @@ class FrameImage(ttk.Frame):
 class FrameSpline(ttk.Frame):
     def __init__(self, parent, name, *args, **kwargs):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
-        logg.setLevel("TRACE")
+        #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('init', 'start')}")
 
         self.name = name
@@ -569,7 +570,7 @@ class FrameSpline(ttk.Frame):
         """Create a frame for each SP received
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_all_SP")
-        logg.debug(f"Start {fmt_cn('update_all_SP', 'start')}")
+        logg.info(f"Start {fmt_cn('update_all_SP', 'start')}")
 
         sp_frames_width = 220
         sp_frames_height = 50
@@ -612,7 +613,7 @@ class FrameSpline(ttk.Frame):
             - FrameSPoint
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_active_SP")
-        logg.debug(f"Start {fmt_cn('update_active_SP', 'a2')} {data}")
+        logg.info(f"Start {fmt_cn('update_active_SP', 'a2')} {data}")
 
         ### create headers
         # how many glyphs there are
@@ -662,7 +663,7 @@ class FrameSpline(ttk.Frame):
             - active: the mouse is inside
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_selected_spid_SP")
-        logg.debug(f"Start {fmt_cn('update_selected_spid_SP', 'start')} {data}")
+        logg.info(f"Start {fmt_cn('update_selected_spid_SP', 'start')} {data}")
 
         # if the old selected was a point
         if not self.old_selected_spid is None:
@@ -681,7 +682,7 @@ class FrameSpline(ttk.Frame):
         """TODO: what are you changing when updating selected_header_SP?
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_selected_header_SP")
-        logg.debug(f"Start {fmt_cn('update_selected_header_SP', 'start')} {data}")
+        logg.info(f"Start {fmt_cn('update_selected_header_SP', 'start')} {data}")
 
         if not self.old_selected_header is None:
             self.all_SP_headers[self.old_selected_header].set_state("!selected")
@@ -699,8 +700,8 @@ class LabelId(ttk.Label):
         """TODO: what is __init__ doing?
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.__init__")
-        logg.setLevel("TRACE")
-        logg.debug(f"Start {fmt_cn('__init__', 'start')}")
+        #  logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('__init__', 'start')}")
 
         self.id_ = id_
         super().__init__(parent, *args, **kwargs)
@@ -716,7 +717,7 @@ class LabelId(ttk.Label):
 
     def on_enter(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.on_enter")
-        logg.setLevel("TRACE")
+        #  logg.setLevel("TRACE")
         logg.trace(f"{fmt_cn('Enter', 'start')} LabelId {self.id_}")
         logg.trace(f"Event {event} fired by {event.widget}")
         id_ = event.widget.id_
@@ -727,7 +728,7 @@ class LabelId(ttk.Label):
 
     def on_leave(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.on_leave")
-        logg.setLevel("TRACE")
+        #  logg.setLevel("TRACE")
         logg.trace(f"{fmt_cn('Leave', 'start')} LabelId {self.id_}")
 
         self.event_generate("<<sp_header_leave>>")
@@ -735,15 +736,15 @@ class LabelId(ttk.Label):
 
     def on_button1_press(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.on_button1_press")
-        logg.setLevel("TRACE")
-        logg.trace(f"Clicked {fmt_cn('Button-1', 'start')} on LabelId {self.id_}")
+        #  logg.setLevel("TRACE")
+        logg.debug(f"Clicked {fmt_cn('Button-1', 'start')} on LabelId {self.id_}")
         self.event_generate("<<sp_header_btn1_press>>")
 
     def set_state(self, the_state):
         """Sets the state of the label
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.set_state")
-        logg.setLevel("TRACE")
+        #  logg.setLevel("TRACE")
         logg.trace(f"Start {fmt_cn('set_state', 'start')} {the_state}")
 
         self.state([the_state])
