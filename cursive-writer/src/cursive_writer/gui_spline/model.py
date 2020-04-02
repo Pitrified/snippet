@@ -28,7 +28,7 @@ class Model:
         self.crop_input_image = Observable()
 
         # current mouse position in the image coordinate
-        self.curr_mouse_pos = Observable()
+        self.curr_mouse_pos_info = Observable()
 
         # canvas width
         self._widget_wid = -1
@@ -98,8 +98,6 @@ class Model:
 
         self.redraw_canvas()
 
-        # TODO recompute mouse coord
-
     def save_click_canvas(self, click_type, canvas_x, canvas_y):
         """Save the pos clicked on the canvas
         """
@@ -158,7 +156,9 @@ class Model:
         # save the current pos in the image
         self.move_view_x = canvas_x - self._image_cropper.widget_shift_x
         self.move_view_y = canvas_y - self._image_cropper.widget_shift_y
-        self.curr_mouse_pos.set((self.move_view_x, self.move_view_y))
+
+        # compute and update mouse pos info to send and show
+        self.update_mouse_pos_info(canvas_x, canvas_y)
 
         current_state = self.state.get()
         logg.debug(f"Moved current_state: {current_state}")
@@ -208,7 +208,7 @@ class Model:
         self.end_view_x = canvas_x - self._image_cropper.widget_shift_x
         self.end_view_y = canvas_y - self._image_cropper.widget_shift_y
         logg.info(
-            f"{fmt_cn('Released', 'start')} - pos in image {self.end_view_x}x{self.end_view_y}"
+            f"{fmt_cn('Released', 'start')} view_pos {self.end_view_x}x{self.end_view_y}"
         )
 
         current_state = self.state.get()
@@ -310,14 +310,18 @@ class Model:
             self.state.set("setting_base_mean")
 
     def clicked_btn_set_base_ascent(self):
-        """TODO: what is clicked_btn_set_base_ascent doing?
+        """TODO: change state to setting_base_ascent
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_base_ascent")
         logg.setLevel("TRACE")
         logg.debug(f"Start {fmt_cn('clicked_btn_set_base_ascent', 'start')}")
 
     def clicked_sh_btn_new_spline(self):
-        """TODO: what is clicked_sh_btn_new_spline doing?
+        """Start working on a new glyph
+
+        Either you are at the end of the current_glyph, so you create a new one
+        and start building that, or you are in the middle of the current, so
+        you split that in two and keep working on the end of the first chunk
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_sh_btn_new_spline")
         logg.setLevel("TRACE")
@@ -359,6 +363,33 @@ class Model:
         self.update_image_obs()
         self.recompute_fm_lines_view()
         self.compute_visible_spline_points()
+        # TODO recompute mouse coord
+
+    def update_mouse_pos_info(self, canvas_x, canvas_y):
+        """Compute relevant mouse coord and pack them
+        
+        canvas_pos is the position inside the widget
+        """
+        # position of the cropped region inside the zoomed image
+        #  mov_x = self._image_cropper._mov_x
+        #  mov_y = self._image_cropper._mov_y
+
+        # position inside the cropped region
+        view_x = canvas_x - self._image_cropper.widget_shift_x
+        view_y = canvas_y - self._image_cropper.widget_shift_y
+
+        view_op = OrientedPoint(view_x, view_y, 0)
+        abs_op = self.rescale_point(view_op, "view2abs")
+
+        # TODO compute and send coord in FM reference
+
+        curr_mouse_pos_info = {
+            "view": (view_x, view_y),
+            "abs": (abs_op.x, abs_op.y),
+            "canvas": (canvas_x, canvas_y),
+            "fm": (0, 0),
+        }
+        self.curr_mouse_pos_info.set(curr_mouse_pos_info)
 
     ### FONT MEASUREMENTS ###
 

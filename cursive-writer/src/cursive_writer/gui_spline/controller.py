@@ -22,7 +22,7 @@ class Controller:
         self.model.pf_input_image.add_callback(self.updated_pf_input_image)
         self.model.crop_input_image.add_callback(self.updated_crop_input_image)
         self.model.free_line.add_callback(self.updated_free_line)
-        self.model.curr_mouse_pos.add_callback(self.updated_curr_mouse_pos)
+        self.model.curr_mouse_pos_info.add_callback(self.updated_curr_mouse_pos_info)
         self.model.fm_lines_view.add_callback(self.updated_fm_lines)
         self.model.click_left_start_pos.add_callback(self.updated_click_left_start_pos)
         self.model.state.add_callback(self.updated_state)
@@ -297,14 +297,14 @@ class Controller:
         logg.trace(f"Start {fmt_cn('updated_free_line', 'start')}")
         self.view.frame_image.update_free_line(data)
 
-    def updated_curr_mouse_pos(self, data):
+    def updated_curr_mouse_pos_info(self, data):
         """
         """
-        logg = logging.getLogger(f"c.{__class__.__name__}.updated_curr_mouse_pos")
+        logg = logging.getLogger(f"c.{__class__.__name__}.updated_curr_mouse_pos_info")
         logg.setLevel("INFO")
-        logg.debug(f"Start {fmt_cn('updated_curr_mouse_pos', 'start')}")
+        logg.debug(f"Start {fmt_cn('updated_curr_mouse_pos_info', 'start')}")
 
-        self.view.frame_info.update_curr_mouse_pos(data)
+        self.view.frame_info.update_curr_mouse_pos_info(data)
 
     def updated_fm_lines(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_fm_lines")

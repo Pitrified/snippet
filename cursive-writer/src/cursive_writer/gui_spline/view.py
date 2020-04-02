@@ -195,7 +195,7 @@ class FrameInfo(ttk.Frame):
         self.build_mouse_info_frame()
 
     def build_font_measurement_frame(self):
-        """
+        """Build the elements inside font_measurement_frame and grid them
         """
         self.fm_title = ttk.Label(
             self.font_measurement_frame, text="Font Measurement", style="title.TLabel"
@@ -219,19 +219,28 @@ class FrameInfo(ttk.Frame):
         self.fm_btn_set_base_ascent.grid(row=1, column=1, pady=4)
 
     def build_mouse_info_frame(self):
+        """Build the elements inside mouse_info_frame and grid them
         """
-        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.build_mouse_info_frame")
+        logg.debug(f"Start {fmt_cn('build_mouse_info_frame', 'start')}")
+
         # mouse_info_frame title label
         self.mi_title = ttk.Label(
             self.mouse_info_frame, text="Mouse info", style="title.TLabel"
         )
 
-        # create mouse pos info label
-        self.mi_var_pos = tk.StringVar(self.mouse_info_frame)
-        self.mi_label_pos = ttk.Label(
-            self.mouse_info_frame, textvariable=self.mi_var_pos, style="info.TLabel",
-        )
-        self.mi_var_pos.set("Mouse at (0, 0)")
+        # create mouse pos info dicts to hold labels and vars
+        self.mi_var_pos_info = {}
+        self.mi_label_pos_info = {}
+
+        for pos_type in ["view", "abs", "canvas", "fm"]:
+            self.mi_var_pos_info[pos_type] = tk.StringVar(self.mouse_info_frame)
+            self.mi_label_pos_info[pos_type] = ttk.Label(
+                self.mouse_info_frame,
+                textvariable=self.mi_var_pos_info[pos_type],
+                style="info.TLabel",
+            )
+            self.mi_var_pos_info[pos_type].set(f"{pos_type.capitalize()} (0, 0)")
 
         # create state info label
         self.mi_var_state = tk.StringVar(self.mouse_info_frame)
@@ -245,17 +254,27 @@ class FrameInfo(ttk.Frame):
 
         # grid mouse_info_frame elements
         self.mi_title.grid(row=0, column=0, sticky="ew")
-        self.mi_label_pos.grid(row=1, column=0, sticky="ew")
-        self.mi_label_state.grid(row=2, column=0, sticky="ew")
+        self.mi_label_pos_info["view"].grid(row=1, column=0, sticky="ew")
+        self.mi_label_pos_info["abs"].grid(row=2, column=0, sticky="ew")
+        self.mi_label_pos_info["canvas"].grid(row=3, column=0, sticky="ew")
+        self.mi_label_pos_info["fm"].grid(row=4, column=0, sticky="ew")
+        self.mi_label_state.grid(row=5, column=0, sticky="ew")
 
     ### REACTIONS TO OBSERVABLES ###
 
-    def update_curr_mouse_pos(self, pos):
-        logg = logging.getLogger(f"c.{__class__.__name__}.update_curr_mouse_pos")
-        logg.setLevel("INFO")
-        pos_str = f"Mouse at ({pos[0]}, {pos[1]})"
-        logg.debug(f"Start {fmt_cn('update_curr_mouse_pos', 'start')} - {pos_str}")
-        self.mi_var_pos.set(pos_str)
+    def update_curr_mouse_pos_info(self, pos_info):
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_curr_mouse_pos_info")
+        logg.setLevel("TRACE")
+        logg.trace(f"Start {fmt_cn('update_curr_mouse_pos_info', 'start')}")
+
+        for pos_type in ["view",  "canvas"]:
+            pos_str = f"{pos_type.capitalize()} ({pos_info[pos_type][0]}, {pos_info[pos_type][1]})"
+            logg.trace(f"pos_str: {pos_str}")
+            self.mi_var_pos_info[pos_type].set(pos_str)
+        for pos_type in [ "abs", "fm"]:
+            pos_str = f"{pos_type.capitalize()} ({pos_info[pos_type][0]:.4f}, {pos_info[pos_type][1]:.4f})"
+            logg.trace(f"pos_str: {pos_str}")
+            self.mi_var_pos_info[pos_type].set(pos_str)
 
     def update_state(self, state):
         """Update the label with the current state
