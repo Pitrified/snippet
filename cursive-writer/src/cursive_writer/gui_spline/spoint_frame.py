@@ -29,7 +29,7 @@ class FrameSPoint(ttk.Frame):
 
         # create the element
         pos_str = f"{spoint.ori_deg:6.1f} @ ({spoint.x:6.1f}, {spoint.y:6.1f})"
-        self.pos_lab = ttk.Label(self, text=pos_str, style="sp_pos.TLabel")
+        self.pos_lab = ttk.Label(self, text=pos_str, style="sp_pos.sp_info.TLabel")
 
         # grid the element in the frame
         self.pos_lab.grid(row=0, column=0, sticky="nsew")
@@ -60,8 +60,6 @@ class FrameSPoint(ttk.Frame):
         spid = event.widget.spoint.spid
         logg.trace(f"event.widget.spoint.spid: {spid}")
 
-        # the virtual event is left for future needs, MAYBE compute some things
-        # on the fly between active and selected? Who knows. Draw a spline?
         self.event_generate("<<sp_frame_enter>>")
         self.set_state("active")
 

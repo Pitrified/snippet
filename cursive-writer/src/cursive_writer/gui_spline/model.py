@@ -71,6 +71,8 @@ class Model:
         # the index of the selected header, only active when no points are in
         # that glyph or you want to insert a SP at the beginning of a glyph
         self.selected_header_SP = Observable(0)
+        # id of the spline header hovered
+        self.hovered_header_SP = -1
 
     ### OPERATIONS ON CANVAS ###
 
@@ -566,20 +568,28 @@ class Model:
 
         all_SP = self.all_SP.get()
         visible_SP = {}
-        for spid, curr_sp in all_SP.items():
+        selected_spid_SP = self.selected_spid_SP.get()
 
-            # check that the point is in the region cropped
-            if region[0] < curr_sp.x < region[2] and region[1] < curr_sp.y < region[3]:
-                view_op = self.rescale_point(curr_sp, "abs2view")
+        #  for spid, curr_sp in all_SP.items():
+        for hid, glyph in enumerate(self.active_SP.get()):
+            for spid in glyph:
+                curr_sp = all_SP[spid]
 
-                # assign a type to the point
-                if spid == self.selected_spid_SP.get():
-                    arrow_type = "selected"
-                elif spid == self.hovered_SP:
-                    arrow_type = "active"
-                else:
-                    arrow_type = "standard"
-                visible_SP[spid] = [view_op, arrow_type]
+                # check that the point is in the region cropped
+                if (
+                    region[0] < curr_sp.x < region[2]
+                    and region[1] < curr_sp.y < region[3]
+                ):
+                    view_op = self.rescale_point(curr_sp, "abs2view")
+
+                    # assign a type to the point
+                    if spid == selected_spid_SP:
+                        arrow_type = "selected"
+                    elif spid == self.hovered_SP or hid == self.hovered_header_SP:
+                        arrow_type = "active"
+                    else:
+                        arrow_type = "standard"
+                    visible_SP[spid] = [view_op, arrow_type]
 
         self.visible_SP.set(visible_SP)
 
@@ -613,7 +623,6 @@ class Model:
         logg.trace(f"Start {fmt_cn('sp_frame_left', 'start')}")
 
         # reset the id
-        #  self.hovered_SP = spid
         self.hovered_SP = -1
 
         self.compute_visible_spline_points()
@@ -637,6 +646,26 @@ class Model:
         self.selected_header_SP.set(None)
 
         # recompute colors
+        self.compute_visible_spline_points()
+
+    def sp_header_entered(self, hid):
+        logg = logging.getLogger(f"c.{__class__.__name__}.sp_header_entered")
+        logg.setLevel("TRACE")
+        logg.trace(f"Start {fmt_cn('sp_header_entered', 'a2')}")
+
+        # save the id of the point that the mouse is hovering
+        self.hovered_header_SP = hid
+
+        self.compute_visible_spline_points()
+
+    def sp_header_left(self, hid):
+        logg = logging.getLogger(f"c.{__class__.__name__}.sp_header_left")
+        #  logg.setLevel("TRACE")
+        logg.trace(f"Start {fmt_cn('sp_header_left', 'start')}")
+
+        # reset the id
+        self.hovered_header_SP = -1
+
         self.compute_visible_spline_points()
 
     def sp_header_btn1_pressed(self, hid):

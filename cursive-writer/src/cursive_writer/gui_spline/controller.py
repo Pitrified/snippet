@@ -52,6 +52,8 @@ class Controller:
         self.view.root.bind("<<sp_frame_enter>>", self.sp_frame_entered)
         self.view.root.bind("<<sp_frame_leave>>", self.sp_frame_left)
         self.view.root.bind("<<sp_frame_btn1_press>>", self.sp_frame_btn1_pressed)
+        self.view.root.bind("<<sp_header_enter>>", self.sp_header_entered)
+        self.view.root.bind("<<sp_header_leave>>", self.sp_header_left)
         self.view.root.bind("<<sp_header_btn1_press>>", self.sp_header_btn1_pressed)
 
         ### button clicks
@@ -248,12 +250,28 @@ class Controller:
         spid = event.widget.spoint.spid
         self.model.sp_frame_btn1_pressed(spid)
 
+    def sp_header_entered(self, event):
+        logg = logging.getLogger(f"c.{__class__.__name__}.sp_header_entered")
+        logg.setLevel("TRACE")
+        logg.trace(f"Start {fmt_cn('sp_header_entered', 'start')}")
+        #  logg.trace(f"Event {event} fired by {event.widget}")
+        hid = event.widget.id_
+        self.model.sp_header_entered(hid)
+
+    def sp_header_left(self, event):
+        logg = logging.getLogger(f"c.{__class__.__name__}.sp_header_left")
+        logg.setLevel("TRACE")
+        logg.trace(f"Start {fmt_cn('sp_header_left', 'start')}")
+        #  logg.trace(f"Event {event} fired by {event.widget}")
+        hid = event.widget.id_
+        self.model.sp_header_left(hid)
+
     def sp_header_btn1_pressed(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_header_btn1_pressed")
         logg.setLevel("TRACE")
         logg.debug(f"Start {fmt_cn('sp_header_btn1_pressed', 'start')}")
         #  logg.trace(f"Event {event} fired by {event.widget}")
-        hid = event.widget._id
+        hid = event.widget.id_
         self.model.sp_header_btn1_pressed(hid)
 
     ###### OBSERVABLE CALLBACKS ######

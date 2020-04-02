@@ -109,15 +109,22 @@ class View:
             padding=(0, 6, 0, 6),
         )
         s.configure("info.TLabel", background="burlywood2")
+
         s.configure(
-            "sp_pos.TLabel",
+            "sp_info.TLabel",
             background="burlywood2",
             anchor=tk.CENTER,
             #  font=("Courier", 12),
-            font=("Consolas", 10),
+            #  font=("Consolas", 10),
         )
         s.map(
-            "sp_pos.TLabel", background=[("selected", "tan2"), ("active", "wheat1"),],
+            "sp_info.TLabel", background=[("selected", "tan2"), ("active", "wheat1"),],
+        )
+        s.configure(
+            "sp_pos.sp_info.TLabel", font=("Consolas", 10),
+        )
+        s.configure(
+            "sp_header.sp_info.TLabel", font=("Consolas", 12), padding=(0, 3, 0, 3),
         )
 
         ### BUTTONS ###
@@ -491,7 +498,7 @@ class FrameSpline(ttk.Frame):
 
         # create the elements
         self.sh_title = ttk.Label(
-            self.spline_header_frame, text="Title INFO", style="title.TLabel"
+            self.spline_header_frame, text="Spline options", style="title.TLabel"
         )
         self.sh_btn_new_spline = ttk.Button(
             self.spline_header_frame, text="New spline", style="settings.TButton",
@@ -511,7 +518,7 @@ class FrameSpline(ttk.Frame):
 
         # header for this frame
         self.sl_title = ttk.Label(
-            self.spline_list_frame, text="Title SPlist", style="title.TLabel"
+            self.spline_list_frame, text="Spline points", style="title.TLabel"
         )
         # create the ScrollableFrame
         #  cv_bg = "blue"
@@ -597,10 +604,12 @@ class FrameSpline(ttk.Frame):
                 self.sl_scrollable.scroll_frame,
                 i,
                 text=header_title,
-                style="sp_pos.TLabel",
+                style="sp_header.sp_info.TLabel",
             )
 
             # bind click to the header
+            sp_header.bind("<Enter>", sp_header.on_enter)
+            sp_header.bind("<Leave>", sp_header.on_leave)
             sp_header.bind("<Button-1>", sp_header.on_button1_press)
 
             # bind mouse scroll on header
@@ -682,6 +691,25 @@ class LabelId(ttk.Label):
         self.bind("<4>", func)
         self.bind("<5>", func)
         self.bind("<MouseWheel>", func)
+
+    def on_enter(self, event):
+        logg = logging.getLogger(f"c.{__class__.__name__}.on_enter")
+        logg.setLevel("TRACE")
+        logg.trace(f"{fmt_cn('Enter', 'start')} LabelId {self.id_}")
+        logg.trace(f"Event {event} fired by {event.widget}")
+        id_ = event.widget.id_
+        logg.trace(f"event.widget.id_: {id_}")
+
+        self.event_generate("<<sp_header_enter>>")
+        self.set_state("active")
+
+    def on_leave(self, event):
+        logg = logging.getLogger(f"c.{__class__.__name__}.on_leave")
+        logg.setLevel("TRACE")
+        logg.trace(f"{fmt_cn('Leave', 'start')} LabelId {self.id_}")
+
+        self.event_generate("<<sp_header_leave>>")
+        self.set_state("!active")
 
     def on_button1_press(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.on_button1_press")
