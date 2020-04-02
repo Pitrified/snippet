@@ -21,7 +21,7 @@ def line_curve_ab_coeff(x0, y0, x1, y1):
     """
     logg = logging.getLogger(f"c.{__name__}.line_curve")
     logg.setLevel("INFO")
-    logg.debug(f"{fmt_cn('Starting', 'start')} line_curve")
+    logg.debug(f"{fmt_cn('Starting')} line_curve")
 
     if x1 == x0:
         return [float("inf"), x0]
@@ -58,7 +58,7 @@ def collide_line_box(bbox, line_point):
     """
     logg = logging.getLogger(f"c.{__name__}.collide_line_box")
     logg.setLevel("INFO")
-    logg.debug(f"{fmt_cn('Start', 'start')} collide_line_box")
+    logg.debug(f"{fmt_cn('Start')} collide_line_box")
 
     left, top, right, bot = bbox
     line_coeff = line_point.to_ab_line()
@@ -125,9 +125,7 @@ def translate_line(line_coeff, shift_x, shift_y):
     """
     logg = logging.getLogger(f"c.{__name__}.translate_line")
     #  logg.setLevel("INFO")
-    logg.debug(
-        f"{fmt_cn('Starting', 'start')} translate_line {line_coeff} {shift_x} {shift_y}"
-    )
+    logg.debug(f"{fmt_cn('Starting')} translate_line {line_coeff} {shift_x} {shift_y}")
 
     a, b = line_coeff
 

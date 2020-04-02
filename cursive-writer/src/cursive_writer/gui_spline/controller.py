@@ -11,7 +11,7 @@ class Controller:
     def __init__(self, pf_input_image):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         #  logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('init', 'start')}")
+        logg.info(f"Start {fmt_cn('init')}")
 
         self.root = tk.Tk()
 
@@ -80,7 +80,7 @@ class Controller:
         """Start the app and run the mainloop
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.run")
-        logg.info(f"{fmt_cn('Running', 'start')} controller\n")
+        logg.info(f"{fmt_cn('Running')} controller\n")
 
         self.root.mainloop()
 
@@ -97,7 +97,7 @@ class Controller:
 
     def canvas_resized(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.canvas_resized")
-        logg.info(f"{fmt_cn('Resized', 'start')} image_canvas")
+        logg.info(f"{fmt_cn('Resized')} image_canvas")
         widget_wid = event.widget.winfo_width()
         widget_hei = event.widget.winfo_height()
         self.model.do_canvas_resize(widget_wid, widget_hei)
@@ -105,7 +105,7 @@ class Controller:
     def clicked_canvas(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_canvas")
         #  logg.setLevel("TRACE")
-        recap = f"\n{fmt_cn('Clicked', 'start')} mouse on canvas"
+        recap = f"\n{fmt_cn('Clicked')} mouse on canvas"
         recap += f" - event: {event} event.state: {event.state}"
         recap += f" - event.x: {event.x} event.y: {event.y}"
         logg.info(recap)
@@ -136,7 +136,7 @@ class Controller:
     def released_canvas(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.released_canvas")
         #  logg.setLevel("TRACE")
-        recap = f"\n{fmt_cn('Released', 'start')} mouse on canvas"
+        recap = f"\n{fmt_cn('Released')} mouse on canvas"
         recap += f" - event: {event} event.state: {event.state}"
         recap += f" - event.x: {event.x} event.y: {event.y}"
         logg.info(recap)
@@ -171,7 +171,7 @@ class Controller:
         #  logg.setLevel("TRACE")
         #  logg.setLevel("DEBUG")
         #  logg.setLevel("INFO")
-        recap = f"\n{fmt_cn('Moved', 'start')} mouse on canvas"
+        recap = f"\n{fmt_cn('Moved')} mouse on canvas"
         recap += f" - event: {event} event.state: {event.state}"
         recap += f" - event.x: {event.x} event.y: {event.y}"
         logg.trace(recap)
@@ -204,7 +204,7 @@ class Controller:
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_base_mean")
         #  logg.setLevel("TRACE")
         #  logg.setLevel("INFO")
-        logg.info(f"\nStart {fmt_cn('clicked_btn_set_base_mean', 'start')}")
+        logg.info(f"\nStart {fmt_cn('clicked_btn_set_base_mean')}")
 
         self.model.clicked_btn_set_base_mean()
 
@@ -214,7 +214,7 @@ class Controller:
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_base_ascent")
         #  logg.setLevel("TRACE")
         #  logg.setLevel("INFO")
-        logg.debug(f"\nStart {fmt_cn('clicked_btn_set_base_ascent', 'start')}")
+        logg.debug(f"\nStart {fmt_cn('clicked_btn_set_base_ascent')}")
 
         self.model.clicked_btn_set_base_ascent()
 
@@ -224,7 +224,7 @@ class Controller:
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_sh_btn_new_spline")
         #  logg.setLevel("TRACE")
         #  logg.setLevel("INFO")
-        logg.info(f"\nStart {fmt_cn('clicked_sh_btn_new_spline', 'start')}")
+        logg.info(f"\nStart {fmt_cn('clicked_sh_btn_new_spline')}")
 
         self.model.clicked_sh_btn_new_spline()
 
@@ -234,7 +234,7 @@ class Controller:
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_sh_btn_delete_SP")
         #  logg.setLevel("TRACE")
         #  logg.setLevel("INFO")
-        logg.info(f"\nStart {fmt_cn('clicked_sh_btn_delete_SP', 'start')}")
+        logg.info(f"\nStart {fmt_cn('clicked_sh_btn_delete_SP')}")
 
         self.model.clicked_sh_btn_delete_SP()
 
@@ -243,7 +243,7 @@ class Controller:
     def sp_frame_entered(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_entered")
         #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('sp_frame_entered', 'start')}")
+        logg.trace(f"Start {fmt_cn('sp_frame_entered')}")
         #  logg.trace(f"Event {event} fired by {event.widget}")
 
         spid = event.widget.spoint.spid
@@ -252,7 +252,7 @@ class Controller:
     def sp_frame_left(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_left")
         #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('sp_frame_left', 'start')}")
+        logg.trace(f"Start {fmt_cn('sp_frame_left')}")
         logg.trace(f"Event {event} fired by {event.widget}")
         spid = event.widget.spoint.spid
         self.model.sp_frame_left(spid)
@@ -260,7 +260,7 @@ class Controller:
     def sp_frame_btn1_pressed(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_btn1_pressed")
         #  logg.setLevel("TRACE")
-        logg.info(f"\nStart {fmt_cn('sp_frame_btn1_pressed', 'start')}")
+        logg.info(f"\nStart {fmt_cn('sp_frame_btn1_pressed')}")
         logg.trace(f"Event {event} fired by {event.widget}")
         spid = event.widget.spoint.spid
         self.model.sp_frame_btn1_pressed(spid)
@@ -268,7 +268,7 @@ class Controller:
     def sp_header_entered(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_header_entered")
         #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('sp_header_entered', 'start')}")
+        logg.trace(f"Start {fmt_cn('sp_header_entered')}")
         logg.trace(f"Event {event} fired by {event.widget}")
         hid = event.widget.id_
         self.model.sp_header_entered(hid)
@@ -276,7 +276,7 @@ class Controller:
     def sp_header_left(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_header_left")
         #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('sp_header_left', 'start')}")
+        logg.trace(f"Start {fmt_cn('sp_header_left')}")
         logg.trace(f"Event {event} fired by {event.widget}")
         hid = event.widget.id_
         self.model.sp_header_left(hid)
@@ -284,7 +284,7 @@ class Controller:
     def sp_header_btn1_pressed(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_header_btn1_pressed")
         #  logg.setLevel("TRACE")
-        logg.info(f"\nStart {fmt_cn('sp_header_btn1_pressed', 'start')}")
+        logg.info(f"\nStart {fmt_cn('sp_header_btn1_pressed')}")
         logg.trace(f"Event {event} fired by {event.widget}")
         hid = event.widget.id_
         self.model.sp_header_btn1_pressed(hid)
@@ -295,21 +295,19 @@ class Controller:
 
     def updated_pf_input_image(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_pf_input_image")
-        logg.info(
-            f"New values {fmt_cn('received', 'start')} for pf_input_image: {data}"
-        )
+        logg.info(f"New values {fmt_cn('received')} for pf_input_image: {data}")
         self.view.update_pf_input_image(data)
 
     ### IMAGE CANVAS ###
 
     def updated_crop_input_image(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_crop_input_image")
-        logg.trace(f"Start {fmt_cn('updated_crop_input_image', 'start')}")
+        logg.trace(f"Start {fmt_cn('updated_crop_input_image')}")
         self.view.frame_image.update_crop_input_image(data)
 
     def updated_free_line(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_free_line")
-        logg.trace(f"Start {fmt_cn('updated_free_line', 'start')}")
+        logg.trace(f"Start {fmt_cn('updated_free_line')}")
         self.view.frame_image.update_free_line(data)
 
     def updated_curr_mouse_pos_info(self, data):
@@ -317,48 +315,48 @@ class Controller:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_curr_mouse_pos_info")
         #  logg.setLevel("INFO")
-        logg.trace(f"Start {fmt_cn('updated_curr_mouse_pos_info', 'start')}")
+        logg.trace(f"Start {fmt_cn('updated_curr_mouse_pos_info')}")
 
         self.view.frame_info.update_curr_mouse_pos_info(data)
 
     def updated_fm_lines(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_fm_lines")
-        logg.trace(f"Start {fmt_cn('updated_fm_lines', 'start')}")
+        logg.trace(f"Start {fmt_cn('updated_fm_lines')}")
         self.view.frame_image.update_fm_lines(data)
 
     def updated_click_left_start_pos(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_click_left_start_pos")
-        logg.info(f"Start {fmt_cn('updated_click_left_start_pos', 'start')}")
+        logg.info(f"Start {fmt_cn('updated_click_left_start_pos')}")
         self.view.frame_image.update_click_left_start_pos(data)
 
     def updated_state(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_state")
-        logg.info(f"Start {fmt_cn('updated_state', 'start')}")
+        logg.info(f"Start {fmt_cn('updated_state')}")
         self.view.frame_info.update_state(data)
 
     ### SPLINE INFO ###
 
     def updated_all_SP(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_all_SP")
-        logg.info(f"Start {fmt_cn('updated_all_SP', 'start')}")
+        logg.info(f"Start {fmt_cn('updated_all_SP')}")
         self.view.frame_spline.update_all_SP(data)
 
     def updated_visible_SP(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_visible_SP")
-        logg.trace(f"Start {fmt_cn('updated_visible_SP', 'start')}")
+        logg.trace(f"Start {fmt_cn('updated_visible_SP')}")
         self.view.update_visible_SP(data)
 
     def updated_active_SP(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_active_SP")
-        logg.info(f"Start {fmt_cn('updated_active_SP', 'start')}")
+        logg.info(f"Start {fmt_cn('updated_active_SP')}")
         self.view.frame_spline.update_active_SP(data)
 
     def updated_selected_spid_SP(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_selected_spid_SP")
-        logg.info(f"Start {fmt_cn('updated_selected_spid_SP', 'start')}")
+        logg.info(f"Start {fmt_cn('updated_selected_spid_SP')}")
         self.view.frame_spline.update_selected_spid_SP(data)
 
     def updated_selected_header_SP(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_selected_header_SP")
-        logg.info(f"Start {fmt_cn('updated_selected_header_SP', 'start')}")
+        logg.info(f"Start {fmt_cn('updated_selected_header_SP')}")
         self.view.frame_spline.update_selected_header_SP(data)

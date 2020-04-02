@@ -20,7 +20,7 @@ class Model:
     def __init__(self):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         #  logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('init', 'start')}")
+        logg.info(f"Start {fmt_cn('init')}")
 
         # full path of the current image
         self.pf_input_image = Observable()
@@ -78,7 +78,7 @@ class Model:
 
     def set_pf_input_image(self, pf_input_image):
         logg = logging.getLogger(f"c.{__class__.__name__}.set_pf_input_image")
-        logg.info(f"{fmt_cn('Setting', 'start')} pf_input_image '{pf_input_image}'")
+        logg.info(f"{fmt_cn('Setting')} pf_input_image '{pf_input_image}'")
 
         self.pf_input_image.set(pf_input_image)
 
@@ -88,7 +88,7 @@ class Model:
 
     def do_canvas_resize(self, widget_wid, widget_hei):
         logg = logging.getLogger(f"c.{__class__.__name__}.do_canvas_resize")
-        logg.info(f"{fmt_cn('New', 'start')} canvas is {widget_wid}x{widget_hei}")
+        logg.info(f"{fmt_cn('New')} canvas is {widget_wid}x{widget_hei}")
 
         self._widget_wid = widget_wid
         self._widget_hei = widget_hei
@@ -110,7 +110,7 @@ class Model:
 
         current_state = self.state.get()
 
-        recap = f"{fmt_cn('Clicked', 'start')} mouse on canvas"
+        recap = f"{fmt_cn('Clicked')} mouse on canvas"
         recap += f" - start_view_pos {self.start_view_x}x{self.start_view_y}"
         recap += f" - current_state: {current_state}"
         logg.info(recap)
@@ -152,7 +152,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.move_canvas_mouse")
         #  logg.setLevel("INFO")
-        logg.trace(f"Start {fmt_cn('move_canvas_mouse', 'start')}")
+        logg.trace(f"Start {fmt_cn('move_canvas_mouse')}")
 
         # save the current pos in the image
         self.move_view_x = canvas_x - self._image_cropper.widget_shift_x
@@ -211,11 +211,9 @@ class Model:
 
         current_state = self.state.get()
 
-        logg.info(
-            f"{fmt_cn('Released', 'start')} view_pos {self.end_view_x}x{self.end_view_y}"
-        )
+        logg.info(f"{fmt_cn('Released')} view_pos {self.end_view_x}x{self.end_view_y}")
 
-        recap = f"{fmt_cn('Released', 'start')} mouse on canvas"
+        recap = f"{fmt_cn('Released')} mouse on canvas"
         recap += f" - end_view_pos {self.end_view_x}x{self.end_view_y}"
         recap += f" - current_state: {current_state}"
         logg.info(recap)
@@ -259,7 +257,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.zoom_image")
         #  logg.setLevel("INFO")
-        logg.info(f"Start {fmt_cn('zoom_image', 'start')} {direction}")
+        logg.info(f"Start {fmt_cn('zoom_image')} {direction}")
 
         # compute the new image
         self._image_cropper.zoom_image(direction, view_x, view_y)
@@ -271,7 +269,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.move_image")
         #  logg.setLevel("INFO")
-        logg.trace(f"Start {fmt_cn('move_image', 'start')}")
+        logg.trace(f"Start {fmt_cn('move_image')}")
 
         delta_x = self.old_move_view_x - new_move_view_x
         delta_y = self.old_move_view_y - new_move_view_y
@@ -287,7 +285,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_image_obs")
         #  logg.setLevel("INFO")
-        logg.trace(f"Start {fmt_cn('update_image_obs', 'start')}")
+        logg.trace(f"Start {fmt_cn('update_image_obs')}")
         # update the image in the observable, with info on where to put it
         data = {
             "image_res": self._image_cropper.image_res,
@@ -303,7 +301,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_base_mean")
         #  logg.setLevel("INFO")
-        logg.info(f"Start {fmt_cn('click_btn_set_base_mean', 'start')}")
+        logg.info(f"Start {fmt_cn('click_btn_set_base_mean')}")
 
         current_state = self.state.get()
 
@@ -320,7 +318,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_base_ascent")
         #  logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('clicked_btn_set_base_ascent', 'start')}")
+        logg.info(f"Start {fmt_cn('clicked_btn_set_base_ascent')}")
 
     def clicked_sh_btn_new_spline(self):
         """Start working on a new glyph
@@ -331,7 +329,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_sh_btn_new_spline")
         #  logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('clicked_sh_btn_new_spline', 'start')}")
+        logg.info(f"Start {fmt_cn('clicked_sh_btn_new_spline')}")
 
         path = self.active_SP.get()
 
@@ -371,7 +369,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_sh_btn_delete_SP")
         #  logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('clicked_sh_btn_delete_SP', 'start')}")
+        logg.info(f"Start {fmt_cn('clicked_sh_btn_delete_SP')}")
 
         path = self.active_SP.get()
         glyph_idx, point_idx = self.selected_indexes
@@ -423,7 +421,6 @@ class Model:
 
             # update the cursor
             self.selected_indexes = [new_glyph_idx, new_point_idx]
-
 
         # update the selected label
         # now pointing to a header
@@ -483,7 +480,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.build_fm_lines_abs")
         #  logg.setLevel("INFO")
-        logg.trace(f"Start {fmt_cn('build_fm_lines_abs', 'start')} type {input_type}")
+        logg.trace(f"Start {fmt_cn('build_fm_lines_abs')} type {input_type}")
 
         if input_type == "base_mean":
             self.vert_point = line_curve_point(
@@ -535,7 +532,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.rescale_fm_lines_to_abs")
         #  logg.setLevel("INFO")
-        logg.trace(f"Start {fmt_cn('rescale_fm_lines_to_abs', 'start')}")
+        logg.trace(f"Start {fmt_cn('rescale_fm_lines_to_abs')}")
 
         abs_lines = {}
         for line_name in fm_lines_view:
@@ -548,7 +545,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.rescale_fm_lines_to_view")
         #  logg.setLevel("INFO")
-        logg.trace(f"Start {fmt_cn('rescale_fm_lines_to_view', 'start')}")
+        logg.trace(f"Start {fmt_cn('rescale_fm_lines_to_view')}")
 
         view_lines = {}
         for line_name in fm_lines_abs:
@@ -565,7 +562,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.rescale_point")
         #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('rescale_point', 'start')}")
+        logg.trace(f"Start {fmt_cn('rescale_point')}")
 
         # current zoom value
         zoom = self._image_cropper.zoom
@@ -621,7 +618,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.add_spline_point")
         #  logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('add_spline_point', 'start')}")
+        logg.info(f"Start {fmt_cn('add_spline_point')}")
 
         if (
             self.start_view_x < 0
@@ -675,7 +672,7 @@ class Model:
         logg = logging.getLogger(
             f"c.{__class__.__name__}.compute_visible_spline_points"
         )
-        logg.trace(f"Start {fmt_cn('compute_visible_spline_points', 'start')}")
+        logg.trace(f"Start {fmt_cn('compute_visible_spline_points')}")
 
         # region showed in the view, in abs image coordinate
         region = self._image_cropper.region
@@ -724,7 +721,7 @@ class Model:
     def sp_frame_entered(self, spid):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_entered")
         #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('sp_frame_entered', 'start')}")
+        logg.trace(f"Start {fmt_cn('sp_frame_entered')}")
 
         # save the id of the point that the mouse is hovering
         self.hovered_SP = spid
@@ -734,7 +731,7 @@ class Model:
     def sp_frame_left(self, spid):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_left")
         #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('sp_frame_left', 'start')}")
+        logg.trace(f"Start {fmt_cn('sp_frame_left')}")
 
         # reset the id
         self.hovered_SP = -1
@@ -746,7 +743,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_btn1_pressed")
         #  logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('sp_frame_btn1_pressed', 'start')} {spid}")
+        logg.info(f"Start {fmt_cn('sp_frame_btn1_pressed')} {spid}")
 
         self.selected_indexes = self.find_spid_in_active_SP(spid)
         logg.debug(f"selected_indexes: {self.selected_indexes}")
@@ -765,7 +762,7 @@ class Model:
     def sp_header_entered(self, hid):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_header_entered")
         #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('sp_header_entered', 'start')}")
+        logg.trace(f"Start {fmt_cn('sp_header_entered')}")
 
         # save the id of the point that the mouse is hovering
         self.hovered_header_SP = hid
@@ -775,7 +772,7 @@ class Model:
     def sp_header_left(self, hid):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_header_left")
         #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('sp_header_left', 'start')}")
+        logg.trace(f"Start {fmt_cn('sp_header_left')}")
 
         # reset the id
         self.hovered_header_SP = -1
@@ -787,7 +784,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_header_btn1_pressed")
         #  logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('sp_header_btn1_pressed', 'start')} {hid}")
+        logg.info(f"Start {fmt_cn('sp_header_btn1_pressed')} {hid}")
 
         # remove highlight from point
         self.selected_spid_SP.set(None)
@@ -818,7 +815,7 @@ class ImageCropper:
     def __init__(self, photo_name_full):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         #  logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('init', 'start')}")
+        logg.info(f"Start {fmt_cn('init')}")
 
         # load the image
         self._photo_name_full = photo_name_full
@@ -856,7 +853,7 @@ class ImageCropper:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.reset_image")
         #  logg.setLevel("TRACE")
-        logg.info(f"{fmt_cn('Resetting', 'start')} image")
+        logg.info(f"{fmt_cn('Resetting')} image")
         logg.trace(f"widget_wid: {widget_wid} widget_hei: {widget_hei}")
 
         if widget_wid != -1:
@@ -889,7 +886,7 @@ class ImageCropper:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_crop")
         #  logg.setLevel("TRACE")
-        logg.trace(f"{fmt_cn('Updating', 'start')} crop zoom {self._zoom_level:.4f}")
+        logg.trace(f"{fmt_cn('Updating')} crop zoom {self._zoom_level:.4f}")
 
         # zoom in linear scale
         zoom = self._zoom_base ** self._zoom_level
@@ -989,7 +986,7 @@ class ImageCropper:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.zoom_image")
         #  logg.setLevel("TRACE")
-        logg.info(f"{fmt_cn('Zooming', 'start')} image {direction}")
+        logg.info(f"{fmt_cn('Zooming')} image {direction}")
 
         old_zoom = self._zoom_base ** self._zoom_level
         old_zoom_wid = self._image_wid * old_zoom
@@ -1119,7 +1116,7 @@ class ImageCropper:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}._validate_region")
         #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('_validate_region', 'start')}")
+        logg.trace(f"Start {fmt_cn('_validate_region')}")
 
         # left
         if region[0] < 0:
