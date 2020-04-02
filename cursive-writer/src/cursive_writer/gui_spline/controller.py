@@ -66,6 +66,9 @@ class Controller:
         self.view.frame_spline.sh_btn_new_spline.config(
             command=self.clicked_sh_btn_new_spline
         )
+        self.view.frame_spline.sh_btn_delete_SP.config(
+            command=self.clicked_sh_btn_delete_SP
+        )
 
         # initialize the values in the model
         self.model.set_pf_input_image(pf_input_image)
@@ -224,6 +227,16 @@ class Controller:
         logg.info(f"\nStart {fmt_cn('clicked_sh_btn_new_spline', 'start')}")
 
         self.model.clicked_sh_btn_new_spline()
+
+        self.view.reset_focus()
+
+    def clicked_sh_btn_delete_SP(self):
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_sh_btn_delete_SP")
+        #  logg.setLevel("TRACE")
+        #  logg.setLevel("INFO")
+        logg.info(f"\nStart {fmt_cn('clicked_sh_btn_delete_SP', 'start')}")
+
+        self.model.clicked_sh_btn_delete_SP()
 
         self.view.reset_focus()
 

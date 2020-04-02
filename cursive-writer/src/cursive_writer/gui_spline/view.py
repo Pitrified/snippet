@@ -519,18 +519,23 @@ class FrameSpline(ttk.Frame):
         """
         # setup grid for spline_header_frame
         self.spline_header_frame.grid_columnconfigure(0, weight=1)
+        self.spline_header_frame.grid_columnconfigure(1, weight=1)
 
         # create the elements
         self.sh_title = ttk.Label(
             self.spline_header_frame, text="Spline options", style="title.TLabel"
         )
         self.sh_btn_new_spline = ttk.Button(
-            self.spline_header_frame, text="New spline", style="settings.TButton",
+            self.spline_header_frame, text="New glyph", style="settings.TButton",
+        )
+        self.sh_btn_delete_SP = ttk.Button(
+            self.spline_header_frame, text="Delete point", style="settings.TButton",
         )
 
         # grid the elements in spline_header_frame
-        self.sh_title.grid(row=0, column=0, sticky="ew")
+        self.sh_title.grid(row=0, column=0, sticky="ew", columnspan=2)
         self.sh_btn_new_spline.grid(row=1, column=0, pady=4)
+        self.sh_btn_delete_SP.grid(row=1, column=1, pady=4)
 
     def build_spline_list_frame(self):
         """### SETUP frame for spline points ###
@@ -613,7 +618,7 @@ class FrameSpline(ttk.Frame):
             - FrameSPoint
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_active_SP")
-        logg.info(f"Start {fmt_cn('update_active_SP', 'a2')} {data}")
+        logg.info(f"Start {fmt_cn('update_active_SP', 'start')} {data}")
 
         ### create headers
         # how many glyphs there are

@@ -331,7 +331,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_sh_btn_new_spline")
         #  logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('clicked_sh_btn_new_spline', 'a2')}")
+        logg.info(f"Start {fmt_cn('clicked_sh_btn_new_spline', 'start')}")
 
         path = self.active_SP.get()
 
@@ -362,6 +362,82 @@ class Model:
             self.sp_header_btn1_pressed(sel_idxs[0] + 1)
 
         logg.debug(f"self.selected_indexes: {self.selected_indexes}")
+
+    def clicked_sh_btn_delete_SP(self):
+        """Delete a spline point or a header
+
+        The point is straightforward, just remove it from the list
+        For the header, if it is the first, do nothing, else merge with the previous
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_sh_btn_delete_SP")
+        #  logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('clicked_sh_btn_delete_SP', 'start')}")
+
+        path = self.active_SP.get()
+        glyph_idx, point_idx = self.selected_indexes
+
+        logg.debug(f"path: {path}")
+        logg.debug(f"glyph_idx, point_idx: {glyph_idx} {point_idx}")
+
+        # delete header
+        if point_idx == -1:
+            if glyph_idx == 0:
+                logg.info(f"Cannot remove the {fmt_cn('first', 'warn')} glyph")
+                return
+
+            # update the selected_indexes before popping
+            new_glyph_idx = glyph_idx - 1
+            new_point_idx = len(path[new_glyph_idx]) - 1
+            logg.debug(f"new_glyph_idx, new_point_idx: {new_glyph_idx} {new_point_idx}")
+
+            # pop the selected glyph from the path
+            popped_glyph = path.pop(glyph_idx)
+            logg.debug(f"path after pop: {path} popped_glyph: {popped_glyph}")
+
+            # insert it by extending the previous glyph
+            path[glyph_idx - 1].extend(popped_glyph)
+            logg.debug(f"path after extend: {path}")
+
+            # update the path
+            self.active_SP.set(path)
+
+            # update the cursor
+            self.selected_indexes = [new_glyph_idx, new_point_idx]
+
+        # delete point
+        else:
+            # find spid of point to remove
+            spid_pop = path[glyph_idx][point_idx]
+
+            # remove it from the path
+            path[glyph_idx].remove(spid_pop)
+            logg.debug(f"path after remove: {path} spid_pop: {spid_pop}")
+
+            # update the selected_indexes
+            new_glyph_idx = glyph_idx
+            new_point_idx = point_idx - 1
+            logg.debug(f"new_glyph_idx, new_point_idx: {new_glyph_idx} {new_point_idx}")
+
+            # update the path
+            self.active_SP.set(path)
+
+            # update the cursor
+            self.selected_indexes = [new_glyph_idx, new_point_idx]
+
+
+        # update the selected label
+        # now pointing to a header
+        if new_point_idx == -1:
+            self.selected_spid_SP.set(None)
+            self.selected_header_SP.set(new_glyph_idx)
+
+        # now pointing at a point
+        else:
+            self.selected_spid_SP.set(path[new_glyph_idx][new_point_idx])
+            self.selected_header_SP.set(None)
+
+        # technically not needer if a header has been deleted, but it does not hurt
+        self.compute_visible_spline_points()
 
     def redraw_canvas(self):
         """
@@ -689,7 +765,7 @@ class Model:
     def sp_header_entered(self, hid):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_header_entered")
         #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('sp_header_entered', 'a2')}")
+        logg.trace(f"Start {fmt_cn('sp_header_entered', 'start')}")
 
         # save the id of the point that the mouse is hovering
         self.hovered_header_SP = hid
@@ -721,6 +797,7 @@ class Model:
 
         # set the indexes to point before the first point in the clicked glyph
         self.selected_indexes = [hid, -1]
+        logg.debug(f"self.selected_indexes: {self.selected_indexes}")
 
         # redraw the visible points: now no one will be highlighted
         self.compute_visible_spline_points()
