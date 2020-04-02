@@ -5,12 +5,12 @@ from tkinter import ttk
 from math import cos
 from math import sin
 
+from cursive_writer.gui_spline.scrollable_frame import ScrollableFrame
+from cursive_writer.gui_spline.spoint_frame import FrameSPoint
 from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.geometric_utils import collide_line_box
 from cursive_writer.utils.geometric_utils import translate_point_dxy
-from cursive_writer.gui_spline.spoint_frame import FrameSPoint
-from cursive_writer.gui_spline.scrollable_frame import ScrollableFrame
 
 
 class View:
@@ -176,18 +176,27 @@ class FrameInfo(ttk.Frame):
         self.name = name
         super().__init__(parent, *args, **kwargs)
 
-        # setup grid for the frame
+        # setup grid for this frame
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        # frame for font measurement related buttons
+        # create children frames
         self.font_measurement_frame = ttk.Frame(self, style="group.TFrame")
+        self.mouse_info_frame = ttk.Frame(self, style="group.TFrame")
 
-        # setup grid for font_measurement_frame
-        self.font_measurement_frame.grid_columnconfigure(0, weight=1)
-        self.font_measurement_frame.grid_columnconfigure(1, weight=1)
+        # grid the children frames
+        self.font_measurement_frame.grid(
+            row=0, column=0, sticky="new", padx=10, pady=10
+        )
+        self.mouse_info_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
 
-        # build the objects in font_measurement_frame
+        # build the objects in children frames
+        self.build_font_measurement_frame()
+        self.build_mouse_info_frame()
+
+    def build_font_measurement_frame(self):
+        """
+        """
         self.fm_title = ttk.Label(
             self.font_measurement_frame, text="Font Measurement", style="title.TLabel"
         )
@@ -200,19 +209,18 @@ class FrameInfo(ttk.Frame):
             self.font_measurement_frame, text="Set BA", style="settings.TButton",
         )
 
+        # setup grid for font_measurement_frame
+        self.font_measurement_frame.grid_columnconfigure(0, weight=1)
+        self.font_measurement_frame.grid_columnconfigure(1, weight=1)
+
         # grid the objects in font_measurement_frame
         self.fm_title.grid(row=0, column=0, sticky="ew", columnspan=2)
-        #  self.fm_btn_set_base_mean.grid(row=1, column=0, sticky="ew")
-        #  self.fm_btn_set_base_ascent.grid(row=2, column=0, sticky="ew")
         self.fm_btn_set_base_mean.grid(row=1, column=0, pady=4)
         self.fm_btn_set_base_ascent.grid(row=1, column=1, pady=4)
 
-        # frame for mouse pos / line orientation informations
-        self.mouse_info_frame = ttk.Frame(self, style="group.TFrame")
-
-        # setup grid for mouse_info_frame
-        self.mouse_info_frame.grid_columnconfigure(0, weight=1)
-
+    def build_mouse_info_frame(self):
+        """
+        """
         # mouse_info_frame title label
         self.mi_title = ttk.Label(
             self.mouse_info_frame, text="Mouse info", style="title.TLabel"
@@ -232,16 +240,13 @@ class FrameInfo(ttk.Frame):
         )
         self.mi_var_state.set("State: FREE")
 
+        # setup grid for mouse_info_frame
+        self.mouse_info_frame.grid_columnconfigure(0, weight=1)
+
         # grid mouse_info_frame elements
         self.mi_title.grid(row=0, column=0, sticky="ew")
         self.mi_label_pos.grid(row=1, column=0, sticky="ew")
         self.mi_label_state.grid(row=2, column=0, sticky="ew")
-
-        # grid the frames
-        self.font_measurement_frame.grid(
-            row=0, column=0, sticky="new", padx=10, pady=10
-        )
-        self.mouse_info_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
 
     ### REACTIONS TO OBSERVABLES ###
 
@@ -474,25 +479,24 @@ class FrameSpline(ttk.Frame):
         self.old_selected_spid = None
         self.old_selected_header = None
 
-        ########################
-        ### SETUP this frame ###
-        ########################
-
-        # setup grid for the frame
+        # setup grid for this frame
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        # create the child frames
+        # create the children frames
         self.spline_header_frame = ttk.Frame(self, style="group.TFrame")
         self.spline_list_frame = ttk.Frame(self, style="group.TFrame")
-        # grid the frames
+        # grid the children frames
         self.spline_header_frame.grid(row=0, column=0, sticky="new", padx=10, pady=10)
         self.spline_list_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
 
-        ###############################################
-        ### SETUP frame for spline buttons and info ###
-        ###############################################
+        # build the objects in children frames
+        self.build_spline_header_frame()
+        self.build_spline_list_frame()
 
+    def build_spline_header_frame(self):
+        """### setup frame for spline buttons and info ###
+        """
         # setup grid for spline_header_frame
         self.spline_header_frame.grid_columnconfigure(0, weight=1)
 
@@ -508,10 +512,9 @@ class FrameSpline(ttk.Frame):
         self.sh_title.grid(row=0, column=0, sticky="ew")
         self.sh_btn_new_spline.grid(row=1, column=0, pady=4)
 
-        #####################################
-        ### SETUP frame for spline points ###
-        #####################################
-
+    def build_spline_list_frame(self):
+        """### SETUP frame for spline points ###
+        """
         # setup grid for spline_list_frame
         self.spline_list_frame.grid_rowconfigure(1, weight=1)
         self.spline_list_frame.grid_columnconfigure(0, weight=1)
