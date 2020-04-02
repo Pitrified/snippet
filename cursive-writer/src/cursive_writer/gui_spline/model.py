@@ -98,17 +98,19 @@ class Model:
 
         self.redraw_canvas()
 
-    def save_click_canvas(self, click_type, mouse_x, mouse_y):
+        # TODO recompute mouse coord
+
+    def save_click_canvas(self, click_type, canvas_x, canvas_y):
         """Save the pos clicked on the canvas
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.save_click_canvas")
 
         # mouse pos relative to image corner
         # do this for all click_type and states
-        self.start_img_x = mouse_x - self._image_cropper.widget_shift_x
-        self.start_img_y = mouse_y - self._image_cropper.widget_shift_y
+        self.start_view_x = canvas_x - self._image_cropper.widget_shift_x
+        self.start_view_y = canvas_y - self._image_cropper.widget_shift_y
         logg.info(
-            f"{fmt_cn('Clicked', 'start')}: pos in image {self.start_img_x}x{self.start_img_y}"
+            f"{fmt_cn('Clicked', 'start')}: pos in image {self.start_view_x}x{self.start_view_y}"
         )
 
         current_state = self.state.get()
@@ -119,7 +121,7 @@ class Model:
             # was free
             if current_state == "free":
                 self.state.set("free_clicked_left")
-                self.click_left_start_pos.set((self.start_img_x, self.start_img_y))
+                self.click_left_start_pos.set((self.start_view_x, self.start_view_y))
 
             # was ready to set BM
             elif current_state == "setting_base_mean":
@@ -131,22 +133,22 @@ class Model:
             # this resets a state like setting_base_mean
             self.state.set("free_clicked_right")
             # save the old mouse pos
-            self.old_img_x = self.start_img_x
-            self.old_img_y = self.start_img_y
+            self.old_move_view_x = self.start_view_x
+            self.old_move_view_y = self.start_view_y
 
         # handle scroll up
         elif click_type == "scroll_up":
-            self.zoom_image("in", self.start_img_x, self.start_img_y)
+            self.zoom_image("in", self.start_view_x, self.start_view_y)
 
         # handle scroll down
         elif click_type == "scroll_down":
-            self.zoom_image("out", self.start_img_x, self.start_img_y)
+            self.zoom_image("out", self.start_view_x, self.start_view_y)
 
         # very weird things
         else:
             logg.error(f"{fmt_cn('Unrecognized', 'error')} click_type {click_type}")
 
-    def move_canvas_mouse(self, move_type, mouse_x, mouse_y):
+    def move_canvas_mouse(self, move_type, canvas_x, canvas_y):
         """React to mouse movement on Canvas
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.move_canvas_mouse")
@@ -154,9 +156,9 @@ class Model:
         logg.debug(f"Start {fmt_cn('move_canvas_mouse', 'start')}")
 
         # save the current pos in the image
-        img_mouse_x = mouse_x - self._image_cropper.widget_shift_x
-        img_mouse_y = mouse_y - self._image_cropper.widget_shift_y
-        self.curr_mouse_pos.set((img_mouse_x, img_mouse_y))
+        self.move_view_x = canvas_x - self._image_cropper.widget_shift_x
+        self.move_view_y = canvas_y - self._image_cropper.widget_shift_y
+        self.curr_mouse_pos.set((self.move_view_x, self.move_view_y))
 
         current_state = self.state.get()
         logg.debug(f"Moved current_state: {current_state}")
@@ -171,7 +173,10 @@ class Model:
             # draw the tangent for the SPoint
             if current_state == "free_clicked_left":
                 line_point = line_curve_point(
-                    img_mouse_x, img_mouse_y, self.start_img_x, self.start_img_y
+                    self.move_view_x,
+                    self.move_view_y,
+                    self.start_view_x,
+                    self.start_view_y,
                 )
                 self.free_line.set(line_point)
 
@@ -186,13 +191,13 @@ class Model:
         # moved the mouse while right button clicked
         elif move_type == "move_right_clicked":
             if current_state == "free_clicked_right":
-                self.move_image(img_mouse_x, img_mouse_y)
+                self.move_image(self.move_view_x, self.move_view_y)
 
         # very weird things
         else:
             logg.error(f"{fmt_cn('Unrecognized', 'error')} move_type {move_type}")
 
-    def release_click_canvas(self, click_type, mouse_x, mouse_y):
+    def release_click_canvas(self, click_type, canvas_x, canvas_y):
         """The mouse has been released: depending on self.state
             - adjust baseline
             - create new point
@@ -200,10 +205,10 @@ class Model:
         logg = logging.getLogger(f"c.{__class__.__name__}.release_click_canvas")
 
         # mouse pos relative to image corner
-        self.end_img_x = mouse_x - self._image_cropper.widget_shift_x
-        self.end_img_y = mouse_y - self._image_cropper.widget_shift_y
+        self.end_view_x = canvas_x - self._image_cropper.widget_shift_x
+        self.end_view_y = canvas_y - self._image_cropper.widget_shift_y
         logg.info(
-            f"{fmt_cn('Released', 'start')} - pos in image {self.end_img_x}x{self.end_img_y}"
+            f"{fmt_cn('Released', 'start')} - pos in image {self.end_view_x}x{self.end_view_y}"
         )
 
         current_state = self.state.get()
@@ -233,7 +238,7 @@ class Model:
         elif click_type == "right_click":
             if current_state == "free_clicked_right":
                 # move the image
-                self.move_image(self.end_img_x, self.end_img_y)
+                self.move_image(self.end_view_x, self.end_view_y)
                 # go back to free state
                 self.state.set("free")
 
@@ -241,32 +246,32 @@ class Model:
         else:
             logg.error(f"{fmt_cn('Unrecognized', 'error')} click_type {click_type}")
 
-    def zoom_image(self, direction, img_x, img_y):
+    def zoom_image(self, direction, view_x, view_y):
         """Zoom the image
 
-        img_x, img_y are relative to the image corner in the widget
+        view_x, view_y are relative to the image corner that you see in the widget
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.zoom_image")
         #  logg.setLevel("INFO")
         logg.debug(f"Start {fmt_cn('zoom_image', 'start')} {direction}")
 
         # compute the new image
-        self._image_cropper.zoom_image(direction, img_x, img_y)
+        self._image_cropper.zoom_image(direction, view_x, view_y)
 
         self.redraw_canvas()
 
-    def move_image(self, new_x, new_y):
+    def move_image(self, new_move_view_x, new_move_view_y):
         """
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.move_image")
         #  logg.setLevel("INFO")
         logg.debug(f"Start {fmt_cn('move_image', 'start')}")
 
-        delta_x = self.old_img_x - new_x
-        delta_y = self.old_img_y - new_y
+        delta_x = self.old_move_view_x - new_move_view_x
+        delta_y = self.old_move_view_y - new_move_view_y
 
-        self.old_img_x = new_x
-        self.old_img_y = new_y
+        self.old_move_view_x = new_move_view_x
+        self.old_move_view_y = new_move_view_y
 
         self._image_cropper.move_image(delta_x, delta_y)
         self.redraw_canvas()
@@ -367,18 +372,15 @@ class Model:
         #  logg.setLevel("INFO")
         logg.debug(f"Start {fmt_cn('build_fm_lines_abs', 'start')} type {input_type}")
 
-        # mouse position in the image, scaled for viewing
-        curr_pos_x, curr_pos_y = self.curr_mouse_pos.get()
-
         if input_type == "base_mean":
             self.vert_point = line_curve_point(
-                self.start_img_x, self.start_img_y, curr_pos_x, curr_pos_y
+                self.start_view_x, self.start_view_y, self.move_view_x, self.move_view_y
             )
             self.base_point = OrientedPoint(
-                self.start_img_x, self.start_img_y, self.vert_point.ori_deg + 90
+                self.start_view_x, self.start_view_y, self.vert_point.ori_deg + 90
             )
             self.mean_point = OrientedPoint(
-                curr_pos_x, curr_pos_y, self.vert_point.ori_deg + 90
+                self.move_view_x, self.move_view_y, self.vert_point.ori_deg + 90
             )
 
             dist_base_mean = dist2D(self.base_point, self.mean_point)
@@ -509,18 +511,17 @@ class Model:
         logg.info(f"Start {fmt_cn('add_spline_point', 'start')}")
 
         if (
-            self.start_img_x < 0
-            or self.start_img_y < 0
-            or self.start_img_x > self._image_cropper.zoom_wid
-            or self.start_img_y > self._image_cropper.zoom_hei
+            self.start_view_x < 0
+            or self.start_view_y < 0
+            or self.start_view_x > self._image_cropper.zoom_wid
+            or self.start_view_y > self._image_cropper.zoom_hei
         ):
             logg.warn(f"Point {fmt_cn('outside', 'warn')} image")
             return
 
-        # mouse position in the image, scaled for viewing
-        view_x, view_y = self.curr_mouse_pos.get()
-
-        view_op = line_curve_point(self.start_img_x, self.start_img_y, view_x, view_y)
+        view_op = line_curve_point(
+            self.start_view_x, self.start_view_y, self.move_view_x, self.move_view_y
+        )
 
         # MAYBE add button to flip this behaviour
         # flip this to draw spline orientation in the other direction
@@ -689,6 +690,17 @@ class Model:
 
 
 class ImageCropper:
+    """Class to crop a region from an image, saved in image_res
+
+    Various coordinate systems:
+        - abs: the real pixel pos in the image, also called img (_image_wid)
+        - mov: how much the cropped region is moving inside the image
+        - view: the cursor position relative to the visible corner of the image
+        - zoom = mov + view: the position relative to the zoomed image corner
+        - widget_shift: how much the cropped image must be moved in the widget
+            to keep it centered when the zoomed image is smaller than the widget
+    """
+
     def __init__(self, photo_name_full):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         #  logg.setLevel("TRACE")

@@ -11,6 +11,11 @@
 * If deleting when a header is selected, merge the two glyphs before/after that
 * Make the point list scroll when adding points if it is filled
 * Move spline buttons and info to left sidebar
+* line_curve_point is called with swapped args sometimes, check that
+
+### MAYBE
+
+* Is there really a reason to put FrameInfo as a different class? It could just be a regular frame inside the view.
 
 ##### Done
 
@@ -21,3 +26,8 @@
 ### Ideas
 
 * Each spline point has unique ID, the splines are list of IDs
+
+### On logging
+
+* You can artificially _lower_ the loglevel inside a function to debug that, but in regular use you should not change it: that way it is controlled easily at app level.
+* I should try to change a level for an entire class and see if it works as I expect
