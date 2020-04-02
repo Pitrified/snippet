@@ -381,9 +381,7 @@ class FrameImage(ttk.Frame):
         """
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_click_left_start_pos")
-        logg.debug(
-            f"Start {fmt_cn('update_click_left_start_pos')} {start_pos}"
-        )
+        logg.debug(f"Start {fmt_cn('update_click_left_start_pos')} {start_pos}")
 
         # if the Observable has been emptied remove the circle
         if start_pos is None:

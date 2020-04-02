@@ -157,3 +157,17 @@ def dist2D(p0, p1):
     """Distance between two points
     """
     return sqrt((p0.x - p1.x) ** 2 + (p0.y - p1.y) ** 2)
+
+
+def apply_affine_transform(F, x, y):
+    """Left multiply the homogeneous point by the matrix
+
+    res = F * p
+    """
+    logg = logging.getLogger(f"c.{__name__}.apply_affine_transform")
+    #  logg.setLevel("TRACE")
+    logg.trace(f"Start {fmt_cn('apply_affine_transform')}")
+
+    hom_point = np.array([x, y, 1])
+    transform_point = np.dot(F, hom_point)
+    return [transform_point[0], transform_point[1]]

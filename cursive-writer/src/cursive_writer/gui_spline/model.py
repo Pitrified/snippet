@@ -1,19 +1,22 @@
 import logging
-from math import sqrt
-from math import log
-from math import floor
-from math import ceil
-
+import numpy as np
 from PIL import Image
 from PIL import ImageTk
+from math import ceil
+from math import cos
+from math import floor
+from math import log
+from math import sin
+from math import sqrt
 
-from observable import Observable
 from cursive_writer.utils.color_utils import fmt_cn
+from cursive_writer.utils.geometric_utils import dist2D
 from cursive_writer.utils.geometric_utils import line_curve_point
 from cursive_writer.utils.geometric_utils import translate_point_dir
-from cursive_writer.utils.geometric_utils import dist2D
+from cursive_writer.utils.geometric_utils import apply_affine_transform
 from cursive_writer.utils.oriented_point import OrientedPoint
 from cursive_writer.utils.spline_point import SplinePoint
+from observable import Observable
 
 
 class Model:
@@ -37,6 +40,8 @@ class Model:
         # how to react to a mouse movement
         self.state = Observable("free")
 
+        ### FONT MEASUREMENT ###
+
         # font measurement: save the SPoint with normalized x,y on
         # descent-base-mean-ascent send the position scaled for display
         # info on all font measurement lines
@@ -53,6 +58,11 @@ class Model:
         self.free_line = Observable()
         # info on where you clicked the canvas
         self.click_left_start_pos = Observable()
+
+        self.abs2fm = None
+        self.fm2abs = None
+
+        ### SPLINE POINTS ###
 
         # all the SplinePoint generated, dict {spid: SP(x, y, od, id), ... }
         self.all_SP = Observable({})
@@ -461,12 +471,18 @@ class Model:
         abs_op = self.rescale_point(view_op, "view2abs")
 
         # TODO compute and send coord in FM reference
+        if self.abs2fm is None:
+            fm_x, fm_y = 0, 0
+            fm2_x, fm2_y = 0, 0
+        else:
+            fm_x, fm_y = apply_affine_transform(self.abs2fm, abs_op.x, abs_op.y)
+            fm2_x, fm2_y = apply_affine_transform(self.fm2abs, abs_op.x, abs_op.y)
 
         curr_mouse_pos_info = {
             "view": (view_x, view_y),
             "abs": (abs_op.x, abs_op.y),
             "canvas": (canvas_x, canvas_y),
-            "fm": (0, 0),
+            "fm": (fm_x, fm_y),
         }
         self.curr_mouse_pos_info.set(curr_mouse_pos_info)
 
@@ -479,7 +495,7 @@ class Model:
         new fm_lines_abs
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.build_fm_lines_abs")
-        #  logg.setLevel("INFO")
+        #  logg.setLevel("TRACE")
         logg.trace(f"Start {fmt_cn('build_fm_lines_abs')} type {input_type}")
 
         if input_type == "base_mean":
@@ -492,6 +508,8 @@ class Model:
             self.mean_point = OrientedPoint(
                 self.move_view_x, self.move_view_y, self.vert_point.ori_deg + 90
             )
+
+            logg.trace(f"base_point: {self.base_point} vert_point: {self.vert_point}")
 
             dist_base_mean = dist2D(self.base_point, self.mean_point)
 
@@ -517,6 +535,8 @@ class Model:
         # save them
         self.fm_lines_abs.set(fm_lines_abs)
 
+        self.compute_affine_fm_abs()
+
     def recompute_fm_lines_view(self):
         """Updats the value in fm_lines_view to match the current abs/mov/zoom
         """
@@ -526,7 +546,7 @@ class Model:
             self.fm_lines_view.set(new_view_lines)
 
     def rescale_fm_lines_to_abs(self, fm_lines_view):
-        """Rescale the points from VIEWING coord to ABSOLUTE img coord
+        """Rescale the fm points from VIEWING coord to ABSOLUTE img coord
 
         Returns a new dict of points
         """
@@ -541,7 +561,7 @@ class Model:
         return abs_lines
 
     def rescale_fm_lines_to_view(self, fm_lines_abs):
-        """Rescale the points from ABSOLUTE img coord to VIEWING coord
+        """Rescale the fm points from ABSOLUTE img coord to VIEWING coord
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.rescale_fm_lines_to_view")
         #  logg.setLevel("INFO")
@@ -607,6 +627,71 @@ class Model:
 
             # create a new point
             return OrientedPoint(view_x, view_y, point.ori_deg)
+
+    def compute_affine_fm_abs(self):
+        """TODO: what is compute_affine_fm_abs doing?
+
+        Update the affine transform matrix fm <-> abs coord
+        Given basis e1, e2 at 0, moved into u, v at p
+
+            e2              v
+            |       ->     /
+            ._ e1         ._ u
+           0             p
+
+        Write the u,v,p in canonical coord and the homogeneous matrix is
+
+                [u1 v1 p1]
+            F = [u2 v2 p2]
+                [ 0  0  1]
+
+        Move points to and from frame by multiplying by F
+        Point in frame p_F is converted to canonical p_e
+
+            p_e = F p_F
+            p_F = F-1 p_e
+
+        Clear lecture on the topic:
+        http://www.cs.cornell.edu/courses/cs4620/2014fa/lectures/08transforms2d.pdf
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.compute_affine_fm_abs")
+        #  logg.setLevel("TRACE")
+        logg.trace(f"Start {fmt_cn('compute_affine_fm_abs', 'a2')}")
+
+        fm_lines_abs = self.fm_lines_abs.get()
+        base_pt_abs = fm_lines_abs["base_point"]
+        vert_pt_abs = fm_lines_abs["vert_point"]
+        mean_pt_abs = fm_lines_abs["mean_point"]
+
+        logg.trace(f"base_point: {base_pt_abs} vert_point: {vert_pt_abs}")
+
+        if self.fm_lines_abs.get() is None:
+            logg.warn(f"Set font measurement {fmt_cn('before', 'error')} computing")
+
+        # distance from base to mean point in abs units
+        dist_base_mean = dist2D(base_pt_abs, mean_pt_abs)
+
+        # we want that to be the normalized height
+        self.normalized_dist_base_mean = 1000
+
+        # the length of the fm basis vectors in abs coord
+        basis_length = dist_base_mean / self.normalized_dist_base_mean
+
+        # the orientation are aligned with abs, so y is flipped
+        # this is ok, will be fixed in the affine transform
+        base_ori_rad = base_pt_abs.ori_rad
+        vert_ori_rad = vert_pt_abs.ori_rad
+        logg.trace(f"base_ori_rad: {base_ori_rad} vert_ori_rad: {vert_ori_rad} radians")
+
+        # basis vector of the FM frame, in img coord
+        u = [cos(base_ori_rad) * basis_length, sin(base_ori_rad) * basis_length]
+        v = [sin(base_ori_rad) * basis_length, -cos(base_ori_rad) * basis_length]
+        p = base_pt_abs
+
+        self.fm2abs = np.array([[u[0], v[0], p.x], [u[1], v[1], p.y], [0, 0, 1]])
+        logg.trace(f"self.fm2abs: {self.fm2abs}")
+        self.abs2fm = np.linalg.inv(self.fm2abs)
+        logg.trace(f"self.abs2fm: {self.abs2fm}")
 
     ### SPLINE ###
 
