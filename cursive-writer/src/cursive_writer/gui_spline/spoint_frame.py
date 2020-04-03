@@ -22,14 +22,18 @@ class FrameSPoint(ttk.Frame):
 
         self.name = name
         self.spoint = spoint
+        # this point is the same object as the one all the way in model.all_SP Observable
+        logg.debug(f"id(self.spoint): {id(self.spoint)}")
 
         # setup grid for the frame
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
         # create the element
-        pos_str = f"{spoint.ori_deg:6.1f} @ ({spoint.x:6.1f}, {spoint.y:6.1f})"
-        self.pos_lab = ttk.Label(self, text=pos_str, style="sp_pos.sp_info.TLabel")
+        #  pos_str = f"{spoint.ori_deg:6.1f} @ ({spoint.x:6.1f}, {spoint.y:6.1f})"
+        #  self.pos_lab = ttk.Label(self, text=pos_str, style="sp_pos.sp_info.TLabel")
+        self.pos_lab = ttk.Label(self, style="sp_pos.sp_info.TLabel")
+        self.update_label()
 
         # grid the element in the frame
         self.pos_lab.grid(row=0, column=0, sticky="nsew")
@@ -92,3 +96,14 @@ class FrameSPoint(ttk.Frame):
         logg.trace(f"Start {fmt_cn('set_state')} {the_state}")
 
         self.pos_lab.state([the_state])
+
+    def update_label(self):
+        """Updates the text in the label based on the current spoint
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_label")
+        #  logg.setLevel("TRACE")
+        logg.trace(f"Start {fmt_cn('update_label')}")
+
+        pos_str = f"{self.spoint.ori_deg:6.1f} @"
+        pos_str += f" ({self.spoint.x:6.1f}, {self.spoint.y:6.1f})"
+        self.pos_lab["text"] = pos_str

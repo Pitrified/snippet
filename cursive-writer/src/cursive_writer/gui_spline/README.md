@@ -3,16 +3,13 @@
 ### TODO
 
 * File dialog to save glyphs
-* Rescale from abs (image) to normalized (FM coord)
-* Add buttons to change selected SP data, left, very left, orientation
 * Add loading of a glyph, after FMlines are set, remap those points to the current image
 * Make the point list scroll when adding points if it is filled
-* Move spline buttons and info to left sidebar
-* `line_curve_point` is called with swapped args sometimes, check that
 
 ### MAYBE
 
 * Is there really a reason to put FrameInfo as a different class? It could just be a regular frame inside the view.
+* Move spline buttons and info to left sidebar
 
 ##### Done
 
@@ -22,6 +19,8 @@
 * Button to delete FSP in the spline info pane
 * If deleting when a header is selected, merge the two glyphs before/after that
 * After deleting a point set as selected the previous one, if it is the first select the spline header
+* Rescale from abs (image) to normalized (FM coord)
+* Add buttons to change selected SP data, left, very left, orientation
 
 ### Ideas
 

@@ -184,10 +184,10 @@ class Model:
             # draw the tangent for the SPoint
             if current_state == "free_clicked_left":
                 line_point = line_curve_point(
-                    self.move_view_x,
-                    self.move_view_y,
                     self.start_view_x,
                     self.start_view_y,
+                    self.move_view_x,
+                    self.move_view_y,
                 )
                 self.free_line.set(line_point)
 
@@ -446,13 +446,61 @@ class Model:
         # technically not needer if a header has been deleted, but it does not hurt
         self.compute_visible_spline_points()
 
+    def clicked_btn_adjust(self, adjust_type):
+        """Adjust the position/orientation of the selected point
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_adjust")
+        #  logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('clicked_btn_adjust')}")
+
+        if self.selected_indexes[1] == -1:
+            logg.warn(f"{fmt_cn('Cannot', 'warn')} move a glyph")
+
+        all_SP = self.all_SP.get()
+        sel_pt = all_SP[self.selected_spid_SP.get()]
+
+        shift = 0.1
+        very_shift = 1
+        rot = 0.1
+        very_rot = 1
+
+        if adjust_type == "vl":
+            sel_pt.translate(-very_shift, 0)
+        elif adjust_type == "l":
+            sel_pt.translate(-shift, 0)
+        elif adjust_type == "r":
+            sel_pt.translate(shift, 0)
+        elif adjust_type == "vr":
+            sel_pt.translate(very_shift, 0)
+        elif adjust_type == "vb":
+            sel_pt.translate(0, very_shift)
+        elif adjust_type == "b":
+            sel_pt.translate(0, shift)
+        elif adjust_type == "u":
+            sel_pt.translate(0, -shift)
+        elif adjust_type == "vu":
+            sel_pt.translate(0, -very_shift)
+        elif adjust_type == "va":
+            sel_pt.rotate(-very_rot)
+        elif adjust_type == "a":
+            sel_pt.rotate(-rot)
+        elif adjust_type == "o":
+            sel_pt.rotate(rot)
+        elif adjust_type == "vo":
+            sel_pt.rotate(very_rot)
+
+        all_SP[self.selected_spid_SP.get()] = sel_pt
+
+        self.all_SP.set(all_SP)
+
+        self.compute_visible_spline_points()
+
     def redraw_canvas(self):
         """
         """
         self.update_image_obs()
         self.recompute_fm_lines_view()
         self.compute_visible_spline_points()
-        # TODO recompute mouse coord
 
     def update_mouse_pos_info(self, canvas_x, canvas_y):
         """Compute relevant mouse coord and pack them
@@ -470,7 +518,6 @@ class Model:
         view_op = OrientedPoint(view_x, view_y, 0)
         abs_op = self.rescale_point(view_op, "view2abs")
 
-        # TODO compute and send coord in FM reference
         if self.abs2fm is None:
             fm_x, fm_y = 0, 0
             fm2_x, fm2_y = 0, 0
@@ -499,36 +546,36 @@ class Model:
         logg.trace(f"Start {fmt_cn('build_fm_lines_abs')} type {input_type}")
 
         if input_type == "base_mean":
-            self.vert_point = line_curve_point(
+            vert_pt_view = line_curve_point(
                 self.start_view_x, self.start_view_y, self.move_view_x, self.move_view_y
             )
-            self.base_point = OrientedPoint(
-                self.start_view_x, self.start_view_y, self.vert_point.ori_deg + 90
+            base_pt_view = OrientedPoint(
+                self.start_view_x, self.start_view_y, vert_pt_view.ori_deg + 90
             )
-            self.mean_point = OrientedPoint(
-                self.move_view_x, self.move_view_y, self.vert_point.ori_deg + 90
+            mean_pt_view = OrientedPoint(
+                self.move_view_x, self.move_view_y, vert_pt_view.ori_deg + 90
             )
 
-            logg.trace(f"base_point: {self.base_point} vert_point: {self.vert_point}")
+            logg.trace(f"base_point: {base_pt_view} vert_point: {vert_pt_view}")
 
-            dist_base_mean = dist2D(self.base_point, self.mean_point)
+            dist_base_mean = dist2D(base_pt_view, mean_pt_view)
 
             dist_base_ascent = dist_base_mean * (1 + self.prop_mean_ascent)
-            self.ascent_point = translate_point_dir(
-                self.base_point, self.vert_point.ori_deg, dist_base_ascent
+            ascent_pt_view = translate_point_dir(
+                base_pt_view, vert_pt_view.ori_deg, dist_base_ascent
             )
             dist_desc_base = dist_base_mean * self.prop_desc_base
-            self.descent_point = translate_point_dir(
-                self.base_point, self.vert_point.ori_deg, -dist_desc_base
+            descent_pt_view = translate_point_dir(
+                base_pt_view, vert_pt_view.ori_deg, -dist_desc_base
             )
 
         # these are in VIEWING coord
         fm_lines_view = {
-            "vert_point": self.vert_point,
-            "base_point": self.base_point,
-            "mean_point": self.mean_point,
-            "ascent_point": self.ascent_point,
-            "descent_point": self.descent_point,
+            "vert_point": vert_pt_view,
+            "base_point": base_pt_view,
+            "mean_point": mean_pt_view,
+            "ascent_point": ascent_pt_view,
+            "descent_point": descent_pt_view,
         }
         # rescale them to ABSOLUTE
         fm_lines_abs = self.rescale_fm_lines_to_abs(fm_lines_view)
@@ -629,9 +676,8 @@ class Model:
             return OrientedPoint(view_x, view_y, point.ori_deg)
 
     def compute_affine_fm_abs(self):
-        """TODO: what is compute_affine_fm_abs doing?
+        """Update the affine transform matrix fm <-> abs coord
 
-        Update the affine transform matrix fm <-> abs coord
         Given basis e1, e2 at 0, moved into u, v at p
 
             e2              v
@@ -656,7 +702,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.compute_affine_fm_abs")
         #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('compute_affine_fm_abs', 'a2')}")
+        logg.trace(f"Start {fmt_cn('compute_affine_fm_abs')}")
 
         fm_lines_abs = self.fm_lines_abs.get()
         base_pt_abs = fm_lines_abs["base_point"]
@@ -727,6 +773,7 @@ class Model:
 
         # create the SplinePoint
         new_sp = SplinePoint(abs_op.x, abs_op.y, abs_op.ori_deg, self.next_spid)
+        logg.debug(f"id(new_sp): {id(new_sp)}")
 
         # save the point
         all_SP = self.all_SP.get()

@@ -138,6 +138,35 @@ class View:
         s.map(
             "settings.TButton",
             background=[("pressed", "wheat1"), ("active", "wheat1"),],
+            highlightbackground=[("pressed", "red")],
+            highlightcolor=[("pressed", "red")],
+        )
+        logg.debug(f"s.layout('settings.TButton'): {s.layout('settings.TButton')}")
+        # original layout
+        #  s.layout('settings.TButton', [('Button.border', {'sticky': 'nswe',
+        #  'border': '1', 'children': [('Button.focus', {'sticky': 'nswe',
+        #  'children': [('Button.padding', {'sticky': 'nswe', 'children':
+        #  [('Button.label', {'sticky': 'nswe'})]})]})]})])
+        s.layout(
+            "settings.TButton",
+            [
+                (
+                    "Button.border",
+                    {
+                        "sticky": "nswe",
+                        "border": "1",
+                        "children": [
+                            (
+                                "Button.padding",
+                                {
+                                    "sticky": "nswe",
+                                    "children": [("Button.label", {"sticky": "nswe"})],
+                                },
+                            )
+                        ],
+                    },
+                )
+            ],
         )
 
     def reset_focus(self):
@@ -178,21 +207,22 @@ class FrameInfo(ttk.Frame):
         super().__init__(parent, *args, **kwargs)
 
         # setup grid for this frame
-        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
         # create children frames
         self.font_measurement_frame = ttk.Frame(self, style="group.TFrame")
+        self.spoint_adjust_frame = ttk.Frame(self, style="group.TFrame")
         self.mouse_info_frame = ttk.Frame(self, style="group.TFrame")
 
         # grid the children frames
-        self.font_measurement_frame.grid(
-            row=0, column=0, sticky="new", padx=10, pady=10
-        )
-        self.mouse_info_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
+        self.font_measurement_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
+        self.spoint_adjust_frame.grid(row=1, column=0, sticky="new", padx=10, pady=10)
+        self.mouse_info_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=10)
 
         # build the objects in children frames
         self.build_font_measurement_frame()
+        self.build_spoint_adjust_frame()
         self.build_mouse_info_frame()
 
     def build_font_measurement_frame(self):
@@ -218,6 +248,56 @@ class FrameInfo(ttk.Frame):
         self.fm_title.grid(row=0, column=0, sticky="ew", columnspan=2)
         self.fm_btn_set_base_mean.grid(row=1, column=0, pady=4)
         self.fm_btn_set_base_ascent.grid(row=1, column=1, pady=4)
+
+    def build_spoint_adjust_frame(self):
+        """Build the monster with 12 buttons
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.build_spoint_adjust_frame")
+        #  logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('build_spoint_adjust_frame')}")
+
+        self.sa_title = ttk.Label(
+            self.spoint_adjust_frame, text="Spline adjust", style="title.TLabel"
+        )
+
+        # setup grid for spoint_adjust_frame
+        self.spoint_adjust_frame.grid_columnconfigure(0, weight=1)
+        self.spoint_adjust_frame.grid_columnconfigure(1, weight=1)
+        self.spoint_adjust_frame.grid_columnconfigure(2, weight=1)
+        self.spoint_adjust_frame.grid_columnconfigure(3, weight=1)
+
+        bt_sty = "settings.TButton"
+        self.sa_btn_vl = ttk.Button(self.spoint_adjust_frame, text="VL", style=bt_sty)
+        self.sa_btn_l = ttk.Button(self.spoint_adjust_frame, text="L", style=bt_sty)
+        self.sa_btn_r = ttk.Button(self.spoint_adjust_frame, text="R", style=bt_sty)
+        self.sa_btn_vr = ttk.Button(self.spoint_adjust_frame, text="VR", style=bt_sty)
+
+        self.sa_btn_vb = ttk.Button(self.spoint_adjust_frame, text="VB", style=bt_sty)
+        self.sa_btn_b = ttk.Button(self.spoint_adjust_frame, text="B", style=bt_sty)
+        self.sa_btn_u = ttk.Button(self.spoint_adjust_frame, text="U", style=bt_sty)
+        self.sa_btn_vu = ttk.Button(self.spoint_adjust_frame, text="VU", style=bt_sty)
+
+        self.sa_btn_va = ttk.Button(self.spoint_adjust_frame, text="VA", style=bt_sty)
+        self.sa_btn_a = ttk.Button(self.spoint_adjust_frame, text="A", style=bt_sty)
+        self.sa_btn_o = ttk.Button(self.spoint_adjust_frame, text="O", style=bt_sty)
+        self.sa_btn_vo = ttk.Button(self.spoint_adjust_frame, text="VO", style=bt_sty)
+
+        self.sa_title.grid(row=0, column=0, sticky="ew", columnspan=4)
+
+        self.sa_btn_vl.grid(row=1, column=0, padx=4, pady=4)
+        self.sa_btn_l.grid(row=1, column=1, padx=4, pady=4)
+        self.sa_btn_r.grid(row=1, column=2, padx=4, pady=4)
+        self.sa_btn_vr.grid(row=1, column=3, padx=4, pady=4)
+
+        self.sa_btn_vb.grid(row=2, column=0, padx=4, pady=4)
+        self.sa_btn_b.grid(row=2, column=1, padx=4, pady=4)
+        self.sa_btn_u.grid(row=2, column=2, padx=4, pady=4)
+        self.sa_btn_vu.grid(row=2, column=3, padx=4, pady=4)
+
+        self.sa_btn_va.grid(row=3, column=0, padx=4, pady=4)
+        self.sa_btn_a.grid(row=3, column=1, padx=4, pady=4)
+        self.sa_btn_o.grid(row=3, column=2, padx=4, pady=4)
+        self.sa_btn_vo.grid(row=3, column=3, padx=4, pady=4)
 
     def build_mouse_info_frame(self):
         """Build the elements inside mouse_info_frame and grid them
@@ -600,6 +680,10 @@ class FrameSpline(ttk.Frame):
                 # save the frame
                 self.all_SP_frames[spid] = sp_frame
 
+            # update the text inside with current pos
+            else:
+                self.all_SP_frames[spid].update_label()
+
     def do_update_visible_SP(self, data):
         """MAYBE change background of the visible SP?
 
@@ -660,7 +744,7 @@ class FrameSpline(ttk.Frame):
                 row += 1
 
     def update_selected_spid_SP(self, data):
-        """TODO: what are you changing when updating selected_spid_SP?
+        """Change the state of the point frame with corresponding spid
 
             - selected: the widget is selected
             - active: the mouse is inside
@@ -682,7 +766,7 @@ class FrameSpline(ttk.Frame):
             self.all_SP_frames[data].set_state("selected")
 
     def update_selected_header_SP(self, data):
-        """TODO: what are you changing when updating selected_header_SP?
+        """Change the state of the header frame with given id
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_selected_header_SP")
         logg.info(f"Start {fmt_cn('update_selected_header_SP')} {data}")
@@ -700,7 +784,7 @@ class FrameSpline(ttk.Frame):
 
 class LabelId(ttk.Label):
     def __init__(self, parent, id_, *args, **kwargs):
-        """TODO: what is __init__ doing?
+        """Create a label with an id_ attached
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.__init__")
         #  logg.setLevel("TRACE")

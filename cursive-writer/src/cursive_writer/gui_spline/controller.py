@@ -70,6 +70,43 @@ class Controller:
             command=self.clicked_sh_btn_delete_SP
         )
 
+        self.view.frame_info.sa_btn_vl.config(
+            command=lambda: self.clicked_btn_adjust("vl")
+        )
+        self.view.frame_info.sa_btn_l.config(
+            command=lambda: self.clicked_btn_adjust("l")
+        )
+        self.view.frame_info.sa_btn_r.config(
+            command=lambda: self.clicked_btn_adjust("r")
+        )
+        self.view.frame_info.sa_btn_vr.config(
+            command=lambda: self.clicked_btn_adjust("vr")
+        )
+        self.view.frame_info.sa_btn_vb.config(
+            command=lambda: self.clicked_btn_adjust("vb")
+        )
+        self.view.frame_info.sa_btn_b.config(
+            command=lambda: self.clicked_btn_adjust("b")
+        )
+        self.view.frame_info.sa_btn_u.config(
+            command=lambda: self.clicked_btn_adjust("u")
+        )
+        self.view.frame_info.sa_btn_vu.config(
+            command=lambda: self.clicked_btn_adjust("vu")
+        )
+        self.view.frame_info.sa_btn_va.config(
+            command=lambda: self.clicked_btn_adjust("va")
+        )
+        self.view.frame_info.sa_btn_a.config(
+            command=lambda: self.clicked_btn_adjust("a")
+        )
+        self.view.frame_info.sa_btn_o.config(
+            command=lambda: self.clicked_btn_adjust("o")
+        )
+        self.view.frame_info.sa_btn_vo.config(
+            command=lambda: self.clicked_btn_adjust("vo")
+        )
+
         # initialize the values in the model
         self.model.set_pf_input_image(pf_input_image)
 
@@ -237,6 +274,17 @@ class Controller:
         logg.info(f"\nStart {fmt_cn('clicked_sh_btn_delete_SP')}")
 
         self.model.clicked_sh_btn_delete_SP()
+
+        self.view.reset_focus()
+
+    def clicked_btn_adjust(self, adjust_type):
+        """Callback for buttons to adjust spline points
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_adjust")
+        #  logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('clicked_btn_adjust')} {adjust_type}")
+
+        self.model.clicked_btn_adjust(adjust_type)
 
         self.view.reset_focus()
 
