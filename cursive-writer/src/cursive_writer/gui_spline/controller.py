@@ -345,7 +345,7 @@ class Controller:
     def updated_pf_input_image(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_pf_input_image")
         logg.info(f"New values {fmt_cn('received')} for pf_input_image: {data}")
-        self.view.update_pf_input_image(data)
+        self.view.update_window_title(data)
 
     ### IMAGE CANVAS ###
 
@@ -393,7 +393,7 @@ class Controller:
     def updated_visible_SP(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_visible_SP")
         logg.trace(f"Start {fmt_cn('updated_visible_SP')}")
-        self.view.update_visible_SP(data)
+        self.view.frame_image.update_visible_SP(data)
 
     def updated_path_SP(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_path_SP")
@@ -412,5 +412,5 @@ class Controller:
 
     def updated_visible_segment_SP(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_visible_segment_SP")
-        logg.debug(f"Start {fmt_cn('updated_visible_segment_SP')}")
+        logg.trace(f"Start {fmt_cn('updated_visible_segment_SP')}")
         self.view.frame_image.update_visible_segment_SP(data)

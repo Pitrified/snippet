@@ -1,21 +1,21 @@
 import logging
 import numpy as np
-import copy
 from math import cos
 from math import sin
 
 from cursive_writer.utils.color_utils import fmt_cn
+from cursive_writer.utils.geometric_utils import apply_affine_transform
+from cursive_writer.utils.geometric_utils import compute_affine_transform
 from cursive_writer.utils.geometric_utils import dist2D
 from cursive_writer.utils.geometric_utils import line_curve_point
 from cursive_writer.utils.geometric_utils import translate_point_dir
-from cursive_writer.utils.geometric_utils import apply_affine_transform
+from cursive_writer.utils.image_cropper import ImageCropper
 from cursive_writer.utils.oriented_point import OrientedPoint
 from cursive_writer.utils.spline_point import SplinePoint
-from cursive_writer.utils.utils import iterate_double_list
 from cursive_writer.utils.utils import enumerate_double_list
-from observable import Observable
-from image_cropper import ImageCropper
-from cursive_writer.spliner.spliner import compute_cubic_segment
+from cursive_writer.utils.utils import iterate_double_list
+from cursive_writer.utils.observable import Observable
+from cursive_writer.utils.spline_segment_holder import SplineSegmentHolder
 
 
 class Model:
@@ -52,6 +52,8 @@ class Model:
         # proportion between the line
         self.prop_mean_ascent = 0.7
         self.prop_desc_base = 0.6
+        # we want that to be the normalized height
+        self.normalized_dist_base_mean = 1000
 
         # info on the line from clicked point to current
         self.free_line = Observable()
@@ -345,10 +347,8 @@ class Model:
         logg.info(f"Start {fmt_cn('clicked_sh_btn_new_spline')}")
 
         path = self.path_SP.get()
-
         sel_idxs = self.selected_indexes
         current_glyph = path[sel_idxs[0]]
-
         logg.debug(f"sel_idxs: {sel_idxs}")
         logg.debug(f"path[{sel_idxs[0]}]: {current_glyph}")
 
@@ -356,6 +356,13 @@ class Model:
         if len(current_glyph) == 0:
             logg.info(f"Current glyph is {fmt_cn('empty', 'warn')}")
             return
+
+        # the selected is not the first
+        if sel_idxs[0] > 0:
+            # the previous is emptry
+            if len(path[sel_idxs[0] - 1]) == 0:
+                logg.info(f"Previous glyph is {fmt_cn('empty', 'warn')}")
+                return
 
         split_left = current_glyph[: sel_idxs[1] + 1]
         split_right = current_glyph[sel_idxs[1] + 1 :]
@@ -414,12 +421,6 @@ class Model:
             path[glyph_idx - 1].extend(popped_glyph)
             logg.debug(f"path after extend: {path}")
 
-            # update the path
-            self.path_SP.set(path)
-
-            # update the cursor
-            self.selected_indexes = [new_glyph_idx, new_point_idx]
-
         # delete point
         else:
             # find spid of point to remove
@@ -434,13 +435,11 @@ class Model:
             new_point_idx = point_idx - 1
             logg.debug(f"new_glyph_idx, new_point_idx: {new_glyph_idx} {new_point_idx}")
 
-            # update the path
-            self.path_SP.set(path)
+        # update the path
+        self.path_SP.set(path)
 
-            # update the cursor
-            self.selected_indexes = [new_glyph_idx, new_point_idx]
-
-            # TODO move update path and selected indexes out of the if
+        # update the cursor
+        self.selected_indexes = [new_glyph_idx, new_point_idx]
 
         # update the segment holder
         self.spline_segment_holder.update_data(self.all_SP.get(), path)
@@ -470,6 +469,7 @@ class Model:
 
         if self.selected_indexes[1] == -1:
             logg.warn(f"{fmt_cn('Cannot', 'warn')} move a glyph")
+            return
 
         all_SP = self.all_SP.get()
         sel_pt = all_SP[self.selected_spid_SP.get()]
@@ -603,7 +603,15 @@ class Model:
         # save them
         self.fm_lines_abs.set(fm_lines_abs)
 
-        self.compute_affine_fm_abs()
+        # compute the affine transform fm-abs
+        base_pt_abs = fm_lines_abs["base_point"]
+        mean_pt_abs = fm_lines_abs["mean_point"]
+        # distance from base to mean point in abs units
+        dist_base_mean = dist2D(base_pt_abs, mean_pt_abs)
+        # the length of the fm basis vectors in abs coord
+        basis_length = dist_base_mean / self.normalized_dist_base_mean
+
+        self.fm2abs, self.abs2fm = compute_affine_transform(base_pt_abs, basis_length)
 
     def recompute_fm_lines_view(self):
         """Updats the value in fm_lines_view to match the current abs/mov/zoom
@@ -696,70 +704,6 @@ class Model:
             # create a new point
             return OrientedPoint(view_x, view_y, point.ori_deg)
 
-    def compute_affine_fm_abs(self):
-        """Update the affine transform matrix fm <-> abs coord
-
-        Given basis e1, e2 at 0, moved into u, v at p
-
-            e2              v
-            |       ->     /
-            ._ e1         ._ u
-           0             p
-
-        Write the u,v,p in canonical coord and the homogeneous matrix is
-
-                [u1 v1 p1]
-            F = [u2 v2 p2]
-                [ 0  0  1]
-
-        Move points to and from frame by multiplying by F
-        Point in frame p_F is converted to canonical p_e
-
-            p_e = F p_F
-            p_F = F-1 p_e
-
-        Clear lecture on the topic:
-        http://www.cs.cornell.edu/courses/cs4620/2014fa/lectures/08transforms2d.pdf
-        """
-        logg = logging.getLogger(f"c.{__class__.__name__}.compute_affine_fm_abs")
-        #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('compute_affine_fm_abs')}")
-
-        fm_lines_abs = self.fm_lines_abs.get()
-        base_pt_abs = fm_lines_abs["base_point"]
-        vert_pt_abs = fm_lines_abs["vert_point"]
-        mean_pt_abs = fm_lines_abs["mean_point"]
-
-        logg.trace(f"base_point: {base_pt_abs} vert_point: {vert_pt_abs}")
-
-        if self.fm_lines_abs.get() is None:
-            logg.warn(f"Set font measurement {fmt_cn('before', 'error')} computing")
-
-        # distance from base to mean point in abs units
-        dist_base_mean = dist2D(base_pt_abs, mean_pt_abs)
-
-        # we want that to be the normalized height
-        self.normalized_dist_base_mean = 1000
-
-        # the length of the fm basis vectors in abs coord
-        basis_length = dist_base_mean / self.normalized_dist_base_mean
-
-        # the orientation are aligned with abs, so y is flipped
-        # this is ok, will be fixed in the affine transform
-        base_ori_rad = base_pt_abs.ori_rad
-        vert_ori_rad = vert_pt_abs.ori_rad
-        logg.trace(f"base_ori_rad: {base_ori_rad} vert_ori_rad: {vert_ori_rad} radians")
-
-        # basis vector of the FM frame, in img coord
-        u = [cos(base_ori_rad) * basis_length, sin(base_ori_rad) * basis_length]
-        v = [sin(base_ori_rad) * basis_length, -cos(base_ori_rad) * basis_length]
-        p = base_pt_abs
-
-        self.fm2abs = np.array([[u[0], v[0], p.x], [u[1], v[1], p.y], [0, 0, 1]])
-        logg.trace(f"self.fm2abs: {self.fm2abs}")
-        self.abs2fm = np.linalg.inv(self.fm2abs)
-        logg.trace(f"self.abs2fm: {self.abs2fm}")
-
     ### SPLINE ###
 
     def add_spline_point(self):
@@ -825,7 +769,7 @@ class Model:
         self.compute_visible_spline_points()
 
     def compute_visible_spline_points(self):
-        """
+        """Transform the points in view coord and send the visible one
         """
         logg = logging.getLogger(
             f"c.{__class__.__name__}.compute_visible_spline_points"
@@ -862,32 +806,24 @@ class Model:
     def find_spid_in_path_SP(self, spid):
         """Find the indexes of the given spid in the path
         """
-        # whole letter
-        path = self.path_SP.get()
-        # # get each glyph
-        # for i, glyph in enumerate(path):
-        #     # get each point
-        #     for j, sp in enumerate(glyph):
-        #         if sp == spid:
-        #             return [i, j]
-        for i, j, sp in enumerate_double_list(path):
+        for i, j, sp in enumerate_double_list(self.path_SP.get()):
             if sp == spid:
                 return [i, j]
         return [0, -1]
-        # MAYBE return [len(path) - 1, len(path[-1]) - 1] to point at the last element
 
     def compute_visible_segment_points(self):
-        """TODO: what is compute_visible_segment_points doing?
+        """Transform the segment points in view coord and send the visible one
         """
         logg = logging.getLogger(
             f"c.{__class__.__name__}.compute_visible_segment_points"
         )
         # logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('compute_visible_segment_points')}")
+        logg.trace(f"Start {fmt_cn('compute_visible_segment_points', 'a2')}")
 
         full_path = list(iterate_double_list(self.path_SP.get()))
 
         if len(full_path) == 0 or len(full_path) == 1:
+            self.visible_segment_SP.set([])
             return
 
         # region showed in the view, in abs image coordinate
@@ -1009,109 +945,3 @@ class Model:
 
         # redraw the visible points: now no one will be highlighted
         self.compute_visible_spline_points()
-
-
-class SplineSegmentHolder:
-    def __init__(self):
-        logg = logging.getLogger(f"c.{__class__.__name__}.init")
-        #  logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('init')}")
-
-        # remember the position used to compute the current segmentes
-        # { spid : (x, y, ori_deg) }
-        # MAYBE use copy ?
-        self.cached_pos = {}
-
-        # dict of segments interpolated
-        self.segments = {}
-
-        # how many points per segment
-        self.num_samples = 50
-
-    def update_data(self, new_all_SP, new_path_SP):
-        """TODO: what is update_data doing?
-        """
-        logg = logging.getLogger(f"c.{__class__.__name__}.update_data")
-        # logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('update_data')}")
-
-        logg.trace(f"new_all_SP: {new_all_SP}")
-        logg.trace(f"new_path_SP: {new_path_SP}")
-
-        full_path = list(iterate_double_list(new_path_SP))
-
-        if len(full_path) == 0:
-            logg.warn(f"The path is {fmt_cn('empty', 'alert')}")
-            return
-
-        if len(full_path) == 1:
-            logg.warn(f"The path has {fmt_cn('one', 'alert')} element")
-            spid0 = full_path[0]
-            self.cached_pos[spid0] = copy.copy(new_all_SP[spid0])
-            logg.trace(f"self.cached_pos[spid0]: {self.cached_pos[spid0]}")
-            logg.trace(f"id(self.cached_pos[spid0]): {id(self.cached_pos[spid0])}")
-            logg.trace(f"new_all_SP[spid0]: {new_all_SP[spid0]}")
-            logg.trace(f"id(new_all_SP[spid0]): {id(new_all_SP[spid0])}")
-            return
-
-        spid0 = full_path[0]
-        for spid1 in full_path[1:]:
-            pair = (spid0, spid1)
-            logg.trace(f"Processing pair: {pair}")
-
-            # both points already seen
-            if spid0 in self.cached_pos and spid1 in self.cached_pos:
-
-                # check if their pos is the same
-                if (
-                    self.cached_pos[spid0] == new_all_SP[spid0]
-                    and self.cached_pos[spid1] == new_all_SP[spid1]
-                ):
-
-                    # check if the segment between them is already computed
-                    if pair in self.segments:
-                        # nothing to recompute
-                        logg.trace(f"Already computed pair: {pair}")
-
-                        # get ready for next iteration
-                        spid0 = spid1
-                        continue
-
-            # if any of the conditions fail, save the points and recompute the segment
-            logg.trace(f"Now computing pair: {pair}")
-
-            # only update the cached pos of the left point, the right one has
-            # to still be wrong in the next iteration, when it will be the left
-            # one, and will be corrected
-            self.cached_pos[spid0] = copy.copy(new_all_SP[spid0])
-
-            # use the right point from the new data arriving
-            self.segments[pair] = self.compute_segment_points(
-                self.cached_pos[spid0], new_all_SP[spid1], self.num_samples
-            )
-
-            # get ready for next iteration
-            spid0 = spid1
-
-        # finally update the last right point
-        self.cached_pos[spid1] = copy.copy(new_all_SP[spid1])
-
-        # MAYBE do clean up of unused segments
-
-    def compute_segment_points(self, p0, p1, num_samples):
-        """TODO: what is compute_segment_points doing?
-
-        TODO: do this with multiprocessing
-        MAYBE: resample the segment with different precision for different zoom levels?
-        """
-        logg = logging.getLogger(f"c.{__class__.__name__}.compute_segment_points")
-        # logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('compute_segment_points')}")
-
-        x_segment, y_segment = compute_cubic_segment(p0, p1)
-
-        the_points = list(zip(x_segment, y_segment))
-
-        logg.trace(f"the_points: {the_points}")
-
-        return the_points

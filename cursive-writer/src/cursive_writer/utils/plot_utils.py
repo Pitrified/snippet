@@ -13,6 +13,7 @@ def plot_build(fig, ax):
     #  ax.legend()
     fig.tight_layout()
 
+
 def add_vector(sp, ax, color="b", vec_len=0.3):
     """Add a point with direction to the plot
     """
@@ -36,4 +37,3 @@ def add_vector(sp, ax, color="b", vec_len=0.3):
         fc=color,
         ec=color,
     )
-

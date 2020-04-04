@@ -5,12 +5,14 @@ from tkinter import ttk
 from math import cos
 from math import sin
 
-from cursive_writer.gui_spline.scrollable_frame import ScrollableFrame
 from cursive_writer.gui_spline.spoint_frame import FrameSPoint
 from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.geometric_utils import collide_line_box
 from cursive_writer.utils.geometric_utils import translate_point_dxy
+from cursive_writer.utils.scrollable_frame import ScrollableFrame
+from cursive_writer.utils.ttk_setup_style import setup_style
+from cursive_writer.utils.label_id import LabelId
 
 
 class View:
@@ -43,7 +45,7 @@ class View:
 
         self.setup_layout()
 
-        self.setup_style()
+        setup_style()
 
     ### HELPERS ###
 
@@ -68,107 +70,6 @@ class View:
         self.frame_spline.grid(row=0, column=2, sticky="ns")
         self.frame_spline.grid_propagate(False)
 
-    def setup_style(self):
-        logg = logging.getLogger(f"c.{__class__.__name__}.setup_style")
-        #  logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('init', 'setup_style')}")
-
-        s = ttk.Style()
-
-        the_font = "Helvetica"
-
-        # configure root style
-        s.configure(".", font=(the_font, 12))
-
-        ### FRAMES ###
-
-        s.configure("container.TFrame", background="burlywood1")
-        s.configure("group.TFrame", background="burlywood2")
-
-        # ScrollableFrame
-        s.configure("sf.TFrame", background="burlywood2")
-        s.configure(
-            "sf.Vertical.TScrollbar",
-            background="red",
-            borderwidth=0,
-            troughcolor="blue",
-            highlightthickness=0,
-        )
-        s.map(
-            "sf.Vertical.TScrollbar",
-            background=[("active", "green"), ("pressed", "yellow"),],
-        )
-
-        ### LABELS ###
-
-        s.configure("TLabel", anchor=tk.CENTER)
-        s.configure(
-            "title.TLabel",
-            background="burlywood3",
-            font=(the_font, 14),
-            padding=(0, 6, 0, 6),
-        )
-        s.configure("info.TLabel", background="burlywood2")
-
-        s.configure(
-            "sp_info.TLabel",
-            background="burlywood2",
-            anchor=tk.CENTER,
-            #  font=("Courier", 12),
-            #  font=("Consolas", 10),
-        )
-        s.map(
-            "sp_info.TLabel", background=[("selected", "tan2"), ("active", "wheat1"),],
-        )
-        s.configure(
-            "sp_pos.sp_info.TLabel", font=("Consolas", 10),
-        )
-        s.configure(
-            "sp_header.sp_info.TLabel", font=("Consolas", 12), padding=(0, 3, 0, 3),
-        )
-
-        ### BUTTONS ###
-
-        s.configure(
-            "settings.TButton",
-            background="wheat2",
-            borderwidth=0,
-            highlightthickness=0,
-        )
-        s.map(
-            "settings.TButton",
-            background=[("pressed", "wheat1"), ("active", "wheat1"),],
-            highlightbackground=[("pressed", "red")],
-            highlightcolor=[("pressed", "red")],
-        )
-        logg.debug(f"s.layout('settings.TButton'): {s.layout('settings.TButton')}")
-        # original layout
-        #  s.layout('settings.TButton', [('Button.border', {'sticky': 'nswe',
-        #  'border': '1', 'children': [('Button.focus', {'sticky': 'nswe',
-        #  'children': [('Button.padding', {'sticky': 'nswe', 'children':
-        #  [('Button.label', {'sticky': 'nswe'})]})]})]})])
-        s.layout(
-            "settings.TButton",
-            [
-                (
-                    "Button.border",
-                    {
-                        "sticky": "nswe",
-                        "border": "1",
-                        "children": [
-                            (
-                                "Button.padding",
-                                {
-                                    "sticky": "nswe",
-                                    "children": [("Button.label", {"sticky": "nswe"})],
-                                },
-                            )
-                        ],
-                    },
-                )
-            ],
-        )
-
     def reset_focus(self):
         """
         """
@@ -180,21 +81,10 @@ class View:
 
     ### REACTIONS TO OBSERVABLES ###
 
-    def update_pf_input_image(self, pf_input_image):
-        logg = logging.getLogger(f"c.{__class__.__name__}.update_pf_input_image")
+    def update_window_title(self, pf_input_image):
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_window_title")
         logg.info(f"{fmt_cn('Updating')} pf_input_image '{pf_input_image}'")
         # TODO write this name somewhere LOL
-
-    def update_visible_SP(self, data):
-        """Update the drawn arrows
-
-        MAYBE change background of the visible SP?
-        """
-        logg = logging.getLogger(f"c.{__class__.__name__}.update_visible_SP")
-        #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('update_visible_SP')}")
-
-        self.frame_image.do_update_visible_SP(data)
 
 
 class FrameInfo(ttk.Frame):
@@ -207,22 +97,25 @@ class FrameInfo(ttk.Frame):
         super().__init__(parent, *args, **kwargs)
 
         # setup grid for this frame
-        self.grid_rowconfigure(1, weight=1)
+        self.grid_rowconfigure(2, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
         # create children frames
         self.font_measurement_frame = ttk.Frame(self, style="group.TFrame")
         self.spoint_adjust_frame = ttk.Frame(self, style="group.TFrame")
         self.mouse_info_frame = ttk.Frame(self, style="group.TFrame")
+        self.file_save_frame = ttk.Frame(self, style="group.TFrame")
 
         # grid the children frames
         self.font_measurement_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
-        self.spoint_adjust_frame.grid(row=1, column=0, sticky="new", padx=10, pady=10)
-        self.mouse_info_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=10)
+        self.spoint_adjust_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
+        self.file_save_frame.grid(row=2, column=0, sticky="new", padx=10, pady=10)
+        self.mouse_info_frame.grid(row=3, column=0, sticky="ew", padx=10, pady=10)
 
         # build the objects in children frames
         self.build_font_measurement_frame()
         self.build_spoint_adjust_frame()
+        self.build_file_save_frame()
         self.build_mouse_info_frame()
 
     def build_font_measurement_frame(self):
@@ -298,6 +191,30 @@ class FrameInfo(ttk.Frame):
         self.sa_btn_a.grid(row=3, column=1, padx=4, pady=4)
         self.sa_btn_o.grid(row=3, column=2, padx=4, pady=4)
         self.sa_btn_vo.grid(row=3, column=3, padx=4, pady=4)
+
+    def build_file_save_frame(self):
+        """
+        """
+        self.fs_title = ttk.Label(
+            self.file_save_frame, text="Font Measurement", style="title.TLabel"
+        )
+
+        self.fs_btn_save = ttk.Button(
+            self.file_save_frame, text="Save", style="settings.TButton",
+        )
+
+        self.fs_btn_set_save_path = ttk.Button(
+            self.file_save_frame, text="Set folder", style="settings.TButton",
+        )
+
+        # setup grid for file_save_frame
+        self.file_save_frame.grid_columnconfigure(0, weight=1)
+        self.file_save_frame.grid_columnconfigure(1, weight=1)
+
+        # grid the objects in file_save_frame
+        self.fs_title.grid(row=0, column=0, sticky="ew", columnspan=2)
+        self.fs_btn_save.grid(row=1, column=0, pady=4)
+        self.fs_btn_set_save_path.grid(row=1, column=1, pady=4)
 
     def build_mouse_info_frame(self):
         """Build the elements inside mouse_info_frame and grid them
@@ -484,29 +401,11 @@ class FrameImage(ttk.Frame):
             *circ_bbox, tag="click_left_start_pos", fill="red", width=1
         )
 
-    def update_visible_segment_SP(self, data):
-        """TODO: what are you changing when updating visible_segment_SP?
-        """
-        logg = logging.getLogger(f"c.{__class__.__name__}.update_visible_segment_SP")
-        logg.debug(f"Start {fmt_cn('update_visible_segment_SP')}")
-
-        tag = "segment"
-        self.image_canvas.delete(tag)
-
-        for segment in data:
-            seq = []
-            for point in segment:
-                seq.append(point.x + self.widget_shift_x)
-                seq.append(point.y + self.widget_shift_y)
-            self.image_canvas.create_line(*seq, tags=tag, fill="lime green")
-
-    ### HELPERS ###
-
-    def do_update_visible_SP(self, data):
+    def update_visible_SP(self, data):
         """Update the drawn arrows
         """
-        logg = logging.getLogger(f"c.{__class__.__name__}.do_update_visible_SP")
-        logg.trace(f"Start {fmt_cn('do_update_visible_SP')}")
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_visible_SP")
+        logg.trace(f"Start {fmt_cn('update_visible_SP')}")
 
         self.image_canvas.delete("spline_point")
 
@@ -522,6 +421,24 @@ class FrameImage(ttk.Frame):
                 logg.warn(f"{fmt_cn('Unrecognized', 'alert')} arrow_type: {arrow_type}")
                 color = "cyan"
             self.draw_point(view_op, "spline_point", color)
+
+    def update_visible_segment_SP(self, data):
+        """TODO: what are you changing when updating visible_segment_SP?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_visible_segment_SP")
+        logg.trace(f"Start {fmt_cn('update_visible_segment_SP')}")
+
+        tag = "segment"
+        self.image_canvas.delete(tag)
+
+        for segment in data:
+            seq = []
+            for point in segment:
+                seq.append(point.x + self.widget_shift_x)
+                seq.append(point.y + self.widget_shift_y)
+            self.image_canvas.create_line(*seq, tags=tag, fill="lime green")
+
+    ### HELPERS ###
 
     def draw_point(self, view_op, tag, color="cyan", length=-1):
         """Draw a point on the canvas
@@ -700,14 +617,6 @@ class FrameSpline(ttk.Frame):
             else:
                 self.all_SP_frames[spid].update_label()
 
-    def do_update_visible_SP(self, data):
-        """MAYBE change background of the visible SP?
-
-        This is never called
-        """
-        logg = logging.getLogger(f"c.{__class__.__name__}.do_update_visible_SP")
-        logg.trace(f"Start {fmt_cn('do_update_visible_SP')}")
-
     def update_path_SP(self, data):
         """Grid the frames relative to the path/glyphs/points
 
@@ -794,60 +703,3 @@ class FrameSpline(ttk.Frame):
 
         if not data is None:
             self.all_SP_headers[data].set_state("selected")
-
-    ### HELPERS ###
-
-
-class LabelId(ttk.Label):
-    def __init__(self, parent, id_, *args, **kwargs):
-        """Create a label with an id_ attached
-        """
-        logg = logging.getLogger(f"c.{__class__.__name__}.__init__")
-        #  logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('__init__')}")
-
-        self.id_ = id_
-        super().__init__(parent, *args, **kwargs)
-
-    def register_scroll_func(self, func):
-        logg = logging.getLogger(f"c.{__class__.__name__}.register_scroll_func")
-        #  logg.setLevel("TRACE")
-        logg.trace(f"{fmt_cn('Register')} scroll function")
-
-        self.bind("<4>", func)
-        self.bind("<5>", func)
-        self.bind("<MouseWheel>", func)
-
-    def on_enter(self, event):
-        logg = logging.getLogger(f"c.{__class__.__name__}.on_enter")
-        #  logg.setLevel("TRACE")
-        logg.trace(f"{fmt_cn('Enter')} LabelId {self.id_}")
-        logg.trace(f"Event {event} fired by {event.widget}")
-        id_ = event.widget.id_
-        logg.trace(f"event.widget.id_: {id_}")
-
-        self.event_generate("<<sp_header_enter>>")
-        self.set_state("active")
-
-    def on_leave(self, event):
-        logg = logging.getLogger(f"c.{__class__.__name__}.on_leave")
-        #  logg.setLevel("TRACE")
-        logg.trace(f"{fmt_cn('Leave')} LabelId {self.id_}")
-
-        self.event_generate("<<sp_header_leave>>")
-        self.set_state("!active")
-
-    def on_button1_press(self, event):
-        logg = logging.getLogger(f"c.{__class__.__name__}.on_button1_press")
-        #  logg.setLevel("TRACE")
-        logg.debug(f"Clicked {fmt_cn('Button-1')} on LabelId {self.id_}")
-        self.event_generate("<<sp_header_btn1_press>>")
-
-    def set_state(self, the_state):
-        """Sets the state of the label
-        """
-        logg = logging.getLogger(f"c.{__class__.__name__}.set_state")
-        #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('set_state')} {the_state}")
-
-        self.state([the_state])
