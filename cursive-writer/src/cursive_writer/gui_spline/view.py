@@ -488,7 +488,17 @@ class FrameImage(ttk.Frame):
         """TODO: what are you changing when updating visible_segment_SP?
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_visible_segment_SP")
-        logg.debug(f"Start {fmt_cn('update_visible_segment_SP', 'a2')}")
+        logg.debug(f"Start {fmt_cn('update_visible_segment_SP')}")
+
+        tag = "segment"
+        self.image_canvas.delete(tag)
+
+        for segment in data:
+            seq = []
+            for point in segment:
+                seq.append(point.x + self.widget_shift_x)
+                seq.append(point.y + self.widget_shift_y)
+            self.image_canvas.create_line(*seq, tags=tag, fill="lime green")
 
     ### HELPERS ###
 
@@ -507,7 +517,7 @@ class FrameImage(ttk.Frame):
             elif arrow_type == "active":
                 color = "green"
             elif arrow_type == "standard":
-                color = "cyan"
+                color = "cyan2"
             else:
                 logg.warn(f"{fmt_cn('Unrecognized', 'alert')} arrow_type: {arrow_type}")
                 color = "cyan"

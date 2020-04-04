@@ -412,5 +412,5 @@ class Controller:
 
     def updated_visible_segment_SP(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_visible_segment_SP")
-        logg.debug(f"Start {fmt_cn('updated_visible_segment_SP', 'a2')}")
+        logg.debug(f"Start {fmt_cn('updated_visible_segment_SP')}")
         self.view.frame_image.update_visible_segment_SP(data)

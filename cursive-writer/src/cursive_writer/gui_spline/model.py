@@ -521,6 +521,7 @@ class Model:
         self.update_image_obs()
         self.recompute_fm_lines_view()
         self.compute_visible_spline_points()
+        self.compute_visible_segment_points()
 
     def update_mouse_pos_info(self, canvas_x, canvas_y):
         """Compute relevant mouse coord and pack them
@@ -881,8 +882,8 @@ class Model:
         logg = logging.getLogger(
             f"c.{__class__.__name__}.compute_visible_segment_points"
         )
-        logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('compute_visible_segment_points', 'a2')}")
+        # logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('compute_visible_segment_points')}")
 
         full_path = list(iterate_double_list(self.path_SP.get()))
 
@@ -903,17 +904,12 @@ class Model:
 
             abs_p0 = all_SP[spid0]
             abs_p1 = all_SP[spid1]
-            view_p0 = self.rescale_point(abs_p0, "abs2view")
-            view_p1 = self.rescale_point(abs_p1, "abs2view")
-
-            # check that both ends of the segment are in view
+            # check that at least one of the end of the segment is in view
             if (
-                region[0] < view_p0.x < region[2]
-                and region[1] < view_p0.y < region[3]
-                and region[0] < view_p1.x < region[2]
-                and region[1] < view_p1.y < region[3]
+                region[0] < abs_p0.x < region[2] and region[1] < abs_p0.y < region[3]
+            ) or (
+                region[0] < abs_p1.x < region[2] and region[1] < abs_p1.y < region[3]
             ):
-
                 # extract the points to draw the segment
                 seg_pts = self.spline_segment_holder.segments[pair]
 
@@ -1036,8 +1032,8 @@ class SplineSegmentHolder:
         """TODO: what is update_data doing?
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_data")
-        logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('update_data', 'a2')}")
+        # logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('update_data')}")
 
         logg.trace(f"new_all_SP: {new_all_SP}")
         logg.trace(f"new_path_SP: {new_path_SP}")
@@ -1076,7 +1072,7 @@ class SplineSegmentHolder:
                     if pair in self.segments:
                         # nothing to recompute
                         logg.trace(f"Already computed pair: {pair}")
-                        
+
                         # get ready for next iteration
                         spid0 = spid1
                         continue
@@ -1110,7 +1106,7 @@ class SplineSegmentHolder:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.compute_segment_points")
         # logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('compute_segment_points', 'a2')}")
+        logg.trace(f"Start {fmt_cn('compute_segment_points')}")
 
         x_segment, y_segment = compute_cubic_segment(p0, p1)
 
