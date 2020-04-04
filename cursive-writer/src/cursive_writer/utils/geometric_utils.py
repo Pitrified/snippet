@@ -171,3 +171,47 @@ def apply_affine_transform(F, x, y):
     hom_point = np.array([x, y, 1])
     transform_point = np.dot(F, hom_point)
     return [transform_point[0], transform_point[1]]
+
+
+def poly_model(x, coeff, flip_coeff=False):
+    """Compute y values of a polynomial
+
+    y = coeff[0] + coeff[1] * x + coeff[2] * x^2 ...
+
+    x: x vector
+    coeff: polynomial parameters, low degrees first
+    flip_coeff: flip the order of coeff
+    """
+    if flip_coeff:
+        flipped_coeff = np.flip(coeff)
+    else:
+        flipped_coeff = coeff
+
+    pol_order = len(coeff)
+    x_matrix = np.array([x ** i for i in range(pol_order)]).transpose()
+    y_true = np.matmul(x_matrix, flipped_coeff)
+    return y_true
+
+def compute_rot_matrix(theta_deg):
+    """Compute the 2x2 rotation matrix for angle theta_deg in degrees
+    """
+    logg = logging.getLogger(f"c.{__name__}.compute_rot_matrix")
+    logg.setLevel("INFO")
+
+    theta_deg = radians(theta_deg)
+    ct = cos(theta_deg)
+    st = sin(theta_deg)
+    rot_mat = np.array(((ct, -st), (st, ct)))
+    logg.debug(f"rot_mat = {rot_mat}")
+
+    return rot_mat
+
+
+def rotate_point(point, theta_deg):
+    """Rotate a point (or Nx2 array of points) by theta_deg degree
+
+    MAYBE automagically transpose the point mat if it is 2xN instead of Nx2
+    """
+    rot_mat = compute_rot_matrix(theta_deg)
+    return np.matmul(point, rot_mat)
+
