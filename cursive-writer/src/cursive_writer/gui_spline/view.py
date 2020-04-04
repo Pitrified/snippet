@@ -692,15 +692,15 @@ class FrameSpline(ttk.Frame):
         logg = logging.getLogger(f"c.{__class__.__name__}.do_update_visible_SP")
         logg.trace(f"Start {fmt_cn('do_update_visible_SP')}")
 
-    def update_active_SP(self, data):
+    def update_path_SP(self, data):
         """Grid the frames relative to the path/glyphs/points
 
         Grid
             - Headers
             - FrameSPoint
         """
-        logg = logging.getLogger(f"c.{__class__.__name__}.update_active_SP")
-        logg.info(f"Start {fmt_cn('update_active_SP')} {data}")
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_path_SP")
+        logg.info(f"Start {fmt_cn('update_path_SP')} {data}")
 
         ### create headers
         # how many glyphs there are

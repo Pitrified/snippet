@@ -28,7 +28,7 @@ class Controller:
         self.model.state.add_callback(self.updated_state)
         self.model.all_SP.add_callback(self.updated_all_SP)
         self.model.visible_SP.add_callback(self.updated_visible_SP)
-        self.model.active_SP.add_callback(self.updated_active_SP)
+        self.model.path_SP.add_callback(self.updated_path_SP)
         self.model.selected_spid_SP.add_callback(self.updated_selected_spid_SP)
         self.model.selected_header_SP.add_callback(self.updated_selected_header_SP)
 
@@ -110,7 +110,7 @@ class Controller:
         # initialize the values in the model
         self.model.set_pf_input_image(pf_input_image)
 
-        self.model.active_SP.set([[]])
+        self.model.path_SP.set([[]])
         self.model.selected_header_SP.set(0)
 
     def run(self):
@@ -394,10 +394,10 @@ class Controller:
         logg.trace(f"Start {fmt_cn('updated_visible_SP')}")
         self.view.update_visible_SP(data)
 
-    def updated_active_SP(self, data):
-        logg = logging.getLogger(f"c.{__class__.__name__}.updated_active_SP")
-        logg.info(f"Start {fmt_cn('updated_active_SP')}")
-        self.view.frame_spline.update_active_SP(data)
+    def updated_path_SP(self, data):
+        logg = logging.getLogger(f"c.{__class__.__name__}.updated_path_SP")
+        logg.info(f"Start {fmt_cn('updated_path_SP')}")
+        self.view.frame_spline.update_path_SP(data)
 
     def updated_selected_spid_SP(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_selected_spid_SP")
