@@ -84,6 +84,8 @@ class Model:
         self.hovered_header_SP = -1
 
         self.spline_segment_holder = SplineSegmentHolder()
+        # list of lists with segment points
+        self.visible_segment_SP = Observable()
 
     ### OPERATIONS ON CANVAS ###
 
@@ -364,6 +366,11 @@ class Model:
         logg.debug(f"path: {path}")
         self.path_SP.set(path)
 
+        # update the segment holder
+        self.spline_segment_holder.update_data(self.all_SP.get(), path)
+        # update the visible segments
+        self.compute_visible_segment_points()
+
         # cursor at the end of current_glyph: point to NEXT list
         if len(current_glyph) == sel_idxs[1] + 1:
             logg.debug(f"Pointing at the end of the line")
@@ -433,6 +440,13 @@ class Model:
             # update the cursor
             self.selected_indexes = [new_glyph_idx, new_point_idx]
 
+            # TODO move update path and selected indexes out of the if
+
+        # update the segment holder
+        self.spline_segment_holder.update_data(self.all_SP.get(), path)
+        # update the visible segments
+        self.compute_visible_segment_points()
+
         # update the selected label
         # now pointing to a header
         if new_point_idx == -1:
@@ -495,7 +509,9 @@ class Model:
         self.all_SP.set(all_SP)
 
         # update the segment holder
-        self.spline_segment_holder.update_data(all_SP, path)
+        self.spline_segment_holder.update_data(all_SP, self.path_SP.get())
+        # update the visible segments
+        self.compute_visible_segment_points()
 
         self.compute_visible_spline_points()
 
@@ -883,6 +899,7 @@ class Model:
         spid0 = full_path[0]
         for spid1 in full_path[1:]:
             pair = (spid0, spid1)
+            logg.trace(f"Processing pair: {pair}")
 
             abs_p0 = all_SP[spid0]
             abs_p1 = all_SP[spid1]
@@ -910,6 +927,11 @@ class Model:
                     svp.append(view_op)
 
                 visible_points.append(svp)
+
+            # get ready for next iteration
+            spid0 = spid1
+
+        self.visible_segment_SP.set(visible_points)
 
     def sp_frame_entered(self, spid):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_entered")
@@ -1053,21 +1075,30 @@ class SplineSegmentHolder:
                     # check if the segment between them is already computed
                     if pair in self.segments:
                         # nothing to recompute
+                        logg.trace(f"Already computed pair: {pair}")
+                        
                         # get ready for next iteration
                         spid0 = spid1
                         continue
 
             # if any of the conditions fail, save the points and recompute the segment
+            logg.trace(f"Now computing pair: {pair}")
 
+            # only update the cached pos of the left point, the right one has
+            # to still be wrong in the next iteration, when it will be the left
+            # one, and will be corrected
             self.cached_pos[spid0] = copy.copy(new_all_SP[spid0])
-            self.cached_pos[spid1] = copy.copy(new_all_SP[spid1])
 
+            # use the right point from the new data arriving
             self.segments[pair] = self.compute_segment_points(
-                self.cached_pos[spid0], self.cached_pos[spid1], self.num_samples
+                self.cached_pos[spid0], new_all_SP[spid1], self.num_samples
             )
 
             # get ready for next iteration
             spid0 = spid1
+
+        # finally update the last right point
+        self.cached_pos[spid1] = copy.copy(new_all_SP[spid1])
 
         # MAYBE do clean up of unused segments
 

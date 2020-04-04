@@ -1,5 +1,6 @@
 from math import tan
 from math import radians
+from math import isclose
 
 
 class OrientedPoint:
@@ -63,6 +64,17 @@ class OrientedPoint:
         r_ori = self.ori_deg - other.ori_deg
         result = SPoint(r_x, r_y, r_ori)
         return result
+
+    def __eq__(self, other):
+        """Compare two OrientedPoint
+        """
+        if not isclose(self.x, other.x):
+            return False
+        if not isclose(self.y, other.y):
+            return False
+        if not isclose(self.ori_deg, other.ori_deg):
+            return False
+        return True
 
     def __repr__(self):
         the_repr_str = ""

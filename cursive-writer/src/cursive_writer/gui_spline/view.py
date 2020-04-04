@@ -484,6 +484,12 @@ class FrameImage(ttk.Frame):
             *circ_bbox, tag="click_left_start_pos", fill="red", width=1
         )
 
+    def update_visible_segment_SP(self, data):
+        """TODO: what are you changing when updating visible_segment_SP?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_visible_segment_SP")
+        logg.debug(f"Start {fmt_cn('update_visible_segment_SP', 'a2')}")
+
     ### HELPERS ###
 
     def do_update_visible_SP(self, data):

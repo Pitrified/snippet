@@ -31,6 +31,7 @@ class Controller:
         self.model.path_SP.add_callback(self.updated_path_SP)
         self.model.selected_spid_SP.add_callback(self.updated_selected_spid_SP)
         self.model.selected_header_SP.add_callback(self.updated_selected_header_SP)
+        self.model.visible_segment_SP.add_callback(self.updated_visible_segment_SP)
 
         ### VIEW  ###
         self.view = View(self.root)
@@ -408,3 +409,8 @@ class Controller:
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_selected_header_SP")
         logg.info(f"Start {fmt_cn('updated_selected_header_SP')}")
         self.view.frame_spline.update_selected_header_SP(data)
+
+    def updated_visible_segment_SP(self, data):
+        logg = logging.getLogger(f"c.{__class__.__name__}.updated_visible_segment_SP")
+        logg.debug(f"Start {fmt_cn('updated_visible_segment_SP', 'a2')}")
+        self.view.frame_image.update_visible_segment_SP(data)

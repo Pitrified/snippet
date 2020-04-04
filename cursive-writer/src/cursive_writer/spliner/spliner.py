@@ -17,7 +17,7 @@ def translate_points_to_origin(p0, p1):
         - the direction from p0 to p1 in the original frame
     """
     logg = logging.getLogger(f"c.{__name__}.translate_points_to_origin")
-    logg.setLevel("TRACE")
+    # logg.setLevel("TRACE")
     logg.trace(f"Starting translate_points_to_origin")
 
     # direction from point 0 to 1
@@ -47,7 +47,7 @@ def rototranslate_points(x_sample, y_segment, offset_angle, offset_x, offset_y):
     Returns two arrays with x and y values
     """
     logg = logging.getLogger(f"c.{__name__}.rototranslate_points")
-    logg.setLevel("TRACE")
+    # logg.setLevel("TRACE")
     logg.trace(f"Starting rototranslate_points")
 
     # rotate the points back
@@ -72,7 +72,7 @@ def fit_line(p0, p1):
     y = ax + b
     """
     logg = logging.getLogger(f"c.{__name__}.fit_line")
-    logg.setLevel("TRACE")
+    # logg.setLevel("TRACE")
     logg.trace(f"Starting fit_line")
 
     a = (p1.y - p0.y) / (p1.x - p0.x)
@@ -97,7 +97,7 @@ def fit_cubic(p0, p1):
     Both tangents should be smallish, in the [-1, 1] range
     """
     logg = logging.getLogger(f"c.{__name__}.fit_cubic")
-    logg.setLevel("TRACE")
+    # logg.setLevel("TRACE")
     logg.trace(f"Starting fit_cubic")
 
     x0 = p0.x
@@ -129,7 +129,7 @@ def sample_segment_points(x_start, x_end, coeff):
     """Sample a poly_model in the [x_start, x_end] range on natural numbers
     """
     logg = logging.getLogger(f"c.{__name__}.sample_segment_points")
-    logg.setLevel("TRACE")
+    # logg.setLevel("TRACE")
     logg.trace(f"Starting sample_segment_points")
 
     if x_start > x_end:
@@ -157,7 +157,7 @@ def compute_cubic_segment(p0, p1, ax=None):
     * rotate and translate to original position
     """
     logg = logging.getLogger(f"c.{__name__}.compute_cubic_segment")
-    logg.setLevel("TRACE")
+    # logg.setLevel("TRACE")
     logg.trace(f"Starting compute_cubic_segment")
 
     # translate and rotate the point to the origin
@@ -211,7 +211,7 @@ def build_contour(
 
     """
     logg = logging.getLogger(f"c.{__name__}.build_contour")
-    logg.setLevel("TRACE")
+    # logg.setLevel("TRACE")
     logg.trace(f"Starting build_contour")
 
     # regular case, no overlaps
@@ -350,7 +350,7 @@ def compute_thick_spline(p0, p1, thickness, ax=None):
     * rotate and translate to original position
     """
     logg = logging.getLogger(f"c.{__name__}.compute_spline")
-    logg.setLevel("TRACE")
+    # logg.setLevel("TRACE")
     logg.trace(f"Starting compute_spline")
 
     # translate and rotate the point to the origin
