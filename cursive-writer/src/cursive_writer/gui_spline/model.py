@@ -1,5 +1,6 @@
 import logging
 import numpy as np
+import copy
 from math import cos
 from math import sin
 
@@ -14,6 +15,7 @@ from cursive_writer.utils.utils import iterate_double_list
 from cursive_writer.utils.utils import enumerate_double_list
 from observable import Observable
 from image_cropper import ImageCropper
+from cursive_writer.spliner.spliner import compute_cubic_segment
 
 
 class Model:
@@ -71,7 +73,7 @@ class Model:
         self.path_SP = Observable([[]])
         # id of the selected SP
         self.selected_spid_SP = Observable(None)
-        # indexes of the current selected SP, where to put the next one in the path
+        # indexes of the current selected SP in the path, or [n, -1] for header n
         self.selected_indexes = [0, -1]
         # id of the SP under the mouse
         self.hovered_SP = -1
@@ -80,6 +82,8 @@ class Model:
         self.selected_header_SP = Observable(0)
         # id of the spline header hovered
         self.hovered_header_SP = -1
+
+        self.spline_segment_holder = SplineSegmentHolder()
 
     ### OPERATIONS ON CANVAS ###
 
@@ -490,6 +494,9 @@ class Model:
 
         self.all_SP.set(all_SP)
 
+        # update the segment holder
+        self.spline_segment_holder.update_data(all_SP, path)
+
         self.compute_visible_spline_points()
 
     def redraw_canvas(self):
@@ -783,6 +790,11 @@ class Model:
         self.selected_indexes[1] += 1
         self.path_SP.set(path)
 
+        # update the segment holder
+        self.spline_segment_holder.update_data(all_SP, path)
+        # update the visible segments
+        self.compute_visible_segment_points()
+
         # update the id of the selected SP
         self.selected_spid_SP.set(new_sp.spid)
 
@@ -846,6 +858,58 @@ class Model:
                 return [i, j]
         return [0, -1]
         # MAYBE return [len(path) - 1, len(path[-1]) - 1] to point at the last element
+
+    def compute_visible_segment_points(self):
+        """TODO: what is compute_visible_segment_points doing?
+        """
+        logg = logging.getLogger(
+            f"c.{__class__.__name__}.compute_visible_segment_points"
+        )
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('compute_visible_segment_points', 'a2')}")
+
+        full_path = list(iterate_double_list(self.path_SP.get()))
+
+        if len(full_path) == 0 or len(full_path) == 1:
+            return
+
+        # region showed in the view, in abs image coordinate
+        region = self._image_cropper.region
+        all_SP = self.all_SP.get()
+
+        # list of lists, each containing
+        visible_points = []
+
+        spid0 = full_path[0]
+        for spid1 in full_path[1:]:
+            pair = (spid0, spid1)
+
+            abs_p0 = all_SP[spid0]
+            abs_p1 = all_SP[spid1]
+            view_p0 = self.rescale_point(abs_p0, "abs2view")
+            view_p1 = self.rescale_point(abs_p1, "abs2view")
+
+            # check that both ends of the segment are in view
+            if (
+                region[0] < view_p0.x < region[2]
+                and region[1] < view_p0.y < region[3]
+                and region[0] < view_p1.x < region[2]
+                and region[1] < view_p1.y < region[3]
+            ):
+
+                # extract the points to draw the segment
+                seg_pts = self.spline_segment_holder.segments[pair]
+
+                # points of this segment visible
+                svp = []
+
+                for x, y in seg_pts:
+                    # create a OrientedPoint to rescale to view
+                    abs_op = OrientedPoint(x, y, 0)
+                    view_op = self.rescale_point(abs_op, "abs2view")
+                    svp.append(view_op)
+
+                visible_points.append(svp)
 
     def sp_frame_entered(self, spid):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_entered")
@@ -927,3 +991,100 @@ class Model:
 
         # redraw the visible points: now no one will be highlighted
         self.compute_visible_spline_points()
+
+
+class SplineSegmentHolder:
+    def __init__(self):
+        logg = logging.getLogger(f"c.{__class__.__name__}.init")
+        #  logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('init')}")
+
+        # remember the position used to compute the current segmentes
+        # { spid : (x, y, ori_deg) }
+        # MAYBE use copy ?
+        self.cached_pos = {}
+
+        # dict of segments interpolated
+        self.segments = {}
+
+        # how many points per segment
+        self.num_samples = 50
+
+    def update_data(self, new_all_SP, new_path_SP):
+        """TODO: what is update_data doing?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_data")
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('update_data', 'a2')}")
+
+        logg.trace(f"new_all_SP: {new_all_SP}")
+        logg.trace(f"new_path_SP: {new_path_SP}")
+
+        full_path = list(iterate_double_list(new_path_SP))
+
+        if len(full_path) == 0:
+            logg.warn(f"The path is {fmt_cn('empty', 'alert')}")
+            return
+
+        if len(full_path) == 1:
+            logg.warn(f"The path has {fmt_cn('one', 'alert')} element")
+            spid0 = full_path[0]
+            self.cached_pos[spid0] = copy.copy(new_all_SP[spid0])
+            logg.trace(f"self.cached_pos[spid0]: {self.cached_pos[spid0]}")
+            logg.trace(f"id(self.cached_pos[spid0]): {id(self.cached_pos[spid0])}")
+            logg.trace(f"new_all_SP[spid0]: {new_all_SP[spid0]}")
+            logg.trace(f"id(new_all_SP[spid0]): {id(new_all_SP[spid0])}")
+            return
+
+        spid0 = full_path[0]
+        for spid1 in full_path[1:]:
+            pair = (spid0, spid1)
+            logg.trace(f"Processing pair: {pair}")
+
+            # both points already seen
+            if spid0 in self.cached_pos and spid1 in self.cached_pos:
+
+                # check if their pos is the same
+                if (
+                    self.cached_pos[spid0] == new_all_SP[spid0]
+                    and self.cached_pos[spid1] == new_all_SP[spid1]
+                ):
+
+                    # check if the segment between them is already computed
+                    if pair in self.segments:
+                        # nothing to recompute
+                        # get ready for next iteration
+                        spid0 = spid1
+                        continue
+
+            # if any of the conditions fail, save the points and recompute the segment
+
+            self.cached_pos[spid0] = copy.copy(new_all_SP[spid0])
+            self.cached_pos[spid1] = copy.copy(new_all_SP[spid1])
+
+            self.segments[pair] = self.compute_segment_points(
+                self.cached_pos[spid0], self.cached_pos[spid1], self.num_samples
+            )
+
+            # get ready for next iteration
+            spid0 = spid1
+
+        # MAYBE do clean up of unused segments
+
+    def compute_segment_points(self, p0, p1, num_samples):
+        """TODO: what is compute_segment_points doing?
+
+        TODO: do this with multiprocessing
+        MAYBE: resample the segment with different precision for different zoom levels?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.compute_segment_points")
+        # logg.setLevel("TRACE")
+        logg.trace(f"Start {fmt_cn('compute_segment_points', 'a2')}")
+
+        x_segment, y_segment = compute_cubic_segment(p0, p1)
+
+        the_points = list(zip(x_segment, y_segment))
+
+        logg.trace(f"the_points: {the_points}")
+
+        return the_points
