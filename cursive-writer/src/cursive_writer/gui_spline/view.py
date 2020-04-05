@@ -216,7 +216,7 @@ class FrameInfo(ttk.Frame):
         )
 
         self.fs_lab_root = ttk.Label(
-            self.file_save_frame, text="Path root:", style="info.TLabel"
+            self.file_save_frame, text="Glyph name root:", style="info.TLabel"
         )
         self.fs_ent_root = ttk.Entry(
             self.file_save_frame,

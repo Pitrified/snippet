@@ -253,8 +253,8 @@ class Controller:
     def clicked_btn_set_fm(self, fm_set_type):
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_fm")
         #  logg.setLevel("TRACE")
-        logg.debug(f"fm_set_type: {fm_set_type}")
         logg.info(f"\nStart {fmt_cn('clicked_btn_set_fm')}")
+        logg.debug(f"fm_set_type: {fm_set_type}")
         self.model.clicked_btn_set_fm(fm_set_type)
         self.view.reset_focus()
 
@@ -274,16 +274,16 @@ class Controller:
     def clicked_fs_btn_save_spline(self):
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fs_btn_save_spline")
         logg.info(f"\nStart {fmt_cn('clicked_fs_btn_save_spline')}")
-        glyph_root = self.view.frame_info.fs_ent_root.get()
-        logg.debug(f"glyph_root: {glyph_root}")
-        self.model.clicked_fs_btn_save_spline()
+        glyph_root_name = self.view.frame_info.fs_ent_root.get()
+        logg.debug(f"glyph_root_name: {glyph_root_name}")
+        self.model.clicked_fs_btn_save_spline(glyph_root_name)
         self.view.reset_focus()
 
     def clicked_fs_btn_set_save_path(self):
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fs_btn_set_save_path")
         logg.info(f"\nStart {fmt_cn('clicked_fs_btn_set_save_path')}")
-        self.model.clicked_fs_btn_set_save_path()
         self.view.reset_focus()
+        self.model.clicked_fs_btn_set_save_path()
 
     def clicked_btn_adjust(self, adjust_type):
         """Callback for buttons to adjust spline points

@@ -2,6 +2,9 @@ import logging
 import numpy as np
 from math import cos
 from math import sin
+from pathlib import Path
+
+from tkinter import filedialog
 
 from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.geometric_utils import apply_affine_transform
@@ -14,6 +17,7 @@ from cursive_writer.utils.oriented_point import OrientedPoint
 from cursive_writer.utils.spline_point import SplinePoint
 from cursive_writer.utils.utils import enumerate_double_list
 from cursive_writer.utils.utils import iterate_double_list
+from cursive_writer.utils.utils import find_free_index
 from cursive_writer.utils.observable import Observable
 from cursive_writer.utils.spline_segment_holder import SplineSegmentHolder
 
@@ -26,6 +30,9 @@ class Model:
 
         # full path of the current image
         self.pf_input_image = Observable()
+        # Path to the folder to save the spline in
+        self.path_out_folder = None
+
         # ImageTk that holds the cropped picture
         self.crop_input_image = Observable()
 
@@ -519,19 +526,92 @@ class Model:
 
         self.compute_visible_spline_points()
 
-    def clicked_fs_btn_save_spline(self):
+    def clicked_fs_btn_save_spline(self, glyph_root_name):
         """Save the spline points to file
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fs_btn_save_spline")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('clicked_fs_btn_save_spline', 'a2')}")
 
+        if self.path_out_folder is None:
+            logg.warn(f"{fmt_cn('Set', 'alert')} the output folder before saving")
+            return
+
+        if glyph_root_name == "":
+            logg.warn(f"{fmt_cn('Set', 'alert')} the glyph root name before saving")
+            return
+
+        fm_lines_abs = self.fm_lines_abs.get()
+        if fm_lines_abs is None:
+            logg.warn(f"{fmt_cn('Set', 'alert')} the font measurements before saving")
+            return
+
+        if not self.path_out_folder.exists():
+            self.path_out_folder.mkdir(parents=True)
+
+        letter_name_fmt = f"{glyph_root_name}_{{:03d}}.txt"
+        glyph_name_fmt = f"{glyph_root_name}_{{:03d}}_{{:03d}}.txt"
+        logg.debug(f"letter_name_fmt {letter_name_fmt} glyph_name_fmt {glyph_name_fmt}")
+
+        # get the first free file index glyph_root_name_NNN.txt
+        file_index = find_free_index(self.path_out_folder, letter_name_fmt)
+
+        # full path to the letter recap file
+        letter_name = self.path_out_folder / letter_name_fmt.format(file_index)
+        logg.debug(f"letter_name: {letter_name}")
+
+        path = self.path_SP.get()
+        all_SP = self.all_SP.get()
+        base_point_abs = fm_lines_abs["base_point"]
+        logg.debug(f"base_point_abs: {base_point_abs}")
+
+        # save which glyph make this letter
+        all_glyphs = ""
+
+        # go through all the glyphs
+        for glyph_index in range(len(path)):
+            # build the name of the glyph file
+            glyph_name = glyph_name_fmt.format(file_index, glyph_index)
+            # build the glyph full file name
+            full_glyph_name = self.path_out_folder / glyph_name
+
+            # build the line for the main file
+            path_line = f"{glyph_name}\t0\t0\n"
+            all_glyphs += path_line
+
+            # build the glyph point recap
+            str_glyph = ""
+            for spid in path[glyph_index]:
+                abs_pt = all_SP[spid]
+                # find the coord of the point in fm frame
+                fm_x, fm_y = apply_affine_transform(self.abs2fm, abs_pt.x, abs_pt.y)
+                fm_ori_deg = -abs_pt.ori_deg + base_point_abs.ori_deg
+                # create the OrientedPoint to normalize the angle
+                fm_pt = OrientedPoint(fm_x, fm_y, fm_ori_deg)
+                gly_line = f"{fm_pt.x}\t{fm_pt.y}\t{fm_pt.ori_deg}\n"
+                str_glyph += gly_line
+            full_glyph_name.write_text(str_glyph)
+
+        letter_name.write_text(all_glyphs)
+
     def clicked_fs_btn_set_save_path(self):
-        """Save the spline points to file
+        """Set the output folder to save the spline into
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fs_btn_set_save_path")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('clicked_fs_btn_set_save_path', 'a2')}")
+
+        str_out_folder = filedialog.askdirectory()
+
+        # filedialog sometimes returns an empty tuple, sometimes an empty string
+        if len(str_out_folder) == 0:
+            logg.info(f"Selection of output_folder cancelled")
+            return
+
+        path_out_folder = Path(str_out_folder)
+        logg.debug(f"path_out_folder: {path_out_folder}")
+
+        self.path_out_folder = path_out_folder
 
     def redraw_canvas(self):
         """
