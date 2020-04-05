@@ -58,12 +58,24 @@ class Controller:
         self.view.root.bind("<<sp_header_btn1_press>>", self.sp_header_btn1_pressed)
 
         ### button clicks
+        # info frame
         self.view.frame_info.fm_btn_set_base_mean.config(
-            command=self.clicked_btn_set_base_mean
+            command=lambda: self.clicked_btn_set_fm("bm")
         )
         self.view.frame_info.fm_btn_set_base_ascent.config(
-            command=self.clicked_btn_set_base_ascent
+            command=lambda: self.clicked_btn_set_fm("ba")
         )
+        self.view.frame_info.fm_btn_set_mean_descent.config(
+            command=lambda: self.clicked_btn_set_fm("md")
+        )
+
+        self.view.frame_info.fs_btn_save_spline.config(
+            command=self.clicked_fs_btn_save_spline
+        )
+        self.view.frame_info.fs_btn_set_save_path.config(
+            command=self.clicked_fs_btn_set_save_path
+        )
+        # spline frame
         self.view.frame_spline.sh_btn_new_spline.config(
             command=self.clicked_sh_btn_new_spline
         )
@@ -238,44 +250,39 @@ class Controller:
 
         self.model.move_canvas_mouse(move_type, event.x, event.y)
 
-    def clicked_btn_set_base_mean(self):
-        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_base_mean")
+    def clicked_btn_set_fm(self, fm_set_type):
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_fm")
         #  logg.setLevel("TRACE")
-        #  logg.setLevel("INFO")
-        logg.info(f"\nStart {fmt_cn('clicked_btn_set_base_mean')}")
-
-        self.model.clicked_btn_set_base_mean()
-
-        self.view.reset_focus()
-
-    def clicked_btn_set_base_ascent(self):
-        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_base_ascent")
-        #  logg.setLevel("TRACE")
-        #  logg.setLevel("INFO")
-        logg.debug(f"\nStart {fmt_cn('clicked_btn_set_base_ascent')}")
-
-        self.model.clicked_btn_set_base_ascent()
-
+        logg.debug(f"fm_set_type: {fm_set_type}")
+        logg.info(f"\nStart {fmt_cn('clicked_btn_set_fm')}")
+        self.model.clicked_btn_set_fm(fm_set_type)
         self.view.reset_focus()
 
     def clicked_sh_btn_new_spline(self):
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_sh_btn_new_spline")
         #  logg.setLevel("TRACE")
-        #  logg.setLevel("INFO")
         logg.info(f"\nStart {fmt_cn('clicked_sh_btn_new_spline')}")
-
         self.model.clicked_sh_btn_new_spline()
-
         self.view.reset_focus()
 
     def clicked_sh_btn_delete_SP(self):
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_sh_btn_delete_SP")
-        #  logg.setLevel("TRACE")
-        #  logg.setLevel("INFO")
         logg.info(f"\nStart {fmt_cn('clicked_sh_btn_delete_SP')}")
-
         self.model.clicked_sh_btn_delete_SP()
+        self.view.reset_focus()
 
+    def clicked_fs_btn_save_spline(self):
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fs_btn_save_spline")
+        logg.info(f"\nStart {fmt_cn('clicked_fs_btn_save_spline')}")
+        glyph_root = self.view.frame_info.fs_ent_root.get()
+        logg.debug(f"glyph_root: {glyph_root}")
+        self.model.clicked_fs_btn_save_spline()
+        self.view.reset_focus()
+
+    def clicked_fs_btn_set_save_path(self):
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fs_btn_set_save_path")
+        logg.info(f"\nStart {fmt_cn('clicked_fs_btn_set_save_path')}")
+        self.model.clicked_fs_btn_set_save_path()
         self.view.reset_focus()
 
     def clicked_btn_adjust(self, adjust_type):
@@ -284,9 +291,7 @@ class Controller:
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_adjust")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('clicked_btn_adjust')} {adjust_type}")
-
         self.model.clicked_btn_adjust(adjust_type)
-
         self.view.reset_focus()
 
     def sp_frame_entered(self, event):
@@ -345,7 +350,8 @@ class Controller:
     def updated_pf_input_image(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_pf_input_image")
         logg.info(f"New values {fmt_cn('received')} for pf_input_image: {data}")
-        self.view.update_window_title(data)
+        title = f"Spline builder GUI - {data}"
+        self.view.update_window_title(title)
 
     ### IMAGE CANVAS ###
 

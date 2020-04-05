@@ -27,7 +27,7 @@ class SplineSegmentHolder:
         """TODO: what is update_data doing?
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_data")
-        logg.setLevel("TRACE")
+        # logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('update_data')}")
 
         logg.trace(f"new_all_SP: {new_all_SP}")

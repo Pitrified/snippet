@@ -63,6 +63,16 @@ def setup_style():
         "sp_header.sp_info.TLabel", font=("Consolas", 12), padding=(0, 3, 0, 3),
     )
 
+    ### ENTRY ###
+
+    s.configure(
+        "root.TEntry",
+        background="wheat2",
+        borderwidth=0,
+        highlightthickness=0,
+        fieldbackground="wheat1",
+    )
+
     ### BUTTONS ###
 
     s.configure(

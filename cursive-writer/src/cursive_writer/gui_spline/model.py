@@ -311,22 +311,26 @@ class Model:
         }
         self.crop_input_image.set(data)
 
-    def clicked_btn_set_base_mean(self):
-        """Clicked the button of base mean
+    def clicked_btn_set_fm(self, fm_set_type):
+        """Clicked one of the button of font measurement set
         """
-        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_base_mean")
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_fm")
         #  logg.setLevel("INFO")
-        logg.info(f"Start {fmt_cn('click_btn_set_base_mean')}")
+        logg.info(f"Start {fmt_cn('click_btn_set_fm')} - {fm_set_type}")
 
         current_state = self.state.get()
 
-        # if it was already in SBM, go back to free
-        if current_state == "setting_base_mean":
-            self.state.set("free")
+        if fm_set_type == "bm":
+            # if it was already in SBM, go back to free
+            if current_state == "setting_base_mean":
+                self.state.set("free")
 
-        # else go to state SBM
+            # else go to state SBM
+            else:
+                self.state.set("setting_base_mean")
+
         else:
-            self.state.set("setting_base_mean")
+            logg.warn(f"{fmt_cn('Unrecognized', 'alert')} fm_set_type {fm_set_type}")
 
     def clicked_btn_set_base_ascent(self):
         """TODO: change state to setting_base_ascent
@@ -514,6 +518,20 @@ class Model:
         self.compute_visible_segment_points()
 
         self.compute_visible_spline_points()
+
+    def clicked_fs_btn_save_spline(self):
+        """Save the spline points to file
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fs_btn_save_spline")
+        #  logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('clicked_fs_btn_save_spline', 'a2')}")
+
+    def clicked_fs_btn_set_save_path(self):
+        """Save the spline points to file
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fs_btn_set_save_path")
+        #  logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('clicked_fs_btn_set_save_path', 'a2')}")
 
     def redraw_canvas(self):
         """

@@ -16,14 +16,16 @@ from cursive_writer.utils.label_id import LabelId
 
 
 class View:
-    def __init__(self, root):
+    def __init__(self, root, sidebar_width=250, width=900, height=600):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('init')}")
 
         self.root = root
 
-        self.sidebar_width = 250
+        self.sidebar_width = sidebar_width
+        self.width = width
+        self.height = height
 
         self.frame_info = FrameInfo(
             self.root,
@@ -81,10 +83,10 @@ class View:
 
     ### REACTIONS TO OBSERVABLES ###
 
-    def update_window_title(self, pf_input_image):
+    def update_window_title(self, title):
         logg = logging.getLogger(f"c.{__class__.__name__}.update_window_title")
-        logg.info(f"{fmt_cn('Updating')} pf_input_image '{pf_input_image}'")
-        # TODO write this name somewhere LOL
+        logg.info(f"{fmt_cn('Updating')} title '{title}'")
+        self.root.title(title)
 
 
 class FrameInfo(ttk.Frame):
@@ -122,25 +124,31 @@ class FrameInfo(ttk.Frame):
         """Build the elements inside font_measurement_frame and grid them
         """
         self.fm_title = ttk.Label(
-            self.font_measurement_frame, text="Font Measurement", style="title.TLabel"
+            self.font_measurement_frame, text="Font measurement", style="title.TLabel"
         )
 
         self.fm_btn_set_base_mean = ttk.Button(
-            self.font_measurement_frame, text="Set BM", style="settings.TButton",
+            self.font_measurement_frame, text="B - M", style="settings.TButton",
         )
 
         self.fm_btn_set_base_ascent = ttk.Button(
-            self.font_measurement_frame, text="Set BA", style="settings.TButton",
+            self.font_measurement_frame, text="B - A", style="settings.TButton",
+        )
+
+        self.fm_btn_set_mean_descent = ttk.Button(
+            self.font_measurement_frame, text="M - D", style="settings.TButton",
         )
 
         # setup grid for font_measurement_frame
         self.font_measurement_frame.grid_columnconfigure(0, weight=1)
         self.font_measurement_frame.grid_columnconfigure(1, weight=1)
+        self.font_measurement_frame.grid_columnconfigure(2, weight=1)
 
         # grid the objects in font_measurement_frame
-        self.fm_title.grid(row=0, column=0, sticky="ew", columnspan=2)
+        self.fm_title.grid(row=0, column=0, sticky="ew", columnspan=3)
         self.fm_btn_set_base_mean.grid(row=1, column=0, pady=4)
         self.fm_btn_set_base_ascent.grid(row=1, column=1, pady=4)
+        self.fm_btn_set_mean_descent.grid(row=1, column=2, pady=4)
 
     def build_spoint_adjust_frame(self):
         """Build the monster with 12 buttons
@@ -196,10 +204,10 @@ class FrameInfo(ttk.Frame):
         """
         """
         self.fs_title = ttk.Label(
-            self.file_save_frame, text="Font Measurement", style="title.TLabel"
+            self.file_save_frame, text="Output path", style="title.TLabel"
         )
 
-        self.fs_btn_save = ttk.Button(
+        self.fs_btn_save_spline = ttk.Button(
             self.file_save_frame, text="Save", style="settings.TButton",
         )
 
@@ -207,14 +215,27 @@ class FrameInfo(ttk.Frame):
             self.file_save_frame, text="Set folder", style="settings.TButton",
         )
 
+        self.fs_lab_root = ttk.Label(
+            self.file_save_frame, text="Path root:", style="info.TLabel"
+        )
+        self.fs_ent_root = ttk.Entry(
+            self.file_save_frame,
+            text="Path root:",
+            style="root.TEntry",
+            exportselection=0,
+            width=13,
+        )
+
         # setup grid for file_save_frame
-        self.file_save_frame.grid_columnconfigure(0, weight=1)
-        self.file_save_frame.grid_columnconfigure(1, weight=1)
+        self.file_save_frame.grid_columnconfigure(0, weight=1, uniform="half")
+        self.file_save_frame.grid_columnconfigure(1, weight=1, uniform="half")
 
         # grid the objects in file_save_frame
         self.fs_title.grid(row=0, column=0, sticky="ew", columnspan=2)
-        self.fs_btn_save.grid(row=1, column=0, pady=4)
-        self.fs_btn_set_save_path.grid(row=1, column=1, pady=4)
+        self.fs_lab_root.grid(row=1, column=0, pady=4)
+        self.fs_ent_root.grid(row=1, column=1, pady=4)
+        self.fs_btn_set_save_path.grid(row=2, column=0, pady=4)
+        self.fs_btn_save_spline.grid(row=2, column=1, pady=4)
 
     def build_mouse_info_frame(self):
         """Build the elements inside mouse_info_frame and grid them
@@ -436,7 +457,10 @@ class FrameImage(ttk.Frame):
             for point in segment:
                 seq.append(point.x + self.widget_shift_x)
                 seq.append(point.y + self.widget_shift_y)
-            self.image_canvas.create_line(*seq, tags=tag, fill="lime green")
+
+            # need at least two points to plot a line
+            if len(seq) >= 4:
+                self.image_canvas.create_line(*seq, tags=tag, fill="lime green")
 
     ### HELPERS ###
 
