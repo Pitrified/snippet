@@ -1,13 +1,11 @@
 import argparse
 import logging
-
-import numpy as np
-import matplotlib.pyplot as plt
-
 from random import seed as rseed
 from timeit import default_timer as timer
 
-import utils
+import numpy as np
+
+from sample.another_lib.another_functions import ListTracker
 
 
 def parse_arguments():
@@ -77,7 +75,7 @@ def setup_env():
 
     # build command string to repeat this run
     # FIXME if an option is a flag this does not work, sorry
-    recap = f"python3 prova_solver.py"
+    recap = f"python3 main_sample.py"
     for a, v in args._get_kwargs():
         if a == "rand_seed":
             recap += f" --rand_seed {myseed}"
@@ -90,73 +88,19 @@ def setup_env():
     return args
 
 
-def cubic_curve(x0, y0, y0p, x1, y1, y1p):
-    """Find the coefficient for a cubic curve passing through two points
-
-    Tangents are the slope of the curve on the point
-    p0 = (x0, y0) with tangent y0p
-    p1 = (x1, y1) with tangent y1p
-
-    y = a*x^3 + b*x^2 + c*x + d
-    y' = 3*a*x^2 + 2*b*x + c
-    """
-    logg = logging.getLogger(f"c.{__name__}.cubic_curve")
-    logg.debug(f"Starting cubic_curve")
-    #  logg.setLevel("INFO")
-
-    A = np.array(
-        [
-            [x0 ** 3, x0 ** 2, x0, 1],
-            [3 * x0 ** 2, 2 * x0 ** 1, 1, 0],
-            [x1 ** 3, x1 ** 2, x1, 1],
-            [3 * x1 ** 2, 2 * x1 ** 1, 1, 0],
-        ]
-    )
-    b = np.array([y0, y0p, y1, y1p])
-    # x are the coefficients of the curve
-    x = np.linalg.solve(A, b)
-
-    logg.debug(f"x: {x}")
-    logg.debug(f"y = {x[0]:.4f}*x^3 + {x[1]:.4f}*x^2 + {x[2]:.4f}*x + {x[3]:.4f}")
-
-    return x
-
-
-def run_prova_solver(args):
+def run_main_sample(args):
     """
     """
-    logg = logging.getLogger(f"c.{__name__}.run_prova_solver")
-    logg.debug(f"Starting run_prova_solver")
+    logg = logging.getLogger(f"c.{__name__}.run_main_sample")
+    logg.debug(f"Starting run_main_sample")
 
-    # create the plot
-    fig, ax = plt.subplots()
-    # sample per segment
-    num_samples = 100
-
-    # first segment
-    x0, y0, y0p = 1, 1, 0
-    x1, y1, y1p = 3, 2, 1
-    coeff = cubic_curve(x0, y0, y0p, x1, y1, y1p)
-
-    x_sample = np.linspace(x0, x1, num_samples)
-    y_segment = utils.poly_model(x_sample, np.flip(coeff))
-    utils.add_points(x_sample, y_segment, ax)
-
-    # second segment
-    x0, y0, y0p = 3, 2, 1
-    #  x1, y1, y1p = 4, 4, 2
-    x1, y1, y1p = 3.5, 3.5, 6
-    coeff = cubic_curve(x0, y0, y0p, x1, y1, y1p)
-
-    x_sample = np.linspace(x0, x1, num_samples)
-    y_segment = utils.poly_model(x_sample, np.flip(coeff))
-    utils.add_points(x_sample, y_segment, ax, color="r")
-
-    # plot everything
-    utils.plot_build(fig, ax)
-    plt.show()
+    list_tracker = ListTracker()
+    ll = [[0, 1, 2], [3, 4, 5]]
+    for l in ll:
+        list_tracker.new_list(l)
+    logg.debug(f"total sum is: {list_tracker.total}")
 
 
 if __name__ == "__main__":
     args = setup_env()
-    run_prova_solver(args)
+    run_main_sample(args)

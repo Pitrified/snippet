@@ -51,3 +51,71 @@ class Controller:
     def MoneyChanged(self, money):
         self.view1.SetMoney(money)
 ```
+
+### Flow
+
+The user interacts with the view.
+
+```python
+# view.py
+# input
+self.btn_compute = tk.Button(self.root)
+# output
+self.result_var = tk.StringVar()
+self.result_label = tk.Label(textvariable=self.result_var)
+```
+
+The controller binds the reaction to that button, and sends the info to the model.
+
+```python
+# controller.py
+def __init__(self):
+    self.view.btn_compute.config(command=self.clicked_compute)
+def clicked_compute(self):
+    self.model.clicked_compute()
+```
+
+Note that the model does not know about the view, so the data sent must not contain references to that:
+
+```python
+# controller.py
+def __init__(self):
+    self.view.root.bind("<Button-1>", self.clicked_mouse)
+def clicked_mouse(self, event):
+    # parse the event, extract relevant info
+    mouse_x = event.x
+    mouse_y = event.y
+    # the model does not know about tkinter events
+    self.model.clicked_mouse(mouse_x, mouse_y)
+```
+
+The model reacts accordingly, does its computations and sets the new value in the Observable.
+
+```python
+# model.py
+def clicked_compute(self):
+    # do useful things
+    self.result.set(result)
+```
+
+The controller has registered a callback for that Observable, and when a new value is `set` the callback is called. In the callback the view is notified of the change.
+
+```python
+# controller.py
+def __init__(self):
+    self.model.result.add_callback(self.updated_result)
+def updated_result(self, data):
+    # data contains the result
+    self.view.update_result(data)
+```
+
+And finally the view updates to show the new result
+
+```python
+# view.py
+def update_result(self, data):
+    # extract info from data
+    result = data
+    # update the view
+    self.result_var.set(result)
+```
