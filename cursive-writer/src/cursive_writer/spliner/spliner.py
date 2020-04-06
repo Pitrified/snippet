@@ -457,3 +457,30 @@ def compute_thick_spline(p0, p1, thickness, ax=None):
         ax.plot(rototran_x, rototran_y, color="b", marker=".", ls="")
 
     return rototran_x, rototran_y
+
+
+def compute_long_spline(spline_sequence, thickness=20):
+    """Compute thick spline points for a spline spline_sequence
+
+    spline_sequence = [[OP1, OP2, ...], [OP6, OP7, ...], ...]
+    returns a list of list of 2-tuples
+    spline_samples = [[(x12, y12), (x23, y23), ...], ...]
+    """
+    logg = logging.getLogger(f"c.{__name__}.compute_long_spline")
+    logg.debug(f"Start compute_long_spline")
+
+    spline_samples = []
+
+    for glyph in spline_sequence:
+        glyph_sample = []
+        for i in range(len(glyph) - 1):
+            p0 = glyph[i]
+            p1 = glyph[i + 1]
+
+            segment_x, segment_y = compute_thick_spline(p0, p1, thickness)
+
+            glyph_sample.append((segment_x, segment_y))
+
+        spline_samples.append(glyph_sample)
+
+    return spline_samples

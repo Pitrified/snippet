@@ -877,6 +877,7 @@ def example_load_letter():
 
     scale = 10
     spline_sequence = utils.load_points(letter_file_path, scale)
+    print(spline_sequence)
 
     xlim = 0 * scale, 124 * scale
     ylim = -250 * scale, 0 * scale

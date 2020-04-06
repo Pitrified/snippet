@@ -11,6 +11,7 @@ from math import sin
 from cursive_writer.spliner.spliner import fit_cubic
 from cursive_writer.spliner.spliner import compute_cubic_segment
 from cursive_writer.spliner.spliner import compute_thick_spline
+from cursive_writer.spliner.spliner import compute_long_spline
 from cursive_writer.utils.oriented_point import OrientedPoint
 from cursive_writer.utils.geometric_utils import poly_model
 from cursive_writer.utils import plot_utils
@@ -297,15 +298,175 @@ def exs_thick_spline():
     ex_thick_spline(p0, p1, thickness, plot_scale)
 
 
+def ex_long_spline(spline_sequence, thickness):
+    """
+    """
+    fig, ax = plt.subplots()
+
+    spline_samples = compute_long_spline(spline_sequence, thickness)
+
+    for glyph in spline_samples:
+        for segment in glyph:
+            ax.plot(*segment, color="k", marker=".", ls="")
+
+    # plot everything
+    plot_utils.plot_build(fig, ax)
+
+
+def exs_long_spline():
+    """
+    """
+    thickness = 2
+    spline_sequence = [
+        [
+            OrientedPoint(0, 0, 0),
+            OrientedPoint(2, 1, 45),
+            OrientedPoint(3, 3, 90),
+            OrientedPoint(2, 5, 135),
+            OrientedPoint(0, 6, 180),
+            OrientedPoint(-2, 5, -135),
+            OrientedPoint(-3, 3, -90),
+            OrientedPoint(-2, 1, -45),
+            OrientedPoint(0, 0, 0),
+        ]
+    ]
+    ex_long_spline(spline_sequence, thickness)
+
+    thickness = 10
+    spline_sequence = [
+        [
+            OrientedPoint(00, 00, 0),
+            OrientedPoint(20, 10, 45),
+            OrientedPoint(30, 30, 90),
+            OrientedPoint(20, 50, 135),
+            OrientedPoint(00, 60, 180),
+            OrientedPoint(-20, 50, -135),
+            OrientedPoint(-30, 30, -90),
+            OrientedPoint(-20, 10, -45),
+            OrientedPoint(00, 00, 0),
+        ]
+    ]
+    ex_long_spline(spline_sequence, thickness)
+
+    thickness = 20
+    spline_sequence = [
+        [
+            OrientedPoint(000, 000, 0),
+            OrientedPoint(200, 100, 45),
+            OrientedPoint(300, 300, 90),
+            OrientedPoint(200, 500, 135),
+            OrientedPoint(000, 600, 180),
+            OrientedPoint(-200, 500, -135),
+            OrientedPoint(-300, 300, -90),
+            OrientedPoint(-200, 100, -45),
+            OrientedPoint(000, 000, 0),
+        ]
+    ]
+    ex_long_spline(spline_sequence, thickness)
+
+    thickness = 5
+    spline_sequence = [
+        [
+            OrientedPoint(10, -223, 19),
+            OrientedPoint(36.5, -205.5, 43),
+            OrientedPoint(55.8, -181, 57.28),
+            OrientedPoint(68.5, -160, 61.09),
+            OrientedPoint(80.6, -136.5, 64),
+            OrientedPoint(94, -107.8, 66.3),
+            OrientedPoint(103, -85, 71),
+            OrientedPoint(109.6, -63, 77),
+            OrientedPoint(112.6, -48, 81),
+            OrientedPoint(113.8, -38.6, 88),
+            OrientedPoint(113.5, -32, 98),
+            OrientedPoint(111, -24.1, 115.6),
+            OrientedPoint(108.8, -21.4, 142),
+            OrientedPoint(106, -20, 164),
+            OrientedPoint(102.7, -19.6, 180),
+            OrientedPoint(97.2, -21, -153.7),
+            OrientedPoint(91.5, -24.8, -139),
+            OrientedPoint(84, -33, -127.85),
+            OrientedPoint(78.2, -41.2, -122.1),
+            OrientedPoint(67.5, -60.6, -117),
+            OrientedPoint(57, -84.8, -110.5),
+            OrientedPoint(47.8, -113, -104.85),
+            OrientedPoint(42, -137.5, -100.81),
+            OrientedPoint(38.7, -156, -97.7),
+            OrientedPoint(37, -172.6, -94.1),
+            OrientedPoint(36.2, -189.2, -91.7),
+            OrientedPoint(36.2, -199, -88.9),
+            OrientedPoint(37.8, -217.6, -80.9),
+            OrientedPoint(38.6, -221.9, -78.15),
+            OrientedPoint(40.4, -228, -66.22),
+            OrientedPoint(42.8, -231.9, -50.40),
+            OrientedPoint(45.3, -234, -33.24),
+            OrientedPoint(48.7, -235, -1.52),
+            OrientedPoint(52.8, -234.3, 18),
+            OrientedPoint(58, -231.2, 37.66),
+            OrientedPoint(64, -225.4, 48.75),
+            OrientedPoint(70, -217.8, 55),
+            OrientedPoint(77, -207.8, 58.4),
+            OrientedPoint(88, -189.5, 57.9),
+        ]
+    ]
+    ex_long_spline(spline_sequence, thickness)
+
+    thickness = 13
+    spline_sequence = [
+        [
+            OrientedPoint(100.0000, -2230.0000, 19.0000),
+            OrientedPoint(365.0000, -2055.0000, 43.0000),
+            OrientedPoint(558.0000, -1810.0000, 57.2800),
+            OrientedPoint(685.0000, -1600.0000, 61.0900),
+            OrientedPoint(806.0000, -1365.0000, 64.0000),
+            OrientedPoint(940.0000, -1078.0000, 66.3000),
+            OrientedPoint(1030.0000, -850.0000, 71.0000),
+            OrientedPoint(1096.0000, -630.0000, 77.0000),
+            OrientedPoint(1126.0000, -480.0000, 81.0000),
+            OrientedPoint(1138.0000, -386.0000, 88.0000),
+            OrientedPoint(1135.0000, -320.0000, 98.0000),
+            OrientedPoint(1110.0000, -241.0000, 115.6000),
+            OrientedPoint(1088.0000, -214.0000, 142.0000),
+            OrientedPoint(1060.0000, -200.0000, 164.0000),
+            OrientedPoint(1027.0000, -196.0000, 180.0000),
+            OrientedPoint(972.0000, -210.0000, -153.7000),
+            OrientedPoint(915.0000, -248.0000, -139.0000),
+            OrientedPoint(840.0000, -330.0000, -127.8500),
+            OrientedPoint(782.0000, -412.0000, -122.1000),
+            OrientedPoint(675.0000, -606.0000, -117.0000),
+            OrientedPoint(570.0000, -848.0000, -110.5000),
+            OrientedPoint(478.0000, -1130.0000, -104.8500),
+            OrientedPoint(420.0000, -1375.0000, -100.8100),
+            OrientedPoint(387.0000, -1560.0000, -97.7000),
+            OrientedPoint(370.0000, -1726.0000, -94.1000),
+            OrientedPoint(362.0000, -1892.0000, -91.7000),
+            OrientedPoint(362.0000, -1990.0000, -88.9000),
+            OrientedPoint(378.0000, -2176.0000, -80.9000),
+            OrientedPoint(386.0000, -2219.0000, -78.1500),
+            OrientedPoint(404.0000, -2280.0000, -66.2200),
+            OrientedPoint(428.0000, -2319.0000, -50.4000),
+            OrientedPoint(453.0000, -2340.0000, -33.2400),
+            OrientedPoint(487.0000, -2350.0000, -1.5200),
+            OrientedPoint(528.0000, -2343.0000, 18.0000),
+            OrientedPoint(580.0000, -2312.0000, 37.6600),
+            OrientedPoint(640.0000, -2254.0000, 48.7500),
+            OrientedPoint(700.0000, -2178.0000, 55.0000),
+            OrientedPoint(770.0000, -2078.0000, 58.4000),
+            OrientedPoint(880.0000, -1895.0000, 57.9000),
+        ]
+    ]
+    ex_long_spline(spline_sequence, thickness)
+
+
 def run_spliner_examples(args):
     """
     """
     logg = logging.getLogger(f"c.{__name__}.run_spliner_examples")
     logg.debug(f"Starting run_spliner_examples")
 
-    # ex_fit_cubic_curve()
-    # ex_compute_cubic_segment()
+    ex_fit_cubic_curve()
+    ex_compute_cubic_segment()
     exs_thick_spline()
+    exs_long_spline()
 
     plt.show()
 
