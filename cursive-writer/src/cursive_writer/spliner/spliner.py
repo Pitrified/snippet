@@ -160,6 +160,10 @@ def compute_cubic_segment(p0, p1, ax=None):
     # logg.setLevel("TRACE")
     logg.trace(f"Starting compute_cubic_segment")
 
+    # if the points are actually the same, return just that
+    if p0.x == p1.x and p0.y == p1.y:
+        return [p0.x], [p0.y]
+
     # translate and rotate the point to the origin
     rot_p0, rot_p1, dir_01 = translate_points_to_origin(p0, p1)
 

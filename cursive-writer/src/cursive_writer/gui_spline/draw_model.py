@@ -62,6 +62,12 @@ class Model:
         # we want that to be the normalized height
         self.normalized_dist_base_mean = 1000
 
+        # how much the points are translated when adjusting
+        self.shift = 0.1
+        self.very_shift = 1
+        self.rot = 0.1
+        self.very_rot = 1
+
         # info on the line from clicked point to current
         self.free_line = Observable()
         # info on where you clicked the canvas
@@ -479,48 +485,63 @@ class Model:
         logg.info(f"Start {fmt_cn('clicked_btn_adjust')}")
 
         if self.selected_indexes[1] == -1:
-            logg.warn(f"{fmt_cn('Cannot', 'warn')} move a glyph")
-            return
+            glyph_idx = self.selected_indexes[0]
+            logg.debug(f"{fmt_cn('Moving', 'a1')} glyph {glyph_idx}")
+            if adjust_type == "vl":
+                self.translate_glyph(glyph_idx, -self.very_shift, 0)
+            elif adjust_type == "l":
+                self.translate_glyph(glyph_idx, -self.shift, 0)
+            elif adjust_type == "r":
+                self.translate_glyph(glyph_idx, self.shift, 0)
+            elif adjust_type == "vr":
+                self.translate_glyph(glyph_idx, self.very_shift, 0)
+            elif adjust_type == "vb":
+                self.translate_glyph(glyph_idx, 0, self.very_shift)
+            elif adjust_type == "b":
+                self.translate_glyph(glyph_idx, 0, self.shift)
+            elif adjust_type == "u":
+                self.translate_glyph(glyph_idx, 0, -self.shift)
+            elif adjust_type == "vu":
+                self.translate_glyph(glyph_idx, 0, -self.very_shift)
+            else:
+                logg.warn(f"{fmt_cn('Cannot', 'warn')} rotate a glyph")
 
-        all_SP = self.all_SP.get()
-        sel_pt = all_SP[self.selected_spid_SP.get()]
+        # translate the current active point
+        else:
+            all_SP = self.all_SP.get()
+            sel_pt = all_SP[self.selected_spid_SP.get()]
 
-        shift = 0.1
-        very_shift = 1
-        rot = 0.1
-        very_rot = 1
+            if adjust_type == "vl":
+                sel_pt.translate(-self.very_shift, 0)
+            elif adjust_type == "l":
+                sel_pt.translate(-self.shift, 0)
+            elif adjust_type == "r":
+                sel_pt.translate(self.shift, 0)
+            elif adjust_type == "vr":
+                sel_pt.translate(self.very_shift, 0)
+            elif adjust_type == "vb":
+                sel_pt.translate(0, self.very_shift)
+            elif adjust_type == "b":
+                sel_pt.translate(0, self.shift)
+            elif adjust_type == "u":
+                sel_pt.translate(0, -self.shift)
+            elif adjust_type == "vu":
+                sel_pt.translate(0, -self.very_shift)
+            elif adjust_type == "va":
+                sel_pt.rotate(-self.very_rot)
+            elif adjust_type == "a":
+                sel_pt.rotate(-self.rot)
+            elif adjust_type == "o":
+                sel_pt.rotate(self.rot)
+            elif adjust_type == "vo":
+                sel_pt.rotate(self.very_rot)
 
-        if adjust_type == "vl":
-            sel_pt.translate(-very_shift, 0)
-        elif adjust_type == "l":
-            sel_pt.translate(-shift, 0)
-        elif adjust_type == "r":
-            sel_pt.translate(shift, 0)
-        elif adjust_type == "vr":
-            sel_pt.translate(very_shift, 0)
-        elif adjust_type == "vb":
-            sel_pt.translate(0, very_shift)
-        elif adjust_type == "b":
-            sel_pt.translate(0, shift)
-        elif adjust_type == "u":
-            sel_pt.translate(0, -shift)
-        elif adjust_type == "vu":
-            sel_pt.translate(0, -very_shift)
-        elif adjust_type == "va":
-            sel_pt.rotate(-very_rot)
-        elif adjust_type == "a":
-            sel_pt.rotate(-rot)
-        elif adjust_type == "o":
-            sel_pt.rotate(rot)
-        elif adjust_type == "vo":
-            sel_pt.rotate(very_rot)
-
-        all_SP[self.selected_spid_SP.get()] = sel_pt
-
-        self.all_SP.set(all_SP)
+            # update the point
+            all_SP[self.selected_spid_SP.get()] = sel_pt
+            self.all_SP.set(all_SP)
 
         # update the segment holder
-        self.spline_segment_holder.update_data(all_SP, self.path_SP.get())
+        self.spline_segment_holder.update_data(self.all_SP.get(), self.path_SP.get())
         # update the visible segments
         self.compute_visible_segment_points()
 
@@ -531,7 +552,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fs_btn_save_spline")
         #  logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('clicked_fs_btn_save_spline', 'a2')}")
+        logg.info(f"Start {fmt_cn('clicked_fs_btn_save_spline')}")
 
         if self.path_out_folder is None:
             logg.warn(f"{fmt_cn('Set', 'alert')} the output folder before saving")
@@ -599,7 +620,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fs_btn_set_save_path")
         #  logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('clicked_fs_btn_set_save_path', 'a2')}")
+        logg.info(f"Start {fmt_cn('clicked_fs_btn_set_save_path')}")
 
         str_out_folder = filedialog.askdirectory()
 
@@ -612,6 +633,18 @@ class Model:
         logg.debug(f"path_out_folder: {path_out_folder}")
 
         self.path_out_folder = path_out_folder
+
+    def translate_glyph(self, glyph_idx, dx, dy):
+        """Translate all the points in a glyph
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.translate_glyph")
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('translate_glyph')}")
+
+        all_SP = self.all_SP.get()
+        for spid in self.path_SP.get()[glyph_idx]:
+            all_SP[spid].translate(dx, dy)
+        self.all_SP.set(all_SP)
 
     def redraw_canvas(self):
         """
@@ -916,7 +949,7 @@ class Model:
             f"c.{__class__.__name__}.compute_visible_segment_points"
         )
         # logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('compute_visible_segment_points', 'a2')}")
+        logg.trace(f"Start {fmt_cn('compute_visible_segment_points')}")
 
         full_path = list(iterate_double_list(self.path_SP.get()))
 
