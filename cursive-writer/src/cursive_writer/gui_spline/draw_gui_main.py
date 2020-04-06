@@ -3,7 +3,7 @@ import logging
 from timeit import default_timer as timer
 from pathlib import Path
 
-from controller import Controller
+from cursive_writer.gui_spline.draw_controller import Controller
 
 
 def parse_arguments():

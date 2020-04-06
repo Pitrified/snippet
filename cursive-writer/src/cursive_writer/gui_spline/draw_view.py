@@ -5,14 +5,14 @@ from tkinter import ttk
 from math import cos
 from math import sin
 
+from cursive_writer.gui_spline.label_id import LabelId
+from cursive_writer.gui_spline.scrollable_frame import ScrollableFrame
 from cursive_writer.gui_spline.spoint_frame import FrameSPoint
+from cursive_writer.gui_spline.ttk_setup_style import setup_style
 from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.geometric_utils import collide_line_box
 from cursive_writer.utils.geometric_utils import translate_point_dxy
-from cursive_writer.utils.scrollable_frame import ScrollableFrame
-from cursive_writer.utils.ttk_setup_style import setup_style
-from cursive_writer.utils.label_id import LabelId
 
 
 class View:

@@ -6,20 +6,20 @@ from pathlib import Path
 
 from tkinter import filedialog
 
+from cursive_writer.gui_spline.image_cropper import ImageCropper
+from cursive_writer.gui_spline.observable import Observable
 from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.geometric_utils import apply_affine_transform
 from cursive_writer.utils.geometric_utils import compute_affine_transform
 from cursive_writer.utils.geometric_utils import dist2D
 from cursive_writer.utils.geometric_utils import line_curve_point
 from cursive_writer.utils.geometric_utils import translate_point_dir
-from cursive_writer.utils.image_cropper import ImageCropper
 from cursive_writer.utils.oriented_point import OrientedPoint
 from cursive_writer.utils.spline_point import SplinePoint
-from cursive_writer.utils.utils import enumerate_double_list
-from cursive_writer.utils.utils import iterate_double_list
-from cursive_writer.utils.utils import find_free_index
-from cursive_writer.utils.observable import Observable
 from cursive_writer.utils.spline_segment_holder import SplineSegmentHolder
+from cursive_writer.utils.utils import enumerate_double_list
+from cursive_writer.utils.utils import find_free_index
+from cursive_writer.utils.utils import iterate_double_list
 
 
 class Model:

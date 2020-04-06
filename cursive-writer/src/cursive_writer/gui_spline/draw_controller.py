@@ -1,8 +1,8 @@
 import logging
 import tkinter as tk
 
-from view import View
-from model import Model
+from cursive_writer.gui_spline.draw_model import Model
+from cursive_writer.gui_spline.draw_view import View
 from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
 
