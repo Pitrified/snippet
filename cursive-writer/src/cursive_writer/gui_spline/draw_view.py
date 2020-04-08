@@ -1,6 +1,8 @@
 import logging
 import tkinter as tk
 from tkinter import ttk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 
 from math import cos
 from math import sin
@@ -22,10 +24,34 @@ class View:
         logg.info(f"Start {fmt_cn('init')}")
 
         self.root = root
-
         self.sidebar_width = sidebar_width
         self.width = width
         self.height = height
+
+        self.setup_main_window()
+
+        self.create_containers()
+
+        self.setup_layout_containers()
+
+        setup_style()
+
+    ### HELPERS ###
+
+    def setup_main_window(self):
+        """Setup main window aesthetics
+        """
+        self.width = 900
+        self.height = 600
+        self.root.geometry(f"{self.width}x{self.height}")
+        self.root.title(f"Spline builder GUI")
+
+    def create_containers(self):
+        """TODO: what is create_containers doing?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.create_containers")
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('create_containers', 'a2')}")
 
         self.frame_info = FrameInfo(
             self.root,
@@ -43,23 +69,7 @@ class View:
             width=self.sidebar_width,
         )
 
-        self.setup_main_window()
-
-        self.setup_layout()
-
-        setup_style()
-
-    ### HELPERS ###
-
-    def setup_main_window(self):
-        """Setup main window aesthetics
-        """
-        self.width = 900
-        self.height = 600
-        self.root.geometry(f"{self.width}x{self.height}")
-        self.root.title(f"Spline builder GUI")
-
-    def setup_layout(self):
+    def setup_layout_containers(self):
         # row 0 expands
         self.root.grid_rowconfigure(0, weight=1)
         # column 1 expands
@@ -98,27 +108,27 @@ class FrameInfo(ttk.Frame):
         self.name = name
         super().__init__(parent, *args, **kwargs)
 
-        # setup grid for this frame
-        self.grid_rowconfigure(2, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-
         # create children frames
         self.font_measurement_frame = ttk.Frame(self, style="group.TFrame")
         self.spoint_adjust_frame = ttk.Frame(self, style="group.TFrame")
         self.mouse_info_frame = ttk.Frame(self, style="group.TFrame")
         self.file_save_frame = ttk.Frame(self, style="group.TFrame")
 
-        # grid the children frames
-        self.font_measurement_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
-        self.spoint_adjust_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
-        self.file_save_frame.grid(row=2, column=0, sticky="new", padx=10, pady=10)
-        self.mouse_info_frame.grid(row=3, column=0, sticky="ew", padx=10, pady=10)
-
         # build the objects in children frames
         self.build_font_measurement_frame()
         self.build_spoint_adjust_frame()
         self.build_file_save_frame()
         self.build_mouse_info_frame()
+
+        # setup grid for this frame
+        self.grid_rowconfigure(2, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+
+        # grid the children frames
+        self.font_measurement_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
+        self.spoint_adjust_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
+        self.file_save_frame.grid(row=2, column=0, sticky="new", padx=10, pady=10)
+        self.mouse_info_frame.grid(row=3, column=0, sticky="ew", padx=10, pady=10)
 
     def build_font_measurement_frame(self):
         """Build the elements inside font_measurement_frame and grid them
@@ -227,8 +237,8 @@ class FrameInfo(ttk.Frame):
         )
 
         # setup grid for file_save_frame
-        self.file_save_frame.grid_columnconfigure(0, weight=1, uniform="half")
-        self.file_save_frame.grid_columnconfigure(1, weight=1, uniform="half")
+        self.file_save_frame.grid_columnconfigure(0, weight=1, uniform="fs_half")
+        self.file_save_frame.grid_columnconfigure(1, weight=1, uniform="fs_half")
 
         # grid the objects in file_save_frame
         self.fs_title.grid(row=0, column=0, sticky="ew", columnspan=2)
@@ -325,16 +335,74 @@ class FrameImage(ttk.Frame):
         self.name = name
         super().__init__(parent, *args, **kwargs)
 
-        # setup grid for this frame
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-
-        # create the canvas, size in pixels, width=300, height=200
-        # the size is not needed, because is gridded with sticky option
+        # create the canvas/children element
         self.image_canvas = tk.Canvas(self, bg="black", highlightthickness=0)
+        self.plot_frame = ttk.Frame(self, style="group.TFrame")
 
-        # pack the canvas into a frame/form
-        self.image_canvas.grid(row=0, column=0, sticky="nsew")
+        self.build_plot_frame()
+
+        # layout_type = "plot"
+        layout_type = "image_plot"
+        # layout_type = "image"
+        self.setup_layout_frame_image(layout_type)
+
+    def build_plot_frame(self):
+        """TODO: what is build_plot_frame doing?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.build_plot_frame")
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('build_plot_frame', 'a2')}")
+
+        # build the plot_frame elements
+        self.fig = Figure(figsize=(7.5, 4), dpi=80)
+        self.ax0 = self.fig.add_axes(
+            (0.05, 0.05, 0.90, 0.90), facecolor=(0.75, 0.75, 0.75), frameon=False
+        )
+        self.plot_canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
+        self.plot_canvas.draw()
+
+        # setup grid for plot_frame
+        self.plot_frame.grid_rowconfigure(0, weight=1)
+        self.plot_frame.grid_columnconfigure(0, weight=1)
+
+        # grid the objects in plot_frame
+        self.plot_canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
+
+    def setup_layout_frame_image(self, layout_type):
+        """TODO: what is setup_layout_frame_image doing?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.setup_layout_frame_image")
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('setup_layout_frame_image', 'a2')}")
+
+        if layout_type == "image":
+            # setup grid for this frame
+            self.grid_rowconfigure(0, weight=1)
+            self.grid_columnconfigure(0, weight=1, uniform="")
+            self.grid_columnconfigure(1, weight=0, uniform="")
+
+            # pack the canvas into a frame/form
+            self.image_canvas.grid(row=0, column=0, sticky="nsew")
+
+        elif layout_type == "plot":
+            # setup grid for this frame
+            self.grid_rowconfigure(0, weight=1)
+            self.grid_columnconfigure(0, weight=1, uniform="")
+            self.grid_columnconfigure(1, weight=0, uniform="")
+
+            self.plot_frame.grid(row=0, column=0, sticky="nsew")
+
+        elif layout_type == "image_plot":
+            # setup grid for this frame
+            self.grid_rowconfigure(0, weight=1)
+            self.grid_columnconfigure(0, weight=1, uniform="pf_half")
+            self.grid_columnconfigure(1, weight=1, uniform="pf_half")
+
+            self.image_canvas.grid(row=0, column=0, sticky="nsew")
+            self.plot_frame.grid(row=0, column=1, sticky="nsew")
+
+        else:
+            logg.warn(f"{fmt_cn('Unrecognized', 'alert')} layout_type: {layout_type}")
 
     ### REACTIONS TO OBSERVABLES ###
 
