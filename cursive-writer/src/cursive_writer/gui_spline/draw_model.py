@@ -99,6 +99,7 @@ class Model:
         self.hovered_header_SP = -1
 
         self.spline_segment_holder = SplineSegmentHolder()
+        self.spline_thick_holder = SplineSegmentHolder(thickness=10)
         # list of lists with segment points
         self.visible_segment_SP = Observable()
 
@@ -395,6 +396,8 @@ class Model:
         # update the visible segments
         self.compute_visible_segment_points()
 
+        self.update_thick_segments()
+
         # cursor at the end of current_glyph: point to NEXT list
         if len(current_glyph) == sel_idxs[1] + 1:
             logg.debug(f"Pointing at the end of the line")
@@ -462,6 +465,8 @@ class Model:
         self.spline_segment_holder.update_data(self.all_SP.get(), path)
         # update the visible segments
         self.compute_visible_segment_points()
+
+        self.update_thick_segments()
 
         # update the selected label
         # now pointing to a header
@@ -544,6 +549,8 @@ class Model:
         self.spline_segment_holder.update_data(self.all_SP.get(), self.path_SP.get())
         # update the visible segments
         self.compute_visible_segment_points()
+
+        self.update_thick_segments()
 
         self.compute_visible_spline_points()
 
@@ -653,6 +660,7 @@ class Model:
         self.recompute_fm_lines_view()
         self.compute_visible_spline_points()
         self.compute_visible_segment_points()
+        self.update_thick_segments()
 
     def update_mouse_pos_info(self, canvas_x, canvas_y):
         """Compute relevant mouse coord and pack them
@@ -887,6 +895,8 @@ class Model:
         # update the visible segments
         self.compute_visible_segment_points()
 
+        self.update_thick_segments()
+
         # update the id of the selected SP
         self.selected_spid_SP.set(new_sp.spid)
 
@@ -995,6 +1005,35 @@ class Model:
             spid0 = spid1
 
         self.visible_segment_SP.set(visible_points)
+
+    def update_thick_segments(self):
+        """TODO: what is update_thick_segments doing?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_thick_segments")
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('update_thick_segments', 'a2')}")
+
+        if self.abs2fm is None:
+            return
+
+        fm_lines_abs = self.fm_lines_abs.get()
+        all_fm = {}
+        all_SP = self.all_SP.get()
+        path = self.path_SP.get()
+        base_point_abs = fm_lines_abs["base_point"]
+
+        for spid in iterate_double_list(self.path_SP.get()):
+            abs_pt = all_SP[spid]
+            # find the coord of the point in fm frame
+            fm_x, fm_y = apply_affine_transform(self.abs2fm, abs_pt.x, abs_pt.y)
+            fm_ori_deg = -abs_pt.ori_deg + base_point_abs.ori_deg
+            # create the OrientedPoint to normalize the angle
+            fm_pt = OrientedPoint(fm_x, fm_y, fm_ori_deg)
+            all_fm[spid] = fm_pt
+
+        # TODO fix compute_thick_spline
+        # TODO when drawing FM lines, call this
+        # self.spline_thick_holder.update_data(all_fm, path)
 
     def sp_frame_entered(self, spid):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_entered")

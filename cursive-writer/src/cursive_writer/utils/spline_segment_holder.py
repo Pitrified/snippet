@@ -4,10 +4,11 @@ import copy
 from cursive_writer.utils.utils import iterate_double_list
 from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.spliner.spliner import compute_cubic_segment
+from cursive_writer.spliner.spliner import compute_thick_spline
 
 
 class SplineSegmentHolder:
-    def __init__(self):
+    def __init__(self, thickness=-1):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('init')}")
@@ -22,6 +23,8 @@ class SplineSegmentHolder:
 
         # how many points per segment
         self.num_samples = 50
+
+        self.thickness = thickness
 
     def update_data(self, new_all_SP, new_path_SP):
         """TODO: what is update_data doing?
@@ -82,7 +85,7 @@ class SplineSegmentHolder:
 
             # use the right point from the new data arriving
             self.segments[pair] = self.compute_segment_points(
-                self.cached_pos[spid0], new_all_SP[spid1], self.num_samples
+                self.cached_pos[spid0], new_all_SP[spid1],
             )
 
             # get ready for next iteration
@@ -93,7 +96,7 @@ class SplineSegmentHolder:
 
         # MAYBE do clean up of unused segments
 
-    def compute_segment_points(self, p0, p1, num_samples):
+    def compute_segment_points(self, p0, p1):
         """TODO: what is compute_segment_points doing?
 
         TODO: do this with multiprocessing
@@ -103,7 +106,11 @@ class SplineSegmentHolder:
         # logg.setLevel("TRACE")
         logg.trace(f"Start {fmt_cn('compute_segment_points')}")
 
-        x_segment, y_segment = compute_cubic_segment(p0, p1)
+        # if thickness is set, compute the thick spline
+        if self.thickness == -1:
+            x_segment, y_segment = compute_cubic_segment(p0, p1)
+        else:
+            x_segment, y_segment = compute_thick_spline(p0, p1, self.thickness)
 
         the_points = list(zip(x_segment, y_segment))
 
