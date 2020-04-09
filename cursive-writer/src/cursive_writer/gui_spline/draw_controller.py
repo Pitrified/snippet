@@ -146,6 +146,32 @@ class Controller:
         if keysym == "Escape":
             self.view.exit()
 
+        # adjust point
+        elif keysym == "q":
+            self.clicked_btn_adjust("vl")
+        elif keysym == "w":
+            self.clicked_btn_adjust("l")
+        elif keysym == "e":
+            self.clicked_btn_adjust("r")
+        elif keysym == "r":
+            self.clicked_btn_adjust("vr")
+        elif keysym == "a":
+            self.clicked_btn_adjust("vb")
+        elif keysym == "s":
+            self.clicked_btn_adjust("b")
+        elif keysym == "d":
+            self.clicked_btn_adjust("u")
+        elif keysym == "f":
+            self.clicked_btn_adjust("vu")
+        elif keysym == "z":
+            self.clicked_btn_adjust("va")
+        elif keysym == "x":
+            self.clicked_btn_adjust("a")
+        elif keysym == "c":
+            self.clicked_btn_adjust("o")
+        elif keysym == "v":
+            self.clicked_btn_adjust("vo")
+
     def canvas_resized(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.canvas_resized")
         logg.info(f"{fmt_cn('Resized')} image_canvas")

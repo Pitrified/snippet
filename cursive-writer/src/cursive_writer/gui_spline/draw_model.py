@@ -555,8 +555,6 @@ class Model:
 
         self.update_thick_segments()
 
-        self.compute_visible_spline_points()
-
     def clicked_fs_btn_save_spline(self, glyph_root_name):
         """Save the spline points to file
         """
@@ -663,7 +661,6 @@ class Model:
         self.recompute_fm_lines_view()
         self.compute_visible_spline_points()
         self.compute_visible_segment_points()
-        self.update_thick_segments()
 
     def update_mouse_pos_info(self, canvas_x, canvas_y):
         """Compute relevant mouse coord and pack them
@@ -979,7 +976,7 @@ class Model:
         visible_points = []
 
         path = self.path_SP.get()
-        
+
         for glyph in path:
             if len(glyph) <= 1:
                 logg.trace(f"Skip this glyph")
@@ -994,9 +991,11 @@ class Model:
                 abs_p1 = all_SP[spid1]
                 # check that at least one of the end of the segment is in view
                 if (
-                    region[0] < abs_p0.x < region[2] and region[1] < abs_p0.y < region[3]
+                    region[0] < abs_p0.x < region[2]
+                    and region[1] < abs_p0.y < region[3]
                 ) or (
-                    region[0] < abs_p1.x < region[2] and region[1] < abs_p1.y < region[3]
+                    region[0] < abs_p1.x < region[2]
+                    and region[1] < abs_p1.y < region[3]
                 ):
                     # extract the points to draw the segment
                     seg_pts = self.spline_segment_holder.segments[pair]
