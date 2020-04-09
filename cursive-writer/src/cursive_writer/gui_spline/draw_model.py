@@ -1020,7 +1020,7 @@ class Model:
 
         full_path = list(iterate_double_list(self.path_SP.get()))
         if len(full_path) == 0 or len(full_path) == 1:
-            self.thick_segment_points.set([])
+            self.thick_segment_points.set([[], []])
             return
 
         all_fm = {}

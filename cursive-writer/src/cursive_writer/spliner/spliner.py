@@ -220,6 +220,8 @@ def build_contour(
 
     # regular case, no overlaps
     if p0t.x <= p1t.x and p0b.x <= p1b.x:
+        logg.trace(f"Regular case")
+
         # sample the whole line
         x_sample_l, y_segment_l = sample_segment_points(p0t.x, p0b.x, coeff_l)
         x_sample_r, y_segment_r = sample_segment_points(p1t.x, p1b.x, coeff_r)
@@ -354,12 +356,22 @@ def compute_thick_spline(p0, p1, thickness, ax=None):
     * rotate and translate to original position
     """
     logg = logging.getLogger(f"c.{__name__}.compute_spline")
-    logg.setLevel("TRACE")
+    # logg.setLevel("TRACE")
     logg.trace(f"Starting compute_spline {p0} :: {p1} :: {thickness}")
 
     # translate and rotate the point to the origin
     rot_p0, rot_p1, dir_01 = translate_points_to_origin(p0, p1)
     logg.trace(f"rot_p0: {rot_p0} rot_p1: {rot_p1}")
+
+    # check that the rotated points are in the right direction: if they point
+    # outside the [-90, 90] range, we assume that the arrow is reversed, and
+    # bring that back to the allowed range
+    if not -90 < rot_p0.ori_deg < 90:
+        rot_p0.set_ori_deg(rot_p0.ori_deg + 180)
+        logg.trace(f"NEW rot_p0.ori_deg: {rot_p0.ori_deg}")
+    if not -90 < rot_p1.ori_deg < 90:
+        rot_p1.set_ori_deg(rot_p1.ori_deg + 180)
+        logg.trace(f"NEW rot_p1.ori_deg: {rot_p1.ori_deg}")
 
     # compute the normal direction to the vectors
     np0_ori_rad = rot_p0.ori_rad + math.pi / 2
@@ -411,6 +423,9 @@ def compute_thick_spline(p0, p1, thickness, ax=None):
     logg.trace(f"contour_t.shape: {contour_t.shape}")
     logg.trace(f"contour_b.shape: {contour_b.shape}")
 
+    logg.trace(f"contour_t: {contour_t}")
+    logg.trace(f"contour_b: {contour_b}")
+
     # get the max and min y, aligned on the grid
     max_y = np.amax(contour_t)
     min_y = np.amin(contour_b)
@@ -423,9 +438,9 @@ def compute_thick_spline(p0, p1, thickness, ax=None):
     on_points_x = []
     on_points_y = []
     for i, x_curr in enumerate(x_sample):
-        logg.trace(f"Doing i {i} x_curr: {x_curr}")
+        # logg.trace(f"Doing i {i} x_curr: {x_curr}")
         for y_curr in range(min_y_aligned, max_y_aligned + 1):
-            logg.trace(f"Testing {contour_b[i]} <= {y_curr} <= {contour_t[i]}")
+            # logg.trace(f"Testing {contour_b[i]} <= {y_curr} <= {contour_t[i]}")
             if contour_b[i] <= y_curr <= contour_t[i]:
                 on_points_x.append(x_curr)
                 on_points_y.append(y_curr)
@@ -457,8 +472,8 @@ def compute_thick_spline(p0, p1, thickness, ax=None):
         ax.plot(x_sample_t, y_segment_t, color="r", marker="", ls="-")
         ax.plot(x_sample_b, y_segment_b, color="r", marker="", ls="-")
         ## plot top and bottom contours
-        ax.plot(x_sample, contour_t, color="r", marker=".", ls="")
-        ax.plot(x_sample, contour_b, color="r", marker=".", ls="")
+        ax.plot(x_sample, contour_t, color="r", marker="x", ls="")
+        ax.plot(x_sample, contour_b, color="r", marker="x", ls="")
         ## plot on point
         ax.plot(on_points_x, on_points_y, color="b", marker=".", ls="")
         ## plot on point translated back to original position

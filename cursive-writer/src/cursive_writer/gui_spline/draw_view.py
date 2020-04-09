@@ -511,7 +511,10 @@ class FrameImage(ttk.Frame):
         logg = logging.getLogger(f"c.{__class__.__name__}.update_thick_segment_points")
         logg.setLevel("TRACE")
         logg.debug(f"Start {fmt_cn('update_thick_segment_points', 'a2')}")
-        logg.debug(f"Points: {data}")
+        # logg.trace(f"Points: {data}")
+
+        x, y = data
+        self.plot_frame.update_plot(x, y)
 
     ### HELPERS ###
 

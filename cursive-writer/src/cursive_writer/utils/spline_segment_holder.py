@@ -30,7 +30,7 @@ class SplineSegmentHolder:
         """TODO: what is update_data doing?
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_data")
-        logg.setLevel("TRACE")
+        # logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('update_data')}")
 
         logg.trace(f"new_all_SP: {new_all_SP}")
@@ -103,7 +103,7 @@ class SplineSegmentHolder:
         MAYBE: resample the segment with different precision for different zoom levels?
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.compute_segment_points")
-        logg.setLevel("TRACE")
+        # logg.setLevel("TRACE")
         logg.trace(f"Start {fmt_cn('compute_segment_points')} {p0} :: {p1}")
 
         # if thickness is set, compute the thick spline

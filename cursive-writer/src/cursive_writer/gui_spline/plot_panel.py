@@ -41,3 +41,8 @@ class PlotPanel(ttk.Frame):
         # self.fig.canvas.draw()
 
         logg.debug(f"self.canvas.get_tk_widget(): {self.canvas.get_tk_widget()}")
+
+    def update_plot(self, x, y):
+        self.ax0.clear()
+        self.ax0.plot(x, y, ls="", marker=".")
+        self.canvas.draw()

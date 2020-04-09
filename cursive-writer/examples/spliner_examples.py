@@ -244,8 +244,44 @@ def exs_thick_spline():
     """
     scale = 10
 
-    # these broke something
     thickness = 10
+    p0 = OrientedPoint(10, 2, -174)
+    p1 = OrientedPoint(50, 3, -175)
+    ex_thick_spline(p0, p1, thickness)
+
+    p0 = OrientedPoint(10, 2, 6)
+    p1 = OrientedPoint(50, 3, 5)
+    ex_thick_spline(p0, p1, thickness)
+
+    p0 = OrientedPoint(10, 2, 94)
+    p1 = OrientedPoint(50, 3, 95)
+    ex_thick_spline(p0, p1, thickness)
+
+    p0 = OrientedPoint(10, 2, 86)
+    p1 = OrientedPoint(50, 3, 85)
+    ex_thick_spline(p0, p1, thickness)
+
+    p0 = OrientedPoint(10, 2, 86)
+    p1 = OrientedPoint(50, 3, 95)
+    ex_thick_spline(p0, p1, thickness)
+
+    p0 = OrientedPoint(10, 2, 94)
+    p1 = OrientedPoint(50, 3, 85)
+    ex_thick_spline(p0, p1, thickness)
+
+    # these broke something
+    # the error was in the direction that the vector point to: the
+    # compute_thick_spline method needs the points to have angles in the [-90,
+    # 90] range after the alignement with x axis
+    thickness = 10
+    p0 = OrientedPoint(438.5817, 508.1890, -174.7626 + 180)
+    p1 = OrientedPoint(470.1365, 509.9414, -174.4506 + 180)
+    ex_thick_spline(p0, p1, thickness)
+
+    p0 = OrientedPoint(347.9917, 485.3683, 178.4224 + 180)
+    p1 = OrientedPoint(380.3771, 486.2859, -158.1566 + 180)
+    ex_thick_spline(p0, p1, thickness)
+
     p0 = OrientedPoint(438.5817, 508.1890, -174.7626)
     p1 = OrientedPoint(470.1365, 509.9414, -174.4506)
     ex_thick_spline(p0, p1, thickness)

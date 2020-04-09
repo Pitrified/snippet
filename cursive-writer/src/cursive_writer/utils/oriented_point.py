@@ -26,7 +26,9 @@ class OrientedPoint:
         self.set_ori_deg(ori_deg)
 
     def set_ori_deg(self, ori_deg):
-        """
+        """Set the orientation of the points in degrees
+
+        Updates the orientation in radians and slope as well
         """
         # save orientation in [-180, 180) range
         if ori_deg > 180:
