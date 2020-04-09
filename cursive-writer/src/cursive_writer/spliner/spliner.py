@@ -354,8 +354,8 @@ def compute_thick_spline(p0, p1, thickness, ax=None):
     * rotate and translate to original position
     """
     logg = logging.getLogger(f"c.{__name__}.compute_spline")
-    # logg.setLevel("TRACE")
-    logg.trace(f"Starting compute_spline")
+    logg.setLevel("TRACE")
+    logg.trace(f"Starting compute_spline {p0} :: {p1} :: {thickness}")
 
     # translate and rotate the point to the origin
     rot_p0, rot_p1, dir_01 = translate_points_to_origin(p0, p1)
@@ -423,7 +423,9 @@ def compute_thick_spline(p0, p1, thickness, ax=None):
     on_points_x = []
     on_points_y = []
     for i, x_curr in enumerate(x_sample):
+        logg.trace(f"Doing i {i} x_curr: {x_curr}")
         for y_curr in range(min_y_aligned, max_y_aligned + 1):
+            logg.trace(f"Testing {contour_b[i]} <= {y_curr} <= {contour_t[i]}")
             if contour_b[i] <= y_curr <= contour_t[i]:
                 on_points_x.append(x_curr)
                 on_points_y.append(y_curr)
@@ -432,6 +434,8 @@ def compute_thick_spline(p0, p1, thickness, ax=None):
     rototran_x, rototran_y = rototranslate_points(
         on_points_x, on_points_y, -dir_01, p0.x, p0.y,
     )
+    logg.trace(f"rototran_x.shape: {rototran_x.shape}")
+    logg.trace(f"rototran_y.shape: {rototran_y.shape}")
 
     # plot everything to debug things
     if not ax is None:

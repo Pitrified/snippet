@@ -32,6 +32,7 @@ class Controller:
         self.model.selected_spid_SP.add_callback(self.updated_selected_spid_SP)
         self.model.selected_header_SP.add_callback(self.updated_selected_header_SP)
         self.model.visible_segment_SP.add_callback(self.updated_visible_segment_SP)
+        self.model.thick_segment_points.add_callback(self.updated_thick_segment_points)
 
         ### VIEW  ###
         self.view = View(self.root)
@@ -420,3 +421,8 @@ class Controller:
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_visible_segment_SP")
         logg.trace(f"Start {fmt_cn('updated_visible_segment_SP')}")
         self.view.frame_image.update_visible_segment_SP(data)
+
+    def updated_thick_segment_points(self, data):
+        logg = logging.getLogger(f"c.{__class__.__name__}.updated_thick_segment_points")
+        logg.debug(f"Start {fmt_cn('updated_thick_segment_points', 'a2')}")
+        self.view.frame_image.update_thick_segment_points(data)

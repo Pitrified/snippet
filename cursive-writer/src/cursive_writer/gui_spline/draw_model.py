@@ -102,6 +102,8 @@ class Model:
         self.spline_thick_holder = SplineSegmentHolder(thickness=10)
         # list of lists with segment points
         self.visible_segment_SP = Observable()
+        # TODO what structure does this have
+        self.thick_segment_points = Observable()
 
     ### OPERATIONS ON CANVAS ###
 
@@ -1016,13 +1018,18 @@ class Model:
         if self.abs2fm is None:
             return
 
-        fm_lines_abs = self.fm_lines_abs.get()
+        full_path = list(iterate_double_list(self.path_SP.get()))
+        if len(full_path) == 0 or len(full_path) == 1:
+            self.thick_segment_points.set([])
+            return
+
         all_fm = {}
         all_SP = self.all_SP.get()
         path = self.path_SP.get()
+        fm_lines_abs = self.fm_lines_abs.get()
         base_point_abs = fm_lines_abs["base_point"]
 
-        for spid in iterate_double_list(self.path_SP.get()):
+        for spid in full_path:
             abs_pt = all_SP[spid]
             # find the coord of the point in fm frame
             fm_x, fm_y = apply_affine_transform(self.abs2fm, abs_pt.x, abs_pt.y)
@@ -1031,9 +1038,29 @@ class Model:
             fm_pt = OrientedPoint(fm_x, fm_y, fm_ori_deg)
             all_fm[spid] = fm_pt
 
+        logg.trace(f"all_fm: {all_fm}")
+        logg.trace(f"path: {path}")
+
         # TODO fix compute_thick_spline
         # TODO when drawing FM lines, call this
-        # self.spline_thick_holder.update_data(all_fm, path)
+        self.spline_thick_holder.update_data(all_fm, path)
+
+        # in the dict self.spline_thick_holder.segments[pair] = [(x0, y0), (x1, y1), ...]
+
+        all_fm_x = []
+        all_fm_y = []
+        spid0 = full_path[0]
+        for spid1 in full_path[1:]:
+            pair = (spid0, spid1)
+            segment_points = self.spline_thick_holder.segments[pair]
+
+            for fm_pt in segment_points:
+                all_fm_x.append(fm_pt[0])
+                all_fm_y.append(fm_pt[1])
+
+            spid0 = spid1
+
+        self.thick_segment_points.set((all_fm_x, all_fm_y))
 
     def sp_frame_entered(self, spid):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_entered")

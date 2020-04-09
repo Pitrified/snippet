@@ -216,7 +216,7 @@ def ex_compute_cubic_segment():
     plot_utils.plot_build(fig, ax)
 
 
-def ex_thick_spline(p0, p1, thickness, scale):
+def ex_thick_spline(p0, p1, thickness):
     """
     """
     logg = logging.getLogger(f"c.{__name__}.ex_thick_spline")
@@ -227,10 +227,6 @@ def ex_thick_spline(p0, p1, thickness, scale):
 
     # create the plot
     fig, ax = plt.subplots()
-    # ax.set_xlim(-2 * scale, 5 * scale)
-    # ax.set_ylim(-3 * scale, 5 * scale)
-    # ax.set_xlim(-1 * scale, 1.5 * scale)
-    # ax.set_ylim(-2.5 * scale, 2.5 * scale)
 
     # compute the spline
     spline_x, spline_y = compute_thick_spline(p0, p1, thickness, ax=ax)
@@ -246,56 +242,67 @@ def ex_thick_spline(p0, p1, thickness, scale):
 def exs_thick_spline():
     """
     """
+    scale = 10
+
+    # these broke something
+    thickness = 10
+    p0 = OrientedPoint(438.5817, 508.1890, -174.7626)
+    p1 = OrientedPoint(470.1365, 509.9414, -174.4506)
+    ex_thick_spline(p0, p1, thickness)
+
+    p0 = OrientedPoint(347.9917, 485.3683, 178.4224)
+    p1 = OrientedPoint(380.3771, 486.2859, -158.1566)
+    ex_thick_spline(p0, p1, thickness)
+    return
+
     # spline thickness
     thickness = 20
-    scale = 10
-    plot_scale = 10
 
     # this point with thickness 20 shows where the error is: the left/right
     # segment cross each other so the bottom spline has less points than left
     # segment + top spline + right segment
     p0 = OrientedPoint(0, 0, -10)
     p1 = OrientedPoint(2, 1, 35)
-    ex_thick_spline(p0, p1, thickness, plot_scale)
+    ex_thick_spline(p0, p1, thickness)
 
     p0 = OrientedPoint(1, 1, 45)
     p1 = OrientedPoint(4, 2, -45)
-    ex_thick_spline(p0, p1, thickness, plot_scale)
+    ex_thick_spline(p0, p1, thickness)
 
     p0 = OrientedPoint(1, 1, 55)
     p1 = OrientedPoint(2, 2, 65)
-    ex_thick_spline(p0, p1, thickness, plot_scale)
+    ex_thick_spline(p0, p1, thickness)
 
     p0 = OrientedPoint(1, 1, 25)
     p1 = OrientedPoint(2, 2, 35)
-    ex_thick_spline(p0, p1, thickness, plot_scale)
+    ex_thick_spline(p0, p1, thickness)
 
     # both segments are vertical
     p0 = OrientedPoint(1, 1, 45)
     p1 = OrientedPoint(2, 2, 45)
-    ex_thick_spline(p0, p1, thickness, plot_scale)
+    ex_thick_spline(p0, p1, thickness)
 
     # one of the segments is vertical
     p0 = OrientedPoint(1, 1, 45)
     p1 = OrientedPoint(4, 4, 55)
-    ex_thick_spline(p0, p1, thickness, plot_scale)
+    ex_thick_spline(p0, p1, thickness)
 
     # regular cases
     p0 = OrientedPoint(1 * scale, 1 * scale, 30)
     p1 = OrientedPoint(3 * scale, 3 * scale, 60)
-    ex_thick_spline(p0, p1, thickness, plot_scale)
+    ex_thick_spline(p0, p1, thickness)
 
     p0 = OrientedPoint(1 * scale, 1 * scale, 45)
     p1 = OrientedPoint(3 * scale, 2 * scale, 45)
-    ex_thick_spline(p0, p1, thickness, plot_scale)
+    ex_thick_spline(p0, p1, thickness)
 
     p0 = OrientedPoint(1 * scale, 1 * scale, -45)
     p1 = OrientedPoint(3 * scale, 2 * scale, -45)
-    ex_thick_spline(p0, p1, thickness, plot_scale)
+    ex_thick_spline(p0, p1, thickness)
 
     p0 = OrientedPoint(1 * scale, 1 * scale, 45)
     p1 = OrientedPoint(4 * scale, 2 * scale, -45)
-    ex_thick_spline(p0, p1, thickness, plot_scale)
+    ex_thick_spline(p0, p1, thickness)
 
 
 def ex_long_spline(spline_sequence, thickness):
@@ -463,10 +470,10 @@ def run_spliner_examples(args):
     logg = logging.getLogger(f"c.{__name__}.run_spliner_examples")
     logg.debug(f"Starting run_spliner_examples")
 
-    ex_fit_cubic_curve()
-    ex_compute_cubic_segment()
+    # ex_fit_cubic_curve()
+    # ex_compute_cubic_segment()
     exs_thick_spline()
-    exs_long_spline()
+    # exs_long_spline()
 
     plt.show()
 

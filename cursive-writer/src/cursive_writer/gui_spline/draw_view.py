@@ -505,6 +505,14 @@ class FrameImage(ttk.Frame):
             if len(seq) >= 4:
                 self.image_canvas.create_line(*seq, tags=tag, fill="lime green")
 
+    def update_thick_segment_points(self, data):
+        """TODO: what are you changing when updating thick_segment_points?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_thick_segment_points")
+        logg.setLevel("TRACE")
+        logg.debug(f"Start {fmt_cn('update_thick_segment_points', 'a2')}")
+        logg.debug(f"Points: {data}")
+
     ### HELPERS ###
 
     def draw_point(self, view_op, tag, color="cyan", length=-1):

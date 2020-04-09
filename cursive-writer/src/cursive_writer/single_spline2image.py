@@ -146,6 +146,8 @@ def run_single_spline2image(args):
 
     spline_sequence = load_spline(pf_input_spline, data_dir)
 
+    logg.debug(f"spline_sequence: {spline_sequence}")
+
     fig, ax = plt.subplots()
 
     spline_samples = compute_long_spline(spline_sequence, thickness)
