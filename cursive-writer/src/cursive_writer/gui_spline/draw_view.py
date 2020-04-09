@@ -1,8 +1,6 @@
 import logging
 import tkinter as tk
 from tkinter import ttk
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
 
 from math import cos
 from math import sin
@@ -11,6 +9,7 @@ from cursive_writer.gui_spline.label_id import LabelId
 from cursive_writer.gui_spline.scrollable_frame import ScrollableFrame
 from cursive_writer.gui_spline.spoint_frame import FrameSPoint
 from cursive_writer.gui_spline.ttk_setup_style import setup_style
+from cursive_writer.gui_spline.plot_panel import PlotPanel
 from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.geometric_utils import collide_line_box
@@ -18,7 +17,7 @@ from cursive_writer.utils.geometric_utils import translate_point_dxy
 
 
 class View:
-    def __init__(self, root, sidebar_width=250, width=900, height=600):
+    def __init__(self, root, sidebar_width=250, width=1400, height=800):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('init')}")
@@ -41,8 +40,6 @@ class View:
     def setup_main_window(self):
         """Setup main window aesthetics
         """
-        self.width = 900
-        self.height = 600
         self.root.geometry(f"{self.width}x{self.height}")
         self.root.title(f"Spline builder GUI")
 
@@ -76,10 +73,10 @@ class View:
         self.root.grid_columnconfigure(1, weight=1)
 
         self.frame_info.grid(row=0, column=0, sticky="ns")
-        # DO NOT let children widget influence the frame dimension
-        self.frame_info.grid_propagate(False)
         self.frame_image.grid(row=0, column=1, sticky="nsew")
         self.frame_spline.grid(row=0, column=2, sticky="ns")
+        # DO NOT let children widget influence the frame dimension
+        self.frame_info.grid_propagate(False)
         self.frame_spline.grid_propagate(False)
 
     def reset_focus(self):
@@ -171,12 +168,6 @@ class FrameInfo(ttk.Frame):
             self.spoint_adjust_frame, text="Spline adjust", style="title.TLabel"
         )
 
-        # setup grid for spoint_adjust_frame
-        self.spoint_adjust_frame.grid_columnconfigure(0, weight=1)
-        self.spoint_adjust_frame.grid_columnconfigure(1, weight=1)
-        self.spoint_adjust_frame.grid_columnconfigure(2, weight=1)
-        self.spoint_adjust_frame.grid_columnconfigure(3, weight=1)
-
         bt_sty = "settings.TButton"
         self.sa_btn_vl = ttk.Button(self.spoint_adjust_frame, text="VL", style=bt_sty)
         self.sa_btn_l = ttk.Button(self.spoint_adjust_frame, text="L", style=bt_sty)
@@ -193,6 +184,13 @@ class FrameInfo(ttk.Frame):
         self.sa_btn_o = ttk.Button(self.spoint_adjust_frame, text="O", style=bt_sty)
         self.sa_btn_vo = ttk.Button(self.spoint_adjust_frame, text="VO", style=bt_sty)
 
+        # setup grid for spoint_adjust_frame
+        self.spoint_adjust_frame.grid_columnconfigure(0, weight=1)
+        self.spoint_adjust_frame.grid_columnconfigure(1, weight=1)
+        self.spoint_adjust_frame.grid_columnconfigure(2, weight=1)
+        self.spoint_adjust_frame.grid_columnconfigure(3, weight=1)
+
+        # grid the objects in spoint_adjust_frame
         self.sa_title.grid(row=0, column=0, sticky="ew", columnspan=4)
 
         self.sa_btn_vl.grid(row=1, column=0, padx=4, pady=4)
@@ -337,36 +335,13 @@ class FrameImage(ttk.Frame):
 
         # create the canvas/children element
         self.image_canvas = tk.Canvas(self, bg="black", highlightthickness=0)
-        self.plot_frame = ttk.Frame(self, style="group.TFrame")
 
-        self.build_plot_frame()
+        self.plot_frame = PlotPanel(self, style="group.TFrame")
 
         # layout_type = "plot"
         layout_type = "image_plot"
         # layout_type = "image"
         self.setup_layout_frame_image(layout_type)
-
-    def build_plot_frame(self):
-        """TODO: what is build_plot_frame doing?
-        """
-        logg = logging.getLogger(f"c.{__class__.__name__}.build_plot_frame")
-        logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('build_plot_frame', 'a2')}")
-
-        # build the plot_frame elements
-        self.fig = Figure(figsize=(7.5, 4), dpi=80)
-        self.ax0 = self.fig.add_axes(
-            (0.05, 0.05, 0.90, 0.90), facecolor=(0.75, 0.75, 0.75), frameon=False
-        )
-        self.plot_canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
-        self.plot_canvas.draw()
-
-        # setup grid for plot_frame
-        self.plot_frame.grid_rowconfigure(0, weight=1)
-        self.plot_frame.grid_columnconfigure(0, weight=1)
-
-        # grid the objects in plot_frame
-        self.plot_canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
 
     def setup_layout_frame_image(self, layout_type):
         """TODO: what is setup_layout_frame_image doing?
