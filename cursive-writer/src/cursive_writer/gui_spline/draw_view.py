@@ -47,8 +47,8 @@ class View:
         """TODO: what is create_containers doing?
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.create_containers")
-        logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('create_containers', 'a2')}")
+        # logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('create_containers')}")
 
         self.frame_info = FrameInfo(
             self.root,
@@ -347,8 +347,8 @@ class FrameImage(ttk.Frame):
         """TODO: what is setup_layout_frame_image doing?
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.setup_layout_frame_image")
-        logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('setup_layout_frame_image', 'a2')}")
+        # logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('setup_layout_frame_image')}")
 
         if layout_type == "image":
             # setup grid for this frame
@@ -509,8 +509,8 @@ class FrameImage(ttk.Frame):
         """TODO: what are you changing when updating thick_segment_points?
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_thick_segment_points")
-        logg.setLevel("TRACE")
-        logg.debug(f"Start {fmt_cn('update_thick_segment_points', 'a2')}")
+        # logg.setLevel("TRACE")
+        logg.debug(f"Start {fmt_cn('update_thick_segment_points')}")
         # logg.trace(f"Points: {data}")
 
         x, y = data

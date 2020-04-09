@@ -424,5 +424,5 @@ class Controller:
 
     def updated_thick_segment_points(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_thick_segment_points")
-        logg.debug(f"Start {fmt_cn('updated_thick_segment_points', 'a2')}")
+        logg.debug(f"Start {fmt_cn('updated_thick_segment_points')}")
         self.view.frame_image.update_thick_segment_points(data)

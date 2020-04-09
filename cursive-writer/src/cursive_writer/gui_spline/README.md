@@ -2,7 +2,8 @@
 
 ### TODO
 
-* File dialog to save glyphs
+* Control things with keyboard
+* Dark mode
 * Add loading of a glyph, after FMlines are set, remap those points to the current image
 * Make the point list scroll when adding points if it is filled
 
@@ -21,10 +22,13 @@
 * After deleting a point set as selected the previous one, if it is the first select the spline header
 * Rescale from abs (image) to normalized (FM coord)
 * Add buttons to change selected SP data, left, very left, orientation
+* File dialog to save glyphs
+* Do not draw segments between glyphs, they are there for a reason
 
 ### Ideas
 
 * Each spline point has unique ID, the splines are list of IDs
+* For the ligatures: disregard the glyphs and look at the points orientation, chop off the letter wherever needed. Different version of a letter with different attach point are allowd (and needed).
 
 ### On logging
 

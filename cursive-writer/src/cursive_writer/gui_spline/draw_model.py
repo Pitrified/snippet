@@ -265,7 +265,8 @@ class Model:
                 self.build_fm_lines_abs("base_mean")
                 # update the fm_lines_view with the current abs/mov/zoom
                 self.recompute_fm_lines_view()
-
+                # update the thick_segment_points now that FM are available
+                self.update_thick_segments()
                 # after you release the mouse, go back to free state
                 self.state.set("free")
 
@@ -647,7 +648,7 @@ class Model:
         """Translate all the points in a glyph
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.translate_glyph")
-        logg.setLevel("TRACE")
+        # logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('translate_glyph')}")
 
         all_SP = self.all_SP.get()
@@ -897,6 +898,7 @@ class Model:
         # update the visible segments
         self.compute_visible_segment_points()
 
+        # update the thick_segment_points
         self.update_thick_segments()
 
         # update the id of the selected SP
@@ -976,35 +978,42 @@ class Model:
         # list of lists, each containing
         visible_points = []
 
-        spid0 = full_path[0]
-        for spid1 in full_path[1:]:
-            pair = (spid0, spid1)
-            logg.trace(f"Processing pair: {pair}")
+        path = self.path_SP.get()
+        
+        for glyph in path:
+            if len(glyph) <= 1:
+                logg.trace(f"Skip this glyph")
+                continue
 
-            abs_p0 = all_SP[spid0]
-            abs_p1 = all_SP[spid1]
-            # check that at least one of the end of the segment is in view
-            if (
-                region[0] < abs_p0.x < region[2] and region[1] < abs_p0.y < region[3]
-            ) or (
-                region[0] < abs_p1.x < region[2] and region[1] < abs_p1.y < region[3]
-            ):
-                # extract the points to draw the segment
-                seg_pts = self.spline_segment_holder.segments[pair]
+            spid0 = glyph[0]
+            for spid1 in glyph[1:]:
+                pair = (spid0, spid1)
+                logg.trace(f"Processing pair: {pair}")
 
-                # points of this segment visible
-                svp = []
+                abs_p0 = all_SP[spid0]
+                abs_p1 = all_SP[spid1]
+                # check that at least one of the end of the segment is in view
+                if (
+                    region[0] < abs_p0.x < region[2] and region[1] < abs_p0.y < region[3]
+                ) or (
+                    region[0] < abs_p1.x < region[2] and region[1] < abs_p1.y < region[3]
+                ):
+                    # extract the points to draw the segment
+                    seg_pts = self.spline_segment_holder.segments[pair]
 
-                for x, y in seg_pts:
-                    # create a OrientedPoint to rescale to view
-                    abs_op = OrientedPoint(x, y, 0)
-                    view_op = self.rescale_point(abs_op, "abs2view")
-                    svp.append(view_op)
+                    # points of this segment visible
+                    svp = []
 
-                visible_points.append(svp)
+                    for x, y in seg_pts:
+                        # create a OrientedPoint to rescale to view
+                        abs_op = OrientedPoint(x, y, 0)
+                        view_op = self.rescale_point(abs_op, "abs2view")
+                        svp.append(view_op)
 
-            # get ready for next iteration
-            spid0 = spid1
+                    visible_points.append(svp)
+
+                # get ready for next iteration
+                spid0 = spid1
 
         self.visible_segment_SP.set(visible_points)
 
@@ -1012,8 +1021,8 @@ class Model:
         """TODO: what is update_thick_segments doing?
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_thick_segments")
-        logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('update_thick_segments', 'a2')}")
+        # logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('update_thick_segments')}")
 
         if self.abs2fm is None:
             return
@@ -1049,16 +1058,22 @@ class Model:
 
         all_fm_x = []
         all_fm_y = []
-        spid0 = full_path[0]
-        for spid1 in full_path[1:]:
-            pair = (spid0, spid1)
-            segment_points = self.spline_thick_holder.segments[pair]
 
-            for fm_pt in segment_points:
-                all_fm_x.append(fm_pt[0])
-                all_fm_y.append(fm_pt[1])
+        for glyph in path:
+            if len(glyph) <= 1:
+                logg.trace(f"Skip this glyph")
+                continue
 
-            spid0 = spid1
+            spid0 = glyph[0]
+            for spid1 in glyph[1:]:
+                pair = (spid0, spid1)
+                segment_points = self.spline_thick_holder.segments[pair]
+
+                for fm_pt in segment_points:
+                    all_fm_x.append(fm_pt[0])
+                    all_fm_y.append(fm_pt[1])
+
+                spid0 = spid1
 
         self.thick_segment_points.set((all_fm_x, all_fm_y))
 

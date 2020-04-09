@@ -11,7 +11,7 @@ class PlotPanel(ttk.Frame):
     def __init__(self, parent, *args, **kwargs):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         #  logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('init', 'a2')}")
+        logg.info(f"Start {fmt_cn('init')}")
 
         super().__init__(parent, *args, **kwargs)
 
@@ -28,8 +28,9 @@ class PlotPanel(ttk.Frame):
         self.ax0 = self.fig.add_axes((0, 0, 1, 1))
         # facecolor=(0.75, 0.75, 0.75), frameon=True
         self.ax0.set_axis_off()
+        self.ax0.set_facecolor((0.75, 0.75, 0.75))
 
-        self.ax0.plot([1, 4, 6, 2, 6, 3], ls="", marker=".")
+        # self.ax0.plot([1, 4, 6, 2, 6, 3], ls="", marker=".")
 
         # add the plot to a FigureCanvasTkAgg and grid that
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
@@ -44,5 +45,5 @@ class PlotPanel(ttk.Frame):
 
     def update_plot(self, x, y):
         self.ax0.clear()
-        self.ax0.plot(x, y, ls="", marker=".")
+        self.ax0.plot(x, y, ls="", marker=".", color='k')
         self.canvas.draw()
