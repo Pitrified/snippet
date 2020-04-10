@@ -1,4 +1,5 @@
 import logging
+import platform
 import tkinter as tk
 from tkinter import ttk
 from cursive_writer.utils.color_utils import fmt_cn
@@ -71,9 +72,26 @@ def setup_style(colorscheme="terra"):
 
     # font setup
     o["font_std_type"] = "Helvetica"
-    o["font_std_size"] = 12
     o["font_mono_type"] = "Consolas"
-    o["font_mono_size"] = 10
+
+    sys_type = platform.system()
+    uname_version = platform.uname().version
+    logg.info(f"sys_type: {sys_type} uname_version: {uname_version}")
+
+    # check if we are in WSL
+    if "Microsoft" in uname_version:
+        o["font_std_size"] = 12
+        o["font_mono_size"] = 10
+
+    # or regular Linux
+    elif sys_type == "Linux":
+        o["font_std_size"] = 9
+        o["font_mono_size"] = 8
+
+    # or somewhere else, I guess
+    else:
+        o["font_std_size"] = 12
+        o["font_mono_size"] = 10
 
     s = ttk.Style()
 
