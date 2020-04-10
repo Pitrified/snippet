@@ -23,10 +23,12 @@ from cursive_writer.utils.utils import iterate_double_list
 
 
 class Model:
-    def __init__(self):
+    def __init__(self, thickness):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('init')}")
+
+        self.thickness = thickness
 
         # full path of the current image
         self.pf_input_image = Observable()
@@ -99,7 +101,7 @@ class Model:
         self.hovered_header_SP = -1
 
         self.spline_segment_holder = SplineSegmentHolder()
-        self.spline_thick_holder = SplineSegmentHolder(thickness=10)
+        self.spline_thick_holder = SplineSegmentHolder(thickness=self.thickness)
         # list of lists with segment points
         self.visible_segment_SP = Observable()
         # TODO what structure does this have
@@ -547,6 +549,8 @@ class Model:
             # update the point
             all_SP[self.selected_spid_SP.get()] = sel_pt
             self.all_SP.set(all_SP)
+
+        self.compute_visible_spline_points()
 
         # update the segment holder
         self.spline_segment_holder.update_data(self.all_SP.get(), self.path_SP.get())

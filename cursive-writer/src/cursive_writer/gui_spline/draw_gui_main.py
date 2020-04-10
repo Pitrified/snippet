@@ -19,7 +19,22 @@ def parse_arguments():
         help="Path to input image to use",
     )
 
-    parser.add_argument("-s", "--scale", type=int, default=1, help="Scale to use")
+    parser.add_argument(
+        "-t", "--thickness", type=int, default=10, help="Thickness of the drawn letter"
+    )
+
+    parser.add_argument(
+        "-cs", "--colorscheme", type=str, default="slategray", help="Colorscheme to use"
+    )
+
+    parser.add_argument(
+        "-lld",
+        "--log_level_debug",
+        type=str,
+        default="INFO",
+        help="LogLevel for the debugging logger",
+        choices=["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "CRITICAL"],
+    )
 
     # last line to parse the args
     args = parser.parse_args()
@@ -102,8 +117,6 @@ def addLoggingLevel(levelName, levelNum, methodName=None):
 
 
 def setup_env():
-    setup_logger()
-
     args = parse_arguments()
 
     # build command string to repeat this run
@@ -111,6 +124,9 @@ def setup_env():
     recap = f"python3 gui_main.py"
     for a, v in args._get_kwargs():
         recap += f" --{a} {v}"
+
+    # setup the logger with specified debug level
+    setup_logger(args.log_level_debug)
 
     logmain = logging.getLogger(f"c.{__name__}.setup_env")
     logmain.info(recap)
@@ -132,7 +148,7 @@ def run_gui_main(args):
     pf_input_image = image_dir / path_input
     logg.debug(f"pf_input_image: {pf_input_image}")
 
-    c = Controller(pf_input_image)
+    c = Controller(pf_input_image, args.thickness, args.colorscheme)
     c.run()
 
 

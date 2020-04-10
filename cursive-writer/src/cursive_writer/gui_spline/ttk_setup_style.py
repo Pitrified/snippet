@@ -14,7 +14,7 @@ def _from_rgb(r, g, b):
     return f"#{int(r):02x}{int(g):02x}{int(b):02x}"
 
 
-def setup_style(palette="terra"):
+def setup_style(colorscheme="terra"):
     logg = logging.getLogger(f"c.{__name__}.setup_style")
     #  logg.setLevel("TRACE")
     logg.info(f"Start {fmt_cn('init', 'setup_style')}")
@@ -22,7 +22,7 @@ def setup_style(palette="terra"):
     # option dict
     o = {}
 
-    if palette == "terra":
+    if colorscheme == "terra":
         # frames
         o["bg_general"] = "burlywood1"
         o["bg_container"] = "burlywood2"
@@ -34,7 +34,7 @@ def setup_style(palette="terra"):
         # selected element
         o["bg_selected"] = "tan2"
 
-    elif palette == "gray":
+    elif colorscheme == "slategray":
         # frames
         o["bg_general"] = "light slate gray"
         o["bg_container"] = "slate gray"
@@ -48,7 +48,7 @@ def setup_style(palette="terra"):
         # selected element
         o["bg_selected"] = "coral3"
 
-    # default palette == "snow":
+    # default colorscheme == "snow":
     else:
         # frames
         o["bg_general"] = "snow2"

@@ -3,9 +3,9 @@
 ### TODO
 
 * Control things with keyboard
-* Dark mode
 * Add loading of a glyph, after FMlines are set, remap those points to the current image
 * Make the point list scroll when adding points if it is filled
+* Set from CLI theme and thickness and loglevel
 
 ### MAYBE
 
@@ -24,6 +24,7 @@
 * Add buttons to change selected SP data, left, very left, orientation
 * File dialog to save glyphs
 * Do not draw segments between glyphs, they are there for a reason
+* Dark mode
 
 ### Ideas
 

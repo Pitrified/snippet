@@ -8,7 +8,7 @@ from cursive_writer.utils.color_utils import fmt_cn
 
 
 class Controller:
-    def __init__(self, pf_input_image):
+    def __init__(self, pf_input_image, thickness, colorscheme):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('init')}")
@@ -16,7 +16,7 @@ class Controller:
         self.root = tk.Tk()
 
         ### MODEL ###
-        self.model = Model()
+        self.model = Model(thickness=thickness)
 
         # register callbacks on the model observables
         self.model.pf_input_image.add_callback(self.updated_pf_input_image)
@@ -35,7 +35,7 @@ class Controller:
         self.model.thick_segment_points.add_callback(self.updated_thick_segment_points)
 
         ### VIEW  ###
-        self.view = View(self.root)
+        self.view = View(self.root, colorscheme=colorscheme)
 
         ### bind callbacks from user input
 

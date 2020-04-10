@@ -17,7 +17,7 @@ from cursive_writer.utils.geometric_utils import translate_point_dxy
 
 
 class View:
-    def __init__(self, root, palette="snow"):
+    def __init__(self, root, colorscheme="snow"):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('init')}")
@@ -26,12 +26,12 @@ class View:
         self.sidebar_width = 250
         self.width = 1400
         self.height = 800
-        # self.palette = palette
-        self.palette = "terra"
-        self.palette = "snow"
-        self.palette = "gray"
+        self.colorscheme = colorscheme
+        # self.colorscheme = "terra"
+        # self.colorscheme = "snow"
+        # self.colorscheme = "slategray"
 
-        self.style_option = setup_style(self.palette)
+        self.style_option = setup_style(self.colorscheme)
 
         self.setup_main_window()
 
