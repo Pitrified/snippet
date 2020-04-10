@@ -17,23 +17,27 @@ from cursive_writer.utils.geometric_utils import translate_point_dxy
 
 
 class View:
-    def __init__(self, root, sidebar_width=250, width=1400, height=800):
+    def __init__(self, root, palette="snow"):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('init')}")
 
         self.root = root
-        self.sidebar_width = sidebar_width
-        self.width = width
-        self.height = height
+        self.sidebar_width = 250
+        self.width = 1400
+        self.height = 800
+        # self.palette = palette
+        self.palette = "terra"
+        self.palette = "snow"
+        self.palette = "gray"
+
+        self.style_option = setup_style(self.palette)
 
         self.setup_main_window()
 
         self.create_containers()
 
         self.setup_layout_containers()
-
-        setup_style()
 
     ### HELPERS ###
 
@@ -53,15 +57,20 @@ class View:
         self.frame_info = FrameInfo(
             self.root,
             name="frame_info",
+            style_option=self.style_option,
             style="container.TFrame",
             width=self.sidebar_width,
         )
         self.frame_image = FrameImage(
-            self.root, name="frame_image", style="container.TFrame"
+            self.root,
+            name="frame_image",
+            style_option=self.style_option,
+            style="container.TFrame",
         )
         self.frame_spline = FrameSpline(
             self.root,
             name="frame_spline",
+            style_option=self.style_option,
             style="container.TFrame",
             width=self.sidebar_width,
         )
@@ -97,13 +106,14 @@ class View:
 
 
 class FrameInfo(ttk.Frame):
-    def __init__(self, parent, name, *args, **kwargs):
+    def __init__(self, parent, name, style_option, *args, **kwargs):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('init')}")
 
         self.name = name
         super().__init__(parent, *args, **kwargs)
+        self.style_option = style_option
 
         # create children frames
         self.font_measurement_frame = ttk.Frame(self, style="group.TFrame")
@@ -325,18 +335,21 @@ class FrameInfo(ttk.Frame):
 
 
 class FrameImage(ttk.Frame):
-    def __init__(self, parent, name, *args, **kwargs):
+    def __init__(self, parent, name, style_option, *args, **kwargs):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('init')}")
 
         self.name = name
         super().__init__(parent, *args, **kwargs)
+        self.style_option = style_option
 
         # create the canvas/children element
         self.image_canvas = tk.Canvas(self, bg="black", highlightthickness=0)
 
-        self.plot_frame = PlotPanel(self, style="group.TFrame")
+        self.plot_frame = PlotPanel(
+            self, style_option=self.style_option, style="group.TFrame"
+        )
 
         # layout_type = "plot"
         layout_type = "image_plot"
@@ -573,13 +586,14 @@ class FrameImage(ttk.Frame):
 
 
 class FrameSpline(ttk.Frame):
-    def __init__(self, parent, name, *args, **kwargs):
+    def __init__(self, parent, name, style_option, *args, **kwargs):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('init')}")
 
         self.name = name
         super().__init__(parent, *args, **kwargs)
+        self.style_option = style_option
 
         # list of labels to keep track of spline headers
         self.all_SP_headers = []
@@ -638,10 +652,10 @@ class FrameSpline(ttk.Frame):
             self.spline_list_frame, text="Spline points", style="title.TLabel"
         )
         # create the ScrollableFrame
-        #  cv_bg = "blue"
-        cv_bg = "burlywood2"
         self.sl_scrollable = ScrollableFrame(
-            self.spline_list_frame, style="sf.TFrame", cv_bg=cv_bg
+            self.spline_list_frame,
+            style="sf.TFrame",
+            cv_bg=self.style_option["bg_container"],
         )
 
         # grid the elements in spline_list_frame

@@ -3,84 +3,137 @@ import tkinter as tk
 from tkinter import ttk
 from cursive_writer.utils.color_utils import fmt_cn
 
+# color list
+# https://stackoverflow.com/a/12434606/2237151
+# http://www.tcl.tk/man/tcl8.5/TkCmd/colors.htm
 
-def setup_style():
+
+def _from_rgb(r, g, b):
+    """Translates rgb values to a tkinter friendly color code (#F0F8FF)
+    """
+    return f"#{int(r):02x}{int(g):02x}{int(b):02x}"
+
+
+def setup_style(palette="terra"):
     logg = logging.getLogger(f"c.{__name__}.setup_style")
     #  logg.setLevel("TRACE")
     logg.info(f"Start {fmt_cn('init', 'setup_style')}")
 
+    # option dict
+    o = {}
+
+    if palette == "terra":
+        # frames
+        o["bg_general"] = "burlywood1"
+        o["bg_container"] = "burlywood2"
+        o["bg_title"] = "burlywood3"
+        # button background
+        o["bg_btn"] = "wheat2"
+        # hovered element
+        o["bg_active"] = "wheat1"
+        # selected element
+        o["bg_selected"] = "tan2"
+
+    elif palette == "gray":
+        # frames
+        o["bg_general"] = "light slate gray"
+        o["bg_container"] = "slate gray"
+        # o["bg_title"] = "dark slate gray" # 47 79 79
+        o["bg_title"] = _from_rgb(47 + 30, 79 + 30, 79 + 40)
+        # button background
+        # o["bg_btn"] = "azure4" # 131 139 139
+        o["bg_btn"] = _from_rgb(131 + 30, 139 + 30, 139 + 40)
+        # hovered element
+        o["bg_active"] = "light gray"
+        # selected element
+        o["bg_selected"] = "coral3"
+
+    # default palette == "snow":
+    else:
+        # frames
+        o["bg_general"] = "snow2"
+        o["bg_container"] = "snow3"
+        o["bg_title"] = "snow4"
+        # button background
+        o["bg_btn"] = "snow"
+        # hovered element
+        o["bg_active"] = "mint cream"
+        # selected element
+        o["bg_selected"] = "coral"
+
+    # get the rgb values of the container color, needed for plot bg
+    rgb = tk.Button().winfo_rgb(o["bg_container"])
+    o["bg_container_rgb"] = tuple(c / 65535 for c in rgb)
+    logg.info(f"o['bg_container_rgb']: {o['bg_container_rgb']}")
+
+    # font setup
+    o["font_std_type"] = "Helvetica"
+    o["font_std_size"] = 12
+    o["font_mono_type"] = "Consolas"
+    o["font_mono_size"] = 10
+
     s = ttk.Style()
 
-    the_font = "Helvetica"
-
     # configure root style
-    s.configure(".", font=(the_font, 12))
+    s.configure(".", font=(o["font_std_type"], o["font_std_size"]))
 
     ### FRAMES ###
 
-    s.configure("container.TFrame", background="burlywood1")
-    s.configure("group.TFrame", background="burlywood2")
+    s.configure("container.TFrame", background=o["bg_general"])
+    s.configure("group.TFrame", background=o["bg_container"])
 
     # ScrollableFrame
-    s.configure("sf.TFrame", background="burlywood2")
-    s.configure(
-        "sf.Vertical.TScrollbar",
-        background="red",
-        borderwidth=0,
-        troughcolor="blue",
-        highlightthickness=0,
-    )
-    s.map(
-        "sf.Vertical.TScrollbar",
-        background=[("active", "green"), ("pressed", "yellow"),],
-    )
+    s.configure("sf.TFrame", background=o["bg_container"])
 
     ### LABELS ###
 
     s.configure("TLabel", anchor=tk.CENTER)
     s.configure(
         "title.TLabel",
-        background="burlywood3",
-        font=(the_font, 14),
+        background=o["bg_title"],
+        font=(o["font_std_type"], o["font_std_size"] + 2),
         padding=(0, 6, 0, 6),
     )
-    s.configure("info.TLabel", background="burlywood2")
+    s.configure("info.TLabel", background=o["bg_container"])
 
     s.configure(
         "sp_info.TLabel",
-        background="burlywood2",
+        background=o["bg_container"],
         anchor=tk.CENTER,
         #  font=("Courier", 12),
         #  font=("Consolas", 10),
     )
     s.map(
-        "sp_info.TLabel", background=[("selected", "tan2"), ("active", "wheat1"),],
+        "sp_info.TLabel",
+        background=[("selected", o["bg_selected"]), ("active", o["bg_active"]),],
     )
     s.configure(
-        "sp_pos.sp_info.TLabel", font=("Consolas", 10),
+        "sp_header.sp_info.TLabel",
+        font=("Consolas", o["font_mono_size"] + 2),
+        padding=(0, 3, 0, 3),
     )
     s.configure(
-        "sp_header.sp_info.TLabel", font=("Consolas", 12), padding=(0, 3, 0, 3),
+        "sp_pos.sp_info.TLabel", font=("Consolas", o["font_mono_size"]),
     )
 
     ### ENTRY ###
 
     s.configure(
         "root.TEntry",
-        background="wheat2",
+        background=o["bg_btn"],
         borderwidth=0,
         highlightthickness=0,
-        fieldbackground="wheat1",
+        fieldbackground=o["bg_btn"],
     )
 
     ### BUTTONS ###
 
     s.configure(
-        "settings.TButton", background="wheat2", borderwidth=0, highlightthickness=0,
+        "settings.TButton", background=o["bg_btn"], borderwidth=0, highlightthickness=0,
     )
     s.map(
         "settings.TButton",
-        background=[("pressed", "wheat1"), ("active", "wheat1"),],
+        background=[("pressed", o["bg_selected"]), ("active", o["bg_active"]),],
         highlightbackground=[("pressed", "red")],
         highlightcolor=[("pressed", "red")],
     )
@@ -90,6 +143,7 @@ def setup_style():
     #  'border': '1', 'children': [('Button.focus', {'sticky': 'nswe',
     #  'children': [('Button.padding', {'sticky': 'nswe', 'children':
     #  [('Button.label', {'sticky': 'nswe'})]})]})]})])
+    # remove the focus element to avoid dotted gray line
     s.layout(
         "settings.TButton",
         [
@@ -111,3 +165,5 @@ def setup_style():
             )
         ],
     )
+
+    return o
