@@ -33,6 +33,7 @@ def setup_style(colorscheme="terra"):
         o["bg_active"] = "wheat1"
         # selected element
         o["bg_selected"] = "tan2"
+        o["fg_title"] = "gray7"
 
     elif colorscheme == "slategray":
         # frames
@@ -47,6 +48,7 @@ def setup_style(colorscheme="terra"):
         o["bg_active"] = "light gray"
         # selected element
         o["bg_selected"] = "coral3"
+        o["fg_title"] = "white smoke"
 
     # default colorscheme == "snow":
     else:
@@ -60,11 +62,12 @@ def setup_style(colorscheme="terra"):
         o["bg_active"] = "mint cream"
         # selected element
         o["bg_selected"] = "coral"
+        o["fg_title"] = "white"
 
     # get the rgb values of the container color, needed for plot bg
     rgb = tk.Button().winfo_rgb(o["bg_container"])
     o["bg_container_rgb"] = tuple(c / 65535 for c in rgb)
-    logg.info(f"o['bg_container_rgb']: {o['bg_container_rgb']}")
+    logg.trace(f"o['bg_container_rgb']: {o['bg_container_rgb']}")
 
     # font setup
     o["font_std_type"] = "Helvetica"
@@ -91,6 +94,7 @@ def setup_style(colorscheme="terra"):
     s.configure(
         "title.TLabel",
         background=o["bg_title"],
+        foreground=o["fg_title"],
         font=(o["font_std_type"], o["font_std_size"] + 2),
         padding=(0, 6, 0, 6),
     )

@@ -2,10 +2,11 @@
 
 ### TODO
 
+* The letters are drawn with thickness 10: when joining two glyphs at 90 deg angle with a different thickness, it does not look good. Fix it.
 * Control things with keyboard
 * Add loading of a glyph, after FMlines are set, remap those points to the current image
 * Make the point list scroll when adding points if it is filled
-* Set from CLI theme and thickness and loglevel
+* GUI to build splines by assembling glyphs
 
 ### MAYBE
 
@@ -25,6 +26,7 @@
 * File dialog to save glyphs
 * Do not draw segments between glyphs, they are there for a reason
 * Dark mode
+* Set from CLI theme and thickness and loglevel
 
 ### Ideas
 

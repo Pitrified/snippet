@@ -48,33 +48,35 @@ def load_spline(pf_input_spline, data_dir):
     # full path to the letter recap file
     logg.debug(f"pf_input_spline: {pf_input_spline}")
 
-    # letter name
-    spline_name_stem = pf_input_spline.stem
-    # template for the glyph files
-    glyph_name_fmt = f"{spline_name_stem}_{{:03d}}.txt"
-    logg.debug(f"data_dir {data_dir} glyph_name_fmt {glyph_name_fmt}")
-
     spline = []
 
-    for i in range(1000):
-        current_glyph = data_dir / glyph_name_fmt.format(i)
-        logg.debug(f"current_glyph: {current_glyph}")
+    # open the spline file
+    with pf_input_spline.open() as f:
 
-        if not current_glyph.exists():
-            logg.debug(f"No more glyphs")
-            break
+        # in each line there is a glyph name, offset x y
+        for line in f:
+            logg.debug(f"line: {line.rstrip()}")
+            glyph_name, dx, dy = line.rstrip().split("\t")
+            dx = float(dx)
+            dy = float(dy)
+            current_glyph = data_dir / glyph_name
+            logg.debug(f"current_glyph: {current_glyph}")
 
-        glyph = []
-        with current_glyph.open("r") as f:
-            for line in f:
-                # logg.debug(f"line: {line.rstrip()}")
-                x, y, ori_deg = line.rstrip().split("\t")
-                x = float(x)
-                y = float(y)
-                ori_deg = float(ori_deg)
-                fm_pt = OrientedPoint(x, y, ori_deg)
-                glyph.append(fm_pt)
+            if not current_glyph.exists():
+                logg.warn(f"{current_glyph} not found!")
+                continue
 
-        spline.append(glyph)
+            glyph = []
+            with current_glyph.open("r") as f:
+                for line in f:
+                    # logg.debug(f"line: {line.rstrip()}")
+                    x, y, ori_deg = line.rstrip().split("\t")
+                    x = float(x)
+                    y = float(y)
+                    ori_deg = float(ori_deg)
+                    fm_pt = OrientedPoint(x + dx, y + dy, ori_deg)
+                    glyph.append(fm_pt)
+
+            spline.append(glyph)
 
     return spline
