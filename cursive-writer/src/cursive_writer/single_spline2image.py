@@ -128,27 +128,41 @@ def setup_env():
     return args
 
 
-def run_single_spline2image(args):
+def plot_letter(pf_input_spline, data_dir, thickness):
     """
     """
-    logg = logging.getLogger(f"c.{__name__}.run_single_spline2image")
-    logg.debug(f"Starting run_single_spline2image")
-
-    path_input = args.path_input
-    main_dir = Path(__file__).resolve().parent
-    logg.debug(f"main_dir: {main_dir}")
-    data_dir = main_dir / "data"
-    logg.debug(f"data_dir: {data_dir}")
-    pf_input_spline = data_dir / path_input
-    logg.debug(f"pf_input_spline: {pf_input_spline}")
-
-    thickness = args.thickness
+    logg = logging.getLogger(f"c.{__name__}.plot_letter")
+    logg.debug(f"Starting plot_letter")
 
     spline_sequence = load_spline(pf_input_spline, data_dir)
+    # logg.debug(f"spline_sequence: {spline_sequence}")
 
-    logg.debug(f"spline_sequence: {spline_sequence}")
+    min_x = float("inf")
+    max_x = float("-inf")
+    min_y = float("inf")
+    max_y = float("-inf")
+    for glyph in spline_sequence:
+        for point in glyph:
+            # logg.debug(f"point: {point}")
+            if point.x > max_x:
+                max_x = point.x
+            elif point.x < min_x:
+                min_x = point.x
+            if point.y > max_y:
+                max_y = point.y
+            elif point.y < min_y:
+                min_y = point.y
+    logg.debug(f"max_x: {max_x} min_x: {min_x} max_y: {max_y} min_y: {min_y}")
+    wid = max_x - min_x
+    hei = max_y - min_y
 
-    fig, ax = plt.subplots()
+    # inches to point
+    ratio = 4 / 1000
+
+    fig_dims = (wid * ratio, hei * ratio)
+
+    fig, ax = plt.subplots(figsize=fig_dims)
+    # fig, ax = plt.subplots()
 
     spline_samples = compute_long_spline(spline_sequence, thickness)
 
@@ -156,12 +170,52 @@ def run_single_spline2image(args):
         for segment in glyph:
             ax.plot(*segment, color="k", marker=".", ls="")
 
-    # plot everything
-    plot_utils.plot_build(fig, ax)
+    # plt.yticks(rotation=90)
 
-    plt.show()
+    # plot everything
+    # plot_utils.plot_build(fig, ax)
+    fig.tight_layout()
+
+    ax.set_yticklabels(ax.get_yticklabels(), rotation=90)
+
+def plot_good_letters(data_dir, thickness):
+    """
+    """
+    logg = logging.getLogger(f"c.{__name__}.plot_good_letters")
+    logg.debug(f"Starting plot_good_letters")
+
+    good_letters = [
+        "z1_000.txt",
+        "h1_002.txt",
+        "t1_007.txt",
+        "f1_002.txt",
+    ]
+
+    for letter_name in good_letters:
+        pf_input_spline = data_dir / letter_name
+        plot_letter(pf_input_spline, data_dir, thickness)
 
 
 if __name__ == "__main__":
     args = setup_env()
-    run_single_spline2image(args)
+
+    plt.rcParams["toolbar"] = "None"
+
+    logg = logging.getLogger(f"c.{__name__}.main")
+    logg.debug(f"Starting main")
+
+    main_dir = Path(__file__).resolve().parent
+    logg.debug(f"main_dir: {main_dir}")
+    data_dir = main_dir / "data"
+    logg.debug(f"data_dir: {data_dir}")
+
+    path_input = args.path_input
+    pf_input_spline = data_dir / path_input
+    logg.debug(f"pf_input_spline: {pf_input_spline}")
+
+    thickness = args.thickness
+
+    # plot_letter(pf_input_spline, data_dir, thickness)
+    plot_good_letters(data_dir, thickness)
+
+    plt.show()
