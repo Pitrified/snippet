@@ -146,11 +146,11 @@ def plot_letter(pf_input_spline, data_dir, thickness):
             # logg.debug(f"point: {point}")
             if point.x > max_x:
                 max_x = point.x
-            elif point.x < min_x:
+            if point.x < min_x:
                 min_x = point.x
             if point.y > max_y:
                 max_y = point.y
-            elif point.y < min_y:
+            if point.y < min_y:
                 min_y = point.y
     logg.debug(f"max_x: {max_x} min_x: {min_x} max_y: {max_y} min_y: {min_y}")
     wid = max_x - min_x
@@ -161,8 +161,12 @@ def plot_letter(pf_input_spline, data_dir, thickness):
 
     fig_dims = (wid * ratio, hei * ratio)
 
-    fig, ax = plt.subplots(figsize=fig_dims)
+    # fig, ax = plt.subplots(figsize=fig_dims)
     # fig, ax = plt.subplots()
+
+    fig = plt.figure(figsize=fig_dims, frameon=False)
+    ax = fig.add_axes((0, 0, 1, 1))
+    ax.set_axis_off()
 
     spline_samples = compute_long_spline(spline_sequence, thickness)
 
@@ -174,9 +178,9 @@ def plot_letter(pf_input_spline, data_dir, thickness):
 
     # plot everything
     # plot_utils.plot_build(fig, ax)
-    fig.tight_layout()
+    # fig.tight_layout()
+    # ax.set_yticklabels(ax.get_yticklabels(), rotation=90)
 
-    ax.set_yticklabels(ax.get_yticklabels(), rotation=90)
 
 def plot_good_letters(data_dir, thickness):
     """
@@ -185,10 +189,13 @@ def plot_good_letters(data_dir, thickness):
     logg.debug(f"Starting plot_good_letters")
 
     good_letters = [
-        "z1_000.txt",
-        "h1_002.txt",
-        "t1_007.txt",
         "f1_002.txt",
+        "h1_002.txt",
+        "i1_006.txt",
+        "s1_000.txt",
+        "t1_007.txt",
+        "v1_001.txt",
+        "z1_000.txt",
     ]
 
     for letter_name in good_letters:

@@ -2,6 +2,7 @@
 
 ### TODO
 
+* Duplicate glyph
 * The letters are drawn with thickness 10: when joining two glyphs at 90 deg angle with a different thickness, it does not look good. Fix it.
 * Control things with keyboard
 * Add loading of a glyph, after FMlines are set, remap those points to the current image
