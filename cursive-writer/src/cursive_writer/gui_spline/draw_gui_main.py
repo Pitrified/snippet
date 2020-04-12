@@ -147,8 +147,10 @@ def run_gui_main(args):
     logg.debug(f"image_dir: {image_dir}")
     pf_input_image = image_dir / path_input
     logg.debug(f"pf_input_image: {pf_input_image}")
+    data_dir = main_dir.parent / "data"
+    logg.debug(f"data_dir: {data_dir}")
 
-    c = Controller(pf_input_image, args.thickness, args.colorscheme)
+    c = Controller(pf_input_image, data_dir, args.thickness, args.colorscheme)
     c.run()
 
 

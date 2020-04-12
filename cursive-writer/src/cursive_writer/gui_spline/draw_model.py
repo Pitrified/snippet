@@ -2,9 +2,6 @@ import logging
 import numpy as np
 from math import cos
 from math import sin
-from pathlib import Path
-
-from tkinter import filedialog
 
 from cursive_writer.gui_spline.image_cropper import ImageCropper
 from cursive_writer.gui_spline.observable import Observable
@@ -30,10 +27,10 @@ class Model:
 
         self.thickness = thickness
 
-        # full path of the current image
+        # Path of the current image
         self.pf_input_image = Observable()
         # Path to the folder to save the spline in
-        self.path_out_folder = None
+        self.data_dir = Observable()
 
         # ImageTk that holds the cropped picture
         self.crop_input_image = Observable()
@@ -575,7 +572,9 @@ class Model:
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('clicked_fs_btn_save_spline')}")
 
-        if self.path_out_folder is None:
+        data_dir = self.data_dir.get()
+
+        if data_dir is None:
             logg.warn(f"{fmt_cn('Set', 'alert')} the output folder before saving")
             return
 
@@ -588,18 +587,18 @@ class Model:
             logg.warn(f"{fmt_cn('Set', 'alert')} the font measurements before saving")
             return
 
-        if not self.path_out_folder.exists():
-            self.path_out_folder.mkdir(parents=True)
+        if not data_dir.exists():
+            data_dir.mkdir(parents=True)
 
         letter_name_fmt = f"{glyph_root_name}_{{:03d}}.txt"
         glyph_name_fmt = f"{glyph_root_name}_{{:03d}}_{{:03d}}.txt"
         logg.debug(f"letter_name_fmt {letter_name_fmt} glyph_name_fmt {glyph_name_fmt}")
 
         # get the first free file index glyph_root_name_NNN.txt
-        file_index = find_free_index(self.path_out_folder, letter_name_fmt)
+        file_index = find_free_index(data_dir, letter_name_fmt)
 
         # full path to the letter recap file
-        letter_name = self.path_out_folder / letter_name_fmt.format(file_index)
+        letter_name = data_dir / letter_name_fmt.format(file_index)
         logg.debug(f"letter_name: {letter_name}")
 
         path = self.path_SP.get()
@@ -615,7 +614,7 @@ class Model:
             # build the name of the glyph file
             glyph_name = glyph_name_fmt.format(file_index, glyph_index)
             # build the glyph full file name
-            full_glyph_name = self.path_out_folder / glyph_name
+            full_glyph_name = data_dir / glyph_name
 
             # build the line for the main file
             path_line = f"{glyph_name}\t0\t0\n"
@@ -636,24 +635,23 @@ class Model:
 
         letter_name.write_text(all_glyphs)
 
-    def clicked_fs_btn_set_save_path(self):
+    def clicked_fs_btn_set_save_path(self, data_dir):
         """Set the output folder to save the spline into
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fs_btn_set_save_path")
         #  logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('clicked_fs_btn_set_save_path')}")
+        logg.info(f"Start {fmt_cn('clicked_fs_btn_set_save_path')} {data_dir}")
 
-        str_out_folder = filedialog.askdirectory()
+        self.data_dir.set(data_dir)
 
-        # filedialog sometimes returns an empty tuple, sometimes an empty string
-        if len(str_out_folder) == 0:
-            logg.info(f"Selection of output_folder cancelled")
-            return
+    def clicked_fl_btn_load_glyph(self, path_input_glyph):
+        """TODO: what is clicked_fl_btn_load_glyph doing?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fl_btn_load_glyph")
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('clicked_fl_btn_load_glyph', 'a2')}")
 
-        path_out_folder = Path(str_out_folder)
-        logg.debug(f"path_out_folder: {path_out_folder}")
-
-        self.path_out_folder = path_out_folder
+        # TODO actually load the glyph
 
     def translate_glyph(self, glyph_idx, dx, dy):
         """Translate all the points in a glyph

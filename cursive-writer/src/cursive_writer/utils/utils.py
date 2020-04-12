@@ -40,6 +40,12 @@ def find_free_index(folder, base_name_fmt):
 
 
 def load_glyph(pf_input_glyph, dx, dy):
+    """TODO: what is load_glyph doing?
+    """
+    if not pf_input_glyph.exists():
+        logg.warn(f"{pf_input_glyph} not found!")
+        return None
+
     glyph = []
 
     with pf_input_glyph.open("r") as f:
@@ -78,11 +84,12 @@ def load_spline(pf_input_spline, data_dir):
             current_glyph = data_dir / glyph_name
             logg.debug(f"current_glyph: {current_glyph}")
 
-            if not current_glyph.exists():
-                logg.warn(f"{current_glyph} not found!")
+            glyph = load_glyph(current_glyph, dx, dy)
+
+            # if the current_glyph file does not exist, skip it
+            if glyph is None:
                 continue
 
-            glyph = load_glyph(current_glyph, dx, dy)
             spline.append(glyph)
 
     return spline

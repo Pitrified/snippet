@@ -2,9 +2,13 @@
 
 ### TODO
 
-* Create the file dialog in the view, send virtual event to notify controller? Or inside the controller, ask for the destination.
-* Duplicate glyph
-* The letters are drawn with thickness 10: when joining two glyphs at 90 deg angle with a different thickness, it does not look good. Fix it.
+* When writing the root glyph name, the points move when pressing qwerasdfzxcv...
+* Duplicate glyph, add it a bit translated to show it
+* Rotate glyph
+* Rotate glyph 180
+* Rotate point 180
+* Move glyph with mouse
+* The letters are drawn with thickness 10: when joining two glyphs at 90 deg angle with a different thickness, it does not look good
 * Control things with keyboard
 * Add loading of a glyph, after FMlines are set, remap those points to the current image
 * Make the point list scroll when adding points if it is filled
@@ -29,11 +33,12 @@
 * Do not draw segments between glyphs, they are there for a reason
 * Dark mode
 * Set from CLI theme and thickness and loglevel
+* Create the file dialog in the view, inside the controller, ask for the destination, calling a method inside the view, that returns the path.
 
 ### Ideas
 
 * Each spline point has unique ID, the splines are list of IDs
-* For the ligatures: disregard the glyphs and look at the points orientation, chop off the letter wherever needed. Different version of a letter with different attach point are allowd (and needed).
+* For the ligatures: disregard the glyphs and look at the points orientation, chop off the letter wherever needed. Different version of a letter with different left attach point (high/low) are needed.
 
 ### On logging
 

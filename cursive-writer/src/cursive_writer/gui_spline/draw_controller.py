@@ -1,5 +1,6 @@
 import logging
 import tkinter as tk
+from pathlib import Path
 
 from cursive_writer.gui_spline.draw_model import Model
 from cursive_writer.gui_spline.draw_view import View
@@ -8,7 +9,7 @@ from cursive_writer.utils.color_utils import fmt_cn
 
 
 class Controller:
-    def __init__(self, pf_input_image, thickness, colorscheme):
+    def __init__(self, pf_input_image, data_dir, thickness, colorscheme):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('init')}")
@@ -20,6 +21,7 @@ class Controller:
 
         # register callbacks on the model observables
         self.model.pf_input_image.add_callback(self.updated_pf_input_image)
+        self.model.data_dir.add_callback(self.updated_data_dir)
         self.model.crop_input_image.add_callback(self.updated_crop_input_image)
         self.model.free_line.add_callback(self.updated_free_line)
         self.model.curr_mouse_pos_info.add_callback(self.updated_curr_mouse_pos_info)
@@ -59,7 +61,10 @@ class Controller:
         self.view.root.bind("<<sp_header_btn1_press>>", self.sp_header_btn1_pressed)
 
         ### button clicks
-        # info frame
+
+        ### info frame
+
+        # font management
         self.view.frame_info.fm_btn_set_base_mean.config(
             command=lambda: self.clicked_btn_set_fm("bm")
         )
@@ -70,20 +75,20 @@ class Controller:
             command=lambda: self.clicked_btn_set_fm("md")
         )
 
+        # output save/set path
         self.view.frame_info.fs_btn_save_spline.config(
             command=self.clicked_fs_btn_save_spline
         )
         self.view.frame_info.fs_btn_set_save_path.config(
             command=self.clicked_fs_btn_set_save_path
         )
-        # spline frame
-        self.view.frame_spline.sh_btn_new_spline.config(
-            command=self.clicked_sh_btn_new_spline
-        )
-        self.view.frame_spline.sh_btn_delete_SP.config(
-            command=self.clicked_sh_btn_delete_SP
+
+        # load glyph
+        self.view.frame_info.fl_btn_load_glyph.config(
+            command=self.clicked_fl_btn_load_glyph
         )
 
+        # adjust frame
         self.view.frame_info.sa_btn_vl.config(
             command=lambda: self.clicked_btn_adjust("vl")
         )
@@ -121,8 +126,17 @@ class Controller:
             command=lambda: self.clicked_btn_adjust("vo")
         )
 
+        # spline frame
+        self.view.frame_spline.sh_btn_new_spline.config(
+            command=self.clicked_sh_btn_new_spline
+        )
+        self.view.frame_spline.sh_btn_delete_SP.config(
+            command=self.clicked_sh_btn_delete_SP
+        )
+
         # initialize the values in the model
         self.model.set_pf_input_image(pf_input_image)
+        self.model.data_dir.set(data_dir)
 
         self.model.path_SP.set([[]])
         self.model.selected_header_SP.set(0)
@@ -310,7 +324,38 @@ class Controller:
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fs_btn_set_save_path")
         logg.info(f"\nStart {fmt_cn('clicked_fs_btn_set_save_path')}")
         self.view.reset_focus()
-        self.model.clicked_fs_btn_set_save_path()
+
+        data_dir = self.model.data_dir.get()
+        logg.debug(f"data_dir: {data_dir}")
+        str_data_dir = self.view.ask_folder(initialdir=data_dir)
+        logg.debug(f"str_data_dir: {str_data_dir}")
+
+        # filedialog sometimes returns an empty tuple, sometimes an empty string
+        if len(str_data_dir) == 0:
+            logg.info(f"Selection of data folder cancelled")
+            return
+
+        data_dir = Path(str_data_dir)
+        logg.debug(f"data_dir: {data_dir}")
+
+        self.model.clicked_fs_btn_set_save_path(data_dir)
+
+    def clicked_fl_btn_load_glyph(self):
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fl_btn_load_glyph")
+        logg.info(f"\nStart {fmt_cn('clicked_fl_btn_load_glyph')}")
+        self.view.reset_focus()
+
+        data_dir = self.model.data_dir.get()
+        logg.debug(f"data_dir: {data_dir}")
+        str_glyph_file_name = self.view.ask_file_name(initialdir=data_dir)
+        logg.info(f"str_glyph_file_name: {str_glyph_file_name}")
+
+        if len(str_glyph_file_name) == 0:
+            logg.info(f"Glyph load cancelled")
+            return
+
+        path_file_name = Path(str_glyph_file_name)
+        self.model.clicked_fl_btn_load_glyph(path_file_name)
 
     def clicked_btn_adjust(self, adjust_type):
         """Callback for buttons to adjust spline points
@@ -379,6 +424,11 @@ class Controller:
         logg.info(f"New values {fmt_cn('received')} for pf_input_image: {data}")
         title = f"Spline builder GUI - {data}"
         self.view.update_window_title(title)
+
+    def updated_data_dir(self, data):
+        logg = logging.getLogger(f"c.{__class__.__name__}.updated_data_dir")
+        logg.debug(f"Start {fmt_cn('updated_data_dir', 'a2')}")
+        self.view.update_data_dir(data)
 
     ### IMAGE CANVAS ###
 

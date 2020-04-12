@@ -1,6 +1,7 @@
 import logging
 import tkinter as tk
 from tkinter import ttk
+from tkinter import filedialog
 
 from math import cos
 from math import sin
@@ -104,6 +105,34 @@ class View:
         logg.info(f"{fmt_cn('Updating')} title '{title}'")
         self.root.title(title)
 
+    def update_data_dir(self, data):
+        """TODO: what are you changing when updating data_dir?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.update_data_dir")
+        logg.debug(f"Start {fmt_cn('update_data_dir', 'a2')} {data}")
+
+    def ask_file_name(self, **kwargs):
+        """TODO: what is ask_file_name doing?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.ask_file_name")
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('ask_file_name', 'a2')}")
+
+        str_file_name = filedialog.askopenfilename(**kwargs)
+
+        return str_file_name
+
+    def ask_folder(self, **kwargs):
+        """TODO: what is ask_folder doing?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.ask_folder")
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('ask_folder', 'a2')}")
+
+        folder_name = filedialog.askdirectory(**kwargs)
+
+        return folder_name
+
 
 class FrameInfo(ttk.Frame):
     def __init__(self, parent, name, style_option, *args, **kwargs):
@@ -119,23 +148,28 @@ class FrameInfo(ttk.Frame):
         self.font_measurement_frame = ttk.Frame(self, style="group.TFrame")
         self.spoint_adjust_frame = ttk.Frame(self, style="group.TFrame")
         self.mouse_info_frame = ttk.Frame(self, style="group.TFrame")
+        self.file_load_frame = ttk.Frame(self, style="group.TFrame")
         self.file_save_frame = ttk.Frame(self, style="group.TFrame")
 
         # build the objects in children frames
         self.build_font_measurement_frame()
         self.build_spoint_adjust_frame()
+        self.build_file_load_frame()
         self.build_file_save_frame()
         self.build_mouse_info_frame()
 
         # setup grid for this frame
-        self.grid_rowconfigure(2, weight=1)
+        self.grid_rowconfigure(3, weight=1)
         self.grid_columnconfigure(0, weight=1)
+
+        # TODO split top and bottom panes
 
         # grid the children frames
         self.font_measurement_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
         self.spoint_adjust_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
-        self.file_save_frame.grid(row=2, column=0, sticky="new", padx=10, pady=10)
-        self.mouse_info_frame.grid(row=3, column=0, sticky="ew", padx=10, pady=10)
+        self.file_load_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=10)
+        self.file_save_frame.grid(row=3, column=0, sticky="new", padx=10, pady=10)
+        self.mouse_info_frame.grid(row=4, column=0, sticky="ew", padx=10, pady=10)
 
     def build_font_measurement_frame(self):
         """Build the elements inside font_measurement_frame and grid them
@@ -218,11 +252,35 @@ class FrameInfo(ttk.Frame):
         self.sa_btn_o.grid(row=3, column=2, padx=4, pady=4)
         self.sa_btn_vo.grid(row=3, column=3, padx=4, pady=4)
 
+    def build_file_load_frame(self):
+        """
+        """
+        self.fl_title = ttk.Label(
+            self.file_load_frame, text="Load spline", style="title.TLabel"
+        )
+
+        self.fl_btn_load_spline = ttk.Button(
+            self.file_load_frame, text="Load spline", style="settings.TButton",
+        )
+
+        self.fl_btn_load_glyph = ttk.Button(
+            self.file_load_frame, text="Load glyph", style="settings.TButton",
+        )
+
+        # setup grid for file_load_frame
+        self.file_load_frame.grid_columnconfigure(0, weight=1, uniform="fs_half")
+        self.file_load_frame.grid_columnconfigure(1, weight=1, uniform="fs_half")
+
+        # grid the objects in file_load_frame
+        self.fl_title.grid(row=0, column=0, sticky="ew", columnspan=2)
+        self.fl_btn_load_spline.grid(row=1, column=0, pady=4)
+        self.fl_btn_load_glyph.grid(row=1, column=1, pady=4)
+
     def build_file_save_frame(self):
         """
         """
         self.fs_title = ttk.Label(
-            self.file_save_frame, text="Output path", style="title.TLabel"
+            self.file_save_frame, text="Save spline", style="title.TLabel"
         )
 
         self.fs_btn_save_spline = ttk.Button(
@@ -234,7 +292,7 @@ class FrameInfo(ttk.Frame):
         )
 
         self.fs_lab_root = ttk.Label(
-            self.file_save_frame, text="Glyph name root:", style="info.TLabel"
+            self.file_save_frame, text="Spline name root:", style="info.TLabel"
         )
         self.fs_ent_root = ttk.Entry(
             self.file_save_frame,
