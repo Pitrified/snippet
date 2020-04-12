@@ -52,6 +52,15 @@ class Controller:
         self.view.frame_image.bind_canvas("<ButtonRelease>", self.released_canvas)
         self.view.frame_image.bind_canvas("<Motion>", self.moved_canvas_mouse)
 
+        # the Entry gained/lost focus
+        self.has_focus_ent_root = False
+        self.view.frame_info.fs_ent_root.bind(
+            "<FocusIn>", lambda e: self.focus_change_ent_root("in")
+        )
+        self.view.frame_info.fs_ent_root.bind(
+            "<FocusOut>", lambda e: self.focus_change_ent_root("out")
+        )
+
         # moved in/out, click on FrameSPoint
         self.view.root.bind("<<sp_frame_enter>>", self.sp_frame_entered)
         self.view.root.bind("<<sp_frame_leave>>", self.sp_frame_left)
@@ -160,31 +169,33 @@ class Controller:
         if keysym == "Escape":
             self.view.exit()
 
-        # adjust point
-        elif keysym == "q":
-            self.clicked_btn_adjust("vl")
-        elif keysym == "w":
-            self.clicked_btn_adjust("l")
-        elif keysym == "e":
-            self.clicked_btn_adjust("r")
-        elif keysym == "r":
-            self.clicked_btn_adjust("vr")
-        elif keysym == "a":
-            self.clicked_btn_adjust("vb")
-        elif keysym == "s":
-            self.clicked_btn_adjust("b")
-        elif keysym == "d":
-            self.clicked_btn_adjust("u")
-        elif keysym == "f":
-            self.clicked_btn_adjust("vu")
-        elif keysym == "z":
-            self.clicked_btn_adjust("va")
-        elif keysym == "x":
-            self.clicked_btn_adjust("a")
-        elif keysym == "c":
-            self.clicked_btn_adjust("o")
-        elif keysym == "v":
-            self.clicked_btn_adjust("vo")
+        # only adjust if the focus is not in the Entry
+        if self.has_focus_ent_root == False:
+            # adjust point
+            if keysym == "q":
+                self.clicked_btn_adjust("vl")
+            elif keysym == "w":
+                self.clicked_btn_adjust("l")
+            elif keysym == "e":
+                self.clicked_btn_adjust("r")
+            elif keysym == "r":
+                self.clicked_btn_adjust("vr")
+            elif keysym == "a":
+                self.clicked_btn_adjust("vb")
+            elif keysym == "s":
+                self.clicked_btn_adjust("b")
+            elif keysym == "d":
+                self.clicked_btn_adjust("u")
+            elif keysym == "f":
+                self.clicked_btn_adjust("vu")
+            elif keysym == "z":
+                self.clicked_btn_adjust("va")
+            elif keysym == "x":
+                self.clicked_btn_adjust("a")
+            elif keysym == "c":
+                self.clicked_btn_adjust("o")
+            elif keysym == "v":
+                self.clicked_btn_adjust("vo")
 
     def canvas_resized(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.canvas_resized")
@@ -414,6 +425,23 @@ class Controller:
         logg.trace(f"Event {event} fired by {event.widget}")
         hid = event.widget.id_
         self.model.sp_header_btn1_pressed(hid)
+
+    def focus_change_ent_root(self, change):
+        """TODO: what is focus_change_ent_root doing?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.focus_change_ent_root")
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('focus_change_ent_root', 'a2')} {change}")
+
+        if change == "in":
+            logg.trace(f"Entry now has focus")
+            self.has_focus_ent_root = True
+        elif change == "out":
+            logg.trace(f"Entry has lost focus")
+            self.has_focus_ent_root = False
+        else:
+            logg.warn(f"{fmt_cn('Unrecognized', 'alert')} focus change {change}")
+            return
 
     ###### OBSERVABLE CALLBACKS ######
 

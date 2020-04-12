@@ -294,13 +294,21 @@ class FrameInfo(ttk.Frame):
         self.fs_lab_root = ttk.Label(
             self.file_save_frame, text="Spline name root:", style="info.TLabel"
         )
+
+        # small frame with entry and button
+        self.fs_ent_set_frame = ttk.Frame(self.file_save_frame, style="group.TFrame")
         self.fs_ent_root = ttk.Entry(
-            self.file_save_frame,
-            text="Path root:",
-            style="root.TEntry",
-            exportselection=0,
-            width=13,
+            self.fs_ent_set_frame, style="root.TEntry", exportselection=0, width=7,
         )
+        self.fs_btn_set_ent_root = ttk.Button(
+            self.fs_ent_set_frame, text="Set", style="settings.TButton", width=4,
+        )
+        # setup grid for fs_ent_set_frame
+        self.fs_ent_set_frame.grid_columnconfigure(0, weight=1)
+        self.fs_ent_set_frame.grid_columnconfigure(1, weight=1)
+        # grid Entry and Button in the frame
+        self.fs_ent_root.grid(row=0, column=0, pady=4)
+        self.fs_btn_set_ent_root.grid(row=0, column=1, pady=4)
 
         # setup grid for file_save_frame
         self.file_save_frame.grid_columnconfigure(0, weight=1, uniform="fs_half")
@@ -309,7 +317,9 @@ class FrameInfo(ttk.Frame):
         # grid the objects in file_save_frame
         self.fs_title.grid(row=0, column=0, sticky="ew", columnspan=2)
         self.fs_lab_root.grid(row=1, column=0, pady=4)
-        self.fs_ent_root.grid(row=1, column=1, pady=4)
+        # let the intermediate frame grow
+        self.fs_ent_set_frame.grid(row=1, column=1, pady=4, sticky="nsew")
+
         self.fs_btn_set_save_path.grid(row=2, column=0, pady=4)
         self.fs_btn_save_spline.grid(row=2, column=1, pady=4)
 
