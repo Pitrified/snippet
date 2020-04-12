@@ -39,6 +39,22 @@ def find_free_index(folder, base_name_fmt):
             return i
 
 
+def load_glyph(pf_input_glyph, dx, dy):
+    glyph = []
+
+    with pf_input_glyph.open("r") as f:
+        for line in f:
+            # logg.debug(f"line: {line.rstrip()}")
+            x, y, ori_deg = line.rstrip().split("\t")
+            x = float(x)
+            y = float(y)
+            ori_deg = float(ori_deg)
+            fm_pt = OrientedPoint(x + dx, y + dy, ori_deg)
+            glyph.append(fm_pt)
+
+    return glyph
+
+
 def load_spline(pf_input_spline, data_dir):
     """TODO: what is load_spline doing?
     """
@@ -66,17 +82,7 @@ def load_spline(pf_input_spline, data_dir):
                 logg.warn(f"{current_glyph} not found!")
                 continue
 
-            glyph = []
-            with current_glyph.open("r") as f:
-                for line in f:
-                    # logg.debug(f"line: {line.rstrip()}")
-                    x, y, ori_deg = line.rstrip().split("\t")
-                    x = float(x)
-                    y = float(y)
-                    ori_deg = float(ori_deg)
-                    fm_pt = OrientedPoint(x + dx, y + dy, ori_deg)
-                    glyph.append(fm_pt)
-
+            glyph = load_glyph(current_glyph, dx, dy)
             spline.append(glyph)
 
     return spline

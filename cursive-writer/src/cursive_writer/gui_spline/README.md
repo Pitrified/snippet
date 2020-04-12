@@ -2,6 +2,7 @@
 
 ### TODO
 
+* Create the file dialog in the view, send virtual event to notify controller? Or inside the controller, ask for the destination.
 * Duplicate glyph
 * The letters are drawn with thickness 10: when joining two glyphs at 90 deg angle with a different thickness, it does not look good. Fix it.
 * Control things with keyboard

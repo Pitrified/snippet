@@ -380,12 +380,21 @@ class Model:
             logg.info(f"Current glyph is {fmt_cn('empty', 'warn')}")
             return
 
-        # the selected is not the first
+        # the selected glyph is not the first
         if sel_idxs[0] > 0:
-            # the previous is emptry
+            # the previous glyph is emptry
             if len(path[sel_idxs[0] - 1]) == 0:
                 logg.info(f"Previous glyph is {fmt_cn('empty', 'warn')}")
                 return
+
+        # the selected glyph is not the last
+        if sel_idxs[0] < len(path) - 1:
+            # the selected point is the last in the glyph
+            if len(path[sel_idxs[0]]) - 1 == sel_idxs[1]:
+                # the next glyph is empty
+                if len(path[sel_idxs[0] + 1]) == 0:
+                    logg.info(f"Next glyph is {fmt_cn('empty', 'warn')}")
+                    return
 
         split_left = current_glyph[: sel_idxs[1] + 1]
         split_right = current_glyph[sel_idxs[1] + 1 :]
@@ -878,6 +887,16 @@ class Model:
 
         # RESCALE the point from view to absolute coordinates
         abs_op = self.rescale_point(view_op, "view2abs")
+
+        # add the point in path/all_SP
+        self.add_spline_abs_point(abs_op)
+
+    def add_spline_abs_point(self, abs_op):
+        """
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.add_spline_abs_point")
+        #  logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('add_spline_abs_point')}")
 
         # create the SplinePoint
         new_sp = SplinePoint(abs_op.x, abs_op.y, abs_op.ori_deg, self.next_spid)
