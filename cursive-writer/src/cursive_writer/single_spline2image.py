@@ -33,6 +33,14 @@ def parse_arguments():
         help="Thickness of the generated spline",
     )
 
+    parser.add_argument(
+        "-wp",
+        "--which_plot",
+        type=str,
+        default="single",
+        help="Which letter to plot, choose 'single', 'all' of a string of letters to show",
+    )
+
     # last line to parse the args
     args = parser.parse_args()
     return args
@@ -182,7 +190,7 @@ def plot_letter(pf_input_spline, data_dir, thickness):
     # ax.set_yticklabels(ax.get_yticklabels(), rotation=90)
 
 
-def plot_good_letters(data_dir, thickness):
+def plot_good_letters(data_dir, thickness, prefixes=None):
     """
     """
     logg = logging.getLogger(f"c.{__name__}.plot_good_letters")
@@ -192,6 +200,7 @@ def plot_good_letters(data_dir, thickness):
         "f1_002.txt",
         "h1_002.txt",
         "i1_006.txt",
+        "i1_h_006.txt",
         "s1_000.txt",
         "t1_007.txt",
         "v1_001.txt",
@@ -199,8 +208,10 @@ def plot_good_letters(data_dir, thickness):
     ]
 
     for letter_name in good_letters:
-        pf_input_spline = data_dir / letter_name
-        plot_letter(pf_input_spline, data_dir, thickness)
+        if not prefixes is None:
+            if letter_name[0] in prefixes:
+                pf_input_spline = data_dir / letter_name
+                plot_letter(pf_input_spline, data_dir, thickness)
 
 
 if __name__ == "__main__":
@@ -222,7 +233,14 @@ if __name__ == "__main__":
 
     thickness = args.thickness
 
-    # plot_letter(pf_input_spline, data_dir, thickness)
-    plot_good_letters(data_dir, thickness)
+    if args.which_plot == "single":
+        plot_letter(pf_input_spline, data_dir, thickness)
+    elif args.which_plot == "all":
+        plot_good_letters(data_dir, thickness)
+    else:
+        # send the which_plot args as string of prefixes, only plot the letters sent
+        plot_good_letters(data_dir, thickness, args.which_plot)
+
+    # TODO a mode that monitors the files drawn and recomputes them
 
     plt.show()

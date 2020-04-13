@@ -17,6 +17,7 @@ from cursive_writer.utils.spline_segment_holder import SplineSegmentHolder
 from cursive_writer.utils.utils import enumerate_double_list
 from cursive_writer.utils.utils import find_free_index
 from cursive_writer.utils.utils import iterate_double_list
+from cursive_writer.utils.utils import load_glyph
 
 
 class Model:
@@ -628,8 +629,8 @@ class Model:
                 fm_x, fm_y = apply_affine_transform(self.abs2fm, abs_pt.x, abs_pt.y)
                 fm_ori_deg = -abs_pt.ori_deg + base_point_abs.ori_deg
                 # create the OrientedPoint to normalize the angle
-                fm_pt = OrientedPoint(fm_x, fm_y, fm_ori_deg)
-                gly_line = f"{fm_pt.x}\t{fm_pt.y}\t{fm_pt.ori_deg}\n"
+                fm_op = OrientedPoint(fm_x, fm_y, fm_ori_deg)
+                gly_line = f"{fm_op.x}\t{fm_op.y}\t{fm_op.ori_deg}\n"
                 str_glyph += gly_line
             full_glyph_name.write_text(str_glyph)
 
@@ -651,7 +652,20 @@ class Model:
         logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('clicked_fl_btn_load_glyph', 'a2')}")
 
-        # TODO actually load the glyph
+        fm_lines_abs = self.fm_lines_abs.get()
+        if fm_lines_abs is None:
+            logg.warn(f"{fmt_cn('Set', 'alert')} the font measurements before loading")
+            return
+        base_point_abs = fm_lines_abs["base_point"]
+
+        fm_points = load_glyph(path_input_glyph, dx=0, dy=0)
+        logg.trace(f"fm_points: {fm_points}")
+
+        for fm_op in fm_points:
+            abs_x, abs_y = apply_affine_transform(self.fm2abs, fm_op.x, fm_op.y)
+            abs_ori_deg = -fm_op.ori_deg + base_point_abs.ori_deg
+            abs_op = OrientedPoint(abs_x, abs_y, abs_ori_deg)
+            self.add_spline_abs_point(abs_op)
 
     def translate_glyph(self, glyph_idx, dx, dy):
         """Translate all the points in a glyph
@@ -1064,8 +1078,8 @@ class Model:
             fm_x, fm_y = apply_affine_transform(self.abs2fm, abs_pt.x, abs_pt.y)
             fm_ori_deg = -abs_pt.ori_deg + base_point_abs.ori_deg
             # create the OrientedPoint to normalize the angle
-            fm_pt = OrientedPoint(fm_x, fm_y, fm_ori_deg)
-            all_fm[spid] = fm_pt
+            fm_op = OrientedPoint(fm_x, fm_y, fm_ori_deg)
+            all_fm[spid] = fm_op
 
         logg.trace(f"all_fm: {all_fm}")
         logg.trace(f"path: {path}")
@@ -1089,9 +1103,9 @@ class Model:
                 pair = (spid0, spid1)
                 segment_points = self.spline_thick_holder.segments[pair]
 
-                for fm_pt in segment_points:
-                    all_fm_x.append(fm_pt[0])
-                    all_fm_y.append(fm_pt[1])
+                for fm_op in segment_points:
+                    all_fm_x.append(fm_op[0])
+                    all_fm_y.append(fm_op[1])
 
                 spid0 = spid1
 
