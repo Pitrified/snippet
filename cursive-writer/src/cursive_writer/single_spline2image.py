@@ -201,6 +201,7 @@ def plot_good_letters(data_dir, thickness, prefixes=None):
         "h1_002.txt",
         "i1_006.txt",
         "i1_h_006.txt",
+        "m1_001.txt",
         "s1_000.txt",
         "t1_007.txt",
         "v1_001.txt",
