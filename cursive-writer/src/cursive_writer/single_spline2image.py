@@ -202,6 +202,7 @@ def plot_good_letters(data_dir, thickness, prefixes=None):
         "i1_006.txt",
         "i1_h_006.txt",
         "m1_001.txt",
+        "n1_000.txt",
         "s1_000.txt",
         "t1_007.txt",
         "v1_001.txt",
@@ -209,10 +210,9 @@ def plot_good_letters(data_dir, thickness, prefixes=None):
     ]
 
     for letter_name in good_letters:
-        if not prefixes is None:
-            if letter_name[0] in prefixes:
-                pf_input_spline = data_dir / letter_name
-                plot_letter(pf_input_spline, data_dir, thickness)
+        if prefixes is None or letter_name[0] in prefixes:
+            pf_input_spline = data_dir / letter_name
+            plot_letter(pf_input_spline, data_dir, thickness)
 
 
 if __name__ == "__main__":
@@ -233,6 +233,8 @@ if __name__ == "__main__":
     logg.debug(f"pf_input_spline: {pf_input_spline}")
 
     thickness = args.thickness
+
+    logg.debug(f"args.which_plot: {args.which_plot}")
 
     if args.which_plot == "single":
         plot_letter(pf_input_spline, data_dir, thickness)
