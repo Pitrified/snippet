@@ -506,10 +506,10 @@ def run_spliner_examples(args):
     logg = logging.getLogger(f"c.{__name__}.run_spliner_examples")
     logg.debug(f"Starting run_spliner_examples")
 
-    ex_fit_cubic_curve()
+    # ex_fit_cubic_curve()
     ex_compute_cubic_segment()
-    exs_thick_spline()
-    exs_long_spline()
+    # exs_thick_spline()
+    # exs_long_spline()
 
     plt.show()
 
