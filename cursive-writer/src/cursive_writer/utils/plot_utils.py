@@ -27,6 +27,9 @@ def add_vector(sp, ax, color="b", vec_len=0.3):
     end_y = sin(sp.ori_rad) * vec_len
     logg.debug(f"sp {sp} end_x: {end_x} end_y: {end_y}")
 
+    # plot this invisible point so that the ax limits update correctly
+    ax.plot(sp.x, sp.y, color="g", ls="", marker="")
+
     ax.arrow(
         sp.x,
         sp.y,

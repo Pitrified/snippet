@@ -193,6 +193,18 @@ def poly_model(x, coeff, flip_coeff=False):
     return y_true
 
 
+def slope2deg(slope, direction=1):
+    """Convert the slope of a line to an angle in degrees
+    """
+    return degrees(np.arctan2(slope, direction))
+
+
+def slope2rad(slope, direction=1):
+    """Convert the slope of a line to an angle in radians
+    """
+    return np.arctan2(slope, direction)
+
+
 def compute_rot_matrix(theta_deg):
     """Compute the 2x2 rotation matrix for angle theta_deg in degrees
     """

@@ -1,6 +1,7 @@
 import argparse
 import logging
 import numpy as np
+import math
 
 # from random import seed as rseed
 from timeit import default_timer as timer
@@ -11,6 +12,9 @@ from cursive_writer.spliner.spliner import translate_points_to_origin
 from cursive_writer.spliner.spliner import sample_segment_points
 from cursive_writer.spliner.spliner import fit_cubic
 from cursive_writer.spliner.spliner import rototranslate_points
+from cursive_writer.utils.geometric_utils import poly_model
+from cursive_writer.utils.geometric_utils import slope2deg
+from cursive_writer.utils import plot_utils
 
 
 def parse_arguments():
@@ -125,11 +129,101 @@ def setup_env():
     return args
 
 
+def rotate_coeff(coeff, theta_deg):
+    """Returns the parametric expression of the rotated coeff
+
+    Given a cubic curve
+
+        y = a*x^3 + b*x^2 + c*x + d
+
+    It can be parametrized as
+        
+        [x] = [         t               ]
+        [y] = [ a*t^3 + b*t^2 + c*t + d ]
+
+    Apply a rotation of th radians
+        
+        [x'] = [cos(th) -sin(th)] * [         t               ]
+        [y'] = [sin(th)  cos(th)]   [ a*t^3 + b*t^2 + c*t + d ]
+    """
+    logg = logging.getLogger(f"c.{__name__}.rotate_coeff")
+    logg.debug(f"Starting rotate_coeff")
+
+    theta_rad = math.radians(theta_deg)
+    ct = math.cos(theta_rad)
+    st = math.sin(theta_rad)
+
+    a, b, c, d = coeff
+
+    x_rot_coeff = [
+        -st * a,
+        -st * b,
+        ct - st * c,
+        -st * d,
+    ]
+    y_rot_coeff = [
+        ct * a,
+        ct * b,
+        st + ct * c,
+        ct * d,
+    ]
+
+    return x_rot_coeff, y_rot_coeff
+
+
+def rotate_derive_coeff(coeff, theta_deg):
+    """Returns the parametric expression of the derivative of the rotated coeff
+
+    Given a cubic curve
+
+        y = a*x^3 + b*x^2 + c*x + d
+
+    It can be parametrized as
+        
+        [x] = [         t               ]
+        [y] = [ a*t^3 + b*t^2 + c*t + d ]
+
+    Apply a rotation of th radians
+        
+        [x'] = [cos(th) -sin(th)] * [         t               ]
+        [y'] = [sin(th)  cos(th)]   [ a*t^3 + b*t^2 + c*t + d ]
+
+    The derivative as function of t is
+        
+        dy   dy/dt
+        -- = -----
+        dx   dx/dt
+    """
+    theta_rad = math.radians(theta_deg)
+    ct = math.cos(theta_rad)
+    st = math.sin(theta_rad)
+
+    a, b, c, d = coeff
+
+    x_rot_d_coeff = [
+        3 * -st * a,
+        2 * -st * b,
+        ct - st * c,
+    ]
+    y_rot_d_coeff = [
+        3 * ct * a,
+        2 * ct * b,
+        st + ct * c,
+    ]
+
+    return x_rot_d_coeff, y_rot_d_coeff
+
+
 def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
     """
     """
     logg = logging.getLogger(f"c.{__name__}.build_ligature")
     logg.debug(f"Starting build_ligature")
+
+    plot_utils.add_vector(l_p0, ax, color="r", vec_len=3)
+    plot_utils.add_vector(l_p1, ax, color="r", vec_len=3)
+    plot_utils.add_vector(r_p0, ax, color="r", vec_len=3)
+    plot_utils.add_vector(r_p1, ax, color="r", vec_len=3)
 
     # translate the points to the origin
     l_rot_p0, l_rot_p1, l_dir_01 = translate_points_to_origin(l_p0, l_p1)
@@ -139,11 +233,62 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
     l_coeff = fit_cubic(l_rot_p0, l_rot_p1)
     r_coeff = fit_cubic(r_rot_p0, r_rot_p1)
 
+    # find the coeff of the cubic rotated back
+    l_x_rot_coeff, l_y_rot_coeff = rotate_coeff(l_coeff, l_dir_01)
+    r_x_rot_coeff, r_y_rot_coeff = rotate_coeff(r_coeff, r_dir_01)
+
+    # sample the cubic
+    t_sample = np.linspace(0, 20, num=50)
+    l_x_sample = poly_model(t_sample, l_x_rot_coeff, flip_coeff=True)
+    l_y_sample = poly_model(t_sample, l_y_rot_coeff, flip_coeff=True)
+    r_x_sample = poly_model(t_sample, r_x_rot_coeff, flip_coeff=True)
+    r_y_sample = poly_model(t_sample, r_y_rot_coeff, flip_coeff=True)
+
+    # translate it to the original position
+    l_x_sample += l_p0.x
+    l_y_sample += l_p0.y
+    r_x_sample += r_p0.x
+    r_y_sample += r_p0.y
+    ax.plot(l_x_sample, l_y_sample, color="g", ls="-", marker="")
+    ax.plot(r_x_sample, r_y_sample, color="g", ls="-", marker="")
+
+    # find the derivative of the rotated back segments
+    l_x_rot_d_coeff, l_y_rot_d_coeff = rotate_derive_coeff(l_coeff, l_dir_01)
+    r_x_rot_d_coeff, r_y_rot_d_coeff = rotate_derive_coeff(r_coeff, r_dir_01)
+
+    # sample the derived parametric expression
+    l_x_d_sample = poly_model(t_sample, l_x_rot_d_coeff, flip_coeff=True)
+    l_y_d_sample = poly_model(t_sample, l_y_rot_d_coeff, flip_coeff=True)
+    r_x_d_sample = poly_model(t_sample, r_x_rot_d_coeff, flip_coeff=True)
+    r_y_d_sample = poly_model(t_sample, r_y_rot_d_coeff, flip_coeff=True)
+    # compute the value of the derivative
+    l_yp_sample = np.divide(l_y_d_sample, l_x_d_sample)
+    r_yp_sample = np.divide(r_y_d_sample, r_x_d_sample)
+
+    recap = ""
+    xid = 14
+    recap += f"At point l_x_sample[{xid}] {l_x_sample[xid]}"
+    recap += f" l_y_sample[{xid}] {l_y_sample[xid]}"
+    recap += f" l_yp_sample[{xid}] {l_yp_sample[xid]}"
+    logg.debug(recap)
+
+    # plot an example of tangent line
+    tang_op = OrientedPoint(
+        l_x_sample[xid], l_y_sample[xid], slope2deg(l_yp_sample[xid])
+    )
+    tang_coeff = tang_op.to_ab_line()
+    x_sample = np.linspace(l_p0.x, l_p1.x, num=50)
+    tang_y_sample = poly_model(x_sample, tang_coeff, flip_coeff=True)
+    ax.plot(x_sample, tang_y_sample, color="g", ls="-", marker="")
+    return
+
     # sample the points near the origin
     l_x_sample, l_y_segment = sample_segment_points(l_rot_p0.x, l_rot_p1.x, l_coeff)
     r_x_sample, r_y_segment = sample_segment_points(r_rot_p0.x, r_rot_p1.x, r_coeff)
-    ax.plot(l_x_sample, l_y_segment, color="g", ls="-", marker="")
-    ax.plot(r_x_sample, r_y_segment, color="y", ls="-", marker="")
+    # ax.plot(l_x_sample, l_y_segment, color="g", ls="-", marker="")
+    # ax.plot(r_x_sample, r_y_segment, color="y", ls="-", marker="")
+    # ax.plot(l_x_sample, l_y_segment, color="b", ls="", marker=".")
+    # ax.plot(l_x_sample, l_y_segment, color="y", ls="", marker=".")
 
     # translate them back to original position
     l_x_rototran, l_y_rototran = rototranslate_points(
@@ -152,8 +297,10 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
     r_x_rototran, r_y_rototran = rototranslate_points(
         r_x_sample, r_y_segment, -r_dir_01, r_p0.x, r_p0.y,
     )
-    ax.plot(l_x_rototran, l_y_rototran, color="g", ls="-", marker="")
-    ax.plot(r_x_rototran, r_y_rototran, color="y", ls="-", marker="")
+    # ax.plot(l_x_rototran, l_y_rototran, color="g", ls="-", marker="")
+    # ax.plot(r_x_rototran, r_y_rototran, color="y", ls="-", marker="")
+    # ax.plot(l_x_rototran, l_y_rototran, color="b", ls="", marker=".")
+    # ax.plot(l_x_rototran, l_y_rototran, color="y", ls="", marker=".")
 
 
 def exs_build_ligature():
