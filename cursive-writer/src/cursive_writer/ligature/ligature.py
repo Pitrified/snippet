@@ -312,26 +312,39 @@ def print_coeff(coeff):
 
 
 def sample_parametric_aligned(
-    x_coeff, y_coeff, x_d_coeff, y_d_coeff, x_min, x_max, stride
+    x_coeff, y_coeff, x_d_coeff, y_d_coeff, x_min, x_max, x_stride, x_offset=0
 ):
     """TODO: what is sample_parametric_aligned doing?
 
-    Given a parametric curve and an interval [x_min, x_max]
+    Given a parametric curve and its derivative and an interval [x_min, x_max]
 
-        [x] = [f(t)]
-        [y] = [g(t)]
+        [x] = [f(t)] (as x_coeff)       [x'] = [f'(t)] (as x_d_coeff)
+        [y] = [g(t)] (as y_coeff)       [y'] = [g'(t)] (as y_d_coeff)
 
-    Returns an interpolation of that curve, aligned on multiples of stride.
+    Returns an interpolation of that curve, aligned on multiples of x_stride.
 
-    Let x_min = 1.7, x_max = 4.5 and stride = 0.5, the curve will be sampled in
+    Let x_min = 1.7, x_max = 4.5 and x_stride = 0.5, the curve will be sampled in
 
         x_sample = [2, 2.5, 3, 3.5, 4, 4.5]
 
     Note that the extremes are included on both sides.
+
+    Use x_offset to shift the grid a bit: it will be correctly aligned after
+    translating the points in the correct position: if p0.x = 3.8, the x_offset
+    will be equal to 4 - 3.8 = 0.2 and the grid is
+
+        x_sample = [2.2, 2.7, 3.2, 3.7, 4.2, 4.7]
+
+    so that when translating up by 3.8, the x points will be aligned:
+
+        x_sample = [6, 6.5, 7, 7.5, 8, 8.5]
+
+    So x_offset is how much p0.x is misaligned with the grid
     """
     logg = logging.getLogger(f"c.{__name__}.sample_parametric_aligned")
     logg.debug(f"\nStart sample_parametric_aligned")
     logg.debug(f"x_min: {x_min} x_max: {x_max}")
+    logg.debug(f"x_stride: {x_stride} x_offset: {x_offset}")
 
     # find the value for t that corresponds to x_min and x_max
     t_min = bisect_poly(x_coeff, x_d_coeff, x_min, x_low=2 * x_min, x_high=2 * x_max)
@@ -346,13 +359,45 @@ def sample_parametric_aligned(
     logg.debug(f"x_test_min: {x_test_min} x_test_max: {x_test_max}")
     # return [x_test_min, x_test_max], [y_test_min, y_test_max]
 
-    # oversample in t
-    t_oversample = np.linspace(t_min, t_max, num=10*(x_max-x_min))
+    # oversample in t, pad a bit the interval
+    x_len = x_max - x_min
+    # t_pad = x_len / 10
+    t_pad = x_len / 10 * x_stride
+    t_num_samples = int(x_len * 10 / x_stride)
+    t_oversample = np.linspace(t_min - t_pad, t_max + t_pad, num=t_num_samples)
     x_oversample = poly_model(t_oversample, x_coeff, flip_coeff=True)
-    y_oversample = poly_model(t_oversample, y_coeff, flip_coeff=True)   
-    return x_oversample, y_oversample
+    y_oversample = poly_model(t_oversample, y_coeff, flip_coeff=True)
+    # return x_oversample, y_oversample
+
+    # find the aligned x values
+    x_a_min = math.ceil(x_min / x_stride) * x_stride
+    x_a_max = math.floor(x_max / x_stride) * x_stride
+    logg.debug(f"x_a_min: {x_a_min} x_a_max: {x_a_max}")
+    x_a_sample = np.arange(x_a_min, x_a_max + x_stride / 2, x_stride)
+    logg.debug(f"x_a_sample.shape: {x_a_sample.shape} {x_a_sample[0]} {x_a_sample[-1]}")
+
+    # translate the aligned x values to compensate the x_offset
+    x_a_sample += x_offset 
+    logg.debug(f"x_a_sample.shape: {x_a_sample.shape} {x_a_sample[0]} {x_a_sample[-1]}")
 
     # find the closest x in the aligned grid and save the value there
+    x_id = 0
+    y_a_sample = np.empty_like(x_a_sample)
+    # cycle all the t values
+    for i, t in enumerate(t_oversample):
+        # when the x_oversample at index i is bigger than the current aligned at x_id
+        if x_oversample[i] > x_a_sample[x_id]:
+            # logg.debug(f"{x_oversample[i-1]} < {x_a_sample[x_id]} < {x_oversample[i]}")
+
+            # save the y value at the corresponding position
+            # MAYBE even more precise by weighing the two adjacent y_oversample values
+            y_a_sample[x_id] = (y_oversample[i - 1] + y_oversample[i]) / 2
+
+            x_id += 1
+            if x_id >= x_a_sample.shape[0]:
+                break
+
+    return x_a_sample, y_a_sample
 
 
 def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
@@ -361,16 +406,17 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
     logg = logging.getLogger(f"c.{__name__}.build_ligature")
     logg.debug(f"Starting build_ligature")
 
-    plot_utils.add_vector(l_p0, ax, color="r", vec_len=3)
-    plot_utils.add_vector(l_p1, ax, color="r", vec_len=3)
-    # plot_utils.add_vector(r_p0, ax, color="r", vec_len=3)
-    # plot_utils.add_vector(r_p1, ax, color="r", vec_len=3)
+    vec_len = max(r_p1.x, r_p1.y) / 10
+    plot_utils.add_vector(l_p0, ax, color="r", vec_len=vec_len)
+    plot_utils.add_vector(l_p1, ax, color="r", vec_len=vec_len)
+    # plot_utils.add_vector(r_p0, ax, color="r", vec_len=vec_len)
+    # plot_utils.add_vector(r_p1, ax, color="r", vec_len=vec_len)
 
     # find where the points are if translated, but not rotated, to the origin
     l_tran_p0 = OrientedPoint(0, 0, l_p0.ori_deg)
     l_tran_p1 = OrientedPoint(l_p1.x - l_p0.x, l_p1.y - l_p0.y, l_p1.ori_deg)
-    plot_utils.add_vector(l_tran_p0, ax, color="r", vec_len=3)
-    plot_utils.add_vector(l_tran_p1, ax, color="r", vec_len=3)
+    plot_utils.add_vector(l_tran_p0, ax, color="r", vec_len=vec_len)
+    plot_utils.add_vector(l_tran_p1, ax, color="r", vec_len=vec_len)
 
     # translate the points to the origin
     l_rot_p0, l_rot_p1, l_dir_01 = translate_points_to_origin(l_p0, l_p1)
@@ -431,7 +477,9 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
     ax.plot(x_sample, tang_y_sample, color="g", ls="-", marker="")
 
     # sample properly the cubic in the interval
-    stride = 0.1
+    # x_stride = 3
+    x_stride = 0.3
+    x_offset = math.ceil(l_p0.x / x_stride) * x_stride - l_p0.x
     l_x_sample, l_y_sample = sample_parametric_aligned(
         l_x_rot_coeff,
         l_y_rot_coeff,
@@ -439,16 +487,17 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
         l_y_rot_d_coeff,
         0,
         l_p1.x - l_p0.x,
-        stride,
+        x_stride,
+        x_offset,
     )
-    ax.plot(l_x_sample, l_y_sample, color="r", ls="", marker=".")
+    ax.plot(l_x_sample, l_y_sample, color="k", ls="", marker=".")
 
     # translate it to the original position
     l_x_sample += l_p0.x
     l_y_sample += l_p0.y
     r_x_sample += r_p0.x
     r_y_sample += r_p0.y
-    ax.plot(l_x_sample, l_y_sample, color="r", ls="", marker=".")
+    ax.plot(l_x_sample, l_y_sample, color="k", ls="", marker=".")
 
     # sample the points near the origin
     l_x_sample, l_y_segment = sample_segment_points(l_rot_p0.x, l_rot_p1.x, l_coeff)
@@ -512,6 +561,9 @@ def exs_build_ligature():
     r_p1 = OrientedPoint(32, 20, 70)
     ax[1][1].set_title(f"{l_p0.ori_deg} {l_p1.ori_deg} : {r_p0.ori_deg} {r_p1.ori_deg}")
     build_ligature(l_p0, l_p1, r_p0, r_p1, ax[1][1])
+
+    # plt.show()
+    # return
 
     # create the plot
     fig, ax = plt.subplots(2, 2)
