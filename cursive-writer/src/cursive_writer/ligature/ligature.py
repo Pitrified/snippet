@@ -144,6 +144,7 @@ def bisect_poly(coeff, d_coeff, y_target, tolerance=1e-6, x_low=0, x_high=1):
     Ties when y_target is higher/lower than y_mid are broken using the first derivative
     """
     logg = logging.getLogger(f"c.{__name__}.bisect_poly")
+    logg.setLevel("INFO")
     logg.debug(f"Start bisect_poly")
 
     # deal with bad inputs
@@ -297,6 +298,19 @@ def rotate_derive_coeff(coeff, theta_deg):
     return x_rot_d_coeff, y_rot_d_coeff
 
 
+def print_coeff(coeff):
+    """TODO: what is print_coeff doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.print_coeff")
+    logg.debug(f"Start print_coeff {coeff}")
+
+    eq_str = "y ="
+    for i, c in enumerate(np.flip(coeff)):
+        eq_str += f" + {c} * x^{i}"
+
+    return eq_str
+
+
 def sample_parametric_aligned(
     x_coeff, y_coeff, x_d_coeff, y_d_coeff, x_min, x_max, stride
 ):
@@ -316,13 +330,29 @@ def sample_parametric_aligned(
     Note that the extremes are included on both sides.
     """
     logg = logging.getLogger(f"c.{__name__}.sample_parametric_aligned")
-    logg.debug(f"Start sample_parametric_aligned")
+    logg.debug(f"\nStart sample_parametric_aligned")
+    logg.debug(f"x_min: {x_min} x_max: {x_max}")
 
     # find the value for t that corresponds to x_min and x_max
-    t_min = bisect_poly(x_coeff, x_d_coeff, x_min, x_low=-1, x_high=2)
-    t_min = bisect_poly(x_coeff, x_d_coeff, x_max, x_low=-1, x_high=2)
+    t_min = bisect_poly(x_coeff, x_d_coeff, x_min, x_low=2 * x_min, x_high=2 * x_max)
+    t_max = bisect_poly(x_coeff, x_d_coeff, x_max, x_low=2 * x_min, x_high=2 * x_max)
+    logg.debug(f"t_min: {t_min} t_max: {t_max}")
 
-    return 0, 0
+    # check where the extremes are
+    x_test_min = poly_model(np.array([t_min]), x_coeff, flip_coeff=True)
+    y_test_min = poly_model(np.array([t_min]), y_coeff, flip_coeff=True)
+    x_test_max = poly_model(np.array([t_max]), x_coeff, flip_coeff=True)
+    y_test_max = poly_model(np.array([t_max]), y_coeff, flip_coeff=True)
+    logg.debug(f"x_test_min: {x_test_min} x_test_max: {x_test_max}")
+    # return [x_test_min, x_test_max], [y_test_min, y_test_max]
+
+    # oversample in t
+    t_oversample = np.linspace(t_min, t_max, num=10*(x_max-x_min))
+    x_oversample = poly_model(t_oversample, x_coeff, flip_coeff=True)
+    y_oversample = poly_model(t_oversample, y_coeff, flip_coeff=True)   
+    return x_oversample, y_oversample
+
+    # find the closest x in the aligned grid and save the value there
 
 
 def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
@@ -333,8 +363,14 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
 
     plot_utils.add_vector(l_p0, ax, color="r", vec_len=3)
     plot_utils.add_vector(l_p1, ax, color="r", vec_len=3)
-    plot_utils.add_vector(r_p0, ax, color="r", vec_len=3)
-    plot_utils.add_vector(r_p1, ax, color="r", vec_len=3)
+    # plot_utils.add_vector(r_p0, ax, color="r", vec_len=3)
+    # plot_utils.add_vector(r_p1, ax, color="r", vec_len=3)
+
+    # find where the points are if translated, but not rotated, to the origin
+    l_tran_p0 = OrientedPoint(0, 0, l_p0.ori_deg)
+    l_tran_p1 = OrientedPoint(l_p1.x - l_p0.x, l_p1.y - l_p0.y, l_p1.ori_deg)
+    plot_utils.add_vector(l_tran_p0, ax, color="r", vec_len=3)
+    plot_utils.add_vector(l_tran_p1, ax, color="r", vec_len=3)
 
     # translate the points to the origin
     l_rot_p0, l_rot_p1, l_dir_01 = translate_points_to_origin(l_p0, l_p1)
@@ -347,21 +383,24 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
     # find the parametric coeff of the cubic rotated back
     l_x_rot_coeff, l_y_rot_coeff = rotate_coeff(l_coeff, l_dir_01)
     r_x_rot_coeff, r_y_rot_coeff = rotate_coeff(r_coeff, r_dir_01)
+    logg.debug(f"l_x_rot_coeff: {print_coeff(l_x_rot_coeff)}")
+    logg.debug(f"l_y_rot_coeff: {print_coeff(l_y_rot_coeff)}")
 
     # sample the cubic using the parametric coeff
-    t_sample = np.linspace(0, 20, num=50)
+    t_sample = np.linspace(-10, 30, num=50)
     l_x_sample = poly_model(t_sample, l_x_rot_coeff, flip_coeff=True)
     l_y_sample = poly_model(t_sample, l_y_rot_coeff, flip_coeff=True)
     r_x_sample = poly_model(t_sample, r_x_rot_coeff, flip_coeff=True)
     r_y_sample = poly_model(t_sample, r_y_rot_coeff, flip_coeff=True)
+    ax.plot(l_x_sample, l_y_sample, color="b", ls="-", marker="")
 
     # translate it to the original position
     l_x_sample += l_p0.x
     l_y_sample += l_p0.y
     r_x_sample += r_p0.x
     r_y_sample += r_p0.y
-    ax.plot(l_x_sample, l_y_sample, color="g", ls="-", marker="")
-    ax.plot(r_x_sample, r_y_sample, color="g", ls="-", marker="")
+    # ax.plot(l_x_sample, l_y_sample, color="g", ls="", marker=".")
+    # ax.plot(r_x_sample, r_y_sample, color="g", ls="-", marker="")
 
     # find the parametric coeff derivative of the rotated back segments
     l_x_rot_d_coeff, l_y_rot_d_coeff = rotate_derive_coeff(l_coeff, l_dir_01)
@@ -376,7 +415,7 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
     l_yp_sample = np.divide(l_y_d_sample, l_x_d_sample)
     r_yp_sample = np.divide(r_y_d_sample, r_x_d_sample)
 
-    xid = 14
+    xid = 24
     recap = f"At point l_x_sample[{xid}] {l_x_sample[xid]}"
     recap += f" l_y_sample[{xid}] {l_y_sample[xid]}"
     recap += f" l_yp_sample[{xid}] {l_yp_sample[xid]}"
@@ -398,19 +437,25 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
         l_y_rot_coeff,
         l_x_rot_d_coeff,
         l_y_rot_d_coeff,
-        l_rot_p0.x,
-        l_rot_p1.x,
+        0,
+        l_p1.x - l_p0.x,
         stride,
     )
-    ax.plot(l_x_sample, l_y_sample, color="r", ls="", marker="x")
-    return
+    ax.plot(l_x_sample, l_y_sample, color="r", ls="", marker=".")
+
+    # translate it to the original position
+    l_x_sample += l_p0.x
+    l_y_sample += l_p0.y
+    r_x_sample += r_p0.x
+    r_y_sample += r_p0.y
+    ax.plot(l_x_sample, l_y_sample, color="r", ls="", marker=".")
 
     # sample the points near the origin
     l_x_sample, l_y_segment = sample_segment_points(l_rot_p0.x, l_rot_p1.x, l_coeff)
     r_x_sample, r_y_segment = sample_segment_points(r_rot_p0.x, r_rot_p1.x, r_coeff)
     # ax.plot(l_x_sample, l_y_segment, color="g", ls="-", marker="")
     # ax.plot(r_x_sample, r_y_segment, color="y", ls="-", marker="")
-    # ax.plot(l_x_sample, l_y_segment, color="b", ls="", marker=".")
+    ax.plot(l_x_sample, l_y_segment, color="b", ls="", marker=".")
     # ax.plot(l_x_sample, l_y_segment, color="y", ls="", marker=".")
 
     # translate them back to original position
@@ -465,6 +510,42 @@ def exs_build_ligature():
     l_p1 = OrientedPoint(30, 20, 50)
     r_p0 = OrientedPoint(15, 13, -30)
     r_p1 = OrientedPoint(32, 20, 70)
+    ax[1][1].set_title(f"{l_p0.ori_deg} {l_p1.ori_deg} : {r_p0.ori_deg} {r_p1.ori_deg}")
+    build_ligature(l_p0, l_p1, r_p0, r_p1, ax[1][1])
+
+    # create the plot
+    fig, ax = plt.subplots(2, 2)
+    fig.set_size_inches(11, 8)
+    ax[0][0].grid()
+    ax[0][1].grid()
+    ax[1][0].grid()
+    ax[1][1].grid()
+
+    l_p0 = OrientedPoint(100, 100, -30)
+    l_p1 = OrientedPoint(300, 200, 70)
+    r_p0 = OrientedPoint(150, 100, -10)
+    r_p1 = OrientedPoint(320, 200, 50)
+    ax[0][0].set_title(f"{l_p0.ori_deg} {l_p1.ori_deg} : {r_p0.ori_deg} {r_p1.ori_deg}")
+    build_ligature(l_p0, l_p1, r_p0, r_p1, ax[0][0])
+
+    l_p0 = OrientedPoint(100, 130, -30)
+    l_p1 = OrientedPoint(300, 200, 50)
+    r_p0 = OrientedPoint(150, 120, -10)
+    r_p1 = OrientedPoint(320, 200, 70)
+    ax[0][1].set_title(f"{l_p0.ori_deg} {l_p1.ori_deg} : {r_p0.ori_deg} {r_p1.ori_deg}")
+    build_ligature(l_p0, l_p1, r_p0, r_p1, ax[0][1])
+
+    l_p0 = OrientedPoint(100, 100, -10)
+    l_p1 = OrientedPoint(300, 200, 70)
+    r_p0 = OrientedPoint(150, 130, -30)
+    r_p1 = OrientedPoint(320, 200, 50)
+    ax[1][0].set_title(f"{l_p0.ori_deg} {l_p1.ori_deg} : {r_p0.ori_deg} {r_p1.ori_deg}")
+    build_ligature(l_p0, l_p1, r_p0, r_p1, ax[1][0])
+
+    l_p0 = OrientedPoint(100, 100, -10)
+    l_p1 = OrientedPoint(300, 200, 50)
+    r_p0 = OrientedPoint(150, 130, -30)
+    r_p1 = OrientedPoint(320, 200, 70)
     ax[1][1].set_title(f"{l_p0.ori_deg} {l_p1.ori_deg} : {r_p0.ori_deg} {r_p1.ori_deg}")
     build_ligature(l_p0, l_p1, r_p0, r_p1, ax[1][1])
 
