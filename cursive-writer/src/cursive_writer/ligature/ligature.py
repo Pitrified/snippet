@@ -129,6 +129,89 @@ def setup_env():
     return args
 
 
+def bisect_poly(coeff, d_coeff, y_target, tolerance=1e-6, x_low=0, x_high=1):
+    """Finds a value of x so that |y-p(x)| < tolerance
+
+    Also returns when |x_low-x_high| < tolerance
+
+    A simple bisection is used, take care of setting x_low and x_high
+    properly in order to find the value that you vaguely expect.
+    I'm too lazy to use the derivative to find a better midpoint.
+
+    A lot of assumptions are made on the shape of p(x), mainly on the sign of
+    its second derivative, that should not change if you expect good results.
+
+    Ties when y_target is higher/lower than y_mid are broken using the first derivative
+    """
+    logg = logging.getLogger(f"c.{__name__}.bisect_poly")
+    logg.debug(f"Start bisect_poly")
+
+    # deal with bad inputs
+    if x_high < x_low:
+        x_low, x_high = x_high, x_low
+
+    while not math.isclose(x_low, x_high, abs_tol=tolerance):
+        # find the midpoint
+        x_mid = (x_low + x_high) / 2
+
+        # compute the value of the function in low, mid, high
+        y_low = poly_model(np.array([x_low]), coeff, flip_coeff=True)
+        y_mid = poly_model(np.array([x_mid]), coeff, flip_coeff=True)
+        y_high = poly_model(np.array([x_high]), coeff, flip_coeff=True)
+
+        logg.debug(f"x_low: {x_low} x_mid: {x_mid} x_high: {x_high}")
+        logg.debug(f"y_low: {y_low} y_mid: {y_mid} y_high: {y_high}")
+
+        # if the midpoint is a good approx, return that
+        if math.isclose(y_target, y_mid, abs_tol=tolerance):
+            logg.debug(f"the y_target {y_target} is close to y_mid {y_mid}")
+            return x_mid
+
+        # the y_target is between y_low and y_mid
+        elif y_low <= y_target <= y_mid or y_low >= y_target >= y_mid:
+            logg.debug(f"the y_target {y_target} is between y_low and y_mid")
+            x_high = x_mid
+
+        # the y_target is between y_mid and y_high
+        elif y_mid <= y_target <= y_high or y_mid >= y_target >= y_high:
+            logg.debug(f"the y_target {y_target} is between y_mid and y_high")
+            x_low = x_mid
+
+        # the y_target is higher than y_mid (but not lower than y_high or y_low
+        # else it would be in the other cases)
+        elif y_target >= y_mid:
+            logg.debug(f"the y_target {y_target} is over y_mid")
+            y_d_mid = poly_model(np.array([x_mid]), d_coeff, flip_coeff=True)
+
+            # the curve is going up at midpoint, pick right interval
+            if y_d_mid >= 0:
+                logg.debug(f"the curve is going up at midpoint, pick right interval")
+                x_low = x_mid
+
+            # the curve is going down at midpoint, pick left interval
+            elif y_d_mid < 0:
+                logg.debug(f"the curve is going down at midpoint, pick left interval")
+                x_high = x_mid
+
+        elif y_target <= y_mid:
+            logg.debug(f"the y_target {y_target} is below y_mid")
+            y_d_mid = poly_model(np.array([x_mid]), d_coeff, flip_coeff=True)
+
+            # the curve is going up at midpoint, pick left interval
+            if y_d_mid >= 0:
+                logg.debug(f"the curve is going up at midpoint, pick left interval")
+                x_high = x_mid
+
+            # the curve is going down at midpoint, pick right interval
+            elif y_d_mid < 0:
+                logg.debug(f"the curve is going down at midpoint, pick right interval")
+                x_low = x_mid
+
+    # TODO before returning need to check if the y_mid is actually near
+    # y_target, or if y_target was outside the interval requested
+    return (x_low + x_high) / 2
+
+
 def rotate_coeff(coeff, theta_deg):
     """Returns the parametric expression of the rotated coeff
 
@@ -214,6 +297,34 @@ def rotate_derive_coeff(coeff, theta_deg):
     return x_rot_d_coeff, y_rot_d_coeff
 
 
+def sample_parametric_aligned(
+    x_coeff, y_coeff, x_d_coeff, y_d_coeff, x_min, x_max, stride
+):
+    """TODO: what is sample_parametric_aligned doing?
+
+    Given a parametric curve and an interval [x_min, x_max]
+
+        [x] = [f(t)]
+        [y] = [g(t)]
+
+    Returns an interpolation of that curve, aligned on multiples of stride.
+
+    Let x_min = 1.7, x_max = 4.5 and stride = 0.5, the curve will be sampled in
+
+        x_sample = [2, 2.5, 3, 3.5, 4, 4.5]
+
+    Note that the extremes are included on both sides.
+    """
+    logg = logging.getLogger(f"c.{__name__}.sample_parametric_aligned")
+    logg.debug(f"Start sample_parametric_aligned")
+
+    # find the value for t that corresponds to x_min and x_max
+    t_min = bisect_poly(x_coeff, x_d_coeff, x_min, x_low=-1, x_high=2)
+    t_min = bisect_poly(x_coeff, x_d_coeff, x_max, x_low=-1, x_high=2)
+
+    return 0, 0
+
+
 def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
     """
     """
@@ -233,11 +344,11 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
     l_coeff = fit_cubic(l_rot_p0, l_rot_p1)
     r_coeff = fit_cubic(r_rot_p0, r_rot_p1)
 
-    # find the coeff of the cubic rotated back
+    # find the parametric coeff of the cubic rotated back
     l_x_rot_coeff, l_y_rot_coeff = rotate_coeff(l_coeff, l_dir_01)
     r_x_rot_coeff, r_y_rot_coeff = rotate_coeff(r_coeff, r_dir_01)
 
-    # sample the cubic
+    # sample the cubic using the parametric coeff
     t_sample = np.linspace(0, 20, num=50)
     l_x_sample = poly_model(t_sample, l_x_rot_coeff, flip_coeff=True)
     l_y_sample = poly_model(t_sample, l_y_rot_coeff, flip_coeff=True)
@@ -252,7 +363,7 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
     ax.plot(l_x_sample, l_y_sample, color="g", ls="-", marker="")
     ax.plot(r_x_sample, r_y_sample, color="g", ls="-", marker="")
 
-    # find the derivative of the rotated back segments
+    # find the parametric coeff derivative of the rotated back segments
     l_x_rot_d_coeff, l_y_rot_d_coeff = rotate_derive_coeff(l_coeff, l_dir_01)
     r_x_rot_d_coeff, r_y_rot_d_coeff = rotate_derive_coeff(r_coeff, r_dir_01)
 
@@ -265,9 +376,8 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
     l_yp_sample = np.divide(l_y_d_sample, l_x_d_sample)
     r_yp_sample = np.divide(r_y_d_sample, r_x_d_sample)
 
-    recap = ""
     xid = 14
-    recap += f"At point l_x_sample[{xid}] {l_x_sample[xid]}"
+    recap = f"At point l_x_sample[{xid}] {l_x_sample[xid]}"
     recap += f" l_y_sample[{xid}] {l_y_sample[xid]}"
     recap += f" l_yp_sample[{xid}] {l_yp_sample[xid]}"
     logg.debug(recap)
@@ -280,6 +390,19 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
     x_sample = np.linspace(l_p0.x, l_p1.x, num=50)
     tang_y_sample = poly_model(x_sample, tang_coeff, flip_coeff=True)
     ax.plot(x_sample, tang_y_sample, color="g", ls="-", marker="")
+
+    # sample properly the cubic in the interval
+    stride = 0.1
+    l_x_sample, l_y_sample = sample_parametric_aligned(
+        l_x_rot_coeff,
+        l_y_rot_coeff,
+        l_x_rot_d_coeff,
+        l_y_rot_d_coeff,
+        l_rot_p0.x,
+        l_rot_p1.x,
+        stride,
+    )
+    ax.plot(l_x_sample, l_y_sample, color="r", ls="", marker="x")
     return
 
     # sample the points near the origin
