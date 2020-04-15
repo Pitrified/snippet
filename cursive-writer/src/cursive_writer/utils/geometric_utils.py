@@ -382,6 +382,7 @@ def rotate_coeff(coeff, theta_deg):
         [y'] = [sin(th)  cos(th)]   [ a*t^3 + b*t^2 + c*t + d ]
     """
     logg = logging.getLogger(f"c.{__name__}.rotate_coeff")
+    logg.setLevel("INFO")
     logg.debug(f"Starting rotate_coeff")
 
     theta_rad = math.radians(theta_deg)
@@ -463,8 +464,7 @@ def sample_parametric_aligned(
         * t_a_sample values that correspond to
         * x_a_sample values, aligned on multiples of x_stride, accounting for x_offset
         * y_a_sample
-        * x_a_d_sample
-        * y_a_d_sample
+        * yp_a_sample
 
     Let x_min = 1.7, x_max = 4.5 and x_stride = 0.5, the curve will be sampled in
 
@@ -485,6 +485,7 @@ def sample_parametric_aligned(
     So x_offset is how much p0.x is misaligned with the grid
     """
     logg = logging.getLogger(f"c.{__name__}.sample_parametric_aligned")
+    logg.setLevel("INFO")
     logg.debug(f"\nStart sample_parametric_aligned")
     logg.debug(f"x_min: {x_min} x_max: {x_max}")
     logg.debug(f"x_stride: {x_stride} x_offset: {x_offset}")
@@ -528,10 +529,8 @@ def sample_parametric_aligned(
     # find the closest x in the aligned grid and save the value there
     x_id = 0
 
+    # save here the t values that generate x_a_sample values
     t_a_sample = np.empty_like(x_a_sample)
-    y_a_sample = np.empty_like(x_a_sample)
-    x_a_d_sample = np.empty_like(x_a_sample)
-    y_a_d_sample = np.empty_like(x_a_sample)
 
     # cycle all the t values
     for i, t in enumerate(t_oversample):
@@ -546,20 +545,17 @@ def sample_parametric_aligned(
 
             # save the t value at the corresponding position
             t_a_sample[x_id] = (1 - al) * t_oversample[i - 1] + al * t_oversample[i]
-            # y_a_sample[x_id] = (1 - al) * y_oversample[i - 1] + al * y_oversample[i]
-            # x_a_d_sample[x_id] = (1 - al) * x_d_oversample[i - 1] + al * x_d_oversample[i]
-            # y_a_d_sample[x_id] = (1 - al) * y_d_oversample[i - 1] + al * y_d_oversample[i]
 
+            # check if there are more x_a_sample available
             x_id += 1
             if x_id >= x_a_sample.shape[0]:
                 break
-
-    # y_a_sample_bis = poly_model(t_a_sample, y_coeff, flip_coeff=True)
-    # y_a_error = np.sum(np.absolute(np.subtract(y_a_sample, y_a_sample_bis)))
-    # logg.debug(f"error: {y_a_error}")
 
     y_a_sample = poly_model(t_a_sample, y_coeff, flip_coeff=True)
     x_a_d_sample = poly_model(t_a_sample, x_d_coeff, flip_coeff=True)
     y_a_d_sample = poly_model(t_a_sample, y_d_coeff, flip_coeff=True)
 
-    return t_a_sample, x_a_sample, y_a_sample, x_a_d_sample, y_a_d_sample
+    # compute the value of the derivative
+    yp_a_sample = np.divide(y_a_d_sample, x_a_d_sample)
+
+    return t_a_sample, x_a_sample, y_a_sample, yp_a_sample

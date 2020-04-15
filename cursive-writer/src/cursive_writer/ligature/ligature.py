@@ -6,6 +6,7 @@ import math
 from timeit import default_timer as timer
 import matplotlib.pyplot as plt
 
+from cursive_writer.spliner.spliner import compute_aligned_cubic_segment
 from cursive_writer.spliner.spliner import fit_cubic
 from cursive_writer.spliner.spliner import rototranslate_points
 from cursive_writer.spliner.spliner import sample_nat_segment_points
@@ -137,122 +138,92 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
     """
     """
     logg = logging.getLogger(f"c.{__name__}.build_ligature")
-    logg.debug(f"Starting build_ligature")
+    logg.debug(f"\nStarting build_ligature")
 
-    vec_len = max(r_p1.x, r_p1.y) / 10
-    plot_utils.add_vector(l_p0, ax, color="r", vec_len=vec_len)
-    plot_utils.add_vector(l_p1, ax, color="r", vec_len=vec_len)
-    # plot_utils.add_vector(r_p0, ax, color="r", vec_len=vec_len)
-    # plot_utils.add_vector(r_p1, ax, color="r", vec_len=vec_len)
+    # x_stride = 0.01
+    # x_stride = 0.1
+    # x_stride = 0.5
+    x_stride = 2
 
-    # find where the points are if translated, but not rotated, to the origin
-    l_tran_p0 = OrientedPoint(0, 0, l_p0.ori_deg)
-    l_tran_p1 = OrientedPoint(l_p1.x - l_p0.x, l_p1.y - l_p0.y, l_p1.ori_deg)
-    plot_utils.add_vector(l_tran_p0, ax, color="r", vec_len=vec_len)
-    plot_utils.add_vector(l_tran_p1, ax, color="r", vec_len=vec_len)
+    segment_start = timer()
+    l_t_as, l_x_as, l_y_as, l_yp_as = compute_aligned_cubic_segment(
+        l_p0, l_p1, x_stride,
+    )
+    r_t_as, r_x_as, r_y_as, r_yp_as = compute_aligned_cubic_segment(
+        r_p0, r_p1, x_stride,
+    )
+    segment_end = timer()
+    logg.debug(f"Time to compute aligned segments: {segment_end - segment_start:.6f}")
 
-    # translate the points to the origin
-    l_rot_p0, l_rot_p1, l_dir_01 = translate_points_to_origin(l_p0, l_p1)
-    r_rot_p0, r_rot_p1, r_dir_01 = translate_points_to_origin(r_p0, r_p1)
+    # plot the segments
+    ax.plot(l_x_as, l_y_as, color="g", ls="-", marker="")
+    ax.plot(r_x_as, r_y_as, color="y", ls="-", marker="")
+    # ax.plot(l_x_as, l_y_as, color="g", ls="", marker=".")
+    # ax.plot(r_x_as, r_y_as, color="y", ls="", marker=".")
 
-    # fit the cubic on the translated points
-    l_coeff = fit_cubic(l_rot_p0, l_rot_p1)
-    r_coeff = fit_cubic(r_rot_p0, r_rot_p1)
+    tangent_start = timer()
+    for xid in range(r_x_as.shape[0]):
+        # point tangent to the *right* segment
+        tang_op = OrientedPoint(r_x_as[xid], r_y_as[xid], slope2deg(r_yp_as[xid]))
+        tang_coeff = tang_op.to_ab_line()
 
-    # find the parametric coeff of the cubic rotated back
-    l_x_rot_coeff, l_y_rot_coeff = rotate_coeff(l_coeff, l_dir_01)
-    r_x_rot_coeff, r_y_rot_coeff = rotate_coeff(r_coeff, r_dir_01)
-    logg.debug(f"l_x_rot_coeff: {print_coeff(l_x_rot_coeff)}")
-    logg.debug(f"l_y_rot_coeff: {print_coeff(l_y_rot_coeff)}")
+        # sample it on the *left* segment sample
+        tang_y_as = poly_model(l_x_as, tang_coeff, flip_coeff=True)
+        # ax.plot(l_x_as, tang_y_as, color="b", ls="-", marker="")
+        # ax.plot(l_x_as, tang_y_as, color="b", ls="", marker=".")
 
-    # sample the cubic using the parametric coeff
-    t_sample = np.linspace(-10, 30, num=50)
-    l_x_sample = poly_model(t_sample, l_x_rot_coeff, flip_coeff=True)
-    l_y_sample = poly_model(t_sample, l_y_rot_coeff, flip_coeff=True)
-    r_x_sample = poly_model(t_sample, r_x_rot_coeff, flip_coeff=True)
-    r_y_sample = poly_model(t_sample, r_y_rot_coeff, flip_coeff=True)
-    ax.plot(l_x_sample, l_y_sample, color="b", ls="-", marker="")
+        # find if the left segment has some points lower than the tangent
+        lower = l_y_as < tang_y_as
+        # logg.debug(f"lower: {lower} {np.sum(lower)}")
+        if np.sum(lower) == 0:
+            logg.debug(f"Breaking at xid: {xid}")
+            break
+    tangent_end = timer()
+    logg.debug(f"Time to find tangent:             {tangent_end - tangent_start:.6f}")
 
-    # translate it to the original position
-    l_x_sample += l_p0.x
-    l_y_sample += l_p0.y
-    r_x_sample += r_p0.x
-    r_y_sample += r_p0.y
-    # ax.plot(l_x_sample, l_y_sample, color="g", ls="", marker=".")
-    # ax.plot(r_x_sample, r_y_sample, color="g", ls="-", marker="")
+    # check this better, you might have found the tangent at the last iteration...
+    if xid == r_x_as.shape[0] - 1:
+        logg.debug(f"Tangent not found")
+        return
 
-    # find the parametric coeff derivative of the rotated back segments
-    l_x_rot_d_coeff, l_y_rot_d_coeff = rotate_derive_coeff(l_coeff, l_dir_01)
-    r_x_rot_d_coeff, r_y_rot_d_coeff = rotate_derive_coeff(r_coeff, r_dir_01)
+    # plot the last tangent found
+    ax.plot(l_x_as, tang_y_as, color="b", ls="-", marker="")
 
-    # sample the derived parametric expression
-    l_x_d_sample = poly_model(t_sample, l_x_rot_d_coeff, flip_coeff=True)
-    l_y_d_sample = poly_model(t_sample, l_y_rot_d_coeff, flip_coeff=True)
-    r_x_d_sample = poly_model(t_sample, r_x_rot_d_coeff, flip_coeff=True)
-    r_y_d_sample = poly_model(t_sample, r_y_rot_d_coeff, flip_coeff=True)
-    # compute the value of the derivative
-    l_yp_sample = np.divide(l_y_d_sample, l_x_d_sample)
-    r_yp_sample = np.divide(r_y_d_sample, r_x_d_sample)
-
-    xid = 24
-    recap = f"At point l_x_sample[{xid}] {l_x_sample[xid]}"
-    recap += f" l_y_sample[{xid}] {l_y_sample[xid]}"
-    recap += f" l_yp_sample[{xid}] {l_yp_sample[xid]}"
+    # find distance from left segment to tangent
+    dist_lt = l_y_as - tang_y_as
+    min_dist_lt = np.min(dist_lt)
+    argmin_dist_lt = np.argmin(dist_lt)
+    recap = f"min_dist_lt: {min_dist_lt:.6f} argmin_dist_lt: {argmin_dist_lt}"
     logg.debug(recap)
 
-    # plot an example of tangent line
-    tang_op = OrientedPoint(
-        l_x_sample[xid], l_y_sample[xid], slope2deg(l_yp_sample[xid])
-    )
-    tang_coeff = tang_op.to_ab_line()
-    x_sample = np.linspace(l_p0.x, l_p1.x, num=50)
-    tang_y_sample = poly_model(x_sample, tang_coeff, flip_coeff=True)
-    ax.plot(x_sample, tang_y_sample, color="g", ls="-", marker="")
+    l_x_touch = l_x_as[argmin_dist_lt]
+    r_x_touch = r_x_as[xid]
+    dist_x_touch = r_x_touch - l_x_touch
+    l_x_ext = l_x_touch - dist_x_touch / 2
+    r_x_ext = r_x_touch + dist_x_touch / 2
+    recap = f"l_x_touch: {l_x_touch} r_x_touch {r_x_touch}"
+    recap += f" dist_x_touch: {dist_x_touch}"
+    recap += f" l_x_ext: {l_x_ext} r_x_ext {r_x_ext}"
+    logg.debug(recap)
 
-    # sample properly the cubic in the interval
-    # x_stride = 3
-    x_stride = 0.3
-    x_offset = math.ceil(l_p0.x / x_stride) * x_stride - l_p0.x
-    l_x_sample, l_y_sample = sample_parametric_aligned(
-        l_x_rot_coeff,
-        l_y_rot_coeff,
-        l_x_rot_d_coeff,
-        l_y_rot_d_coeff,
-        0,
-        l_p1.x - l_p0.x,
-        x_stride,
-        x_offset,
-    )
-    ax.plot(l_x_sample, l_y_sample, color="k", ls="", marker=".")
-    # ax.plot(l_x_sample, l_y_sample, color="k", ls="-", marker="")
+    lower_x = l_x_as < l_x_ext
+    # argmin returns the *first* occurrence of the min value
+    argmin_lower_x = np.argmin(lower_x)
+    # for symmetry, if we can we keep the previous index (the last of the True)
+    if argmin_lower_x > 0:
+        argmin_lower_x -= 1
+    # recap = f"lower_x: {lower_x}"
+    recap = f" argmin_lower_x: {argmin_lower_x}"
+    recap += f" l_x_as[argmin_lower_x]: {l_x_as[argmin_lower_x]}"
+    logg.debug(recap)
 
-    # translate it to the original position
-    l_x_sample += l_p0.x
-    l_y_sample += l_p0.y
-    r_x_sample += r_p0.x
-    r_y_sample += r_p0.y
-    # ax.plot(l_x_sample, l_y_sample, color="k", ls="", marker=".")
-    ax.plot(l_x_sample, l_y_sample, color="k", ls="-", marker="")
-
-    # sample the points near the origin
-    l_x_sample, l_y_segment = sample_nat_segment_points(l_rot_p0.x, l_rot_p1.x, l_coeff)
-    r_x_sample, r_y_segment = sample_nat_segment_points(r_rot_p0.x, r_rot_p1.x, r_coeff)
-    # ax.plot(l_x_sample, l_y_segment, color="g", ls="-", marker="")
-    # ax.plot(r_x_sample, r_y_segment, color="y", ls="-", marker="")
-    ax.plot(l_x_sample, l_y_segment, color="b", ls="", marker=".")
-    # ax.plot(l_x_sample, l_y_segment, color="y", ls="", marker=".")
-
-    # translate them back to original position
-    l_x_rototran, l_y_rototran = rototranslate_points(
-        l_x_sample, l_y_segment, -l_dir_01, l_p0.x, l_p0.y,
-    )
-    r_x_rototran, r_y_rototran = rototranslate_points(
-        r_x_sample, r_y_segment, -r_dir_01, r_p0.x, r_p0.y,
-    )
-    # ax.plot(l_x_rototran, l_y_rototran, color="g", ls="-", marker="")
-    # ax.plot(r_x_rototran, r_y_rototran, color="y", ls="-", marker="")
-    # ax.plot(l_x_rototran, l_y_rototran, color="b", ls="", marker=".")
-    # ax.plot(l_x_rototran, l_y_rototran, color="y", ls="", marker=".")
+    lower_x = r_x_as < r_x_ext
+    # argmin returns the *first* occurrence of the min value
+    argmin_lower_x = np.argmin(lower_x)
+    # recap = f"lower_x: {lower_x}"
+    recap = f" argmin_lower_x: {argmin_lower_x}"
+    recap += f" r_x_as[argmin_lower_x]: {r_x_as[argmin_lower_x]}"
+    logg.debug(recap)
 
 
 def exs_build_ligature():

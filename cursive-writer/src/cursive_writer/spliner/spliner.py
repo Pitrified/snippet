@@ -3,11 +3,15 @@ import logging
 import numpy as np
 import math
 
-from cursive_writer.utils.oriented_point import OrientedPoint
-from cursive_writer.utils.geometric_utils import rotate_point
-from cursive_writer.utils.geometric_utils import poly_model
 from cursive_writer.utils import plot_utils
+from cursive_writer.utils.geometric_utils import poly_model
+from cursive_writer.utils.geometric_utils import rotate_point
+from cursive_writer.utils.oriented_point import OrientedPoint
+from cursive_writer.utils.utils import print_coeff
 
+from cursive_writer.utils.geometric_utils import rotate_coeff
+from cursive_writer.utils.geometric_utils import rotate_derive_coeff
+from cursive_writer.utils.geometric_utils import sample_parametric_aligned
 
 def translate_points_to_origin(p0, p1):
     """Translate to the origin and rotate the oriented points to have both on the x axis
@@ -178,21 +182,23 @@ def compute_cubic_segment(p0, p1, ax=None):
     # translate and rotate the point to the origin
     rot_p0, rot_p1, dir_01 = translate_points_to_origin(p0, p1)
 
-    # plot the rotated vectors
-    if not ax is None:
-        plot_utils.add_vector(rot_p0, ax, color="r")
-        plot_utils.add_vector(rot_p1, ax, color="r")
-
     # compute the segment points
     coeff = fit_cubic(rot_p0, rot_p1)
     x_sample, y_segment = sample_nat_segment_points(rot_p0.x, rot_p1.x, coeff)
-    if not ax is None:
-        ax.plot(x_sample, y_segment, color="g", ls="-", marker="")
 
     # rototranslate points to the original position
     rototran_x, rototran_y = rototranslate_points(
         x_sample, y_segment, -dir_01, p0.x, p0.y,
     )
+
+    # plot elements for debug purposes
+    if not ax is None:
+        # plot the rotated vectors
+        plot_utils.add_vector(rot_p0, ax, color="r")
+        plot_utils.add_vector(rot_p1, ax, color="r")
+
+        # plot the interpolated cubic at the origin
+        ax.plot(x_sample, y_segment, color="g", ls="-", marker="")
 
     return rototran_x, rototran_y
 
@@ -518,3 +524,71 @@ def compute_long_spline(spline_sequence, thickness=20):
         spline_samples.append(glyph_sample)
 
     return spline_samples
+
+def compute_aligned_cubic_segment(p0, p1, x_stride=1, ax=None):
+    """Compute the aligned cubic segment between two points
+    """
+    logg = logging.getLogger(f"c.{__name__}.compute_aligned_cubic_segment")
+    # logg.debug(f"Start compute_aligned_cubic_segment")
+    
+    # if the points are actually the same, return just that
+    # MAYBE use math.isclose instead of hard comparison
+    if p0.x == p1.x and p0.y == p1.y:
+        return [p0.x], [p0.y]
+
+    # translate the points to the origin
+    rot_p0, rot_p1, dir_01 = translate_points_to_origin(p0, p1)
+
+    # fit the cubic on the translated points
+    coeff = fit_cubic(rot_p0, rot_p1)
+
+    # find the parametric coeff of the cubic rotated back
+    x_rot_coeff, y_rot_coeff = rotate_coeff(coeff, dir_01)
+
+    # find the parametric coeff derivative of the rotated back segments
+    x_rot_d_coeff, y_rot_d_coeff = rotate_derive_coeff(coeff, dir_01)
+
+    # sample properly the cubic in the interval
+    x_offset = math.ceil(p0.x / x_stride) * x_stride - p0.x
+    t_a_sample, x_a_sample, y_a_sample, yp_a_sample = sample_parametric_aligned(
+        x_rot_coeff,
+        y_rot_coeff,
+        x_rot_d_coeff,
+        y_rot_d_coeff,
+        0,
+        p1.x - p0.x,
+        x_stride,
+        x_offset,
+    )
+
+    # translate the sample to the original position
+    x_a_sample += p0.x
+    y_a_sample += p0.y
+
+    # plot elements for debug purposes
+    if not ax is None:
+        logg.debug(f"x_rot_coeff: {print_coeff(x_rot_coeff)}")
+        logg.debug(f"y_rot_coeff: {print_coeff(y_rot_coeff)}")
+
+        vec_len = max(p1.x, p1.y) / 10
+
+        # plot original points
+        plot_utils.add_vector(p0, ax, color="r", vec_len=vec_len)
+        plot_utils.add_vector(p1, ax, color="r", vec_len=vec_len)
+
+        # find where the points are if translated, but not rotated, to the origin
+        tran_p0 = OrientedPoint(0, 0, p0.ori_deg)
+        tran_p1 = OrientedPoint(p1.x - p0.x, p1.y - p0.y, p1.ori_deg)
+        plot_utils.add_vector(tran_p0, ax, color="r", vec_len=vec_len)
+        plot_utils.add_vector(tran_p1, ax, color="r", vec_len=vec_len)
+
+        # over sample the rotated cubic using the parametric coeff
+        t_o_sample = np.linspace(-10, 30, num=50)
+        x_o_sample = poly_model(t_o_sample, x_rot_coeff, flip_coeff=True)
+        y_o_sample = poly_model(t_o_sample, y_rot_coeff, flip_coeff=True)
+        ax.plot(x_o_sample, y_o_sample, color="b", ls="-", marker="")
+
+        # ax.plot(x_a_sample, y_a_sample, color="k", ls="", marker=".")
+        ax.plot(x_a_sample, y_a_sample, color="k", ls="-", marker="")
+
+    return t_a_sample, x_a_sample, y_a_sample, yp_a_sample

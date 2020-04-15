@@ -10,12 +10,8 @@ from timeit import default_timer as timer
 from cursive_writer.utils.utils import print_coeff
 from cursive_writer.utils.oriented_point import OrientedPoint
 from cursive_writer.utils import plot_utils
-from cursive_writer.spliner.spliner import translate_points_to_origin
-from cursive_writer.spliner.spliner import fit_cubic
-from cursive_writer.utils.geometric_utils import rotate_coeff
-from cursive_writer.utils.geometric_utils import rotate_derive_coeff
+from cursive_writer.spliner.spliner import compute_aligned_cubic_segment
 from cursive_writer.utils.geometric_utils import poly_model
-from cursive_writer.utils.geometric_utils import sample_parametric_aligned
 from cursive_writer.utils.geometric_utils import slope2deg
 
 
@@ -151,78 +147,21 @@ def ex_parametric_tangent(p0, p1, x_stride, ax):
     logg = logging.getLogger(f"c.{__name__}.ex_parametric_tangent")
     logg.debug(f"Starting ex_parametric_tangent")
 
-    vec_len = max(p1.x, p1.y) / 10
-
-    # plot original points
-    plot_utils.add_vector(p0, ax, color="r", vec_len=vec_len)
-    plot_utils.add_vector(p1, ax, color="r", vec_len=vec_len)
-
-    # find where the points are if translated, but not rotated, to the origin
-    tran_p0 = OrientedPoint(0, 0, p0.ori_deg)
-    tran_p1 = OrientedPoint(p1.x - p0.x, p1.y - p0.y, p1.ori_deg)
-    plot_utils.add_vector(tran_p0, ax, color="r", vec_len=vec_len)
-    plot_utils.add_vector(tran_p1, ax, color="r", vec_len=vec_len)
-
-    # translate the points to the origin
-    rot_p0, rot_p1, dir_01 = translate_points_to_origin(p0, p1)
-
-    # fit the cubic on the translated points
-    coeff = fit_cubic(rot_p0, rot_p1)
-
-    # find the parametric coeff of the cubic rotated back
-    x_rot_coeff, y_rot_coeff = rotate_coeff(coeff, dir_01)
-    logg.debug(f"x_rot_coeff: {print_coeff(x_rot_coeff)}")
-    logg.debug(f"y_rot_coeff: {print_coeff(y_rot_coeff)}")
-
-    # over sample the rotated cubic using the parametric coeff
-    t_o_sample = np.linspace(-10, 30, num=50)
-    x_o_sample = poly_model(t_o_sample, x_rot_coeff, flip_coeff=True)
-    y_o_sample = poly_model(t_o_sample, y_rot_coeff, flip_coeff=True)
-    ax.plot(x_o_sample, y_o_sample, color="b", ls="-", marker="")
-
-    # find the parametric coeff derivative of the rotated back segments
-    x_rot_d_coeff, y_rot_d_coeff = rotate_derive_coeff(coeff, dir_01)
-
-    # sample properly the cubic in the interval
-    x_offset = math.ceil(p0.x / x_stride) * x_stride - p0.x
-
-    (
-        t_a_sample,
-        x_a_sample,
-        y_a_sample,
-        x_a_d_sample,
-        y_a_d_sample,
-    ) = sample_parametric_aligned(
-        x_rot_coeff,
-        y_rot_coeff,
-        x_rot_d_coeff,
-        y_rot_d_coeff,
-        0,
-        p1.x - p0.x,
-        x_stride,
-        x_offset,
+    t_a_sample, x_a_sample, y_a_sample, yp_a_sample = compute_aligned_cubic_segment(
+        p0, p1, x_stride, ax
     )
-    ax.plot(x_a_sample, y_a_sample, color="k", ls="", marker=".")
-    # ax.plot(x_a_sample, y_a_sample, color="k", ls="-", marker="")
-
-    # translate the sample to the original position
-    x_a_sample += p0.x
-    y_a_sample += p0.y
-    # ax.plot(x_a_sample, y_a_sample, color="k", ls="", marker=".")
-    ax.plot(x_a_sample, y_a_sample, color="k", ls="-", marker="")
-
-    # compute the value of the derivative
-    yp_sample = np.divide(y_a_d_sample, x_a_d_sample)
 
     # xid = 24
     xid = math.floor(x_a_sample.shape[0] / 2)
     recap = f"At point x_a_sample[{xid}] {x_a_sample[xid]}"
     recap += f" y_a_sample[{xid}] {y_a_sample[xid]}"
-    recap += f" yp_sample[{xid}] {yp_sample[xid]}"
+    recap += f" yp_a_sample[{xid}] {yp_a_sample[xid]}"
     logg.debug(recap)
 
     # plot an example of tangent line
-    tang_op = OrientedPoint(x_a_sample[xid], y_a_sample[xid], slope2deg(yp_sample[xid]))
+    tang_op = OrientedPoint(
+        x_a_sample[xid], y_a_sample[xid], slope2deg(yp_a_sample[xid])
+    )
     tang_coeff = tang_op.to_ab_line()
     tang_y_a_sample = poly_model(x_a_sample, tang_coeff, flip_coeff=True)
     ax.plot(x_a_sample, tang_y_a_sample, color="g", ls="-", marker="")
