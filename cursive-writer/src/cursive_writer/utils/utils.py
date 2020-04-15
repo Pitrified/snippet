@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 
 from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.oriented_point import OrientedPoint
@@ -93,3 +94,16 @@ def load_spline(pf_input_spline, data_dir):
             spline.append(glyph)
 
     return spline
+
+
+def print_coeff(coeff):
+    """Prints coeff as equation
+    """
+    logg = logging.getLogger(f"c.{__name__}.print_coeff")
+    logg.debug(f"Start print_coeff {coeff}")
+
+    eq_str = "y ="
+    for i, c in enumerate(np.flip(coeff)):
+        eq_str += f" + {c} * x^{i}"
+
+    return eq_str

@@ -6,6 +6,7 @@ from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.oriented_point import OrientedPoint
 
+import math
 from math import degrees
 from math import radians
 from math import atan2
@@ -176,7 +177,9 @@ def apply_affine_transform(F, x, y):
 def poly_model(x, coeff, flip_coeff=False):
     """Compute y values of a polynomial
 
-    y = coeff[0] + coeff[1] * x + coeff[2] * x^2 ...
+    The coeff start with the low degrees first
+
+        y = coeff[0] + coeff[1] * x + coeff[2] * x^2 ...
 
     x: x vector
     coeff: polynomial parameters, low degrees first
@@ -275,3 +278,288 @@ def compute_affine_transform(base_pt_abs, basis_length):
     logg.trace(f"abs2fm: {abs2fm}")
 
     return fm2abs, abs2fm
+
+
+def bisect_poly(coeff, d_coeff, y_target, tolerance=1e-6, x_low=0, x_high=1):
+    """Finds a value of x so that |y-p(x)| < tolerance
+
+    Also returns when |x_low-x_high| < tolerance
+
+    A simple bisection is used, take care of setting x_low and x_high
+    properly in order to find the value that you vaguely expect.
+    I'm too lazy to use the derivative to find a better midpoint.
+
+    A lot of assumptions are made on the shape of p(x), mainly on the sign of
+    its second derivative, that should not change if you expect good results.
+
+    Ties when y_target is higher/lower than y_mid are broken using the first derivative
+    """
+    logg = logging.getLogger(f"c.{__name__}.bisect_poly")
+    logg.setLevel("INFO")
+    logg.debug(f"Start bisect_poly")
+
+    # deal with bad inputs
+    if x_high < x_low:
+        x_low, x_high = x_high, x_low
+
+    while not math.isclose(x_low, x_high, abs_tol=tolerance):
+        # find the midpoint
+        x_mid = (x_low + x_high) / 2
+
+        # compute the value of the function in low, mid, high
+        y_low = poly_model(np.array([x_low]), coeff, flip_coeff=True)
+        y_mid = poly_model(np.array([x_mid]), coeff, flip_coeff=True)
+        y_high = poly_model(np.array([x_high]), coeff, flip_coeff=True)
+
+        logg.debug(f"x_low: {x_low} x_mid: {x_mid} x_high: {x_high}")
+        logg.debug(f"y_low: {y_low} y_mid: {y_mid} y_high: {y_high}")
+
+        # if the midpoint is a good approx, return that
+        if math.isclose(y_target, y_mid, abs_tol=tolerance):
+            logg.debug(f"the y_target {y_target} is close to y_mid {y_mid}")
+            return x_mid
+
+        # the y_target is between y_low and y_mid
+        elif y_low <= y_target <= y_mid or y_low >= y_target >= y_mid:
+            logg.debug(f"the y_target {y_target} is between y_low and y_mid")
+            x_high = x_mid
+
+        # the y_target is between y_mid and y_high
+        elif y_mid <= y_target <= y_high or y_mid >= y_target >= y_high:
+            logg.debug(f"the y_target {y_target} is between y_mid and y_high")
+            x_low = x_mid
+
+        # the y_target is higher than y_mid (but not lower than y_high or y_low
+        # else it would be in the other cases)
+        elif y_target >= y_mid:
+            logg.debug(f"the y_target {y_target} is over y_mid")
+            y_d_mid = poly_model(np.array([x_mid]), d_coeff, flip_coeff=True)
+
+            # the curve is going up at midpoint, pick right interval
+            if y_d_mid >= 0:
+                logg.debug(f"the curve is going up at midpoint, pick right interval")
+                x_low = x_mid
+
+            # the curve is going down at midpoint, pick left interval
+            elif y_d_mid < 0:
+                logg.debug(f"the curve is going down at midpoint, pick left interval")
+                x_high = x_mid
+
+        elif y_target <= y_mid:
+            logg.debug(f"the y_target {y_target} is below y_mid")
+            y_d_mid = poly_model(np.array([x_mid]), d_coeff, flip_coeff=True)
+
+            # the curve is going up at midpoint, pick left interval
+            if y_d_mid >= 0:
+                logg.debug(f"the curve is going up at midpoint, pick left interval")
+                x_high = x_mid
+
+            # the curve is going down at midpoint, pick right interval
+            elif y_d_mid < 0:
+                logg.debug(f"the curve is going down at midpoint, pick right interval")
+                x_low = x_mid
+
+    # TODO before returning need to check if the y_mid is actually near
+    # y_target, or if y_target was outside the interval requested
+    return (x_low + x_high) / 2
+
+
+def rotate_coeff(coeff, theta_deg):
+    """Returns the parametric expression of the rotated coeff
+
+    Given a cubic curve
+
+        y = a*x^3 + b*x^2 + c*x + d
+
+    It can be parametrized as
+        
+        [x] = [         t               ]
+        [y] = [ a*t^3 + b*t^2 + c*t + d ]
+
+    Apply a rotation of th radians
+        
+        [x'] = [cos(th) -sin(th)] * [         t               ]
+        [y'] = [sin(th)  cos(th)]   [ a*t^3 + b*t^2 + c*t + d ]
+    """
+    logg = logging.getLogger(f"c.{__name__}.rotate_coeff")
+    logg.debug(f"Starting rotate_coeff")
+
+    theta_rad = math.radians(theta_deg)
+    ct = math.cos(theta_rad)
+    st = math.sin(theta_rad)
+
+    a, b, c, d = coeff
+
+    x_rot_coeff = [
+        -st * a,
+        -st * b,
+        ct - st * c,
+        -st * d,
+    ]
+    y_rot_coeff = [
+        ct * a,
+        ct * b,
+        st + ct * c,
+        ct * d,
+    ]
+
+    return x_rot_coeff, y_rot_coeff
+
+
+def rotate_derive_coeff(coeff, theta_deg):
+    """Returns the parametric expression of the derivative of the rotated coeff
+
+    Given a cubic curve
+
+        y = a*x^3 + b*x^2 + c*x + d
+
+    It can be parametrized as
+        
+        [x] = [         t               ]
+        [y] = [ a*t^3 + b*t^2 + c*t + d ]
+
+    Apply a rotation of th radians
+        
+        [x'] = [cos(th) -sin(th)] * [         t               ]
+        [y'] = [sin(th)  cos(th)]   [ a*t^3 + b*t^2 + c*t + d ]
+
+    The derivative as function of t is
+        
+        dy   dy/dt
+        -- = -----
+        dx   dx/dt
+    """
+    theta_rad = math.radians(theta_deg)
+    ct = math.cos(theta_rad)
+    st = math.sin(theta_rad)
+
+    a, b, c, d = coeff
+
+    x_rot_d_coeff = [
+        3 * -st * a,
+        2 * -st * b,
+        ct - st * c,
+    ]
+    y_rot_d_coeff = [
+        3 * ct * a,
+        2 * ct * b,
+        st + ct * c,
+    ]
+
+    return x_rot_d_coeff, y_rot_d_coeff
+
+
+def sample_parametric_aligned(
+    x_coeff, y_coeff, x_d_coeff, y_d_coeff, x_min, x_max, x_stride, x_offset=0
+):
+    """Sample a parametric curve along a grid
+
+    Given a parametric curve and its derivative and an interval [x_min, x_max]
+
+        [x] = [f(t)] (as x_coeff)       [x'] = [f'(t)] (as x_d_coeff)
+        [y] = [g(t)] (as y_coeff)       [y'] = [g'(t)] (as y_d_coeff)
+
+    Returns:
+        * t_a_sample values that correspond to
+        * x_a_sample values, aligned on multiples of x_stride, accounting for x_offset
+        * y_a_sample
+        * x_a_d_sample
+        * y_a_d_sample
+
+    Let x_min = 1.7, x_max = 4.5 and x_stride = 0.5, the curve will be sampled in
+
+        x_sample = [2, 2.5, 3, 3.5, 4, 4.5]
+
+    Note that the extremes are included on both sides.
+
+    Use x_offset to shift the grid a bit: it will be correctly aligned after
+    translating the points in the correct position: if p0.x = 3.8, the x_offset
+    will be equal to 4 - 3.8 = 0.2 and the grid is
+
+        x_sample = [2.2, 2.7, 3.2, 3.7, 4.2, 4.7]
+
+    so that when translating up by 3.8, the x points will be aligned:
+
+        x_sample = [6, 6.5, 7, 7.5, 8, 8.5]
+
+    So x_offset is how much p0.x is misaligned with the grid
+    """
+    logg = logging.getLogger(f"c.{__name__}.sample_parametric_aligned")
+    logg.debug(f"\nStart sample_parametric_aligned")
+    logg.debug(f"x_min: {x_min} x_max: {x_max}")
+    logg.debug(f"x_stride: {x_stride} x_offset: {x_offset}")
+
+    # find the value for t that corresponds to x_min and x_max
+    t_min = bisect_poly(x_coeff, x_d_coeff, x_min, x_low=2 * x_min, x_high=2 * x_max)
+    t_max = bisect_poly(x_coeff, x_d_coeff, x_max, x_low=2 * x_min, x_high=2 * x_max)
+    logg.debug(f"t_min: {t_min} t_max: {t_max}")
+
+    # check where the extremes are
+    x_test_min = poly_model(np.array([t_min]), x_coeff, flip_coeff=True)
+    y_test_min = poly_model(np.array([t_min]), y_coeff, flip_coeff=True)
+    x_test_max = poly_model(np.array([t_max]), x_coeff, flip_coeff=True)
+    y_test_max = poly_model(np.array([t_max]), y_coeff, flip_coeff=True)
+    logg.debug(f"x_test_min: {x_test_min} x_test_max: {x_test_max}")
+    # return [x_test_min, x_test_max], [y_test_min, y_test_max]
+
+    # oversample in t, pad a bit the interval
+    x_len = x_max - x_min
+    # t_pad = x_len / 10
+    t_pad = x_len / 10 * x_stride
+    t_num_samples = int(x_len * 100 / x_stride)
+    t_oversample = np.linspace(t_min - t_pad, t_max + t_pad, num=t_num_samples)
+    x_oversample = poly_model(t_oversample, x_coeff, flip_coeff=True)
+    y_oversample = poly_model(t_oversample, y_coeff, flip_coeff=True)
+    x_d_oversample = poly_model(t_oversample, x_d_coeff, flip_coeff=True)
+    y_d_oversample = poly_model(t_oversample, y_d_coeff, flip_coeff=True)
+    # return x_oversample, y_oversample
+
+    # find the aligned x values
+    x_a_min = math.ceil(x_min / x_stride) * x_stride
+    x_a_max = math.floor(x_max / x_stride) * x_stride
+    logg.debug(f"x_a_min: {x_a_min} x_a_max: {x_a_max}")
+    x_a_sample = np.arange(x_a_min, x_a_max + x_stride / 2, x_stride)
+    logg.debug(f"x_a_sample.shape: {x_a_sample.shape} {x_a_sample[0]} {x_a_sample[-1]}")
+
+    # translate the aligned x values to compensate the x_offset
+    x_a_sample += x_offset
+    logg.debug(f"x_a_sample.shape: {x_a_sample.shape} {x_a_sample[0]} {x_a_sample[-1]}")
+
+    # find the closest x in the aligned grid and save the value there
+    x_id = 0
+
+    t_a_sample = np.empty_like(x_a_sample)
+    y_a_sample = np.empty_like(x_a_sample)
+    x_a_d_sample = np.empty_like(x_a_sample)
+    y_a_d_sample = np.empty_like(x_a_sample)
+
+    # cycle all the t values
+    for i, t in enumerate(t_oversample):
+        # when the x_oversample at index i is bigger than the current aligned at x_id
+        # you are straddling the x_a_sample point
+        if x_oversample[i] > x_a_sample[x_id]:
+            # logg.debug(f"x {x_oversample[i-1]} < {x_a_sample[x_id]} < {x_oversample[i]}")
+
+            # more precise by weighing the two adjacent t_oversample values
+            dist = x_oversample[i] - x_oversample[i - 1]
+            al = (x_a_sample[x_id] - x_oversample[i - 1]) / dist
+
+            # save the t value at the corresponding position
+            t_a_sample[x_id] = (1 - al) * t_oversample[i - 1] + al * t_oversample[i]
+            # y_a_sample[x_id] = (1 - al) * y_oversample[i - 1] + al * y_oversample[i]
+            # x_a_d_sample[x_id] = (1 - al) * x_d_oversample[i - 1] + al * x_d_oversample[i]
+            # y_a_d_sample[x_id] = (1 - al) * y_d_oversample[i - 1] + al * y_d_oversample[i]
+
+            x_id += 1
+            if x_id >= x_a_sample.shape[0]:
+                break
+
+    # y_a_sample_bis = poly_model(t_a_sample, y_coeff, flip_coeff=True)
+    # y_a_error = np.sum(np.absolute(np.subtract(y_a_sample, y_a_sample_bis)))
+    # logg.debug(f"error: {y_a_error}")
+
+    y_a_sample = poly_model(t_a_sample, y_coeff, flip_coeff=True)
+    x_a_d_sample = poly_model(t_a_sample, x_d_coeff, flip_coeff=True)
+    y_a_d_sample = poly_model(t_a_sample, y_d_coeff, flip_coeff=True)
+
+    return t_a_sample, x_a_sample, y_a_sample, x_a_d_sample, y_a_d_sample

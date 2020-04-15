@@ -8,13 +8,14 @@ from timeit import default_timer as timer
 from math import cos
 from math import sin
 
-from cursive_writer.spliner.spliner import fit_cubic
 from cursive_writer.spliner.spliner import compute_cubic_segment
-from cursive_writer.spliner.spliner import compute_thick_spline
 from cursive_writer.spliner.spliner import compute_long_spline
-from cursive_writer.utils.oriented_point import OrientedPoint
-from cursive_writer.utils.geometric_utils import poly_model
+from cursive_writer.spliner.spliner import compute_thick_spline
+from cursive_writer.spliner.spliner import fit_cubic
+from cursive_writer.spliner.spliner import linspace_segment_points
 from cursive_writer.utils import plot_utils
+from cursive_writer.utils.geometric_utils import poly_model
+from cursive_writer.utils.oriented_point import OrientedPoint
 
 
 def parse_arguments():
@@ -143,17 +144,6 @@ def setup_env():
     return args
 
 
-def compute_segment_points(x_start, x_end, coeff, num_samples=50):
-    """Sample a poly_model in the [x_start, x_end] range
-    """
-    if x_start > x_end:
-        x_start, x_end = x_end, x_start
-
-    x_sample = np.linspace(x_start, x_end, num_samples)
-    y_segment = poly_model(x_sample, np.flip(coeff))
-    return x_sample, y_segment
-
-
 def ex_fit_cubic_curve():
     """
     """
@@ -168,14 +158,14 @@ def ex_fit_cubic_curve():
     # compute the coeff to fit the points
     coeff = fit_cubic(p0, p1)
     # add the segment
-    x_sample, y_segment = compute_segment_points(p0.x, p1.x, coeff)
+    x_sample, y_segment = linspace_segment_points(p0.x, p1.x, coeff)
     ax.plot(x_sample, y_segment, color="b", ls="-", marker="")
 
     # second segment
     p0 = OrientedPoint(3, 2, 45)
     p1 = OrientedPoint(3.5, 3.5, 80)
     coeff = fit_cubic(p0, p1)
-    x_sample, y_segment = compute_segment_points(p0.x, p1.x, coeff)
+    x_sample, y_segment = linspace_segment_points(p0.x, p1.x, coeff)
     ax.plot(x_sample, y_segment, color="r", ls="-", marker="")
 
     # plot everything
@@ -506,10 +496,10 @@ def run_spliner_examples(args):
     logg = logging.getLogger(f"c.{__name__}.run_spliner_examples")
     logg.debug(f"Starting run_spliner_examples")
 
-    # ex_fit_cubic_curve()
+    ex_fit_cubic_curve()
     ex_compute_cubic_segment()
-    # exs_thick_spline()
-    # exs_long_spline()
+    exs_thick_spline()
+    exs_long_spline()
 
     plt.show()
 

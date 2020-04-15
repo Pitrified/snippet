@@ -125,12 +125,23 @@ def fit_cubic(p0, p1):
     return x
 
 
-def sample_segment_points(x_start, x_end, coeff):
+def linspace_segment_points(x_start, x_end, coeff, num_samples=50):
+    """Uniformly sample a poly_model in the [x_start, x_end] range
+    """
+    if x_start > x_end:
+        x_start, x_end = x_end, x_start
+
+    x_sample = np.linspace(x_start, x_end, num_samples)
+    y_segment = poly_model(x_sample, np.flip(coeff))
+    return x_sample, y_segment
+
+
+def sample_nat_segment_points(x_start, x_end, coeff):
     """Sample a poly_model in the [x_start, x_end] range on natural numbers
     """
-    logg = logging.getLogger(f"c.{__name__}.sample_segment_points")
+    logg = logging.getLogger(f"c.{__name__}.sample_nat_segment_points")
     # logg.setLevel("TRACE")
-    logg.trace(f"Starting sample_segment_points")
+    logg.trace(f"Starting sample_nat_segment_points")
 
     if x_start > x_end:
         x_start, x_end = x_end, x_start
@@ -174,7 +185,7 @@ def compute_cubic_segment(p0, p1, ax=None):
 
     # compute the segment points
     coeff = fit_cubic(rot_p0, rot_p1)
-    x_sample, y_segment = sample_segment_points(rot_p0.x, rot_p1.x, coeff)
+    x_sample, y_segment = sample_nat_segment_points(rot_p0.x, rot_p1.x, coeff)
     if not ax is None:
         ax.plot(x_sample, y_segment, color="g", ls="-", marker="")
 
@@ -223,8 +234,8 @@ def build_contour(
         logg.trace(f"Regular case")
 
         # sample the whole line
-        x_sample_l, y_segment_l = sample_segment_points(p0t.x, p0b.x, coeff_l)
-        x_sample_r, y_segment_r = sample_segment_points(p1t.x, p1b.x, coeff_r)
+        x_sample_l, y_segment_l = sample_nat_segment_points(p0t.x, p0b.x, coeff_l)
+        x_sample_r, y_segment_r = sample_nat_segment_points(p1t.x, p1b.x, coeff_r)
         logg.trace(f"x_sample_l.shape: {x_sample_l.shape}")
         logg.trace(f"x_sample_r.shape: {x_sample_r.shape}")
 
@@ -280,8 +291,8 @@ def build_contour(
         # x_sample = 0
         # contour_t = 0
         # contour_b = 0
-        x_sample_l, y_segment_l = sample_segment_points(p0b.x, i_x, coeff_l)
-        x_sample_r, y_segment_r = sample_segment_points(p1b.x, i_x, coeff_r)
+        x_sample_l, y_segment_l = sample_nat_segment_points(p0b.x, i_x, coeff_l)
+        x_sample_r, y_segment_r = sample_nat_segment_points(p1b.x, i_x, coeff_r)
 
         # /\
         if coeff_l[0] >= 0 and coeff_r[0] <= 0:
@@ -309,8 +320,8 @@ def build_contour(
         # x_sample = 0
         # contour_t = 0
         # contour_b = 0
-        x_sample_l, y_segment_l = sample_segment_points(p0t.x, i_x, coeff_l)
-        x_sample_r, y_segment_r = sample_segment_points(p1t.x, i_x, coeff_r)
+        x_sample_l, y_segment_l = sample_nat_segment_points(p0t.x, i_x, coeff_l)
+        x_sample_r, y_segment_r = sample_nat_segment_points(p1t.x, i_x, coeff_r)
 
         # //
         if coeff_l[0] >= 0 and coeff_r[0] >= 0:
@@ -399,8 +410,8 @@ def compute_thick_spline(p0, p1, thickness, ax=None):
     # compute the spline points
     coeff_t = fit_cubic(p0t, p1t)
     coeff_b = fit_cubic(p0b, p1b)
-    x_sample_t, y_segment_t = sample_segment_points(p0t.x, p1t.x, coeff_t)
-    x_sample_b, y_segment_b = sample_segment_points(p0b.x, p1b.x, coeff_b)
+    x_sample_t, y_segment_t = sample_nat_segment_points(p0t.x, p1t.x, coeff_t)
+    x_sample_b, y_segment_b = sample_nat_segment_points(p0b.x, p1b.x, coeff_b)
     logg.trace(f"x_sample_t.shape: {x_sample_t.shape}")
     logg.trace(f"x_sample_b.shape: {x_sample_b.shape}")
 
