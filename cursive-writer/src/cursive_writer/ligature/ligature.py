@@ -181,10 +181,6 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
     best_r_x_as = None
     best_tang_y_as = None
 
-    # plot the segments
-    ax.plot(l_x_as, l_y_as, color="g", ls="-", marker="")
-    # ax.plot(l_x_as, l_y_as, color="g", ls="", marker=".")
-
     tangent_times = []
 
     for shift in shift_range:
@@ -215,20 +211,20 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
         tangent_times.append(tangent_end - tangent_start)
         # logg.debug(f"Time to find tangent: {tangent_end - tangent_start:.6f}")
 
-        # check this better, you might have found the tangent at the last iteration...
-        if xid == r_x_as.shape[0] - 1:
+        # find distance from left segment to tangent
+        dist_left_tangent = l_y_as - tang_y_as
+        min_dist_left_tangent = np.min(dist_left_tangent)
+        argmin_dist_left_tangent = np.argmin(dist_left_tangent)
+        recap = f"min_dist_left_tangent: {min_dist_left_tangent:.6f}"
+        recap += " argmin_dist_left_tangent: {argmin_dist_left_tangent}"
+        # logg.debug(recap)
+
+        if min_dist_left_tangent < 0:
             # logg.debug(f"Tangent not found")
             continue
 
-        # find distance from left segment to tangent
-        dist_lt = l_y_as - tang_y_as
-        min_dist_lt = np.min(dist_lt)
-        argmin_dist_lt = np.argmin(dist_lt)
-        recap = f"min_dist_lt: {min_dist_lt:.6f} argmin_dist_lt: {argmin_dist_lt}"
-        # logg.debug(recap)
-
         # find where the tangent touches the segments
-        l_x_touch = l_x_as[argmin_dist_lt]
+        l_x_touch = l_x_as[argmin_dist_left_tangent]
         r_x_touch = r_x_as[xid]
 
         if r_x_touch < l_x_touch:
@@ -244,33 +240,32 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
         recap += f" l_x_ext: {l_x_ext:.4f} r_x_ext {r_x_ext:.4f}"
         # logg.debug(recap)
 
-        if dist_x_touch < best_dist_x_touch:
-            best_dist_x_touch = dist_x_touch
-            best_shift = shift
-            best_r_x_as = r_x_as
-            best_tang_y_as = tang_y_as
+        # if this shift does not improve the distance, go to the next
+        if dist_x_touch >= best_dist_x_touch:
+            continue
 
-        lower_x = l_x_as < l_x_ext
+        # save info about the current shift
+        best_dist_x_touch = dist_x_touch
+        best_shift = shift
+        best_r_x_as = r_x_as
+        best_tang_y_as = tang_y_as
+
+        # find the index of the touch points
+        # left
+        l_lower_x = l_x_as < l_x_ext
         # argmin returns the *first* occurrence of the min value
-        argmin_lower_x = np.argmin(lower_x)
+        l_id_e_x = np.argmin(l_lower_x)
         # for symmetry, if we can, we keep the previous index (the last of the True)
-        if argmin_lower_x > 0:
-            argmin_lower_x -= 1
-        # recap = f"lower_x: {lower_x}"
-        recap = f" argmin_lower_x: {argmin_lower_x}"
-        recap += f" l_x_as[argmin_lower_x]: {l_x_as[argmin_lower_x]}"
+        if l_id_e_x > 0:
+            l_id_e_x -= 1
+        # right
+        r_lower_x = r_x_as < r_x_ext
+        r_id_e_x = np.argmin(r_lower_x)
+        recap = f"l_id_e_x: {l_id_e_x}"
+        recap += f" l_x_as[l_id_e_x]: {l_x_as[l_id_e_x]:.4f}"
+        recap += f" r_id_e_x: {r_id_e_x}"
+        recap += f" r_x_as[r_id_e_x]: {r_x_as[r_id_e_x]:.4f}"
         # logg.debug(recap)
-
-        lower_x = r_x_as < r_x_ext
-        # argmin returns the *first* occurrence of the min value
-        argmin_lower_x = np.argmin(lower_x)
-        # recap = f"lower_x: {lower_x}"
-        recap = f" argmin_lower_x: {argmin_lower_x}"
-        recap += f" r_x_as[argmin_lower_x]: {r_x_as[argmin_lower_x]}"
-        # logg.debug(recap)
-
-        # plot the last tangent found
-        # ax.plot(l_x_as, tang_y_as, color="b", ls="-", marker="")
 
     tangent_time_mean = sum(tangent_times) / len(tangent_times)
     logg.debug(f"Mean tangent time: {tangent_time_mean}")
@@ -278,8 +273,65 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
     ligature_end = timer()
     logg.debug(f"Time for build_ligature: {ligature_end - ligature_start:.6f}")
 
-    ax.plot(best_r_x_as, r_y_as, color="y", ls="-", marker="")
-    ax.plot(l_x_as, best_tang_y_as, color="b", ls="-", marker="")
+    # extract the best value as current
+    r_x_as = best_r_x_as
+    # r_x_as = r_x_orig_as + best_shift
+
+    # find the extended contact point
+    l_p_ext = OrientedPoint(
+        l_x_as[l_id_e_x], l_y_as[l_id_e_x], slope2deg(l_yp_as[l_id_e_x])
+    )
+    r_p_ext = OrientedPoint(
+        r_x_as[r_id_e_x], r_y_as[r_id_e_x], slope2deg(r_yp_as[r_id_e_x])
+    )
+    ext_t_as, ext_x_as, ext_y_as, ext_yp_as = compute_aligned_cubic_segment(
+        l_p_ext, r_p_ext, x_stride,
+    )
+
+    recap = f"l_id_e_x: {l_id_e_x}"
+    recap += f" l_x_as[l_id_e_x]: {l_x_as[l_id_e_x]:.4f}"
+    recap += f" ext_x_as[0]: {ext_x_as[0]:.4f}"
+    recap += f" ext_x_as[-1]: {ext_x_as[-1]:.4f}"
+    recap += f" r_id_e_x: {r_id_e_x}"
+    recap += f" r_x_as[r_id_e_x]: {r_x_as[r_id_e_x]:.4f}"
+    logg.debug(recap)
+
+    # show id to use when plotting
+    l_id_s_x = l_id_e_x
+    r_id_s_x = r_id_e_x
+
+    # fix the ext ids, there is a gap of 1 (one) stride missing on one side
+    if not math.isclose(l_x_as[l_id_e_x], ext_x_as[0]):
+        logg.debug(f"Left not close")
+        # check that is not the last
+        if l_id_e_x < l_x_as.shape[0] - 1:
+            l_id_s_x = l_id_e_x + 1
+
+    if not math.isclose(r_x_as[r_id_e_x], ext_x_as[-1]):
+        logg.debug(f"Right not close")
+        # check that is not the first
+        if r_id_e_x > 0:
+            r_id_s_x = r_id_e_x - 1
+
+    # plot the segments
+    # ax.plot(l_x_as, l_y_as, color="g", ls="", marker=".")
+    # ax.plot(r_x_as, r_y_as, color="y", ls="", marker=".")
+    # ax.plot(l_x_as[: l_id_s_x + 1], l_y_as[: l_id_s_x + 1], color="g", ls="-")
+    # ax.plot(r_x_as[r_id_s_x:], r_y_as[r_id_s_x:], color="y", ls="-")
+    ax.plot(l_x_as[: l_id_s_x + 1], l_y_as[: l_id_s_x + 1], color="k", ls="-")
+    ax.plot(r_x_as[r_id_s_x:], r_y_as[r_id_s_x:], color="k", ls="-")
+    # ax.plot(l_x_as[: l_id_s_x + 1], l_y_as[: l_id_s_x + 1], color="g", marker=".")
+    # ax.plot(r_x_as[r_id_s_x:], r_y_as[r_id_s_x:], color="y", marker=".")
+    ax.plot(ext_x_as, ext_y_as, color="k", ls="-", marker="")
+
+    ax.plot(l_p_ext.x, l_p_ext.y, color="r", ls="", marker="o", fillstyle="none")
+    ax.plot(r_p_ext.x, r_p_ext.y, color="r", ls="", marker="o", fillstyle="none")
+
+    # ax.plot(l_x_as, best_tang_y_as, color="b", ls="-", marker="")
+
+    # vec_len = max(l_p1.x, r_p1.y) / 10
+    # plot_utils.add_vector(l_p_ext, ax, color="r", vec_len=vec_len)
+    # plot_utils.add_vector(r_p_ext, ax, color="r", vec_len=vec_len)
 
 
 def exs_build_ligature():
@@ -324,8 +376,8 @@ def exs_build_ligature():
     ax[1][1].set_title(f"{l_p0.ori_deg} {l_p1.ori_deg} : {r_p0.ori_deg} {r_p1.ori_deg}")
     build_ligature(l_p0, l_p1, r_p0, r_p1, ax[1][1])
 
-    # plt.show()
-    # return
+    plt.show()
+    return
 
     # create the plot
     fig, ax = plt.subplots(2, 2)
