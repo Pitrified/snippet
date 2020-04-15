@@ -363,10 +363,12 @@ def sample_parametric_aligned(
     x_len = x_max - x_min
     # t_pad = x_len / 10
     t_pad = x_len / 10 * x_stride
-    t_num_samples = int(x_len * 10 / x_stride)
+    t_num_samples = int(x_len * 100 / x_stride)
     t_oversample = np.linspace(t_min - t_pad, t_max + t_pad, num=t_num_samples)
     x_oversample = poly_model(t_oversample, x_coeff, flip_coeff=True)
     y_oversample = poly_model(t_oversample, y_coeff, flip_coeff=True)
+    x_d_oversample = poly_model(t_oversample, x_d_coeff, flip_coeff=True)
+    y_d_oversample = poly_model(t_oversample, y_d_coeff, flip_coeff=True)
     # return x_oversample, y_oversample
 
     # find the aligned x values
@@ -377,26 +379,45 @@ def sample_parametric_aligned(
     logg.debug(f"x_a_sample.shape: {x_a_sample.shape} {x_a_sample[0]} {x_a_sample[-1]}")
 
     # translate the aligned x values to compensate the x_offset
-    x_a_sample += x_offset 
+    x_a_sample += x_offset
     logg.debug(f"x_a_sample.shape: {x_a_sample.shape} {x_a_sample[0]} {x_a_sample[-1]}")
 
     # find the closest x in the aligned grid and save the value there
     x_id = 0
+
+    t_a_sample = np.empty_like(x_a_sample)
     y_a_sample = np.empty_like(x_a_sample)
+    x_a_d_sample = np.empty_like(x_a_sample)
+    y_a_d_sample = np.empty_like(x_a_sample)
+
     # cycle all the t values
     for i, t in enumerate(t_oversample):
         # when the x_oversample at index i is bigger than the current aligned at x_id
+        # you are straddling the x_a_sample point
         if x_oversample[i] > x_a_sample[x_id]:
-            # logg.debug(f"{x_oversample[i-1]} < {x_a_sample[x_id]} < {x_oversample[i]}")
+            # logg.debug(f"x {x_oversample[i-1]} < {x_a_sample[x_id]} < {x_oversample[i]}")
 
-            # save the y value at the corresponding position
-            # MAYBE even more precise by weighing the two adjacent y_oversample values
-            y_a_sample[x_id] = (y_oversample[i - 1] + y_oversample[i]) / 2
+            # more precise by weighing the two adjacent t_oversample values
+            dist = x_oversample[i] - x_oversample[i - 1]
+            al = (x_a_sample[x_id] - x_oversample[i - 1]) / dist
+
+            # save the t value at the corresponding position
+            t_a_sample[x_id] = (1 - al) * t_oversample[i - 1] + al * t_oversample[i]
+            # y_a_sample[x_id] = (1 - al) * y_oversample[i - 1] + al * y_oversample[i]
+            # x_a_d_sample[x_id] = (1 - al) * x_d_oversample[i - 1] + al * x_d_oversample[i]
+            # y_a_d_sample[x_id] = (1 - al) * y_d_oversample[i - 1] + al * y_d_oversample[i]
 
             x_id += 1
             if x_id >= x_a_sample.shape[0]:
                 break
 
+    # y_a_sample_bis = poly_model(t_a_sample, y_coeff, flip_coeff=True)
+    # y_a_error = np.sum(np.absolute(np.subtract(y_a_sample, y_a_sample_bis)))
+    # logg.debug(f"error: {y_a_error}")
+
+    y_a_sample = poly_model(t_a_sample, y_coeff, flip_coeff=True)
+    x_a_d_sample = poly_model(t_a_sample, x_d_coeff, flip_coeff=True)
+    y_a_d_sample = poly_model(t_a_sample, y_d_coeff, flip_coeff=True)
     return x_a_sample, y_a_sample
 
 
@@ -491,13 +512,15 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
         x_offset,
     )
     ax.plot(l_x_sample, l_y_sample, color="k", ls="", marker=".")
+    # ax.plot(l_x_sample, l_y_sample, color="k", ls="-", marker="")
 
     # translate it to the original position
     l_x_sample += l_p0.x
     l_y_sample += l_p0.y
     r_x_sample += r_p0.x
     r_y_sample += r_p0.y
-    ax.plot(l_x_sample, l_y_sample, color="k", ls="", marker=".")
+    # ax.plot(l_x_sample, l_y_sample, color="k", ls="", marker=".")
+    ax.plot(l_x_sample, l_y_sample, color="k", ls="-", marker="")
 
     # sample the points near the origin
     l_x_sample, l_y_segment = sample_segment_points(l_rot_p0.x, l_rot_p1.x, l_coeff)
