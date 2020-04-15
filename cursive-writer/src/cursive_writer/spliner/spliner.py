@@ -13,6 +13,7 @@ from cursive_writer.utils.geometric_utils import rotate_coeff
 from cursive_writer.utils.geometric_utils import rotate_derive_coeff
 from cursive_writer.utils.geometric_utils import sample_parametric_aligned
 
+
 def translate_points_to_origin(p0, p1):
     """Translate to the origin and rotate the oriented points to have both on the x axis
 
@@ -525,12 +526,13 @@ def compute_long_spline(spline_sequence, thickness=20):
 
     return spline_samples
 
+
 def compute_aligned_cubic_segment(p0, p1, x_stride=1, ax=None):
     """Compute the aligned cubic segment between two points
     """
     logg = logging.getLogger(f"c.{__name__}.compute_aligned_cubic_segment")
     # logg.debug(f"Start compute_aligned_cubic_segment")
-    
+
     # if the points are actually the same, return just that
     # MAYBE use math.isclose instead of hard comparison
     if p0.x == p1.x and p0.y == p1.y:

@@ -139,91 +139,147 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
     """
     logg = logging.getLogger(f"c.{__name__}.build_ligature")
     logg.debug(f"\nStarting build_ligature")
+    logg.debug(f"l_p0.x: {l_p0.x} l_p1.x: {l_p1.x} r_p0.x: {r_p0.x} r_p1.x: {r_p1.x}")
+
+    ligature_start = timer()
 
     # x_stride = 0.01
     # x_stride = 0.1
+    # x_stride = 1
     # x_stride = 0.5
-    x_stride = 2
+    # x_stride = 2
+    # x_stride = 4
+    x_stride = max(l_p1.x - l_p0.x, r_p1.x - r_p0.x) / 100
+    x_stride = 10 ** math.floor(math.log(x_stride, 10))
+    logg.debug(f"x_stride: {x_stride}")
 
     segment_start = timer()
     l_t_as, l_x_as, l_y_as, l_yp_as = compute_aligned_cubic_segment(
         l_p0, l_p1, x_stride,
     )
-    r_t_as, r_x_as, r_y_as, r_yp_as = compute_aligned_cubic_segment(
+    r_t_as, r_x_orig_as, r_y_as, r_yp_as = compute_aligned_cubic_segment(
         r_p0, r_p1, x_stride,
     )
     segment_end = timer()
     logg.debug(f"Time to compute aligned segments: {segment_end - segment_start:.6f}")
+    # logg.debug(f"r_x_orig_as[0]: {r_x_orig_as[0]} r_x_orig_as[-1]: {r_x_orig_as[-1]}")
+
+    # find how much the right segment can shift
+    shift_11 = l_p1.x - r_p1.x - (l_p1.x - l_p0.x) / 2
+    shift_10 = l_p1.x - r_p0.x
+    # align the shift on the stride grid: now if you sum the shift to l_x_as the points are still aligned.
+    shift_a_11 = math.floor(shift_11 / x_stride) * x_stride
+    shift_a_10 = math.ceil(shift_10 / x_stride) * x_stride
+    shift_range = np.arange(shift_a_11, shift_a_10 + x_stride / 2, x_stride)
+    recap = f"shift_11: {shift_11} shift_10: {shift_10}"
+    recap += f" shift_a_11: {shift_a_11} shift_a_10: {shift_a_10}"
+    # logg.debug(recap)
+    # logg.debug(f"shift_range: {shift_range}")
+
+    best_dist_x_touch = float("inf")
+    best_shift = None
+    best_r_x_as = None
+    best_tang_y_as = None
 
     # plot the segments
     ax.plot(l_x_as, l_y_as, color="g", ls="-", marker="")
-    ax.plot(r_x_as, r_y_as, color="y", ls="-", marker="")
     # ax.plot(l_x_as, l_y_as, color="g", ls="", marker=".")
-    # ax.plot(r_x_as, r_y_as, color="y", ls="", marker=".")
 
-    tangent_start = timer()
-    for xid in range(r_x_as.shape[0]):
-        # point tangent to the *right* segment
-        tang_op = OrientedPoint(r_x_as[xid], r_y_as[xid], slope2deg(r_yp_as[xid]))
-        tang_coeff = tang_op.to_ab_line()
+    tangent_times = []
 
-        # sample it on the *left* segment sample
-        tang_y_as = poly_model(l_x_as, tang_coeff, flip_coeff=True)
+    for shift in shift_range:
+        r_x_as = r_x_orig_as + shift
+        # logg.debug(f"\nNew shift r_x_as[0]: {r_x_as[0]} r_x_as[-1]: {r_x_as[-1]}")
+
+        # ax.plot(r_x_as, r_y_as, color="y", ls="-", marker="")
+        # ax.plot(r_x_as, r_y_as, color="y", ls="", marker=".")
+
+        tangent_start = timer()
+        for xid in range(r_x_as.shape[0]):
+            # point tangent to the *right* segment
+            tang_op = OrientedPoint(r_x_as[xid], r_y_as[xid], slope2deg(r_yp_as[xid]))
+            tang_coeff = tang_op.to_ab_line()
+
+            # sample it on the *left* segment sample
+            tang_y_as = poly_model(l_x_as, tang_coeff, flip_coeff=True)
+            # ax.plot(l_x_as, tang_y_as, color="b", ls="-", marker="")
+            # ax.plot(l_x_as, tang_y_as, color="b", ls="", marker=".")
+
+            # find if the left segment has some points lower than the tangent
+            lower = l_y_as < tang_y_as
+            # logg.debug(f"lower: {lower} {np.sum(lower)}")
+            if np.sum(lower) == 0:
+                # logg.debug(f"Breaking at xid: {xid}")
+                break
+        tangent_end = timer()
+        tangent_times.append(tangent_end - tangent_start)
+        # logg.debug(f"Time to find tangent: {tangent_end - tangent_start:.6f}")
+
+        # check this better, you might have found the tangent at the last iteration...
+        if xid == r_x_as.shape[0] - 1:
+            # logg.debug(f"Tangent not found")
+            continue
+
+        # find distance from left segment to tangent
+        dist_lt = l_y_as - tang_y_as
+        min_dist_lt = np.min(dist_lt)
+        argmin_dist_lt = np.argmin(dist_lt)
+        recap = f"min_dist_lt: {min_dist_lt:.6f} argmin_dist_lt: {argmin_dist_lt}"
+        # logg.debug(recap)
+
+        # find where the tangent touches the segments
+        l_x_touch = l_x_as[argmin_dist_lt]
+        r_x_touch = r_x_as[xid]
+
+        if r_x_touch < l_x_touch:
+            # logg.debug(f"Tangent goes the wrong way")
+            continue
+
+        # extend the points of contact
+        dist_x_touch = r_x_touch - l_x_touch
+        l_x_ext = l_x_touch - dist_x_touch / 2
+        r_x_ext = r_x_touch + dist_x_touch / 2
+        recap = f"l_x_touch: {l_x_touch:.4f} r_x_touch {r_x_touch:.4f}"
+        recap += f" dist_x_touch: {dist_x_touch:.4f}"
+        recap += f" l_x_ext: {l_x_ext:.4f} r_x_ext {r_x_ext:.4f}"
+        # logg.debug(recap)
+
+        if dist_x_touch < best_dist_x_touch:
+            best_dist_x_touch = dist_x_touch
+            best_shift = shift
+            best_r_x_as = r_x_as
+            best_tang_y_as = tang_y_as
+
+        lower_x = l_x_as < l_x_ext
+        # argmin returns the *first* occurrence of the min value
+        argmin_lower_x = np.argmin(lower_x)
+        # for symmetry, if we can, we keep the previous index (the last of the True)
+        if argmin_lower_x > 0:
+            argmin_lower_x -= 1
+        # recap = f"lower_x: {lower_x}"
+        recap = f" argmin_lower_x: {argmin_lower_x}"
+        recap += f" l_x_as[argmin_lower_x]: {l_x_as[argmin_lower_x]}"
+        # logg.debug(recap)
+
+        lower_x = r_x_as < r_x_ext
+        # argmin returns the *first* occurrence of the min value
+        argmin_lower_x = np.argmin(lower_x)
+        # recap = f"lower_x: {lower_x}"
+        recap = f" argmin_lower_x: {argmin_lower_x}"
+        recap += f" r_x_as[argmin_lower_x]: {r_x_as[argmin_lower_x]}"
+        # logg.debug(recap)
+
+        # plot the last tangent found
         # ax.plot(l_x_as, tang_y_as, color="b", ls="-", marker="")
-        # ax.plot(l_x_as, tang_y_as, color="b", ls="", marker=".")
 
-        # find if the left segment has some points lower than the tangent
-        lower = l_y_as < tang_y_as
-        # logg.debug(f"lower: {lower} {np.sum(lower)}")
-        if np.sum(lower) == 0:
-            logg.debug(f"Breaking at xid: {xid}")
-            break
-    tangent_end = timer()
-    logg.debug(f"Time to find tangent:             {tangent_end - tangent_start:.6f}")
+    tangent_time_mean = sum(tangent_times) / len(tangent_times)
+    logg.debug(f"Mean tangent time: {tangent_time_mean}")
 
-    # check this better, you might have found the tangent at the last iteration...
-    if xid == r_x_as.shape[0] - 1:
-        logg.debug(f"Tangent not found")
-        return
+    ligature_end = timer()
+    logg.debug(f"Time for build_ligature: {ligature_end - ligature_start:.6f}")
 
-    # plot the last tangent found
-    ax.plot(l_x_as, tang_y_as, color="b", ls="-", marker="")
-
-    # find distance from left segment to tangent
-    dist_lt = l_y_as - tang_y_as
-    min_dist_lt = np.min(dist_lt)
-    argmin_dist_lt = np.argmin(dist_lt)
-    recap = f"min_dist_lt: {min_dist_lt:.6f} argmin_dist_lt: {argmin_dist_lt}"
-    logg.debug(recap)
-
-    l_x_touch = l_x_as[argmin_dist_lt]
-    r_x_touch = r_x_as[xid]
-    dist_x_touch = r_x_touch - l_x_touch
-    l_x_ext = l_x_touch - dist_x_touch / 2
-    r_x_ext = r_x_touch + dist_x_touch / 2
-    recap = f"l_x_touch: {l_x_touch} r_x_touch {r_x_touch}"
-    recap += f" dist_x_touch: {dist_x_touch}"
-    recap += f" l_x_ext: {l_x_ext} r_x_ext {r_x_ext}"
-    logg.debug(recap)
-
-    lower_x = l_x_as < l_x_ext
-    # argmin returns the *first* occurrence of the min value
-    argmin_lower_x = np.argmin(lower_x)
-    # for symmetry, if we can we keep the previous index (the last of the True)
-    if argmin_lower_x > 0:
-        argmin_lower_x -= 1
-    # recap = f"lower_x: {lower_x}"
-    recap = f" argmin_lower_x: {argmin_lower_x}"
-    recap += f" l_x_as[argmin_lower_x]: {l_x_as[argmin_lower_x]}"
-    logg.debug(recap)
-
-    lower_x = r_x_as < r_x_ext
-    # argmin returns the *first* occurrence of the min value
-    argmin_lower_x = np.argmin(lower_x)
-    # recap = f"lower_x: {lower_x}"
-    recap = f" argmin_lower_x: {argmin_lower_x}"
-    recap += f" r_x_as[argmin_lower_x]: {r_x_as[argmin_lower_x]}"
-    logg.debug(recap)
+    ax.plot(best_r_x_as, r_y_as, color="y", ls="-", marker="")
+    ax.plot(l_x_as, best_tang_y_as, color="b", ls="-", marker="")
 
 
 def exs_build_ligature():
