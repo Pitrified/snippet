@@ -1,5 +1,3 @@
-import logging
-
 from cursive_writer.utils.oriented_point import OrientedPoint
 
 

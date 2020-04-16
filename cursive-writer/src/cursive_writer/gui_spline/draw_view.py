@@ -11,7 +11,6 @@ from cursive_writer.gui_spline.scrollable_frame import ScrollableFrame
 from cursive_writer.gui_spline.spoint_frame import FrameSPoint
 from cursive_writer.gui_spline.ttk_setup_style import setup_style
 from cursive_writer.gui_spline.plot_panel import PlotPanel
-from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.geometric_utils import collide_line_box
 from cursive_writer.utils.geometric_utils import translate_point_dxy
@@ -734,7 +733,6 @@ class FrameSpline(ttk.Frame):
         # this is shady as hell
         # should be (frame_spline - 2*padx)
         sp_frames_width = 230
-        sp_frames_height = 0
         self.sl_mock = ttk.Frame(
             self.sl_scrollable.scroll_frame, width=sp_frames_width, style="sf.TFrame",
         )
@@ -748,11 +746,8 @@ class FrameSpline(ttk.Frame):
         logg = logging.getLogger(f"c.{__class__.__name__}.update_all_SP")
         logg.info(f"Start {fmt_cn('update_all_SP')}")
 
-        sp_frames_width = 220
-        sp_frames_height = 50
-
         for spid in data:
-            if not spid in self.all_SP_frames:
+            if spid not in self.all_SP_frames:
                 name = f"frame_sp_{spid}"
 
                 # create the sp_frame inside the ScrollableFrame
@@ -838,7 +833,7 @@ class FrameSpline(ttk.Frame):
         logg.info(f"Start {fmt_cn('update_selected_spid_SP')} {data}")
 
         # if the old selected was a point
-        if not self.old_selected_spid is None:
+        if self.old_selected_spid is not None:
             # clear old selected state
             self.all_SP_frames[self.old_selected_spid].set_state("!selected")
 
@@ -846,7 +841,7 @@ class FrameSpline(ttk.Frame):
         self.old_selected_spid = data
 
         # if the new point is valid
-        if not data is None:
+        if data is not None:
             # set new one
             self.all_SP_frames[data].set_state("selected")
 
@@ -856,10 +851,10 @@ class FrameSpline(ttk.Frame):
         logg = logging.getLogger(f"c.{__class__.__name__}.update_selected_header_SP")
         logg.info(f"Start {fmt_cn('update_selected_header_SP')} {data}")
 
-        if not self.old_selected_header is None:
+        if self.old_selected_header is not None:
             self.all_SP_headers[self.old_selected_header].set_state("!selected")
 
         self.old_selected_header = data
 
-        if not data is None:
+        if data is not None:
             self.all_SP_headers[data].set_state("selected")

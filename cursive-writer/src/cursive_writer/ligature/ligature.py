@@ -3,23 +3,14 @@ import logging
 import numpy as np
 import math
 
-from timeit import default_timer as timer
 import matplotlib.pyplot as plt
+from timeit import default_timer as timer
 
 from cursive_writer.spliner.spliner import compute_aligned_cubic_segment
-from cursive_writer.spliner.spliner import fit_cubic
-from cursive_writer.spliner.spliner import rototranslate_points
-from cursive_writer.spliner.spliner import sample_nat_segment_points
-from cursive_writer.spliner.spliner import translate_points_to_origin
 from cursive_writer.utils import plot_utils
-from cursive_writer.utils.geometric_utils import bisect_poly
 from cursive_writer.utils.geometric_utils import poly_model
-from cursive_writer.utils.geometric_utils import rotate_coeff
-from cursive_writer.utils.geometric_utils import rotate_derive_coeff
-from cursive_writer.utils.geometric_utils import sample_parametric_aligned
 from cursive_writer.utils.geometric_utils import slope2deg
 from cursive_writer.utils.oriented_point import OrientedPoint
-from cursive_writer.utils.utils import print_coeff
 
 
 def parse_arguments():
@@ -80,7 +71,7 @@ def addLoggingLevel(levelName, levelNum, methodName=None):
 
     To avoid accidental clobberings of existing attributes, this method will
     raise an `AttributeError` if the level name is already an attribute of the
-    `logging` module or if the method name is already present 
+    `logging` module or if the method name is already present
 
     Example
     -------
@@ -177,9 +168,9 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
     # logg.debug(f"shift_range: {shift_range}")
 
     best_dist_x_touch = float("inf")
-    best_shift = None
+    # best_shift = None
     best_r_x_as = None
-    best_tang_y_as = None
+    # best_tang_y_as = None
 
     tangent_times = []
 
@@ -246,9 +237,9 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
 
         # save info about the current shift
         best_dist_x_touch = dist_x_touch
-        best_shift = shift
+        # best_shift = shift
         best_r_x_as = r_x_as
-        best_tang_y_as = tang_y_as
+        # best_tang_y_as = tang_y_as
 
         # find the index of the touch points
         # left
@@ -314,12 +305,12 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
             r_id_s_x = r_id_e_x - 1
 
     # plot the segments
-    # ax.plot(l_x_as, l_y_as, color="g", ls="", marker=".")
-    # ax.plot(r_x_as, r_y_as, color="y", ls="", marker=".")
-    # ax.plot(l_x_as[: l_id_s_x + 1], l_y_as[: l_id_s_x + 1], color="g", ls="-")
-    # ax.plot(r_x_as[r_id_s_x:], r_y_as[r_id_s_x:], color="y", ls="-")
-    ax.plot(l_x_as[: l_id_s_x + 1], l_y_as[: l_id_s_x + 1], color="k", ls="-")
-    ax.plot(r_x_as[r_id_s_x:], r_y_as[r_id_s_x:], color="k", ls="-")
+    ax.plot(l_x_as, l_y_as, color="g", ls="", marker=".")
+    ax.plot(r_x_as, r_y_as, color="y", ls="", marker=".")
+    ax.plot(l_x_as[: l_id_s_x + 1], l_y_as[: l_id_s_x + 1], color="g", ls="-")
+    ax.plot(r_x_as[r_id_s_x:], r_y_as[r_id_s_x:], color="y", ls="-")
+    # ax.plot(l_x_as[: l_id_s_x + 1], l_y_as[: l_id_s_x + 1], color="k", ls="-")
+    # ax.plot(r_x_as[r_id_s_x:], r_y_as[r_id_s_x:], color="k", ls="-")
     # ax.plot(l_x_as[: l_id_s_x + 1], l_y_as[: l_id_s_x + 1], color="g", marker=".")
     # ax.plot(r_x_as[r_id_s_x:], r_y_as[r_id_s_x:], color="y", marker=".")
     ax.plot(ext_x_as, ext_y_as, color="k", ls="-", marker="")
@@ -329,9 +320,9 @@ def build_ligature(l_p0, l_p1, r_p0, r_p1, ax):
 
     # ax.plot(l_x_as, best_tang_y_as, color="b", ls="-", marker="")
 
-    # vec_len = max(l_p1.x, r_p1.y) / 10
-    # plot_utils.add_vector(l_p_ext, ax, color="r", vec_len=vec_len)
-    # plot_utils.add_vector(r_p_ext, ax, color="r", vec_len=vec_len)
+    vec_len = max(l_p1.x, r_p1.y) / 10
+    plot_utils.add_vector(l_p_ext, ax, color="r", vec_len=vec_len)
+    plot_utils.add_vector(r_p_ext, ax, color="r", vec_len=vec_len)
 
 
 def exs_build_ligature():
@@ -339,6 +330,17 @@ def exs_build_ligature():
     """
     logg = logging.getLogger(f"c.{__name__}.exs_build_ligature")
     logg.debug(f"Starting exs_build_ligature")
+
+    fig, ax = plt.subplots(1, 1)
+    fig.set_size_inches(8, 8)
+    l_p0 = OrientedPoint(1213, 682, -12)
+    l_p1 = OrientedPoint(1579, 937, 60)
+    r_p0 = OrientedPoint(50, 700, -15)
+    r_p1 = OrientedPoint(582, 976, 70)
+    build_ligature(l_p0, l_p1, r_p0, r_p1, ax)
+
+    plt.show()
+    return
 
     # create the plot
     fig, ax = plt.subplots(2, 2)
@@ -414,6 +416,14 @@ def exs_build_ligature():
     r_p1 = OrientedPoint(320, 200, 70)
     ax[1][1].set_title(f"{l_p0.ori_deg} {l_p1.ori_deg} : {r_p0.ori_deg} {r_p1.ori_deg}")
     build_ligature(l_p0, l_p1, r_p0, r_p1, ax[1][1])
+
+    fig, ax = plt.subplots(1, 1)
+    fig.set_size_inches(8, 8)
+    l_p0 = OrientedPoint(1213, 682, -3)
+    l_p1 = OrientedPoint(1579, 937, 50)
+    r_p0 = OrientedPoint(50, 700, -15)
+    r_p1 = OrientedPoint(582, 976, 70)
+    build_ligature(l_p0, l_p1, r_p0, r_p1, ax)
 
     plt.show()
 

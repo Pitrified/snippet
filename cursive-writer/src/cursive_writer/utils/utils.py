@@ -43,6 +43,9 @@ def find_free_index(folder, base_name_fmt):
 def load_glyph(pf_input_glyph, dx, dy):
     """TODO: what is load_glyph doing?
     """
+    logg = logging.getLogger(f"c.{__name__}.load_glyph")
+    logg.debug(f"Start load_glyph")
+
     if not pf_input_glyph.exists():
         logg.warn(f"{pf_input_glyph} not found!")
         return None

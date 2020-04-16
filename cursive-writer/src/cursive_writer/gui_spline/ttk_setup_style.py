@@ -127,7 +127,7 @@ def setup_style(colorscheme="terra"):
     )
     s.map(
         "sp_info.TLabel",
-        background=[("selected", o["bg_selected"]), ("active", o["bg_active"]),],
+        background=[("selected", o["bg_selected"]), ("active", o["bg_active"])],
     )
     s.configure(
         "sp_header.sp_info.TLabel",
@@ -155,7 +155,7 @@ def setup_style(colorscheme="terra"):
     )
     s.map(
         "settings.TButton",
-        background=[("pressed", o["bg_selected"]), ("active", o["bg_active"]),],
+        background=[("pressed", o["bg_selected"]), ("active", o["bg_active"])],
         highlightbackground=[("pressed", "red")],
         highlightcolor=[("pressed", "red")],
     )

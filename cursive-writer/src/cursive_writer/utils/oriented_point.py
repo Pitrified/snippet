@@ -55,7 +55,7 @@ class OrientedPoint:
         r_x = self.x + other.x
         r_y = self.y + other.y
         r_ori = self.ori_deg + other.ori_deg
-        result = SPoint(r_x, r_y, r_ori)
+        result = OrientedPoint(r_x, r_y, r_ori)
         return result
 
     def __sub__(self, other):
@@ -64,7 +64,7 @@ class OrientedPoint:
         r_x = self.x - other.x
         r_y = self.y - other.y
         r_ori = self.ori_deg - other.ori_deg
-        result = SPoint(r_x, r_y, r_ori)
+        result = OrientedPoint(r_x, r_y, r_ori)
         return result
 
     def __eq__(self, other):

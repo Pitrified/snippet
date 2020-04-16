@@ -1,23 +1,21 @@
-import argparse
 import logging
 import numpy as np
 import math
 
 from cursive_writer.utils import plot_utils
 from cursive_writer.utils.geometric_utils import poly_model
-from cursive_writer.utils.geometric_utils import rotate_point
-from cursive_writer.utils.oriented_point import OrientedPoint
-from cursive_writer.utils.utils import print_coeff
-
 from cursive_writer.utils.geometric_utils import rotate_coeff
 from cursive_writer.utils.geometric_utils import rotate_derive_coeff
+from cursive_writer.utils.geometric_utils import rotate_point
 from cursive_writer.utils.geometric_utils import sample_parametric_aligned
+from cursive_writer.utils.oriented_point import OrientedPoint
+from cursive_writer.utils.utils import print_coeff
 
 
 def translate_points_to_origin(p0, p1):
     """Translate to the origin and rotate the oriented points to have both on the x axis
 
-    Returns 
+    Returns
         - two *new* OrientedPoint on the x axis, with ori_deg rotated
         - the direction from p0 to p1 in the original frame
     """
@@ -193,7 +191,7 @@ def compute_cubic_segment(p0, p1, ax=None):
     )
 
     # plot elements for debug purposes
-    if not ax is None:
+    if ax is not None:
         # plot the rotated vectors
         plot_utils.add_vector(rot_p0, ax, color="r")
         plot_utils.add_vector(rot_p1, ax, color="r")
@@ -247,14 +245,14 @@ def build_contour(
         logg.trace(f"x_sample_r.shape: {x_sample_r.shape}")
 
         # plot everything to debug things
-        if not ax is None:
+        if ax is not None:
             # plot left and right segments
             ax.plot(x_sample_l, y_segment_l, color="g", marker=".", ls="")
             ax.plot(x_sample_r, y_segment_r, color="g", marker=".", ls="")
 
         # /\
         if coeff_l[0] >= 0 and coeff_r[0] <= 0:
-            logg.trace(f"/\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            logg.trace(f"/\\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
             x_sample = np.hstack((x_sample_l, x_sample_t, x_sample_r))
             contour_t = np.hstack((y_segment_l, y_segment_t, y_segment_r))
             contour_b = y_segment_b
@@ -303,7 +301,7 @@ def build_contour(
 
         # /\
         if coeff_l[0] >= 0 and coeff_r[0] <= 0:
-            logg.trace(f"/\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            logg.trace(f"/\\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
             x_sample = np.hstack((x_sample_l, x_sample_r))
             contour_t = np.hstack((y_segment_l, y_segment_r))
             contour_b = y_segment_b
@@ -352,13 +350,13 @@ def build_contour(
             contour_b = np.hstack((y_segment_l, y_segment_r))
 
     # plot everything to debug things
-    if not ax is None:
-        ## plot left and right segments
+    if ax is not None:
+        # plot left and right segments
         ax.plot(x_sample_l, y_segment_l, color="g", marker=".", ls="")
         ax.plot(x_sample_r, y_segment_r, color="g", marker=".", ls="")
-        ## intersection point
+        # intersection point
         ax.plot([i_x], [i_y], color="g", marker="x", ls="")
-        ## plot the segments
+        # plot the segments
         ax.plot([p0t.x, p0b.x], [p0t.y, p0b.y], color="b", marker="", ls="-")
         ax.plot([p1t.x, p1b.x], [p1t.y, p1b.y], color="b", marker="", ls="-")
 
@@ -471,30 +469,30 @@ def compute_thick_spline(p0, p1, thickness, ax=None):
     logg.trace(f"rototran_y.shape: {rototran_y.shape}")
 
     # plot everything to debug things
-    if not ax is None:
+    if ax is not None:
         vec_len = 3
-        ## plot the points
+        # plot the points
         plot_utils.add_vector(p0, ax, color="r", vec_len=vec_len)
         plot_utils.add_vector(p1, ax, color="r", vec_len=vec_len)
-        ## plot the rotated vectors
+        # plot the rotated vectors
         plot_utils.add_vector(rot_p0, ax, color="k", vec_len=vec_len)
         plot_utils.add_vector(rot_p1, ax, color="k", vec_len=vec_len)
-        ## plot the corner of the spline
+        # plot the corner of the spline
         plot_utils.add_vector(p0t, ax, color="k", vec_len=vec_len)
         plot_utils.add_vector(p1t, ax, color="k", vec_len=vec_len)
         plot_utils.add_vector(p0b, ax, color="k", vec_len=vec_len)
         plot_utils.add_vector(p1b, ax, color="k", vec_len=vec_len)
-        ## plot top and bottom splines
-        #  plot_utils.add_points(x_sample_t, y_segment_t, ax, color="b", marker=".", ls="")
-        #  plot_utils.add_points(x_sample_b, y_segment_b, ax, color="b", marker=".", ls="")
+        # plot top and bottom splines
+        # plot_utils.add_points(x_sample_t, y_segment_t, ax, color="b", marker=".", ls="")
+        # plot_utils.add_points(x_sample_b, y_segment_b, ax, color="b", marker=".", ls="")
         ax.plot(x_sample_t, y_segment_t, color="r", marker="", ls="-")
         ax.plot(x_sample_b, y_segment_b, color="r", marker="", ls="-")
-        ## plot top and bottom contours
+        # plot top and bottom contours
         ax.plot(x_sample, contour_t, color="r", marker="x", ls="")
         ax.plot(x_sample, contour_b, color="r", marker="x", ls="")
-        ## plot on point
+        # plot on point
         ax.plot(on_points_x, on_points_y, color="b", marker=".", ls="")
-        ## plot on point translated back to original position
+        # plot on point translated back to original position
         ax.plot(rototran_x, rototran_y, color="b", marker=".", ls="")
 
     return rototran_x, rototran_y
@@ -568,7 +566,7 @@ def compute_aligned_cubic_segment(p0, p1, x_stride=1, ax=None):
     y_a_sample += p0.y
 
     # plot elements for debug purposes
-    if not ax is None:
+    if ax is not None:
         logg.debug(f"x_rot_coeff: {print_coeff(x_rot_coeff)}")
         logg.debug(f"y_rot_coeff: {print_coeff(y_rot_coeff)}")
 

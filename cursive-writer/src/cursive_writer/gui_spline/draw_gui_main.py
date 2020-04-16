@@ -1,6 +1,5 @@
 import argparse
 import logging
-from timeit import default_timer as timer
 from pathlib import Path
 
 from cursive_writer.gui_spline.draw_controller import Controller
@@ -77,7 +76,7 @@ def addLoggingLevel(levelName, levelNum, methodName=None):
 
     To avoid accidental clobberings of existing attributes, this method will
     raise an `AttributeError` if the level name is already an attribute of the
-    `logging` module or if the method name is already present 
+    `logging` module or if the method name is already present
 
     Example
     -------

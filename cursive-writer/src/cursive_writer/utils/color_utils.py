@@ -1,6 +1,3 @@
-import logging
-
-
 def fmt_cn(string, name="start"):
     """Assign a color to a name, to keep it consistent
     """

@@ -1,11 +1,7 @@
 import logging
-import tkinter as tk
 from tkinter import ttk
-from timeit import default_timer as timer
 
-from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
-from cursive_writer.utils.spline_point import SplinePoint
 
 
 class FrameSPoint(ttk.Frame):

@@ -1,7 +1,5 @@
 import logging
-import numpy as np
-from math import cos
-from math import sin
+import math
 
 
 def plot_build(fig, ax):
@@ -23,8 +21,8 @@ def add_vector(sp, ax, color="b", vec_len=0.3):
 
     head_width = 0.05 * vec_len
     head_length = 0.1 * vec_len
-    end_x = cos(sp.ori_rad) * vec_len
-    end_y = sin(sp.ori_rad) * vec_len
+    end_x = math.cos(sp.ori_rad) * vec_len
+    end_y = math.sin(sp.ori_rad) * vec_len
     logg.debug(f"sp {sp} end_x: {end_x} end_y: {end_y}")
 
     # plot this invisible point so that the ax limits update correctly

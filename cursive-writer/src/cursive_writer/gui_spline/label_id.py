@@ -1,5 +1,4 @@
 import logging
-import tkinter as tk
 from tkinter import ttk
 
 from cursive_writer.utils.color_utils import fmt_cn

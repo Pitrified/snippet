@@ -1,15 +1,8 @@
 import logging
-import tkinter as tk
-from tkinter import ttk
+import math
+
 from PIL import Image
 from PIL import ImageTk
-
-from math import ceil
-from math import cos
-from math import floor
-from math import log
-from math import sin
-from math import sqrt
 
 from cursive_writer.utils.color_utils import fmt_cn
 
@@ -41,7 +34,7 @@ class ImageCropper:
         self.downscaling_mode = Image.LANCZOS
 
         # zoom saved in log scale, actual zoom: zoom_base**zoom_level
-        self._zoom_base = sqrt(2)
+        self._zoom_base = math.sqrt(2)
         self._zoom_level = None
 
         # shift of the image inside the canvas to keep it centered
@@ -82,7 +75,7 @@ class ImageCropper:
             ratio = min(
                 self.widget_wid / self._image_wid, self.widget_hei / self._image_hei
             )
-            self._zoom_level = log(ratio, self._zoom_base)
+            self._zoom_level = math.log(ratio, self._zoom_base)
 
         self._mov_x = 0
         self._mov_y = 0
@@ -107,8 +100,8 @@ class ImageCropper:
         logg.trace(f"Linear zoom: {zoom}")
 
         # dimension of the virtual zoomed image
-        zoom_wid = ceil(self._image_wid * zoom)
-        zoom_hei = ceil(self._image_hei * zoom)
+        zoom_wid = math.ceil(self._image_wid * zoom)
+        zoom_hei = math.ceil(self._image_hei * zoom)
 
         # the zoomed photo fits inside the widget
         if zoom_wid <= self.widget_wid and zoom_hei <= self.widget_hei:

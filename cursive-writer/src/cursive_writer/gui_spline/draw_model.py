@@ -1,7 +1,4 @@
 import logging
-import numpy as np
-from math import cos
-from math import sin
 
 from cursive_writer.gui_spline.image_cropper import ImageCropper
 from cursive_writer.gui_spline.observable import Observable
@@ -689,7 +686,7 @@ class Model:
 
     def update_mouse_pos_info(self, canvas_x, canvas_y):
         """Compute relevant mouse coord and pack them
-        
+
         canvas_pos is the position inside the widget
         """
         # position of the cropped region inside the zoomed image
@@ -781,7 +778,7 @@ class Model:
         """Updats the value in fm_lines_view to match the current abs/mov/zoom
         """
         curr_abs_lines = self.fm_lines_abs.get()
-        if not curr_abs_lines is None:
+        if curr_abs_lines is not None:
             new_view_lines = self.rescale_fm_lines_to_view(curr_abs_lines)
             self.fm_lines_view.set(new_view_lines)
 
@@ -872,7 +869,7 @@ class Model:
 
     def add_spline_point(self):
         """Add the new SplinePoint
-            
+
             - to the dict path_SP
             - update the selected_spid
         """

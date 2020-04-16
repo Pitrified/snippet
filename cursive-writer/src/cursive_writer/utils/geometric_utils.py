@@ -1,18 +1,10 @@
 import logging
 import numpy as np
-from timeit import default_timer as timer
 
-from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.oriented_point import OrientedPoint
 
 import math
-from math import degrees
-from math import radians
-from math import atan2
-from math import sqrt
-from math import cos
-from math import sin
 
 
 def line_curve_ab_coeff(x0, y0, x1, y1):
@@ -38,7 +30,7 @@ def line_curve_ab_coeff(x0, y0, x1, y1):
 def line_curve_point(x0, y0, x1, y1):
     """Find a point on the line with appropriate orientation
     """
-    ori_deg = degrees(atan2(y1 - y0, x1 - x0))
+    ori_deg = math.degrees(math.atan2(y1 - y0, x1 - x0))
     return OrientedPoint(x0, y0, ori_deg)
 
 
@@ -149,15 +141,15 @@ def translate_point_dxy(orig_point, shift_x, shift_y):
 def translate_point_dir(orig_point, dir_deg, shift):
     """Translate the point along a direction of a certain amount
     """
-    new_x = orig_point.x + shift * cos(radians(dir_deg))
-    new_y = orig_point.y + shift * sin(radians(dir_deg))
+    new_x = orig_point.x + shift * math.cos(math.radians(dir_deg))
+    new_y = orig_point.y + shift * math.sin(math.radians(dir_deg))
     return OrientedPoint(new_x, new_y, orig_point.ori_deg)
 
 
 def dist2D(p0, p1):
     """Distance between two points
     """
-    return sqrt((p0.x - p1.x) ** 2 + (p0.y - p1.y) ** 2)
+    return math.sqrt((p0.x - p1.x) ** 2 + (p0.y - p1.y) ** 2)
 
 
 def apply_affine_transform(F, x, y):
@@ -199,7 +191,7 @@ def poly_model(x, coeff, flip_coeff=False):
 def slope2deg(slope, direction=1):
     """Convert the slope of a line to an angle in degrees
     """
-    return degrees(np.arctan2(slope, direction))
+    return math.degrees(np.arctan2(slope, direction))
 
 
 def slope2rad(slope, direction=1):
@@ -214,9 +206,9 @@ def compute_rot_matrix(theta_deg):
     logg = logging.getLogger(f"c.{__name__}.compute_rot_matrix")
     logg.setLevel("INFO")
 
-    theta_deg = radians(theta_deg)
-    ct = cos(theta_deg)
-    st = sin(theta_deg)
+    theta_deg = math.radians(theta_deg)
+    ct = math.cos(theta_deg)
+    st = math.sin(theta_deg)
     rot_mat = np.array(((ct, -st), (st, ct)))
     logg.debug(f"rot_mat = {rot_mat}")
 
@@ -268,8 +260,8 @@ def compute_affine_transform(base_pt_abs, basis_length):
     logg.trace(f"base_ori_rad: {base_ori_rad} radians")
 
     # basis vector of the FM frame, in img coord
-    u = [cos(base_ori_rad) * basis_length, sin(base_ori_rad) * basis_length]
-    v = [sin(base_ori_rad) * basis_length, -cos(base_ori_rad) * basis_length]
+    u = [math.cos(base_ori_rad) * basis_length, math.sin(base_ori_rad) * basis_length]
+    v = [math.sin(base_ori_rad) * basis_length, -math.cos(base_ori_rad) * basis_length]
     p = base_pt_abs
 
     fm2abs = np.array([[u[0], v[0], p.x], [u[1], v[1], p.y], [0, 0, 1]])
@@ -372,12 +364,12 @@ def rotate_coeff(coeff, theta_deg):
         y = a*x^3 + b*x^2 + c*x + d
 
     It can be parametrized as
-        
+
         [x] = [         t               ]
         [y] = [ a*t^3 + b*t^2 + c*t + d ]
 
     Apply a rotation of th radians
-        
+
         [x'] = [cos(th) -sin(th)] * [         t               ]
         [y'] = [sin(th)  cos(th)]   [ a*t^3 + b*t^2 + c*t + d ]
     """
@@ -415,17 +407,17 @@ def rotate_derive_coeff(coeff, theta_deg):
         y = a*x^3 + b*x^2 + c*x + d
 
     It can be parametrized as
-        
+
         [x] = [         t               ]
         [y] = [ a*t^3 + b*t^2 + c*t + d ]
 
     Apply a rotation of th radians
-        
+
         [x'] = [cos(th) -sin(th)] * [         t               ]
         [y'] = [sin(th)  cos(th)]   [ a*t^3 + b*t^2 + c*t + d ]
 
     The derivative as function of t is
-        
+
         dy   dy/dt
         -- = -----
         dx   dx/dt
@@ -497,9 +489,9 @@ def sample_parametric_aligned(
 
     # check where the extremes are
     x_test_min = poly_model(np.array([t_min]), x_coeff, flip_coeff=True)
-    y_test_min = poly_model(np.array([t_min]), y_coeff, flip_coeff=True)
+    # y_test_min = poly_model(np.array([t_min]), y_coeff, flip_coeff=True)
     x_test_max = poly_model(np.array([t_max]), x_coeff, flip_coeff=True)
-    y_test_max = poly_model(np.array([t_max]), y_coeff, flip_coeff=True)
+    # y_test_max = poly_model(np.array([t_max]), y_coeff, flip_coeff=True)
     logg.debug(f"x_test_min: {x_test_min} x_test_max: {x_test_max}")
     # return [x_test_min, x_test_max], [y_test_min, y_test_max]
 
@@ -510,9 +502,9 @@ def sample_parametric_aligned(
     t_num_samples = int(x_len * 100 / x_stride)
     t_oversample = np.linspace(t_min - t_pad, t_max + t_pad, num=t_num_samples)
     x_oversample = poly_model(t_oversample, x_coeff, flip_coeff=True)
-    y_oversample = poly_model(t_oversample, y_coeff, flip_coeff=True)
-    x_d_oversample = poly_model(t_oversample, x_d_coeff, flip_coeff=True)
-    y_d_oversample = poly_model(t_oversample, y_d_coeff, flip_coeff=True)
+    # y_oversample = poly_model(t_oversample, y_coeff, flip_coeff=True)
+    # x_d_oversample = poly_model(t_oversample, x_d_coeff, flip_coeff=True)
+    # y_d_oversample = poly_model(t_oversample, y_d_coeff, flip_coeff=True)
     # return x_oversample, y_oversample
 
     # find the aligned x values

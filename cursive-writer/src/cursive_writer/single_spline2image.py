@@ -1,14 +1,10 @@
 import argparse
 import logging
 import matplotlib.pyplot as plt
-import numpy as np
 
 from pathlib import Path
-from random import seed as rseed
-from timeit import default_timer as timer
 
 from cursive_writer.utils.utils import load_spline
-from cursive_writer.utils import plot_utils
 from cursive_writer.spliner.spliner import compute_long_spline
 
 
@@ -82,7 +78,7 @@ def addLoggingLevel(levelName, levelNum, methodName=None):
 
     To avoid accidental clobberings of existing attributes, this method will
     raise an `AttributeError` if the level name is already an attribute of the
-    `logging` module or if the method name is already present 
+    `logging` module or if the method name is already present
 
     Example
     -------

@@ -4,7 +4,6 @@ from pathlib import Path
 
 from cursive_writer.gui_spline.draw_model import Model
 from cursive_writer.gui_spline.draw_view import View
-from cursive_writer.utils.color_utils import fmt_c
 from cursive_writer.utils.color_utils import fmt_cn
 
 
@@ -170,7 +169,7 @@ class Controller:
             self.view.exit()
 
         # only adjust if the focus is not in the Entry
-        if self.has_focus_ent_root == False:
+        if self.has_focus_ent_root is False:
             # adjust point
             if keysym == "q":
                 self.clicked_btn_adjust("vl")
