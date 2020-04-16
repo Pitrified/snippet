@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 
 from cursive_writer.utils.utils import load_spline
-from cursive_writer.spliner.spliner import compute_long_spline
+from cursive_writer.spliner.spliner import compute_long_thick_spline
 
 
 def parse_arguments():
@@ -18,7 +18,7 @@ def parse_arguments():
         "--path_input",
         type=str,
         default="h1_000.txt",
-        help="path to input spline to use",
+        help="Path to input spline to use",
     )
 
     parser.add_argument(
@@ -172,7 +172,7 @@ def plot_letter(pf_input_spline, data_dir, thickness):
     ax = fig.add_axes((0, 0, 1, 1))
     ax.set_axis_off()
 
-    spline_samples = compute_long_spline(spline_sequence, thickness)
+    spline_samples = compute_long_thick_spline(spline_sequence, thickness)
 
     for glyph in spline_samples:
         for segment in glyph:

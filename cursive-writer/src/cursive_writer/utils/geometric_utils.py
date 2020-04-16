@@ -3,6 +3,7 @@ import numpy as np
 
 from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.oriented_point import OrientedPoint
+from cursive_writer.utils.utils import print_coeff
 
 import math
 
@@ -288,7 +289,9 @@ def bisect_poly(coeff, d_coeff, y_target, tolerance=1e-6, x_low=0, x_high=1):
     """
     logg = logging.getLogger(f"c.{__name__}.bisect_poly")
     logg.setLevel("INFO")
-    logg.debug(f"Start bisect_poly")
+    logg.debug(f"Start bisect_poly {y_target}")
+    logg.debug(f"coeff: {print_coeff(coeff)}")
+    logg.debug(f"d_coeff: {print_coeff(d_coeff)}")
 
     # deal with bad inputs
     if x_high < x_low:
@@ -443,7 +446,16 @@ def rotate_derive_coeff(coeff, theta_deg):
 
 
 def sample_parametric_aligned(
-    x_coeff, y_coeff, x_d_coeff, y_d_coeff, x_min, x_max, x_stride, x_offset=0
+    x_coeff,
+    y_coeff,
+    x_d_coeff,
+    y_d_coeff,
+    x_min,
+    x_max,
+    x_stride,
+    x_offset=0,
+    x_low=None,
+    x_high=None,
 ):
     """Sample a parametric curve along a grid
 
@@ -480,20 +492,27 @@ def sample_parametric_aligned(
     logg.setLevel("INFO")
     logg.debug(f"\nStart sample_parametric_aligned")
     logg.debug(f"x_min: {x_min} x_max: {x_max}")
+    logg.debug(f"x_low: {x_low} x_high: {x_high}")
     logg.debug(f"x_stride: {x_stride} x_offset: {x_offset}")
 
+    if x_low is None:
+        x_low = 2 * x_min
+    if x_high is None:
+        x_high = 2 * x_max
+
     # find the value for t that corresponds to x_min and x_max
-    t_min = bisect_poly(x_coeff, x_d_coeff, x_min, x_low=2 * x_min, x_high=2 * x_max)
-    t_max = bisect_poly(x_coeff, x_d_coeff, x_max, x_low=2 * x_min, x_high=2 * x_max)
+    t_min = bisect_poly(x_coeff, x_d_coeff, x_min, x_low, x_high)
+    t_max = bisect_poly(x_coeff, x_d_coeff, x_max, x_low, x_high)
     logg.debug(f"t_min: {t_min} t_max: {t_max}")
 
     # check where the extremes are
     x_test_min = poly_model(np.array([t_min]), x_coeff, flip_coeff=True)
-    # y_test_min = poly_model(np.array([t_min]), y_coeff, flip_coeff=True)
+    y_test_min = poly_model(np.array([t_min]), y_coeff, flip_coeff=True)
     x_test_max = poly_model(np.array([t_max]), x_coeff, flip_coeff=True)
-    # y_test_max = poly_model(np.array([t_max]), y_coeff, flip_coeff=True)
-    logg.debug(f"x_test_min: {x_test_min} x_test_max: {x_test_max}")
-    # return [x_test_min, x_test_max], [y_test_min, y_test_max]
+    y_test_max = poly_model(np.array([t_max]), y_coeff, flip_coeff=True)
+    recap = f"x_test_min: {x_test_min} x_test_max: {x_test_max}"
+    recap += f" y_test_min: {y_test_min} y_test_max: {y_test_max}"
+    logg.debug(recap)
 
     # oversample in t, pad a bit the interval
     x_len = x_max - x_min
@@ -505,7 +524,7 @@ def sample_parametric_aligned(
     # y_oversample = poly_model(t_oversample, y_coeff, flip_coeff=True)
     # x_d_oversample = poly_model(t_oversample, x_d_coeff, flip_coeff=True)
     # y_d_oversample = poly_model(t_oversample, y_d_coeff, flip_coeff=True)
-    # return x_oversample, y_oversample
+    # return t_oversample, x_oversample, y_oversample, 0
 
     # find the aligned x values
     x_a_min = math.ceil(x_min / x_stride) * x_stride
@@ -551,3 +570,26 @@ def sample_parametric_aligned(
     yp_a_sample = np.divide(y_a_d_sample, x_a_d_sample)
 
     return t_a_sample, x_a_sample, y_a_sample, yp_a_sample
+
+
+def find_align_stride(glyphs):
+    """Given an iterable of glyphs, finds the stride to sample them
+    """
+    logg = logging.getLogger(f"c.{__name__}.find_align_stride")
+    logg.debug(f"Start find_align_stride")
+
+    x_strides = []
+    for glyph in glyphs:
+        for i in range(len(glyph) - 1):
+            p0 = glyph[i]
+            p1 = glyph[i + 1]
+            x_strides.append((p1.x - p0.x) / 100)
+
+    # keep the max: points close to each other will not be sampled well, but
+    # points far away will be computed in reasonable time. If the min was kept,
+    # large segments will become too slow.
+    x_stride = max(x_strides)
+    x_stride = 10 ** math.floor(math.log(x_stride, 10))
+    logg.debug(f"x_stride: {x_stride}")
+
+    return x_stride

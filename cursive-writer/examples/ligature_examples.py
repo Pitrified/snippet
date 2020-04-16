@@ -4,14 +4,16 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 
-from random import seed as rseed
+from pathlib import Path
 from timeit import default_timer as timer
 
-from cursive_writer.utils.utils import print_coeff
 from cursive_writer.utils.oriented_point import OrientedPoint
 from cursive_writer.utils import plot_utils
+from cursive_writer.utils.utils import load_spline
 from cursive_writer.spliner.spliner import compute_aligned_cubic_segment
+from cursive_writer.spliner.spliner import compute_aligned_glyph
 from cursive_writer.utils.geometric_utils import poly_model
+from cursive_writer.utils.geometric_utils import find_align_stride
 from cursive_writer.utils.geometric_utils import slope2deg
 
 
@@ -21,15 +23,18 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="")
 
     parser.add_argument(
-        "-i",
-        "--path_input",
+        "-il",
+        "--path_input_left",
         type=str,
-        default="hp.jpg",
-        help="path to input image to use",
+        default="v1_001.txt",
+        help="Path to input spline to use on the left side",
     )
-
     parser.add_argument(
-        "-s", "--rand_seed", type=int, default=-1, help="random seed to use"
+        "-ir",
+        "--path_input_right",
+        type=str,
+        default="i1_h_006.txt",
+        help="Path to input spline to use on the right side",
     )
 
     # last line to parse the args
@@ -46,10 +51,10 @@ def setup_logger(logLevel="DEBUG"):
 
     module_console_handler = logging.StreamHandler()
 
-    #  log_format_module = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    #  log_format_module = "%(name)s - %(levelname)s: %(message)s"
-    #  log_format_module = '%(levelname)s: %(message)s'
-    #  log_format_module = '%(name)s: %(message)s'
+    # log_format_module = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    # log_format_module = "%(name)s - %(levelname)s: %(message)s"
+    # log_format_module = '%(levelname)s: %(message)s'
+    # log_format_module = '%(name)s: %(message)s'
     log_format_module = "%(message)s"
 
     formatter = logging.Formatter(log_format_module)
@@ -73,7 +78,7 @@ def addLoggingLevel(levelName, levelNum, methodName=None):
 
     To avoid accidental clobberings of existing attributes, this method will
     raise an `AttributeError` if the level name is already an attribute of the
-    `logging` module or if the method name is already present 
+    `logging` module or if the method name is already present
 
     Example
     -------
@@ -117,23 +122,11 @@ def setup_env():
 
     args = parse_arguments()
 
-    # setup seed value
-    if args.rand_seed == -1:
-        myseed = 1
-        myseed = int(timer() * 1e9 % 2 ** 32)
-    else:
-        myseed = args.rand_seed
-    rseed(myseed)
-    np.random.seed(myseed)
-
     # build command string to repeat this run
     # FIXME if an option is a flag this does not work, sorry
     recap = f"python3 spliner_examples.py"
     for a, v in args._get_kwargs():
-        if a == "rand_seed":
-            recap += f" --rand_seed {myseed}"
-        else:
-            recap += f" --{a} {v}"
+        recap += f" --{a} {v}"
 
     logmain = logging.getLogger(f"c.{__name__}.setup_env")
     logmain.info(recap)
@@ -167,13 +160,20 @@ def ex_parametric_tangent(p0, p1, x_stride, ax):
     ax.plot(x_a_sample, tang_y_a_sample, color="g", ls="-", marker="")
 
 
-def exs_parametric_tangent(args):
+def exs_parametric_tangent():
     """TODO: what is exs_parametric_tangent doing?
     """
     logg = logging.getLogger(f"c.{__name__}.exs_parametric_tangent")
     logg.debug(f"Start exs_parametric_tangent")
 
-    # x_stride = 3
+    # p0: (967.5267, 974.1696) # -85.8470 p1: (1006.2328, 822.0541) # -62.3541
+    x_stride = 1
+    fig, ax = plt.subplots(1, 1)
+    fig.set_size_inches(8, 8)
+    p0 = OrientedPoint(967.5267, 974.1696, -85.8470)
+    p1 = OrientedPoint(1006.2328, 822.0541, -62.3541)
+    ex_parametric_tangent(p0, p1, x_stride, ax)
+
     x_stride = 0.3
 
     # create the plot
@@ -270,7 +270,7 @@ def ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax):
     # logg.debug(f"shift_range: {shift_range}")
 
     best_dist_x_touch = float("inf")
-    best_shift = None
+    # best_shift = None
     best_r_x_as = None
     best_tang_y_as = None
 
@@ -339,7 +339,7 @@ def ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax):
 
         # save info about the current shift
         best_dist_x_touch = dist_x_touch
-        best_shift = shift
+        # best_shift = shift
         best_r_x_as = r_x_as
         best_tang_y_as = tang_y_as
 
@@ -427,7 +427,7 @@ def ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax):
     plot_utils.add_vector(r_p_ext, ax, color="r", vec_len=vec_len)
 
 
-def exs_ligature_2segments(args):
+def exs_ligature_2segments():
     """
     """
     logg = logging.getLogger(f"c.{__name__}.exs_build_ligature")
@@ -520,21 +520,52 @@ def exs_ligature_2segments(args):
     r_p1 = OrientedPoint(582, 976, 70)
     ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax)
 
-    plt.show()
 
-
-def run_ligature_examples(args):
+def aligned_glyph(pf_spline_left, data_dir):
+    """TODO: what is aligned_glyph doing?
     """
-    """
-    logg = logging.getLogger(f"c.{__name__}.run_ligature_examples")
-    logg.debug(f"Starting run_ligature_examples")
+    logg = logging.getLogger(f"c.{__name__}.aligned_glyph")
+    logg.debug(f"Start aligned_glyph")
 
-    exs_parametric_tangent(args)
-    exs_ligature_2segments(args)
+    spline_sequence_l = load_spline(pf_spline_left, data_dir)
+    gly_seq_l = spline_sequence_l[-1]
+    spline_sequence_r = load_spline(pf_spline_right, data_dir)
+    gly_seq_r = spline_sequence_r[0]
 
-    plt.show()
+    # find a proper x_stride for this pair of files
+    x_stride = find_align_stride((gly_seq_l, gly_seq_r))
+
+    # compute the data for the left and right glyph
+    t_as_l, x_as_l, y_as_l, yp_as_l = compute_aligned_glyph(gly_seq_l, x_stride)
+    t_as_r, x_as_r, y_as_r, yp_as_r = compute_aligned_glyph(gly_seq_r, x_stride)
+
+    fig, ax = plt.subplots(1, 1)
+    fig.set_size_inches(8, 8)
+    ax.plot(x_as_l, y_as_l, color="y", ls="", marker=".")
+    ax.plot(x_as_r, y_as_r, color="g", ls="", marker=".")
 
 
 if __name__ == "__main__":
     args = setup_env()
-    run_ligature_examples(args)
+
+    logg = logging.getLogger(f"c.{__name__}.main")
+    logg.debug(f"Starting main")
+
+    main_dir = Path(__file__).resolve().parent
+    logg.debug(f"main_dir: {main_dir}")
+    data_dir = main_dir.parent / "src" / "cursive_writer" / "data"
+    logg.debug(f"data_dir: {data_dir}")
+
+    path_input_left = args.path_input_left
+    pf_spline_left = data_dir / path_input_left
+    logg.debug(f"pf_spline_left: {pf_spline_left}")
+    path_input_right = args.path_input_right
+    pf_spline_right = data_dir / path_input_right
+    logg.debug(f"pf_spline_right: {pf_spline_right}")
+
+    exs_parametric_tangent()
+    exs_ligature_2segments()
+
+    aligned_glyph(pf_spline_left, data_dir)
+
+    plt.show()

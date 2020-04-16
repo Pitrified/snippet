@@ -5,16 +5,13 @@ import matplotlib.pyplot as plt
 
 from random import seed as rseed
 from timeit import default_timer as timer
-from math import cos
-from math import sin
 
 from cursive_writer.spliner.spliner import compute_cubic_segment
-from cursive_writer.spliner.spliner import compute_long_spline
+from cursive_writer.spliner.spliner import compute_long_thick_spline
 from cursive_writer.spliner.spliner import compute_thick_spline
 from cursive_writer.spliner.spliner import fit_cubic
 from cursive_writer.spliner.spliner import linspace_segment_points
 from cursive_writer.utils import plot_utils
-from cursive_writer.utils.geometric_utils import poly_model
 from cursive_writer.utils.oriented_point import OrientedPoint
 
 
@@ -76,7 +73,7 @@ def addLoggingLevel(levelName, levelNum, methodName=None):
 
     To avoid accidental clobberings of existing attributes, this method will
     raise an `AttributeError` if the level name is already an attribute of the
-    `logging` module or if the method name is already present 
+    `logging` module or if the method name is already present
 
     Example
     -------
@@ -149,8 +146,6 @@ def ex_fit_cubic_curve():
     """
     # create the plot
     fig, ax = plt.subplots()
-    # sample per segment
-    num_samples = 100
 
     # first segment
     p0 = OrientedPoint(1, 1, 0)
@@ -336,7 +331,7 @@ def ex_long_spline(spline_sequence, thickness):
     """
     fig, ax = plt.subplots()
 
-    spline_samples = compute_long_spline(spline_sequence, thickness)
+    spline_samples = compute_long_thick_spline(spline_sequence, thickness)
 
     for glyph in spline_samples:
         for segment in glyph:

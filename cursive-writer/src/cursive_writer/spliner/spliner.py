@@ -498,15 +498,15 @@ def compute_thick_spline(p0, p1, thickness, ax=None):
     return rototran_x, rototran_y
 
 
-def compute_long_spline(spline_sequence, thickness=20):
+def compute_long_thick_spline(spline_sequence, thickness=20):
     """Compute thick spline points for a spline spline_sequence
 
     spline_sequence = [[OP1, OP2, ...], [OP6, OP7, ...], ...]
     returns a list of list of 2-tuples
     spline_samples = [[(x12, y12), (x23, y23), ...], ...]
     """
-    logg = logging.getLogger(f"c.{__name__}.compute_long_spline")
-    logg.debug(f"Start compute_long_spline")
+    logg = logging.getLogger(f"c.{__name__}.compute_long_thick_spline")
+    logg.debug(f"Start compute_long_thick_spline")
 
     spline_samples = []
 
@@ -529,7 +529,9 @@ def compute_aligned_cubic_segment(p0, p1, x_stride=1, ax=None):
     """Compute the aligned cubic segment between two points
     """
     logg = logging.getLogger(f"c.{__name__}.compute_aligned_cubic_segment")
-    # logg.debug(f"Start compute_aligned_cubic_segment")
+    logg.setLevel("INFO")
+    logg.debug(f"Start compute_aligned_cubic_segment")
+    logg.debug(f"p0: {p0} p1: {p1}")
 
     # if the points are actually the same, return just that
     # MAYBE use math.isclose instead of hard comparison
@@ -559,6 +561,8 @@ def compute_aligned_cubic_segment(p0, p1, x_stride=1, ax=None):
         p1.x - p0.x,
         x_stride,
         x_offset,
+        x_low=0,
+        x_high=max(p1.x - p0.x, abs(p1.y - p0.y)) * 2,
     )
 
     # translate the sample to the original position
@@ -592,3 +596,57 @@ def compute_aligned_cubic_segment(p0, p1, x_stride=1, ax=None):
         ax.plot(x_a_sample, y_a_sample, color="k", ls="-", marker="")
 
     return t_a_sample, x_a_sample, y_a_sample, yp_a_sample
+
+
+def compute_aligned_glyph(gly_seq, x_stride):
+    """TODO: what is compute_aligned_glyph doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.compute_aligned_glyph")
+    logg.debug(f"Start compute_aligned_glyph")
+
+    all_t_as = []
+    all_x_as = []
+    all_y_as = []
+    all_yp_as = []
+    for i in range(len(gly_seq) - 1):
+        p0 = gly_seq[i]
+        p1 = gly_seq[i + 1]
+
+        t_as, x_as, y_as, yp_as = compute_aligned_cubic_segment(p0, p1, x_stride)
+
+        all_t_as.append(t_as)
+        all_x_as.append(x_as)
+        all_y_as.append(y_as)
+        all_yp_as.append(yp_as)
+
+    for i in range(len(all_x_as) - 1):
+        recap = f"{i}:{i+1}/{len(all_x_as)-1}\t"
+        recap += f" all_x_as[i][-1]: {all_x_as[i][-1]} all_x_as[i + 1][0]: {all_x_as[i + 1][0]}"
+        recap += f" all_x_as[i].shape: {all_x_as[i].shape} all_x_as[i + 1].shape: {all_x_as[i + 1].shape}"
+        logg.debug(recap)
+
+        # if the last element of the previous is equal to the first of the current
+        # remove the current first element
+        if math.isclose(all_x_as[i][-1], all_x_as[i + 1][0], abs_tol=x_stride / 10):
+            all_t_as[i + 1] = all_t_as[i + 1][1:]
+            all_x_as[i + 1] = all_x_as[i + 1][1:]
+            all_y_as[i + 1] = all_y_as[i + 1][1:]
+            all_yp_as[i + 1] = all_yp_as[i + 1][1:]
+
+        # logg.debug(f"all_y_as[{i}]: {all_y_as[i]}")
+
+        recap = f"\t all_x_as[i][-1]: {all_x_as[i][-1]} all_x_as[i + 1][0]: {all_x_as[i + 1][0]}"
+        recap += f" all_x_as[i].shape: {all_x_as[i].shape} all_x_as[i + 1].shape: {all_x_as[i + 1].shape}"
+        logg.debug(recap)
+
+    fin_t_as = np.hstack(all_t_as)
+    fin_x_as = np.hstack(all_x_as)
+    fin_y_as = np.hstack(all_y_as)
+    fin_yp_as = np.hstack(all_yp_as)
+    recap = f"fin_t_as.shape: {fin_t_as.shape}"
+    recap += f" fin_x_as.shape: {fin_x_as.shape}"
+    recap += f" fin_y_as.shape: {fin_y_as.shape}"
+    recap += f" fin_yp_as.shape: {fin_yp_as.shape}"
+    logg.debug(recap)
+
+    return fin_t_as, fin_x_as, fin_y_as, fin_yp_as

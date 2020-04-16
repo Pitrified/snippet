@@ -102,8 +102,8 @@ def load_spline(pf_input_spline, data_dir):
 def print_coeff(coeff):
     """Prints coeff as equation
     """
-    logg = logging.getLogger(f"c.{__name__}.print_coeff")
-    logg.debug(f"Start print_coeff {coeff}")
+    # logg = logging.getLogger(f"c.{__name__}.print_coeff")
+    # logg.debug(f"Start print_coeff {coeff}")
 
     eq_str = "y ="
     for i, c in enumerate(np.flip(coeff)):
