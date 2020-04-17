@@ -2,6 +2,7 @@ import argparse
 import logging
 import math
 import matplotlib.pyplot as plt
+import numpy as np
 
 from pathlib import Path
 from timeit import default_timer as timer
@@ -378,11 +379,19 @@ def ex_align_glyphs(pf_spline_left, pf_spline_right, data_dir):
     plot_utils.add_vector(r_p_ext, ax, color="r", vec_len=vec_len)
 
 
-def ex_align_letters(pf_spline_left, pf_spline_right, data_dir, thickness):
-    """TODO: what is ex_align_letters doing?
+def ex_align_letters_1(pf_spline_left, pf_spline_right, data_dir, thickness):
+    """TODO: what is ex_align_letters_1 doing?
+
+    Align letters
+        * high_up/high_up: vi
+        * high_up/high_down: vm
+        * low_up/low_up: mi
     """
-    logg = logging.getLogger(f"c.{__name__}.ex_align_letters")
-    logg.debug(f"Start ex_align_letters")
+    logg = logging.getLogger(f"c.{__name__}.ex_align_letters_1")
+    logg.debug(f"Start ex_align_letters_1")
+    recap = f"pf_spline_left.stem: {pf_spline_left.stem}"
+    recap += f" pf_spline_right.stem {pf_spline_right.stem}"
+    logg.debug(recap)
 
     spline_sequence_l = load_spline(pf_spline_left, data_dir)
     gly_seq_l = spline_sequence_l[-1]
@@ -479,6 +488,121 @@ def ex_align_letters(pf_spline_left, pf_spline_right, data_dir, thickness):
                 ax.plot(*segment, color="k", marker=".", ls="")
 
 
+def ex_align_letters_2(pf_spline_left, pf_spline_right, data_dir, thickness):
+    """TODO: what is ex_align_letters_2 doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.ex_align_letters_2")
+    logg.debug(f"Start ex_align_letters_2")
+
+    spline_sequence_l = load_spline(pf_spline_left, data_dir)
+    gly_seq_l = spline_sequence_l[-1]
+    spline_sequence_r = load_spline(pf_spline_right, data_dir)
+    gly_seq_r = spline_sequence_r[0]
+
+    # find a proper x_stride for this pair of files
+    x_stride = find_align_stride((*spline_sequence_l, *spline_sequence_r))
+    # compute the data for the left and right glyph
+    _, l_x_as, l_y_as, l_yp_as = compute_aligned_glyph(gly_seq_l, x_stride)
+    _, r_x_orig_as, r_y_as, r_yp_as = compute_aligned_glyph(gly_seq_r, x_stride)
+
+    # build a point oriented like r_first_op on l_last_op
+    r_first_op_ori_deg = slope2deg(r_yp_as[0])
+    l_line_op = OrientedPoint(l_x_as[-1], l_y_as[-1], r_first_op_ori_deg)
+    a, b = l_line_op.to_ab_line()
+
+    # the x value of r_first_op.y along l_line_op
+    x_shift_r_first = (r_y_as[0] - b) / a
+    r_x_shift = x_shift_r_first - r_x_orig_as[0]
+    r_x_shift_al = math.floor(r_x_shift / x_stride) * x_stride
+
+    # shift the right glyph
+    r_x_as = r_x_orig_as + r_x_shift_al
+
+    # translate the right spline along x axis
+    translate_spline_sequence(spline_sequence_r, r_x_shift_al, 0)
+
+    # create the OrientedPoint for the ligature
+    l_last_op_ori_deg = slope2deg(l_yp_as[-1])
+    l_last_op = OrientedPoint(l_x_as[-1], l_y_as[-1], l_last_op_ori_deg)
+    r_first_op = OrientedPoint(r_x_as[0], r_y_as[0], r_first_op_ori_deg)
+
+    # build the connecting glyph
+    gly_seq_con = [l_last_op, r_first_op]
+    spline_sequence_con = [gly_seq_con]
+
+    # build a single sequence
+    spline_sequence_all = []
+    spline_sequence_all.extend(spline_sequence_l)
+    spline_sequence_all.extend(spline_sequence_con)
+    spline_sequence_all.extend(spline_sequence_r)
+
+    # compute the thick spline
+    spline_samples_con = compute_long_thick_spline(spline_sequence_con, thickness)
+    spline_samples_l = compute_long_thick_spline(spline_sequence_l, thickness)
+    spline_samples_r = compute_long_thick_spline(spline_sequence_r, thickness)
+
+    # merge in a single one
+    spline_samples_all = []
+    spline_samples_all.extend(spline_samples_l)
+    spline_samples_all.extend(spline_samples_con)
+    spline_samples_all.extend(spline_samples_r)
+
+    # find dimension of the plot
+    xlim, ylim = find_spline_sequence_bbox(spline_sequence_all)
+    # inches to point
+    ratio = 8 / 1000
+    wid = xlim[1] - xlim[0]
+    hei = ylim[1] - ylim[0]
+    fig_dims = (wid * ratio, hei * ratio)
+
+    # create plot
+    fig = plt.figure(figsize=fig_dims, frameon=False)
+    ax = fig.add_axes((0, 0, 1, 1))
+    fig.canvas.set_window_title("Example of glyph alignment")
+    ax.set_axis_off()
+
+    # colors = False
+    colors = True
+    if colors:
+        for glyph in spline_samples_r:
+            for segment in glyph:
+                ax.plot(*segment, color="g", marker=".", ls="")
+        for glyph in spline_samples_con:
+            for segment in glyph:
+                ax.plot(*segment, color="r", marker=".", ls="")
+        for glyph in spline_samples_l:
+            for segment in glyph:
+                ax.plot(*segment, color="y", marker=".", ls="")
+    else:
+        for glyph in spline_samples_all:
+            for segment in glyph:
+                ax.plot(*segment, color="k", marker=".", ls="")
+
+    # plot the line used
+    l_line_x_sample = np.linspace(l_x_as[0], r_x_as[-1])
+    l_line_y_a_sample = poly_model(l_line_x_sample, np.array([b, a]))
+    ax.plot(l_line_x_sample, l_line_y_a_sample, color="c", ls=":", marker="")
+
+
+def exs_align_letters(data_dir, thickness):
+    """TODO: what is exs_align_letters doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.exs_align_letters")
+    logg.debug(f"Start exs_align_letters")
+
+    pf_m = data_dir / "m1_001.txt"
+    pf_i = data_dir / "i1_006.txt"
+    pf_ih = data_dir / "i1_h_006.txt"
+    pf_v = data_dir / "v1_001.txt"
+    # ex_align_letters_1(pf_m, pf_i, data_dir, thickness)
+    # ex_align_letters_1(pf_v, pf_m, data_dir, thickness)
+    # ex_align_letters_1(pf_v, pf_ih, data_dir, thickness)
+
+    ex_align_letters_2(pf_ih, pf_m, data_dir, thickness)
+    ex_align_letters_2(pf_m, pf_v, data_dir, thickness)
+    ex_align_letters_2(pf_i, pf_v, data_dir, thickness)
+
+
 def run_ligature_examples(args):
     """
     """
@@ -506,7 +630,8 @@ def run_ligature_examples(args):
 
     # ex_align_glyphs(pf_spline_left, pf_spline_right, data_dir)
     thickness = 10
-    ex_align_letters(pf_spline_left, pf_spline_right, data_dir, thickness)
+    # ex_align_letters_1(pf_spline_left, pf_spline_right, data_dir, thickness)
+    exs_align_letters(data_dir, thickness)
 
     plt.show()
 
