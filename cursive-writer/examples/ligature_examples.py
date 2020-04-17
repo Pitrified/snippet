@@ -428,7 +428,7 @@ def find_best_shift(l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_str
 
 
 def ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax):
-    """
+    """TODO: what is ex_ligature_2segments doing?
     """
     logg = logging.getLogger(f"c.{__name__}.ex_ligature_2segments")
     logg.debug(f"\nStarting ex_ligature_2segments")
@@ -575,11 +575,11 @@ def exs_ligature_2segments():
     ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax)
 
 
-def aligned_glyph(pf_spline_left, data_dir):
-    """TODO: what is aligned_glyph doing?
+def ex_align_glyphs(pf_spline_left, pf_spline_right, data_dir):
+    """TODO: what is ex_align_glyphs doing?
     """
-    logg = logging.getLogger(f"c.{__name__}.aligned_glyph")
-    logg.debug(f"Start aligned_glyph")
+    logg = logging.getLogger(f"c.{__name__}.ex_align_glyphs")
+    logg.debug(f"Start ex_align_glyphs")
 
     spline_sequence_l = load_spline(pf_spline_left, data_dir)
     gly_seq_l = spline_sequence_l[-1]
@@ -636,8 +636,11 @@ def aligned_glyph(pf_spline_left, data_dir):
     plot_utils.add_vector(r_p_ext, ax, color="r", vec_len=vec_len)
 
 
-if __name__ == "__main__":
-    args = setup_env()
+def run_ligature_examples(args):
+    """
+    """
+    logg = logging.getLogger(f"c.{__name__}.run_ligature_examples")
+    logg.debug(f"Starting run_ligature_examples")
 
     logg = logging.getLogger(f"c.{__name__}.main")
     logg.debug(f"Starting main")
@@ -658,6 +661,11 @@ if __name__ == "__main__":
     # exs_parametric_tangent()
     # exs_ligature_2segments()
 
-    aligned_glyph(pf_spline_left, data_dir)
+    ex_align_glyphs(pf_spline_left, pf_spline_right, data_dir)
 
     plt.show()
+
+
+if __name__ == "__main__":
+    args = setup_env()
+    run_ligature_examples(args)

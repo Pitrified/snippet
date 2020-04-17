@@ -169,6 +169,7 @@ def plot_letter(pf_input_spline, data_dir, thickness):
     # fig, ax = plt.subplots()
 
     fig = plt.figure(figsize=fig_dims, frameon=False)
+    fig.canvas.set_window_title(f"{pf_input_spline.stem}")
     ax = fig.add_axes((0, 0, 1, 1))
     ax.set_axis_off()
 
@@ -211,8 +212,11 @@ def plot_good_letters(data_dir, thickness, prefixes=None):
             plot_letter(pf_input_spline, data_dir, thickness)
 
 
-if __name__ == "__main__":
-    args = setup_env()
+def run_single_spline2image(args):
+    """
+    """
+    logg = logging.getLogger(f"c.{__name__}.run_single_spline2image")
+    logg.debug(f"Starting run_single_spline2image")
 
     plt.rcParams["toolbar"] = "None"
 
@@ -243,3 +247,8 @@ if __name__ == "__main__":
     # TODO a mode that monitors the files drawn and recomputes them
 
     plt.show()
+
+
+if __name__ == "__main__":
+    args = setup_env()
+    run_single_spline2image(args)
