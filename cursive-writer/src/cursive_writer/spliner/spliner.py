@@ -529,8 +529,8 @@ def compute_aligned_cubic_segment(p0, p1, x_stride=1, ax=None):
     """Compute the aligned cubic segment between two points
     """
     logg = logging.getLogger(f"c.{__name__}.compute_aligned_cubic_segment")
-    logg.setLevel("INFO")
     logg.debug(f"Start compute_aligned_cubic_segment")
+    logg.setLevel("INFO")
     logg.debug(f"p0: {p0} p1: {p1}")
 
     # if the points are actually the same, return just that
@@ -603,6 +603,7 @@ def compute_aligned_glyph(gly_seq, x_stride):
     """
     logg = logging.getLogger(f"c.{__name__}.compute_aligned_glyph")
     logg.debug(f"Start compute_aligned_glyph")
+    logg.setLevel("INFO")
 
     all_t_as = []
     all_x_as = []

@@ -245,12 +245,12 @@ def find_lower_tangent(l_x_as, l_y_as, r_x_as, r_y_as, r_yp_as):
         tang_coeff = tang_op.to_ab_line()
 
         # sample it on the *left* segment sample
-        tang_y_as = poly_model(l_x_as, tang_coeff, flip_coeff=True)
-        # ax.plot(l_x_as, tang_y_as, color="b", ls="-", marker="")
-        # ax.plot(l_x_as, tang_y_as, color="b", ls="", marker=".")
+        l_tang_y_as = poly_model(l_x_as, tang_coeff, flip_coeff=True)
+        # ax.plot(l_x_as, l_tang_y_as, color="b", ls="-", marker="")
+        # ax.plot(l_x_as, l_tang_y_as, color="b", ls="", marker=".")
 
         # find if the left segment has some points lower than the tangent
-        lower = l_y_as < tang_y_as
+        lower = l_y_as < l_tang_y_as
         # logg.debug(f"lower: {lower} {np.sum(lower)}")
         if np.sum(lower) == 0:
             # logg.debug(f"Breaking at xid: {xid}")
@@ -260,7 +260,7 @@ def find_lower_tangent(l_x_as, l_y_as, r_x_as, r_y_as, r_yp_as):
     # logg.debug(f"Time to find tangent: {tangent_end - tangent_start:.6f}")
 
     # find distance from left segment to tangent
-    dist_left_tangent = l_y_as - tang_y_as
+    dist_left_tangent = l_y_as - l_tang_y_as
     min_dist_left_tangent = np.min(dist_left_tangent)
     argmin_dist_left_tangent = np.argmin(dist_left_tangent)
     recap = f"min_dist_left_tangent: {min_dist_left_tangent:.6f}"
@@ -274,50 +274,20 @@ def find_lower_tangent(l_x_as, l_y_as, r_x_as, r_y_as, r_yp_as):
     l_xid = argmin_dist_left_tangent
     r_xid = xid
 
-    return l_xid, r_xid, tang_y_as, tangent_time
+    return l_xid, r_xid, l_tang_y_as, tangent_time
 
 
-def find_best_shift(l_p0, l_p1, r_p0, r_p1, x_stride):
+def find_best_shift(l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_stride):
     """TODO: what is find_best_shift doing?
     """
     logg = logging.getLogger(f"c.{__name__}.find_best_shift")
     logg.debug(f"Start find_best_shift")
 
-
-def ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax):
-    """
-    """
-    logg = logging.getLogger(f"c.{__name__}.ex_ligature_2segments")
-    logg.debug(f"\nStarting ex_ligature_2segments")
-    logg.debug(f"l_p0.x: {l_p0.x} l_p1.x: {l_p1.x} r_p0.x: {r_p0.x} r_p1.x: {r_p1.x}")
-
-    ligature_start = timer()
-
-    # find stride roughly a hundredth of the segment length
-    x_stride = max(l_p1.x - l_p0.x, r_p1.x - r_p0.x) / 100
-    x_stride = 10 ** math.floor(math.log(x_stride, 10))
-    logg.debug(f"x_stride: {x_stride}")
-
-    segment_start = timer()
-    _, l_x_as, l_y_as, l_yp_as = compute_aligned_cubic_segment(
-        l_p0, l_p1, x_stride,
-    )
-    _, r_x_orig_as, r_y_as, r_yp_as = compute_aligned_cubic_segment(
-        r_p0, r_p1, x_stride,
-    )
-    segment_end = timer()
-    logg.debug(f"Time to compute aligned segments: {segment_end - segment_start:.6f}")
-    # logg.debug(f"r_x_orig_as[0]: {r_x_orig_as[0]} r_x_orig_as[-1]: {r_x_orig_as[-1]}")
-
-    recap = f"l_p0.x {l_p0.x} l_p1.x {l_p1.x}"
-    recap += f" l_x_as[0] {l_x_as[0]} l_x_as[-1] {l_x_as[-1]}"
-    recap += f"r_p0.x {r_p0.x} r_p1.x {r_p1.x}"
-    recap += f" r_x_orig_as[0] {r_x_orig_as[0]} r_x_orig_as[-1] {r_x_orig_as[-1]}"
-    logg.debug(recap)
+    shift_start = timer()
 
     # find how much the right segment can shift
-    shift_11 = l_p1.x - r_p1.x - (l_p1.x - l_p0.x) / 2
-    shift_10 = l_p1.x - r_p0.x
+    shift_11 = l_x_as[-1] - r_x_orig_as[-1] - (l_x_as[-1] - l_x_as[0]) / 2
+    shift_10 = l_x_as[-1] - r_x_orig_as[0]
     # align the shift on the stride grid: now if you sum the shift to l_x_as
     # the points are still aligned.
     shift_a_11 = math.floor(shift_11 / x_stride) * x_stride
@@ -326,12 +296,11 @@ def ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax):
     recap = f"shift_11: {shift_11} shift_10: {shift_10}"
     recap += f" shift_a_11: {shift_a_11} shift_a_10: {shift_a_10}"
     # logg.debug(recap)
-    # logg.debug(f"shift_range: {shift_range}")
 
     best_dist_x_touch = float("inf")
-    # best_shift = None
+    best_shift = None
     best_r_x_as = None
-    best_tang_y_as = None
+    best_l_tang_y_as = None
 
     tangent_times = []
 
@@ -343,7 +312,7 @@ def ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax):
         # ax.plot(r_x_as, r_y_as, color="y", ls="", marker=".")
 
         # find the indexes where the tangent touches the curves
-        l_xid, r_xid, tang_y_as, tangent_time = find_lower_tangent(
+        l_xid, r_xid, l_tang_y_as, tangent_time = find_lower_tangent(
             l_x_as, l_y_as, r_x_as, r_y_as, r_yp_as
         )
 
@@ -370,9 +339,9 @@ def ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax):
 
         # save info about the current shift
         best_dist_x_touch = dist_x_touch
-        # best_shift = shift
+        best_shift = shift
         best_r_x_as = r_x_as
-        best_tang_y_as = tang_y_as
+        best_l_tang_y_as = l_tang_y_as
 
         # extend the points of contact
         best_l_x_ext = l_x_touch - dist_x_touch / 2
@@ -442,24 +411,70 @@ def ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax):
         if r_id_e_x > 0:
             r_id_s_x = r_id_e_x - 1
 
-    ligature_end = timer()
-    logg.debug(f"Time to find optimal shift: {ligature_end - ligature_start:.6f}")
+    shift_end = timer()
+    logg.debug(f"Time to find optimal shift: {shift_end - shift_start:.6f}")
+
+    return (
+        best_shift,
+        best_r_x_as,
+        best_l_tang_y_as,
+        l_id_s_x,
+        r_id_s_x,
+        l_p_ext,
+        r_p_ext,
+        ext_x_as,
+        ext_y_as,
+    )
+
+
+def ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax):
+    """
+    """
+    logg = logging.getLogger(f"c.{__name__}.ex_ligature_2segments")
+    logg.debug(f"\nStarting ex_ligature_2segments")
+    logg.debug(f"l_p0.x: {l_p0.x} l_p1.x: {l_p1.x} r_p0.x: {r_p0.x} r_p1.x: {r_p1.x}")
+
+    # find stride roughly a hundredth of the segment length
+    x_stride = max(l_p1.x - l_p0.x, r_p1.x - r_p0.x) / 100
+    x_stride = 10 ** math.floor(math.log(x_stride, 10))
+    logg.debug(f"x_stride: {x_stride}")
+
+    segment_start = timer()
+    _, l_x_as, l_y_as, l_yp_as = compute_aligned_cubic_segment(l_p0, l_p1, x_stride)
+    _, r_x_orig_as, r_y_as, r_yp_as = compute_aligned_cubic_segment(
+        r_p0, r_p1, x_stride,
+    )
+    segment_end = timer()
+    logg.debug(f"Time to compute aligned segments: {segment_end - segment_start:.6f}")
+
+    (
+        best_shift,
+        best_r_x_as,
+        best_l_tang_y_as,
+        l_id_s_x,
+        r_id_s_x,
+        l_p_ext,
+        r_p_ext,
+        ext_x_as,
+        ext_y_as,
+    ) = find_best_shift(l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_stride)
+    logg.debug(f"best_shift: {best_shift}")
 
     # plot the segments
     # ax.plot(l_x_as, l_y_as, color="g", ls="", marker=".")
-    # ax.plot(r_x_as, r_y_as, color="y", ls="", marker=".")
+    # ax.plot(best_r_x_as, r_y_as, color="y", ls="", marker=".")
     ax.plot(l_x_as[: l_id_s_x + 1], l_y_as[: l_id_s_x + 1], color="g", ls="-")
-    ax.plot(r_x_as[r_id_s_x:], r_y_as[r_id_s_x:], color="y", ls="-")
+    ax.plot(best_r_x_as[r_id_s_x:], r_y_as[r_id_s_x:], color="y", ls="-")
     # ax.plot(l_x_as[: l_id_s_x + 1], l_y_as[: l_id_s_x + 1], color="k", ls="-")
-    # ax.plot(r_x_as[r_id_s_x:], r_y_as[r_id_s_x:], color="k", ls="-")
+    # ax.plot(best_r_x_as[r_id_s_x:], r_y_as[r_id_s_x:], color="k", ls="-")
     # ax.plot(l_x_as[: l_id_s_x + 1], l_y_as[: l_id_s_x + 1], color="g", marker=".")
-    # ax.plot(r_x_as[r_id_s_x:], r_y_as[r_id_s_x:], color="y", marker=".")
+    # ax.plot(best_r_x_as[r_id_s_x:], r_y_as[r_id_s_x:], color="y", marker=".")
     ax.plot(ext_x_as, ext_y_as, color="k", ls="-", marker="")
 
     ax.plot(l_p_ext.x, l_p_ext.y, color="r", ls="", marker="o", fillstyle="none")
     ax.plot(r_p_ext.x, r_p_ext.y, color="r", ls="", marker="o", fillstyle="none")
 
-    ax.plot(l_x_as, best_tang_y_as, color="b", ls=":", marker="")
+    ax.plot(l_x_as, best_l_tang_y_as, color="b", ls=":", marker="")
 
     vec_len = max(l_p1.x, r_p1.y) / 10
     plot_utils.add_vector(l_p_ext, ax, color="r", vec_len=vec_len)
@@ -575,13 +590,50 @@ def aligned_glyph(pf_spline_left, data_dir):
     x_stride = find_align_stride((gly_seq_l, gly_seq_r))
 
     # compute the data for the left and right glyph
-    t_as_l, x_as_l, y_as_l, yp_as_l = compute_aligned_glyph(gly_seq_l, x_stride)
-    t_as_r, x_as_r, y_as_r, yp_as_r = compute_aligned_glyph(gly_seq_r, x_stride)
+    _, l_x_as, l_y_as, l_yp_as = compute_aligned_glyph(gly_seq_l, x_stride)
+    _, r_x_orig_as, r_y_as, r_yp_as = compute_aligned_glyph(gly_seq_r, x_stride)
 
     fig, ax = plt.subplots(1, 1)
     fig.set_size_inches(8, 8)
-    ax.plot(x_as_l, y_as_l, color="y", ls="", marker=".")
-    ax.plot(x_as_r, y_as_r, color="g", ls="", marker=".")
+    fig.suptitle("Example of glyph alignment", fontsize=16)
+    fig.canvas.set_window_title("Example of glyph alignment")
+
+    # plot original glyphs
+    # ax.plot(l_x_as, l_y_as, color="y", ls="", marker=".")
+    # ax.plot(r_x_orig_as, r_y_as, color="g", ls="", marker=".")
+
+    (
+        best_shift,
+        best_r_x_as,
+        best_l_tang_y_as,
+        l_id_s_x,
+        r_id_s_x,
+        l_p_ext,
+        r_p_ext,
+        ext_x_as,
+        ext_y_as,
+    ) = find_best_shift(l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_stride)
+    logg.debug(f"best_shift: {best_shift}")
+
+    # plot the segments
+    # ax.plot(l_x_as, l_y_as, color="g", ls="", marker=".")
+    # ax.plot(best_r_x_as, r_y_as, color="y", ls="", marker=".")
+    ax.plot(l_x_as[: l_id_s_x + 1], l_y_as[: l_id_s_x + 1], color="g", ls="-")
+    ax.plot(best_r_x_as[r_id_s_x:], r_y_as[r_id_s_x:], color="y", ls="-")
+    # ax.plot(l_x_as[: l_id_s_x + 1], l_y_as[: l_id_s_x + 1], color="k", ls="-")
+    # ax.plot(best_r_x_as[r_id_s_x:], r_y_as[r_id_s_x:], color="k", ls="-")
+    # ax.plot(l_x_as[: l_id_s_x + 1], l_y_as[: l_id_s_x + 1], color="g", marker=".")
+    # ax.plot(best_r_x_as[r_id_s_x:], r_y_as[r_id_s_x:], color="y", marker=".")
+    ax.plot(ext_x_as, ext_y_as, color="k", ls="-", marker="")
+
+    ax.plot(l_p_ext.x, l_p_ext.y, color="r", ls="", marker="o", fillstyle="none")
+    ax.plot(r_p_ext.x, r_p_ext.y, color="r", ls="", marker="o", fillstyle="none")
+
+    ax.plot(l_x_as, best_l_tang_y_as, color="b", ls=":", marker="")
+
+    vec_len = max(l_x_as[-1], l_y_as[-1], r_x_orig_as[-1], r_y_as[-1]) / 10
+    plot_utils.add_vector(l_p_ext, ax, color="r", vec_len=vec_len)
+    plot_utils.add_vector(r_p_ext, ax, color="r", vec_len=vec_len)
 
 
 if __name__ == "__main__":
@@ -589,6 +641,7 @@ if __name__ == "__main__":
 
     logg = logging.getLogger(f"c.{__name__}.main")
     logg.debug(f"Starting main")
+    # logg.setLevel("INFO")
 
     main_dir = Path(__file__).resolve().parent
     logg.debug(f"main_dir: {main_dir}")

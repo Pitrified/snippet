@@ -45,6 +45,7 @@ def load_glyph(pf_input_glyph, dx, dy):
     """
     logg = logging.getLogger(f"c.{__name__}.load_glyph")
     logg.debug(f"Start load_glyph")
+    logg.setLevel("INFO")
 
     if not pf_input_glyph.exists():
         logg.warn(f"{pf_input_glyph} not found!")
@@ -70,6 +71,7 @@ def load_spline(pf_input_spline, data_dir):
     """
     logg = logging.getLogger(f"c.{__name__}.load_spline")
     logg.debug(f"Start load_spline")
+    logg.setLevel("INFO")
 
     # full path to the letter recap file
     logg.debug(f"pf_input_spline: {pf_input_spline}")
