@@ -39,6 +39,14 @@ def parse_arguments():
         help="Which letter to plot, choose 'single', 'all' of a string of letters to show",
     )
 
+    parser.add_argument(
+        "-col",
+        "--colors",
+        type=str,
+        default="k",
+        help="Color to use, set 'cycle' to use a different one in each glyph",
+    )
+
     # last line to parse the args
     args = parser.parse_args()
     return args
@@ -59,7 +67,7 @@ def setup_env():
     return args
 
 
-def plot_letter(pf_input_spline, data_dir, thickness):
+def plot_letter(pf_input_spline, data_dir, thickness, color="k"):
     """
     """
     logg = logging.getLogger(f"c.{__name__}.plot_letter")
@@ -83,12 +91,23 @@ def plot_letter(pf_input_spline, data_dir, thickness):
 
     spline_samples = compute_long_thick_spline(spline_sequence, thickness)
 
+    colors = ["b", "g", "r", "c", "m", "y", "k"]
+
+    i = 0
+
     for glyph in spline_samples:
         for segment in glyph:
-            ax.plot(*segment, color="k", marker=".", ls="")
+            if color == "cycle":
+                mod = i % len(colors)
+                ax.plot(*segment, color=colors[mod], marker=".", ls="")
+            elif color in colors:
+                ax.plot(*segment, color=color, marker=".", ls="")
+            else:
+                ax.plot(*segment, color="k", marker=".", ls="")
+        i += 1
 
 
-def plot_good_letters(data_dir, thickness, prefixes=None):
+def plot_good_letters(data_dir, thickness, colors, prefixes=None):
     """
     """
     logg = logging.getLogger(f"c.{__name__}.plot_good_letters")
@@ -110,7 +129,7 @@ def plot_good_letters(data_dir, thickness, prefixes=None):
     for letter_name in good_letters:
         if prefixes is None or letter_name[0] in prefixes:
             pf_input_spline = data_dir / letter_name
-            plot_letter(pf_input_spline, data_dir, thickness)
+            plot_letter(pf_input_spline, data_dir, thickness, colors)
 
 
 def run_single_spline2image(args):
@@ -138,14 +157,12 @@ def run_single_spline2image(args):
     logg.debug(f"args.which_plot: {args.which_plot}")
 
     if args.which_plot == "single":
-        plot_letter(pf_input_spline, data_dir, thickness)
+        plot_letter(pf_input_spline, data_dir, thickness, args.colors)
     elif args.which_plot == "all":
-        plot_good_letters(data_dir, thickness)
+        plot_good_letters(data_dir, thickness, args.colors)
     else:
         # send the which_plot args as string of prefixes, only plot the letters sent
-        plot_good_letters(data_dir, thickness, args.which_plot)
-
-    # TODO a mode that monitors the files drawn and recomputes them
+        plot_good_letters(data_dir, thickness, args.colors, args.which_plot)
 
     plt.show()
 
