@@ -147,6 +147,18 @@ def translate_point_dir(orig_point, dir_deg, shift):
     return OrientedPoint(new_x, new_y, orig_point.ori_deg)
 
 
+def translate_spline_sequence(spline_sequence, dx, dy):
+    """Changes a spline, translating the points by (dx, dy)
+    """
+    logg = logging.getLogger(f"c.{__name__}.translate_spline_sequence")
+    logg.debug(f"Start translate_spline_sequence")
+
+    for glyph in spline_sequence:
+        for op in glyph:
+            op.x += dx
+            op.y += dy
+
+
 def dist2D(p0, p1):
     """Distance between two points
     """
@@ -487,6 +499,8 @@ def sample_parametric_aligned(
         x_sample = [6, 6.5, 7, 7.5, 8, 8.5]
 
     So x_offset is how much p0.x is misaligned with the grid
+
+    TODO: better documentation of parameters/return
     """
     logg = logging.getLogger(f"c.{__name__}.sample_parametric_aligned")
     logg.setLevel("INFO")
@@ -593,3 +607,36 @@ def find_align_stride(glyphs):
     logg.debug(f"x_stride: {x_stride}")
 
     return x_stride
+
+
+def find_spline_sequence_bbox(spline_sequence, old_xlim=None, old_ylim=None):
+    """TODO: what is find_spline_sequence_bbox doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.find_spline_sequence_bbox")
+    logg.debug(f"Start find_spline_sequence_bbox")
+
+    if old_xlim is None:
+        min_x = float("inf")
+        max_x = float("-inf")
+    else:
+        min_x, max_x = old_xlim
+    if old_xlim is None:
+        min_y = float("inf")
+        max_y = float("-inf")
+    else:
+        min_y, max_y = old_ylim
+
+    for glyph in spline_sequence:
+        for point in glyph:
+            # logg.debug(f"point: {point}")
+            if point.x > max_x:
+                max_x = point.x
+            if point.x < min_x:
+                min_x = point.x
+            if point.y > max_y:
+                max_y = point.y
+            if point.y < min_y:
+                min_y = point.y
+    logg.debug(f"max_x: {max_x} min_x: {min_x} max_y: {max_y} min_y: {min_y}")
+
+    return (min_x, max_x), (min_y, max_y)

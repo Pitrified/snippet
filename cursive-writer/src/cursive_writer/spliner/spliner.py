@@ -527,6 +527,8 @@ def compute_long_thick_spline(spline_sequence, thickness=20):
 
 def compute_aligned_cubic_segment(p0, p1, x_stride=1, ax=None):
     """Compute the aligned cubic segment between two points
+
+    TODO: better documentation of parameters/return
     """
     logg = logging.getLogger(f"c.{__name__}.compute_aligned_cubic_segment")
     logg.debug(f"Start compute_aligned_cubic_segment")

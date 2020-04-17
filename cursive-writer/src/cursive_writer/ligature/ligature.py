@@ -11,7 +11,19 @@ from cursive_writer.utils.oriented_point import OrientedPoint
 
 
 def find_lower_tangent(l_x_as, l_y_as, r_x_as, r_y_as, r_yp_as):
-    """TODO: what is find_lower_tangent doing?
+    """Finds a line tangent to both curves, below them
+
+    l_x_as: x aligned sample of left curve
+    l_y_as: y values of left curve
+    r_x_as: x aligned sample of right curve
+    r_y_as: y values of right curve
+    r_yp_as: first derivative values of right curve
+
+    Returns:
+    l_xid: index, in l_x_as, of the contact point
+    r_xid: index, in r_x_as, of the contact point
+    l_tang_y_as: sample of the tangent on l_x_as
+    tangent_time: time elapsed to check tangents
     """
     # logg = logging.getLogger(f"c.{__name__}.find_lower_tangent")
     # logg.debug(f"Start find_lower_tangent")
@@ -56,7 +68,27 @@ def find_lower_tangent(l_x_as, l_y_as, r_x_as, r_y_as, r_yp_as):
 
 
 def find_best_shift(l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_stride):
-    """TODO: what is find_best_shift doing?
+    """Finds the best shift to align two curves
+
+
+    l_x_as: x aligned sample of left curve
+    l_y_as: y values of left curve
+    l_yp_as: first derivative values of left curve
+    r_x_orig_as: x aligned sample of right curve
+    r_y_as: y values of right curve
+    r_yp_as: first derivative values of right curve
+    x_stride: stride of the alignement
+
+    Returns:
+    best_shift: the best shift to apply to the right curve
+    best_r_x_as: the best x aligned sample of the right curve
+    best_l_tang_y_as: sample of the best tangent on l_x_as
+    l_id_s_x: if of the last x to keep in the left curve
+    r_id_s_x: if of the last x to keep in the right curve
+    l_p_ext: the left extended contact point
+    r_p_ext: the right extended contact point
+    ext_x_as: aligned x sample of the connecting segment
+    ext_y_as: y values of the connecting segment
     """
     logg = logging.getLogger(f"c.{__name__}.find_best_shift")
     logg.debug(f"Start find_best_shift")
@@ -160,7 +192,7 @@ def find_best_shift(l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_str
     r_p_ext = OrientedPoint(
         r_x_as[r_id_e_x], r_y_as[r_id_e_x], slope2deg(r_yp_as[r_id_e_x])
     )
-    ext_t_as, ext_x_as, ext_y_as, ext_yp_as = compute_aligned_cubic_segment(
+    _, ext_x_as, ext_y_as, _ = compute_aligned_cubic_segment(
         l_p_ext, r_p_ext, x_stride,
     )
 

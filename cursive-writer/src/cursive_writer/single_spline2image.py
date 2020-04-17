@@ -4,9 +4,10 @@ import matplotlib.pyplot as plt
 
 from pathlib import Path
 
-from cursive_writer.utils.utils import load_spline
 from cursive_writer.spliner.spliner import compute_long_thick_spline
+from cursive_writer.utils.geometric_utils import find_spline_sequence_bbox
 from cursive_writer.utils.setup import setup_logger
+from cursive_writer.utils.utils import load_spline
 
 
 def parse_arguments():
@@ -67,32 +68,13 @@ def plot_letter(pf_input_spline, data_dir, thickness):
     spline_sequence = load_spline(pf_input_spline, data_dir)
     # logg.debug(f"spline_sequence: {spline_sequence}")
 
-    min_x = float("inf")
-    max_x = float("-inf")
-    min_y = float("inf")
-    max_y = float("-inf")
-    for glyph in spline_sequence:
-        for point in glyph:
-            # logg.debug(f"point: {point}")
-            if point.x > max_x:
-                max_x = point.x
-            if point.x < min_x:
-                min_x = point.x
-            if point.y > max_y:
-                max_y = point.y
-            if point.y < min_y:
-                min_y = point.y
-    logg.debug(f"max_x: {max_x} min_x: {min_x} max_y: {max_y} min_y: {min_y}")
-    wid = max_x - min_x
-    hei = max_y - min_y
-
     # inches to point
     ratio = 4 / 1000
-
+    # find plot dimension
+    xlim, ylim = find_spline_sequence_bbox(spline_sequence)
+    wid = xlim[1] - xlim[0]
+    hei = ylim[1] - ylim[0]
     fig_dims = (wid * ratio, hei * ratio)
-
-    # fig, ax = plt.subplots(figsize=fig_dims)
-    # fig, ax = plt.subplots()
 
     fig = plt.figure(figsize=fig_dims, frameon=False)
     fig.canvas.set_window_title(f"{pf_input_spline.stem}")
@@ -104,13 +86,6 @@ def plot_letter(pf_input_spline, data_dir, thickness):
     for glyph in spline_samples:
         for segment in glyph:
             ax.plot(*segment, color="k", marker=".", ls="")
-
-    # plt.yticks(rotation=90)
-
-    # plot everything
-    # plot_utils.plot_build(fig, ax)
-    # fig.tight_layout()
-    # ax.set_yticklabels(ax.get_yticklabels(), rotation=90)
 
 
 def plot_good_letters(data_dir, thickness, prefixes=None):
