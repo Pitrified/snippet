@@ -11,7 +11,9 @@ from cursive_writer.utils.oriented_point import OrientedPoint
 
 
 def find_lower_tangent(l_x_as, l_y_as, r_x_as, r_y_as, r_yp_as):
-    """Finds a line tangent to both curves, below them
+    """Finds a line tangent to both curves
+
+    The curvature of the right curve is automatically extrapolated
 
     l_x_as: x aligned sample of left curve
     l_y_as: y values of left curve
@@ -28,8 +30,22 @@ def find_lower_tangent(l_x_as, l_y_as, r_x_as, r_y_as, r_yp_as):
     # logg = logging.getLogger(f"c.{__name__}.find_lower_tangent")
     # logg.debug(f"Start find_lower_tangent")
 
+    # compute the second derivative
+    r_ypp = r_yp_as[1:] - r_yp_as[:-1]
+    mean_r_ypp = np.mean(r_ypp)
+
+    # logg.debug(f"r_yp_as: {r_yp_as}")
+    # logg.debug(f"r_ypp: {r_ypp}")
+
+    if mean_r_ypp >= 0:
+        # logg.debug(f"ypp positive")
+        range_xid = range(r_x_as.shape[0])
+    else:
+        # logg.debug(f"ypp negative")
+        range_xid = range(r_x_as.shape[0])[::-1]
+
     tangent_start = timer()
-    for xid in range(r_x_as.shape[0]):
+    for xid in range_xid:
         # point tangent to the *right* segment
         tang_op = OrientedPoint(r_x_as[xid], r_y_as[xid], slope2deg(r_yp_as[xid]))
         tang_coeff = tang_op.to_ab_line()
@@ -45,6 +61,7 @@ def find_lower_tangent(l_x_as, l_y_as, r_x_as, r_y_as, r_yp_as):
         if np.sum(lower) == 0:
             # logg.debug(f"Breaking at xid: {xid}")
             break
+
     tangent_end = timer()
     tangent_time = tangent_end - tangent_start
     # logg.debug(f"Time to find tangent: {tangent_end - tangent_start:.6f}")
@@ -69,7 +86,6 @@ def find_lower_tangent(l_x_as, l_y_as, r_x_as, r_y_as, r_yp_as):
 
 def find_best_shift(l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_stride):
     """Finds the best shift to align two curves
-
 
     l_x_as: x aligned sample of left curve
     l_y_as: y values of left curve
@@ -105,7 +121,7 @@ def find_best_shift(l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_str
     shift_range = np.arange(shift_a_11, shift_a_10 + x_stride / 2, x_stride)
     recap = f"shift_11: {shift_11} shift_10: {shift_10}"
     recap += f" shift_a_11: {shift_a_11} shift_a_10: {shift_a_10}"
-    # logg.debug(recap)
+    logg.debug(recap)
 
     best_dist_x_touch = float("inf")
     best_shift = None

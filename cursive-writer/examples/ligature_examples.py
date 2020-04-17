@@ -195,8 +195,8 @@ def ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax):
     logg.debug(f"best_shift: {best_shift}")
 
     # plot the segments
-    # ax.plot(l_x_as, l_y_as, color="g", ls="", marker=".")
-    # ax.plot(best_r_x_as, r_y_as, color="y", ls="", marker=".")
+    ax.plot(l_x_as, l_y_as, color="c", ls="--", marker="")
+    ax.plot(best_r_x_as, r_y_as, color="c", ls="--", marker="")
     ax.plot(l_x_as[: l_id_s_x + 1], l_y_as[: l_id_s_x + 1], color="g", ls="-")
     ax.plot(best_r_x_as[r_id_s_x:], r_y_as[r_id_s_x:], color="y", ls="-")
     # ax.plot(l_x_as[: l_id_s_x + 1], l_y_as[: l_id_s_x + 1], color="k", ls="-")
@@ -220,6 +220,14 @@ def exs_ligature_2segments():
     """
     logg = logging.getLogger(f"c.{__name__}.exs_build_ligature")
     logg.debug(f"Starting exs_build_ligature")
+
+    fig, ax = plt.subplots(1, 1)
+    fig.set_size_inches(8, 8)
+    l_p0 = OrientedPoint(10, 10, 0)
+    l_p1 = OrientedPoint(30, 20, 60)
+    r_p0 = OrientedPoint(15, 10, 40)
+    r_p1 = OrientedPoint(32, 20, 10)
+    ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax)
 
     fig, ax = plt.subplots(1, 1)
     fig.set_size_inches(8, 8)
@@ -453,14 +461,15 @@ def ex_align_letters(pf_spline_left, pf_spline_right, data_dir, thickness):
     fig.canvas.set_window_title("Example of glyph alignment")
     ax.set_axis_off()
 
-    colors = False
+    # colors = False
+    colors = True
     if colors:
-        for glyph in spline_samples_con:
-            for segment in glyph:
-                ax.plot(*segment, color="g", marker=".", ls="")
         for glyph in spline_samples_r:
             for segment in glyph:
-                ax.plot(*segment, color="k", marker=".", ls="")
+                ax.plot(*segment, color="g", marker=".", ls="")
+        for glyph in spline_samples_con:
+            for segment in glyph:
+                ax.plot(*segment, color="r", marker=".", ls="")
         for glyph in spline_samples_l:
             for segment in glyph:
                 ax.plot(*segment, color="y", marker=".", ls="")
