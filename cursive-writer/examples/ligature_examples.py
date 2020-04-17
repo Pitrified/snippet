@@ -232,6 +232,58 @@ def exs_parametric_tangent():
     ex_parametric_tangent(p0, p1, x_stride, ax[1][1])
 
 
+def find_lower_tangent(l_x_as, l_y_as, r_x_as, r_y_as, r_yp_as):
+    """TODO: what is find_lower_tangent doing?
+    """
+    # logg = logging.getLogger(f"c.{__name__}.find_lower_tangent")
+    # logg.debug(f"Start find_lower_tangent")
+
+    tangent_start = timer()
+    for xid in range(r_x_as.shape[0]):
+        # point tangent to the *right* segment
+        tang_op = OrientedPoint(r_x_as[xid], r_y_as[xid], slope2deg(r_yp_as[xid]))
+        tang_coeff = tang_op.to_ab_line()
+
+        # sample it on the *left* segment sample
+        tang_y_as = poly_model(l_x_as, tang_coeff, flip_coeff=True)
+        # ax.plot(l_x_as, tang_y_as, color="b", ls="-", marker="")
+        # ax.plot(l_x_as, tang_y_as, color="b", ls="", marker=".")
+
+        # find if the left segment has some points lower than the tangent
+        lower = l_y_as < tang_y_as
+        # logg.debug(f"lower: {lower} {np.sum(lower)}")
+        if np.sum(lower) == 0:
+            # logg.debug(f"Breaking at xid: {xid}")
+            break
+    tangent_end = timer()
+    tangent_time = tangent_end - tangent_start
+    # logg.debug(f"Time to find tangent: {tangent_end - tangent_start:.6f}")
+
+    # find distance from left segment to tangent
+    dist_left_tangent = l_y_as - tang_y_as
+    min_dist_left_tangent = np.min(dist_left_tangent)
+    argmin_dist_left_tangent = np.argmin(dist_left_tangent)
+    recap = f"min_dist_left_tangent: {min_dist_left_tangent:.6f}"
+    recap += " argmin_dist_left_tangent: {argmin_dist_left_tangent}"
+    # logg.debug(recap)
+
+    if min_dist_left_tangent < 0:
+        # logg.debug(f"Tangent not found")
+        return -1, -1, None, tangent_time
+
+    l_xid = argmin_dist_left_tangent
+    r_xid = xid
+
+    return l_xid, r_xid, tang_y_as, tangent_time
+
+
+def find_best_shift(l_p0, l_p1, r_p0, r_p1, x_stride):
+    """TODO: what is find_best_shift doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.find_best_shift")
+    logg.debug(f"Start find_best_shift")
+
+
 def ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax):
     """
     """
@@ -247,20 +299,27 @@ def ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax):
     logg.debug(f"x_stride: {x_stride}")
 
     segment_start = timer()
-    l_t_as, l_x_as, l_y_as, l_yp_as = compute_aligned_cubic_segment(
+    _, l_x_as, l_y_as, l_yp_as = compute_aligned_cubic_segment(
         l_p0, l_p1, x_stride,
     )
-    r_t_as, r_x_orig_as, r_y_as, r_yp_as = compute_aligned_cubic_segment(
+    _, r_x_orig_as, r_y_as, r_yp_as = compute_aligned_cubic_segment(
         r_p0, r_p1, x_stride,
     )
     segment_end = timer()
     logg.debug(f"Time to compute aligned segments: {segment_end - segment_start:.6f}")
     # logg.debug(f"r_x_orig_as[0]: {r_x_orig_as[0]} r_x_orig_as[-1]: {r_x_orig_as[-1]}")
 
+    recap = f"l_p0.x {l_p0.x} l_p1.x {l_p1.x}"
+    recap += f" l_x_as[0] {l_x_as[0]} l_x_as[-1] {l_x_as[-1]}"
+    recap += f"r_p0.x {r_p0.x} r_p1.x {r_p1.x}"
+    recap += f" r_x_orig_as[0] {r_x_orig_as[0]} r_x_orig_as[-1] {r_x_orig_as[-1]}"
+    logg.debug(recap)
+
     # find how much the right segment can shift
     shift_11 = l_p1.x - r_p1.x - (l_p1.x - l_p0.x) / 2
     shift_10 = l_p1.x - r_p0.x
-    # align the shift on the stride grid: now if you sum the shift to l_x_as the points are still aligned.
+    # align the shift on the stride grid: now if you sum the shift to l_x_as
+    # the points are still aligned.
     shift_a_11 = math.floor(shift_11 / x_stride) * x_stride
     shift_a_10 = math.ceil(shift_10 / x_stride) * x_stride
     shift_range = np.arange(shift_a_11, shift_a_10 + x_stride / 2, x_stride)
@@ -283,55 +342,27 @@ def ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax):
         # ax.plot(r_x_as, r_y_as, color="y", ls="-", marker="")
         # ax.plot(r_x_as, r_y_as, color="y", ls="", marker=".")
 
-        tangent_start = timer()
-        for xid in range(r_x_as.shape[0]):
-            # point tangent to the *right* segment
-            tang_op = OrientedPoint(r_x_as[xid], r_y_as[xid], slope2deg(r_yp_as[xid]))
-            tang_coeff = tang_op.to_ab_line()
+        # find the indexes where the tangent touches the curves
+        l_xid, r_xid, tang_y_as, tangent_time = find_lower_tangent(
+            l_x_as, l_y_as, r_x_as, r_y_as, r_yp_as
+        )
 
-            # sample it on the *left* segment sample
-            tang_y_as = poly_model(l_x_as, tang_coeff, flip_coeff=True)
-            # ax.plot(l_x_as, tang_y_as, color="b", ls="-", marker="")
-            # ax.plot(l_x_as, tang_y_as, color="b", ls="", marker=".")
+        tangent_times.append(tangent_time)
 
-            # find if the left segment has some points lower than the tangent
-            lower = l_y_as < tang_y_as
-            # logg.debug(f"lower: {lower} {np.sum(lower)}")
-            if np.sum(lower) == 0:
-                # logg.debug(f"Breaking at xid: {xid}")
-                break
-        tangent_end = timer()
-        tangent_times.append(tangent_end - tangent_start)
-        # logg.debug(f"Time to find tangent: {tangent_end - tangent_start:.6f}")
-
-        # find distance from left segment to tangent
-        dist_left_tangent = l_y_as - tang_y_as
-        min_dist_left_tangent = np.min(dist_left_tangent)
-        argmin_dist_left_tangent = np.argmin(dist_left_tangent)
-        recap = f"min_dist_left_tangent: {min_dist_left_tangent:.6f}"
-        recap += " argmin_dist_left_tangent: {argmin_dist_left_tangent}"
-        # logg.debug(recap)
-
-        if min_dist_left_tangent < 0:
+        if l_xid == -1:
             # logg.debug(f"Tangent not found")
             continue
 
         # find where the tangent touches the segments
-        l_x_touch = l_x_as[argmin_dist_left_tangent]
-        r_x_touch = r_x_as[xid]
+        l_x_touch = l_x_as[l_xid]
+        r_x_touch = r_x_as[r_xid]
 
         if r_x_touch < l_x_touch:
             # logg.debug(f"Tangent goes the wrong way")
             continue
 
-        # extend the points of contact
+        # compute how far are the two contacts
         dist_x_touch = r_x_touch - l_x_touch
-        l_x_ext = l_x_touch - dist_x_touch / 2
-        r_x_ext = r_x_touch + dist_x_touch / 2
-        recap = f"l_x_touch: {l_x_touch:.4f} r_x_touch {r_x_touch:.4f}"
-        recap += f" dist_x_touch: {dist_x_touch:.4f}"
-        recap += f" l_x_ext: {l_x_ext:.4f} r_x_ext {r_x_ext:.4f}"
-        # logg.debug(recap)
 
         # if this shift does not improve the distance, go to the next
         if dist_x_touch >= best_dist_x_touch:
@@ -343,32 +374,37 @@ def ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax):
         best_r_x_as = r_x_as
         best_tang_y_as = tang_y_as
 
-        # find the index of the touch points
-        # left
-        l_lower_x = l_x_as < l_x_ext
-        # argmin returns the *first* occurrence of the min value
-        l_id_e_x = np.argmin(l_lower_x)
-        # for symmetry, if we can, we keep the previous index (the last of the True)
-        if l_id_e_x > 0:
-            l_id_e_x -= 1
-        # right
-        r_lower_x = r_x_as < r_x_ext
-        r_id_e_x = np.argmin(r_lower_x)
-        recap = f"l_id_e_x: {l_id_e_x}"
-        recap += f" l_x_as[l_id_e_x]: {l_x_as[l_id_e_x]:.4f}"
-        recap += f" r_id_e_x: {r_id_e_x}"
-        recap += f" r_x_as[r_id_e_x]: {r_x_as[r_id_e_x]:.4f}"
+        # extend the points of contact
+        best_l_x_ext = l_x_touch - dist_x_touch / 2
+        best_r_x_ext = r_x_touch + dist_x_touch / 2
+        # recap = f"l_x_touch: {l_x_touch:.4f} r_x_touch {r_x_touch:.4f}"
+        # recap += f" dist_x_touch: {dist_x_touch:.4f}"
+        # recap += f" best_l_x_ext: {best_l_x_ext:.4f} best_r_x_ext {best_r_x_ext:.4f}"
         # logg.debug(recap)
 
     tangent_time_mean = sum(tangent_times) / len(tangent_times)
     logg.debug(f"Mean tangent time: {tangent_time_mean}")
 
-    ligature_end = timer()
-    logg.debug(f"Time to find optimal shift: {ligature_end - ligature_start:.6f}")
-
-    # extract the best value as current
+    # extract the best value as current (r_x_as = r_x_orig_as + best_shift)
     r_x_as = best_r_x_as
-    # r_x_as = r_x_orig_as + best_shift
+
+    # find the index of the touch point on the left segment
+    l_lower_x = l_x_as < best_l_x_ext
+    # argmin returns the *first* occurrence of the min value
+    l_id_e_x = np.argmin(l_lower_x)
+    # for symmetry, if we can, we keep the previous index (the last of the True)
+    if l_id_e_x > 0:
+        l_id_e_x -= 1
+
+    # find the index of the touch point on the right segment
+    r_lower_x = r_x_as < best_r_x_ext
+    r_id_e_x = np.argmin(r_lower_x)
+
+    # recap = f"l_id_e_x: {l_id_e_x}"
+    # recap += f" l_x_as[l_id_e_x]: {l_x_as[l_id_e_x]:.4f}"
+    # recap += f" r_id_e_x: {r_id_e_x}"
+    # recap += f" r_x_as[r_id_e_x]: {r_x_as[r_id_e_x]:.4f}"
+    # logg.debug(recap)
 
     # find the extended contact point
     l_p_ext = OrientedPoint(
@@ -381,13 +417,13 @@ def ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax):
         l_p_ext, r_p_ext, x_stride,
     )
 
-    recap = f"l_id_e_x: {l_id_e_x}"
-    recap += f" l_x_as[l_id_e_x]: {l_x_as[l_id_e_x]:.4f}"
-    recap += f" ext_x_as[0]: {ext_x_as[0]:.4f}"
-    recap += f" ext_x_as[-1]: {ext_x_as[-1]:.4f}"
-    recap += f" r_id_e_x: {r_id_e_x}"
-    recap += f" r_x_as[r_id_e_x]: {r_x_as[r_id_e_x]:.4f}"
-    logg.debug(recap)
+    # recap = f"l_id_e_x: {l_id_e_x}"
+    # recap += f" l_x_as[l_id_e_x]: {l_x_as[l_id_e_x]:.4f}"
+    # recap += f" ext_x_as[0]: {ext_x_as[0]:.4f}"
+    # recap += f" ext_x_as[-1]: {ext_x_as[-1]:.4f}"
+    # recap += f" r_id_e_x: {r_id_e_x}"
+    # recap += f" r_x_as[r_id_e_x]: {r_x_as[r_id_e_x]:.4f}"
+    # logg.debug(recap)
 
     # show id to use when plotting
     l_id_s_x = l_id_e_x
@@ -405,6 +441,9 @@ def ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax):
         # check that is not the first
         if r_id_e_x > 0:
             r_id_s_x = r_id_e_x - 1
+
+    ligature_end = timer()
+    logg.debug(f"Time to find optimal shift: {ligature_end - ligature_start:.6f}")
 
     # plot the segments
     # ax.plot(l_x_as, l_y_as, color="g", ls="", marker=".")
@@ -563,8 +602,8 @@ if __name__ == "__main__":
     pf_spline_right = data_dir / path_input_right
     logg.debug(f"pf_spline_right: {pf_spline_right}")
 
-    exs_parametric_tangent()
-    exs_ligature_2segments()
+    # exs_parametric_tangent()
+    # exs_ligature_2segments()
 
     aligned_glyph(pf_spline_left, data_dir)
 
