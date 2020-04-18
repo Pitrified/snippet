@@ -459,7 +459,7 @@ def ex_align_letters_1(pf_spline_left, pf_spline_right, data_dir, thickness):
     # find dimension of the plot
     xlim, ylim = find_spline_sequence_bbox(spline_sequence_all)
     # inches to point
-    ratio = 8 / 1000
+    ratio = 6 / 1000
     wid = xlim[1] - xlim[0]
     hei = ylim[1] - ylim[0]
     fig_dims = (wid * ratio, hei * ratio)
@@ -467,7 +467,7 @@ def ex_align_letters_1(pf_spline_left, pf_spline_right, data_dir, thickness):
     # create plot
     fig = plt.figure(figsize=fig_dims, frameon=False)
     ax = fig.add_axes((0, 0, 1, 1))
-    fig.canvas.set_window_title("Example of glyph alignment")
+    fig.canvas.set_window_title(f"A1 {pf_spline_left.stem} - {pf_spline_right.stem}")
     ax.set_axis_off()
 
     # colors = False
@@ -550,7 +550,7 @@ def ex_align_letters_2(pf_spline_left, pf_spline_right, data_dir, thickness):
     # find dimension of the plot
     xlim, ylim = find_spline_sequence_bbox(spline_sequence_all)
     # inches to point
-    ratio = 8 / 1000
+    ratio = 6 / 1000
     wid = xlim[1] - xlim[0]
     hei = ylim[1] - ylim[0]
     fig_dims = (wid * ratio, hei * ratio)
@@ -558,7 +558,7 @@ def ex_align_letters_2(pf_spline_left, pf_spline_right, data_dir, thickness):
     # create plot
     fig = plt.figure(figsize=fig_dims, frameon=False)
     ax = fig.add_axes((0, 0, 1, 1))
-    fig.canvas.set_window_title("Example of glyph alignment")
+    fig.canvas.set_window_title(f"A2 {pf_spline_left.stem} - {pf_spline_right.stem}")
     ax.set_axis_off()
 
     # colors = False
@@ -594,13 +594,22 @@ def exs_align_letters(data_dir, thickness):
     pf_i = data_dir / "i1_006.txt"
     pf_ih = data_dir / "i1_h_006.txt"
     pf_v = data_dir / "v1_001.txt"
-    # ex_align_letters_1(pf_m, pf_i, data_dir, thickness)
-    # ex_align_letters_1(pf_v, pf_m, data_dir, thickness)
-    # ex_align_letters_1(pf_v, pf_ih, data_dir, thickness)
+    pf_o = data_dir / "o1_002.txt"
+    pf_oh = data_dir / "o1_h_001.txt"
+    pf_ol = data_dir / f"o1_l_004.txt"
 
+    ex_align_letters_1(pf_i, pf_ol, data_dir, thickness)
+    ex_align_letters_1(pf_m, pf_i, data_dir, thickness)
+    ex_align_letters_1(pf_o, pf_ih, data_dir, thickness)
+    # ex_align_letters_1(pf_o, pf_m, data_dir, thickness)
+    ex_align_letters_1(pf_v, pf_ih, data_dir, thickness)
+    ex_align_letters_1(pf_v, pf_m, data_dir, thickness)
+    ex_align_letters_1(pf_v, pf_oh, data_dir, thickness)
+
+    ex_align_letters_2(pf_i, pf_ol, data_dir, thickness)
+    ex_align_letters_2(pf_i, pf_v, data_dir, thickness)
     ex_align_letters_2(pf_ih, pf_m, data_dir, thickness)
     ex_align_letters_2(pf_m, pf_v, data_dir, thickness)
-    ex_align_letters_2(pf_i, pf_v, data_dir, thickness)
 
 
 def run_ligature_examples(args):
