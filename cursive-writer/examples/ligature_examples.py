@@ -592,24 +592,30 @@ def exs_align_letters(data_dir, thickness):
 
     pf_m = data_dir / "m1_001.txt"
     pf_i = data_dir / "i1_006.txt"
-    pf_ih = data_dir / "i1_h_006.txt"
-    pf_v = data_dir / "v1_001.txt"
-    pf_o = data_dir / "o1_002.txt"
-    pf_oh = data_dir / "o1_h_001.txt"
-    pf_ol = data_dir / f"o1_l_004.txt"
+    # pf_ih = data_dir / "i1_h_006.txt"
+    # pf_v = data_dir / "v1_001.txt"
+    # pf_o = data_dir / "o1_002.txt"
+    # pf_oh = data_dir / "o1_h_001.txt"
+    # pf_ol = data_dir / f"o1_l_004.txt"
 
-    ex_align_letters_1(pf_i, pf_ol, data_dir, thickness)
-    ex_align_letters_1(pf_m, pf_i, data_dir, thickness)
-    ex_align_letters_1(pf_o, pf_ih, data_dir, thickness)
+    for i in range(1, 7):
+        pf_ol = data_dir / f"o1_l_00{i}.txt"
+        ex_align_letters_1(pf_m, pf_ol, data_dir, thickness)
+        ex_align_letters_1(pf_i, pf_ol, data_dir, thickness)
+
+    # ex_align_letters_1(pf_i, pf_ol, data_dir, thickness)
+    # ex_align_letters_1(pf_m, pf_i, data_dir, thickness)
+    # ex_align_letters_1(pf_m, pf_ol, data_dir, thickness)
+    # ex_align_letters_1(pf_o, pf_ih, data_dir, thickness)
     # ex_align_letters_1(pf_o, pf_m, data_dir, thickness)
-    ex_align_letters_1(pf_v, pf_ih, data_dir, thickness)
-    ex_align_letters_1(pf_v, pf_m, data_dir, thickness)
-    ex_align_letters_1(pf_v, pf_oh, data_dir, thickness)
+    # ex_align_letters_1(pf_v, pf_ih, data_dir, thickness)
+    # ex_align_letters_1(pf_v, pf_m, data_dir, thickness)
+    # ex_align_letters_1(pf_v, pf_oh, data_dir, thickness)
 
-    ex_align_letters_2(pf_i, pf_ol, data_dir, thickness)
-    ex_align_letters_2(pf_i, pf_v, data_dir, thickness)
-    ex_align_letters_2(pf_ih, pf_m, data_dir, thickness)
-    ex_align_letters_2(pf_m, pf_v, data_dir, thickness)
+    # ex_align_letters_2(pf_i, pf_ol, data_dir, thickness)
+    # ex_align_letters_2(pf_i, pf_v, data_dir, thickness)
+    # ex_align_letters_2(pf_ih, pf_m, data_dir, thickness)
+    # ex_align_letters_2(pf_m, pf_v, data_dir, thickness)
 
 
 def run_ligature_examples(args):
