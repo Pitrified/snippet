@@ -1144,6 +1144,14 @@ class Model:
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('sp_frame_btn1_pressed')} {spid}")
 
+        # if the state is moving glyph, start the movement and reset the state
+        if self.state.get() == "moving_glyph":
+            self.move_glyph("clicked_point", spid)
+            self.state.set("free")
+            return
+
+        # else, set this point as selected and update the model
+
         self.selected_indexes = self.find_spid_in_path_SP(spid)
         logg.debug(f"selected_indexes: {self.selected_indexes}")
 
@@ -1211,7 +1219,7 @@ class Model:
             all_SP[spid].translate(dx, dy)
         self.all_SP.set(all_SP)
 
-    def move_glyph(self, source):
+    def move_glyph(self, source, clicked_spid=None):
         """TODO: what is move_glyph doing?
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.move_glyph")
@@ -1224,15 +1232,23 @@ class Model:
 
         # get the current selected point
         curr_abs_sp = all_SP[selected_spid_SP]
-        curr_view_sp = self.rescale_point(curr_abs_sp, "abs2view")
 
         # move the currently selected point to where the mouse was released
         if source == "mouse_release":
+            curr_view_sp = self.rescale_point(curr_abs_sp, "abs2view")
             dx_view = self.end_view_x - curr_view_sp.x
             dy_view = self.end_view_y - curr_view_sp.y
+            # the delta is in view coord, change it to abs
             d_op_view = OrientedPoint(dx_view, dy_view, 0)
             d_op_abs = self.rescale_point(d_op_view, "view2abs")
             self.translate_glyph(sel_idxs[0], d_op_abs.x, d_op_abs.y)
+
+        # move the currently selected point to the clicked point position
+        elif source == "clicked_point":
+            clicked_abs_sp = all_SP[clicked_spid]
+            dx_abs = clicked_abs_sp.x - curr_abs_sp.x
+            dy_abs = clicked_abs_sp.y - curr_abs_sp.y
+            self.translate_glyph(sel_idxs[0], dx_abs, dy_abs)
 
         # update the visible spline points
         self.compute_visible_spline_points()
