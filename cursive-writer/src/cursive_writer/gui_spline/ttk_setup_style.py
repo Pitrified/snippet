@@ -23,7 +23,7 @@ def setup_style(colorscheme="terra"):
     # option dict
     o = {}
 
-    if colorscheme == "terra":
+    if colorscheme.startswith("terra"):
         # frames
         o["bg_general"] = "burlywood1"
         o["bg_container"] = "burlywood2"
@@ -32,11 +32,16 @@ def setup_style(colorscheme="terra"):
         o["bg_btn"] = "wheat2"
         # hovered element
         o["bg_active"] = "wheat1"
-        # selected element
-        o["bg_selected"] = "tan2"
+        # selected element select accent color
+        if "tan" in colorscheme:
+            o["bg_selected"] = "tan2"
+        # default accent for terra colorscheme
+        else:
+            o["bg_selected"] = "olive drab"
+        # text color of title frames
         o["fg_title"] = "gray7"
 
-    elif colorscheme == "slategray":
+    elif colorscheme.startswith("slategray"):
         # frames
         o["bg_general"] = "light slate gray"
         o["bg_container"] = "slate gray"

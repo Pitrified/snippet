@@ -24,7 +24,7 @@ def parse_arguments():
     )
 
     parser.add_argument(
-        "-cs", "--colorscheme", type=str, default="slategray", help="Colorscheme to use"
+        "-cs", "--colorscheme", type=str, default="snow", help="Colorscheme to use"
     )
 
     parser.add_argument(

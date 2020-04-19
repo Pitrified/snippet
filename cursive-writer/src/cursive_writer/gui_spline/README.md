@@ -2,6 +2,7 @@
 
 ### TODO
 
+* Move FM lines, click button to enter base/mean movement mode, then usual qwerasdf movement
 * Move glyph with mouse click
 * Move glyph by selecting a point, then another, and translate the first over the second
 * Duplicate glyph, add it a bit translated to show it
@@ -10,7 +11,7 @@
 * Rotate point 180
 * The letters are drawn with thickness 10: when joining two glyphs at 90 deg angle with a different thickness, it does not look good
 * GUI to build splines by assembling glyphs
-* Control things with keyboard
+* Control more things with keyboard
 * Make the point list scroll when adding points if it is filled
 
 ### MAYBE
