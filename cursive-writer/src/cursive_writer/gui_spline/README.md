@@ -2,17 +2,16 @@
 
 ### TODO
 
-* When writing the root glyph name, the points move when pressing qwerasdfzxcv...
+* Move glyph with mouse click
+* Move glyph by selecting a point, then another, and translate the first over the second
 * Duplicate glyph, add it a bit translated to show it
 * Rotate glyph
 * Rotate glyph 180
 * Rotate point 180
-* Move glyph with mouse
 * The letters are drawn with thickness 10: when joining two glyphs at 90 deg angle with a different thickness, it does not look good
-* Control things with keyboard
-* Add loading of a glyph, after FMlines are set, remap those points to the current image
-* Make the point list scroll when adding points if it is filled
 * GUI to build splines by assembling glyphs
+* Control things with keyboard
+* Make the point list scroll when adding points if it is filled
 
 ### MAYBE
 
@@ -34,6 +33,8 @@
 * Dark mode
 * Set from CLI theme and thickness and loglevel
 * Create the file dialog in the view, inside the controller, ask for the destination, calling a method inside the view, that returns the path.
+* When writing the root glyph name, the points move when pressing qwerasdfzxcv...
+* Add loading of a glyph, after FMlines are set, remap those points to the current image
 
 ### Ideas
 
