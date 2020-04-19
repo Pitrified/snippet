@@ -267,6 +267,13 @@ class Model:
                 # after you release the mouse, go back to free state
                 self.state.set("free")
 
+            # was moving glyph
+            elif current_state == "moving_glyph":
+                # move the glyph using the selected point and the released pos
+                self.move_glyph("mouse_release")
+                # after you release the mouse, go back to free state
+                self.state.set("free")
+
         # handle right click
         elif click_type == "right_click":
             if current_state == "free_clicked_right":
@@ -274,6 +281,8 @@ class Model:
                 self.move_image(self.end_view_x, self.end_view_y)
                 # go back to free state
                 self.state.set("free")
+                # draw the changes
+                self.redraw_canvas()
 
         # very weird things
         else:
@@ -554,14 +563,26 @@ class Model:
             all_SP[self.selected_spid_SP.get()] = sel_pt
             self.all_SP.set(all_SP)
 
+        # update the visible spline points
         self.compute_visible_spline_points()
-
         # update the segment holder
         self.spline_segment_holder.update_data(self.all_SP.get(), self.path_SP.get())
         # update the visible segments
         self.compute_visible_segment_points()
 
         self.update_thick_segments()
+
+    def clicked_btn_move_glyph(self):
+        """TODO: what is clicked_btn_move_glyph doing?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_move_glyph")
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('clicked_btn_move_glyph', 'a2')}")
+
+        if self.state.get() == "moving_glyph":
+            self.state.set("free")
+        else:
+            self.state.set("moving_glyph")
 
     def clicked_fs_btn_save_spline(self, glyph_root_name):
         """Save the spline points to file
@@ -663,18 +684,6 @@ class Model:
             abs_ori_deg = -fm_op.ori_deg + base_point_abs.ori_deg
             abs_op = OrientedPoint(abs_x, abs_y, abs_ori_deg)
             self.add_spline_abs_point(abs_op)
-
-    def translate_glyph(self, glyph_idx, dx, dy):
-        """Translate all the points in a glyph
-        """
-        logg = logging.getLogger(f"c.{__class__.__name__}.translate_glyph")
-        # logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('translate_glyph')}")
-
-        all_SP = self.all_SP.get()
-        for spid in self.path_SP.get()[glyph_idx]:
-            all_SP[spid].translate(dx, dy)
-        self.all_SP.set(all_SP)
 
     def redraw_canvas(self):
         """
@@ -1188,3 +1197,46 @@ class Model:
 
         # redraw the visible points: now no one will be highlighted
         self.compute_visible_spline_points()
+
+    def translate_glyph(self, glyph_idx, dx, dy):
+        """Translate all the points in a glyph
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.translate_glyph")
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('translate_glyph')}")
+        logg.debug(f"glyph_idx: {glyph_idx} dx: {dx} dy: {dy}")
+
+        all_SP = self.all_SP.get()
+        for spid in self.path_SP.get()[glyph_idx]:
+            all_SP[spid].translate(dx, dy)
+        self.all_SP.set(all_SP)
+
+    def move_glyph(self, source):
+        """TODO: what is move_glyph doing?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.move_glyph")
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('move_glyph', 'a2')}")
+
+        all_SP = self.all_SP.get()
+        selected_spid_SP = self.selected_spid_SP.get()
+        sel_idxs = self.selected_indexes
+
+        # get the current selected point
+        curr_abs_sp = all_SP[selected_spid_SP]
+        curr_view_sp = self.rescale_point(curr_abs_sp, "abs2view")
+
+        # move the currently selected point to where the mouse was released
+        if source == "mouse_release":
+            dx_view = self.end_view_x - curr_view_sp.x
+            dy_view = self.end_view_y - curr_view_sp.y
+            d_op_view = OrientedPoint(dx_view, dy_view, 0)
+            d_op_abs = self.rescale_point(d_op_view, "view2abs")
+            self.translate_glyph(sel_idxs[0], d_op_abs.x, d_op_abs.y)
+
+        # update the visible spline points
+        self.compute_visible_spline_points()
+        # update the segment holder
+        self.spline_segment_holder.update_data(self.all_SP.get(), self.path_SP.get())
+        # update the visible segments
+        self.compute_visible_segment_points()

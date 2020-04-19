@@ -56,6 +56,29 @@ def setup_style(colorscheme="terra"):
         o["bg_selected"] = "coral3"
         o["fg_title"] = "white smoke"
 
+    elif colorscheme.startswith("alfa1"):
+        # colors generated from alfa1.jpg
+        cream1 = _from_rgb(203, 184, 167)
+        cream2 = _from_rgb(179, 162, 146)
+        cream3 = _from_rgb(158, 140, 126)
+        cream4 = _from_rgb(131, 114, 104)
+        siena2 = _from_rgb(169, 100, 41)
+        siena3 = _from_rgb(129, 53, 1)
+        # siena4 = _from_rgb(28, 8, 7)
+        # slategrayish = _from_rgb(82, 66, 68)
+
+        # frames
+        o["bg_general"] = cream1
+        o["bg_container"] = cream2
+        o["bg_title"] = siena3
+        # button background
+        o["bg_btn"] = cream4
+        # hovered element
+        o["bg_active"] = cream3
+        # selected element
+        o["bg_selected"] = siena2
+        o["fg_title"] = cream1
+
     # default colorscheme == "snow":
     else:
         # frames
@@ -72,6 +95,7 @@ def setup_style(colorscheme="terra"):
 
     # get the rgb values of the container color, needed for plot bg
     rgb = tk.Button().winfo_rgb(o["bg_container"])
+    # matplotlib wants colors in [0,1] range
     o["bg_container_rgb"] = tuple(c / 65535 for c in rgb)
     logg.trace(f"o['bg_container_rgb']: {o['bg_container_rgb']}")
 

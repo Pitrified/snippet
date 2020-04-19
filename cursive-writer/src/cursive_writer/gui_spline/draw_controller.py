@@ -96,6 +96,11 @@ class Controller:
             command=self.clicked_fl_btn_load_glyph
         )
 
+        # move glyph
+        self.view.frame_info.spla_btn_move_glyph.config(
+            command=self.clicked_btn_move_glyph
+        )
+
         # adjust frame
         self.view.frame_info.sa_btn_vl.config(
             command=lambda: self.clicked_btn_adjust("vl")
@@ -321,6 +326,14 @@ class Controller:
         logg.info(f"\nStart {fmt_cn('clicked_sh_btn_delete_SP')}")
         self.model.clicked_sh_btn_delete_SP()
         self.view.reset_focus()
+
+    def clicked_btn_move_glyph(self):
+        """TODO: what is clicked_btn_move_glyph doing?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_move_glyph")
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('clicked_btn_move_glyph', 'a2')}")
+        self.model.clicked_btn_move_glyph()
 
     def clicked_fs_btn_save_spline(self):
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fs_btn_save_spline")

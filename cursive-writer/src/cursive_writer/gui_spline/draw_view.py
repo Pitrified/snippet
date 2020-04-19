@@ -146,6 +146,7 @@ class FrameInfo(ttk.Frame):
         # create children frames
         self.font_measurement_frame = ttk.Frame(self, style="group.TFrame")
         self.spoint_adjust_frame = ttk.Frame(self, style="group.TFrame")
+        self.spline_adjust_frame = ttk.Frame(self, style="group.TFrame")
         self.mouse_info_frame = ttk.Frame(self, style="group.TFrame")
         self.file_load_frame = ttk.Frame(self, style="group.TFrame")
         self.file_save_frame = ttk.Frame(self, style="group.TFrame")
@@ -153,12 +154,13 @@ class FrameInfo(ttk.Frame):
         # build the objects in children frames
         self.build_font_measurement_frame()
         self.build_spoint_adjust_frame()
+        self.build_spline_adjust_frame()
         self.build_file_load_frame()
         self.build_file_save_frame()
         self.build_mouse_info_frame()
 
         # setup grid for this frame
-        self.grid_rowconfigure(3, weight=1)
+        self.grid_rowconfigure(4, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
         # TODO split top and bottom panes
@@ -166,9 +168,10 @@ class FrameInfo(ttk.Frame):
         # grid the children frames
         self.font_measurement_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
         self.spoint_adjust_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
-        self.file_load_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=10)
-        self.file_save_frame.grid(row=3, column=0, sticky="new", padx=10, pady=10)
-        self.mouse_info_frame.grid(row=4, column=0, sticky="ew", padx=10, pady=10)
+        self.spline_adjust_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=10)
+        self.file_load_frame.grid(row=3, column=0, sticky="ew", padx=10, pady=10)
+        self.file_save_frame.grid(row=4, column=0, sticky="new", padx=10, pady=10)
+        self.mouse_info_frame.grid(row=5, column=0, sticky="ew", padx=10, pady=10)
 
     def build_font_measurement_frame(self):
         """Build the elements inside font_measurement_frame and grid them
@@ -208,7 +211,7 @@ class FrameInfo(ttk.Frame):
         logg.info(f"Start {fmt_cn('build_spoint_adjust_frame')}")
 
         self.sa_title = ttk.Label(
-            self.spoint_adjust_frame, text="Spline adjust", style="title.TLabel"
+            self.spoint_adjust_frame, text="Point adjust", style="title.TLabel"
         )
 
         bt_sty = "settings.TButton"
@@ -251,6 +254,29 @@ class FrameInfo(ttk.Frame):
         self.sa_btn_o.grid(row=3, column=2, padx=4, pady=4)
         self.sa_btn_vo.grid(row=3, column=3, padx=4, pady=4)
 
+    def build_spline_adjust_frame(self):
+        """TODO: what is build_spline_adjust_frame doing?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.build_spline_adjust_frame")
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('build_spline_adjust_frame', 'a2')}")
+
+        self.spla_title = ttk.Label(
+            self.spline_adjust_frame, text="Spline adjust", style="title.TLabel"
+        )
+
+        self.spla_btn_move_glyph = ttk.Button(
+            self.spline_adjust_frame, text="Move glyph", style="settings.TButton",
+        )
+
+        # setup grid for spline_adjust_frame
+        self.spline_adjust_frame.grid_columnconfigure(0, weight=1)
+        self.spline_adjust_frame.grid_columnconfigure(1, weight=1)
+
+        # grid the objects in spline_adjust_frame
+        self.spla_title.grid(row=0, column=0, sticky="ew", columnspan=2)
+        self.spla_btn_move_glyph.grid(row=1, column=0, pady=4, columnspan=2)
+
     def build_file_load_frame(self):
         """
         """
@@ -291,7 +317,7 @@ class FrameInfo(ttk.Frame):
         )
 
         self.fs_lab_root = ttk.Label(
-            self.file_save_frame, text="Spline name root:", style="info.TLabel"
+            self.file_save_frame, text="Spline root name:", style="info.TLabel"
         )
 
         # small frame with entry and button
@@ -395,6 +421,8 @@ class FrameInfo(ttk.Frame):
             state_str = f"State: SET_BM"
         elif state == "setting_base_mean_clicked":
             state_str = f"State: SET_BM_CLICK"
+        elif state == "moving_glyph":
+            state_str = f"State: MOVING GLYPH"
         else:
             logg.info(f"{fmt_cn('Unrecognized', 'alert')} system state {state}")
             return
@@ -519,7 +547,7 @@ class FrameImage(ttk.Frame):
         self.draw_line(fm_lines["descent_point"], tag="descent_point", fill="red")
 
     def update_click_left_start_pos(self, start_pos):
-        """
+        """Show a point where the canvas was clicked when drawing a new SplinePoint
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_click_left_start_pos")
         logg.debug(f"Start {fmt_cn('update_click_left_start_pos')} {start_pos}")
