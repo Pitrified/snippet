@@ -75,6 +75,7 @@ class Controller:
         ### info frame
 
         # font management
+        # set FM
         self.view.frame_info.fm_btn_set_base_mean.config(
             command=lambda: self.clicked_btn_set_fm("bm")
         )
@@ -83,6 +84,13 @@ class Controller:
         )
         self.view.frame_info.fm_btn_set_mean_descent.config(
             command=lambda: self.clicked_btn_set_fm("md")
+        )
+        # adjust FM
+        self.view.frame_info.fm_btn_adjust_base.config(
+            command=lambda: self.clicked_btn_adjust_fm("base")
+        )
+        self.view.frame_info.fm_btn_adjust_mean.config(
+            command=lambda: self.clicked_btn_adjust_fm("mean")
         )
 
         # output save/set path
@@ -317,6 +325,14 @@ class Controller:
         logg.info(f"\nStart {fmt_cn('clicked_btn_set_fm')}")
         logg.debug(f"fm_set_type: {fm_set_type}")
         self.model.clicked_btn_set_fm(fm_set_type)
+        self.view.reset_focus()
+
+    def clicked_btn_adjust_fm(self, fm_adjust_type):
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_adjust_fm")
+        #  logg.setLevel("TRACE")
+        logg.info(f"\nStart {fmt_cn('clicked_btn_adjust_fm')}")
+        logg.debug(f"fm_adjust_type: {fm_adjust_type}")
+        self.model.clicked_btn_adjust_fm(fm_adjust_type)
         self.view.reset_focus()
 
     def clicked_sh_btn_new_spline(self):

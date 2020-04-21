@@ -15,6 +15,8 @@
 * GUI to build splines by assembling glyphs
 * Control more things with keyboard
 * Make the point list scroll when adding points if it is filled
+* `redraw_canvas` should be done in `move_image`, not in `release_click_canvas`, and
+  similar cases
 
 ### MAYBE
 

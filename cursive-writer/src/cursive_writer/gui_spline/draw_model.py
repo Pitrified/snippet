@@ -229,8 +229,10 @@ class Model:
 
     def release_click_canvas(self, click_type, canvas_x, canvas_y):
         """The mouse has been released: depending on self.state
-            - adjust baseline
             - create new point
+            - set baseline
+            - adjust baseline
+            - move glyph
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.release_click_canvas")
 
@@ -267,6 +269,12 @@ class Model:
                 self.update_thick_segments()
                 # after you release the mouse, go back to free state
                 self.state.set("free")
+
+            # was adjusting base or mean
+            elif current_state == "adjusting_base" or current_state == "adjusting_mean":
+                # update the FM lines using the clicked point as base or mean
+                self.adjust_fm_lines("mouse_release")
+                # after you release the mouse, *do not* go back to free state
 
             # was moving glyph
             elif current_state == "moving_glyph":
@@ -355,6 +363,34 @@ class Model:
 
         else:
             logg.warn(f"{fmt_cn('Unrecognized', 'alert')} fm_set_type {fm_set_type}")
+
+    def clicked_btn_adjust_fm(self, fm_adjust_type):
+        """Clicked one of the button of font measurement set
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_fm")
+        #  logg.setLevel("INFO")
+        logg.info(f"Start {fmt_cn('click_btn_set_fm')} - {fm_adjust_type}")
+
+        current_state = self.state.get()
+
+        if fm_adjust_type == "base":
+            # if it was already in AB, go back to free
+            if current_state == "adjusting_base":
+                self.state.set("free")
+            else:
+                self.state.set("adjusting_base")
+
+        elif fm_adjust_type == "mean":
+            # if it was already in AM, go back to free
+            if current_state == "adjusting_mean":
+                self.state.set("free")
+            else:
+                self.state.set("adjusting_mean")
+
+        else:
+            logg.warn(
+                f"{fmt_cn('Unrecognized', 'alert')} fm_adjust_type {fm_adjust_type}"
+            )
 
     def clicked_btn_set_base_ascent(self):
         """TODO: change state to setting_base_ascent
@@ -570,7 +606,7 @@ class Model:
         self.spline_segment_holder.update_data(self.all_SP.get(), self.path_SP.get())
         # update the visible segments
         self.compute_visible_segment_points()
-
+        # update the thick spline
         self.update_thick_segments()
 
     def clicked_btn_move_glyph(self):
@@ -813,6 +849,29 @@ class Model:
         basis_length = dist_base_mean / self.normalized_dist_base_mean
 
         self.fm2abs, self.abs2fm = compute_affine_transform(base_pt_abs, basis_length)
+
+    def adjust_fm_lines(self, source):
+        """TODO: what is adjust_fm_lines doing?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.adjust_fm_lines")
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('adjust_fm_lines', 'a2')} {source}")
+
+        fm_lines_abs = self.fm_lines_abs.get()
+
+        if fm_lines_abs is None:
+            logg.warn(f"{fmt_cn('Set', 'alert')} the FM lines before adjusting them")
+            return
+
+        base_pt_abs = fm_lines_abs["base_point"]
+        mean_pt_abs = fm_lines_abs["mean_point"]
+
+        current_state = self.state.get()
+
+        if current_state == "adjusting_base":
+            # get the mean point in view coord
+            mean_view_op = self.rescale_point(mean_pt_abs, "abs2view")
+            # the base point is the released one
 
     def recompute_fm_lines_view(self):
         """Updats the value in fm_lines_view to match the current abs/mov/zoom
@@ -1255,7 +1314,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.move_glyph")
         logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('move_glyph')}")
+        logg.info(f"Start {fmt_cn('move_glyph')} {source}")
 
         all_SP = self.all_SP.get()
         selected_spid_SP = self.selected_spid_SP.get()
@@ -1266,13 +1325,14 @@ class Model:
 
         # move the currently selected point to where the mouse was released
         if source == "mouse_release":
-            curr_view_sp = self.rescale_point(curr_abs_sp, "abs2view")
-            dx_view = self.end_view_x - curr_view_sp.x
-            dy_view = self.end_view_y - curr_view_sp.y
-            # the delta is in view coord, change it to abs
-            d_op_view = OrientedPoint(dx_view, dy_view, 0)
-            d_op_abs = self.rescale_point(d_op_view, "view2abs")
-            self.translate_glyph(sel_idxs[0], d_op_abs.x, d_op_abs.y)
+            # the released point is in view coordinate
+            release_view_op = OrientedPoint(self.end_view_x, self.end_view_y, 0)
+            # convert it to abs
+            release_abs_op = self.rescale_point(release_view_op, "view2abs")
+            # and compute the delta in abs coord to shift the glyph
+            dx_abs = release_abs_op.x - curr_abs_sp.x
+            dy_abs = release_abs_op.y - curr_abs_sp.y
+            self.translate_glyph(sel_idxs[0], dx_abs, dy_abs)
 
         # move the currently selected point to the clicked point position
         elif source == "clicked_point":
@@ -1287,3 +1347,5 @@ class Model:
         self.spline_segment_holder.update_data(self.all_SP.get(), self.path_SP.get())
         # update the visible segments
         self.compute_visible_segment_points()
+        # update the thick spline
+        self.update_thick_segments()

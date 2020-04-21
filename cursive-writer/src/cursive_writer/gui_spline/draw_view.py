@@ -436,6 +436,10 @@ class FrameInfo(ttk.Frame):
             state_str = f"State: SET_BM"
         elif state == "setting_base_mean_clicked":
             state_str = f"State: SET_BM_CLICK"
+        elif state == "adjusting_base":
+            state_str = f"State: ADJUST_BASE"
+        elif state == "adjusting_mean":
+            state_str = f"State: ADJUST_MEAN"
         elif state == "moving_glyph":
             state_str = f"State: MOVING GLYPH"
         else:
