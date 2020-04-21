@@ -9,7 +9,7 @@ class Observable:
 
     def __init__(self, initialValue=None):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
-        logg.info(f"{fmt_cn('Start', 'start')} init")
+        logg.info(f"Start {fmt_cn('init', 'start')}")
 
         self.data = initialValue
         self.callbacks = {}

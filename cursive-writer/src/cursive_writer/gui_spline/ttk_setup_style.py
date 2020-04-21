@@ -2,6 +2,7 @@ import logging
 import platform
 import tkinter as tk
 from tkinter import ttk
+from tkinter.font import Font
 from cursive_writer.utils.color_utils import fmt_cn
 
 # color list
@@ -100,6 +101,10 @@ def setup_style(colorscheme="terra"):
     logg.trace(f"o['bg_container_rgb']: {o['bg_container_rgb']}")
 
     # font setup
+    # o["font_std_type"] = "DejaVu Sans Mono"
+    # o["font_mono_type"] = "DejaVu Sans Mono"
+    # o["font_std_type"] = "Hack"
+    # o["font_mono_type"] = "Hack"
     o["font_std_type"] = "Helvetica"
     o["font_mono_type"] = "Consolas"
 
@@ -122,10 +127,16 @@ def setup_style(colorscheme="terra"):
         o["font_std_size"] = 12
         o["font_mono_size"] = 10
 
+    # font_std = Font(font=(o["font_std_type"], o["font_std_size"]))
+    font_std = Font(family=o["font_std_type"], size=o["font_std_size"], weight='bold')
+    logg.debug(f"font_std.actual(): {font_std.actual()}")
+    font_mono = Font(font=(o["font_mono_type"], o["font_mono_size"]))
+    logg.debug(f"font_mono.actual(): {font_mono.actual()}")
+
     s = ttk.Style()
 
     # configure root style
-    s.configure(".", font=(o["font_std_type"], o["font_std_size"]))
+    s.configure(".", font=font_std)
 
     ### FRAMES ###
 
@@ -142,30 +153,22 @@ def setup_style(colorscheme="terra"):
         "title.TLabel",
         background=o["bg_title"],
         foreground=o["fg_title"],
-        font=(o["font_std_type"], o["font_std_size"] + 2),
+        font=font_std,
         padding=(0, 6, 0, 6),
     )
     s.configure("info.TLabel", background=o["bg_container"])
 
     s.configure(
-        "sp_info.TLabel",
-        background=o["bg_container"],
-        anchor=tk.CENTER,
-        #  font=("Courier", 12),
-        #  font=("Consolas", 10),
+        "sp_info.TLabel", background=o["bg_container"], anchor=tk.CENTER,
     )
     s.map(
         "sp_info.TLabel",
         background=[("selected", o["bg_selected"]), ("active", o["bg_active"])],
     )
     s.configure(
-        "sp_header.sp_info.TLabel",
-        font=("Consolas", o["font_mono_size"] + 2),
-        padding=(0, 3, 0, 3),
+        "sp_header.sp_info.TLabel", font=font_mono, padding=(0, 3, 0, 3),
     )
-    s.configure(
-        "sp_pos.sp_info.TLabel", font=("Consolas", o["font_mono_size"]),
-    )
+    s.configure("sp_pos.sp_info.TLabel", font=font_mono)
 
     ### ENTRY ###
 
