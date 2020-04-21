@@ -423,9 +423,13 @@ class FrameInfo(ttk.Frame):
 
     def update_state(self, state):
         """Update the label with the current state
+
+        For particular states, also highlight it
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_state")
         logg.info(f"Start {fmt_cn('update_state')} {state}")
+
+        set_state = "free"
         if state == "free":
             state_str = f"State: FREE"
         elif state == "free_clicked_left":
@@ -438,13 +442,21 @@ class FrameInfo(ttk.Frame):
             state_str = f"State: SET_BM_CLICK"
         elif state == "adjusting_base":
             state_str = f"State: ADJUST_BASE"
+            set_state = "selected"
         elif state == "adjusting_mean":
             state_str = f"State: ADJUST_MEAN"
+            set_state = "selected"
         elif state == "moving_glyph":
             state_str = f"State: MOVING GLYPH"
         else:
             logg.info(f"{fmt_cn('Unrecognized', 'alert')} system state {state}")
             return
+
+        if set_state == "free":
+            self.mi_label_state.state(["!selected"])
+        elif set_state == "selected":
+            self.mi_label_state.state(["selected"])
+
         self.mi_var_state.set(state_str)
 
 

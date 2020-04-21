@@ -136,18 +136,24 @@ def setup_style(colorscheme="terra"):
 
     s = ttk.Style()
 
-    # configure root style
+    ### configure root style
     s.configure(".", font=(o["font_std_type"], o["font_std_size"]))
 
+    ##############
     ### FRAMES ###
+    ##############
 
+    # background frames
     s.configure("container.TFrame", background=o["bg_general"])
+    # frame for a group of elements
     s.configure("group.TFrame", background=o["bg_container"])
 
     # ScrollableFrame
     s.configure("sf.TFrame", background=o["bg_container"])
 
+    ##############
     ### LABELS ###
+    ##############
 
     s.configure("TLabel", anchor=tk.CENTER)
     s.configure(
@@ -158,10 +164,17 @@ def setup_style(colorscheme="terra"):
         # padding=(0, 6, 0, 6),
         padding=(0, 9, 0, 9),
     )
+
+    ### general info labels
     s.configure(
         "info.TLabel", background=o["bg_container"], padding=(0, 2, 0, 2),
     )
+    s.map(
+        "info.TLabel",
+        background=[("selected", o["bg_selected"]), ("active", o["bg_active"])],
+    )
 
+    ### Spline info
     s.configure(
         "sp_info.TLabel", background=o["bg_container"], anchor=tk.CENTER,
     )
@@ -180,7 +193,9 @@ def setup_style(colorscheme="terra"):
         padding=(0, 1, 0, 1),
     )
 
+    #############
     ### ENTRY ###
+    #############
 
     s.configure(
         "root.TEntry",
@@ -190,7 +205,9 @@ def setup_style(colorscheme="terra"):
         fieldbackground=o["bg_btn"],
     )
 
+    ###############
     ### BUTTONS ###
+    ###############
 
     s.configure(
         "settings.TButton", background=o["bg_btn"], borderwidth=0, highlightthickness=0,

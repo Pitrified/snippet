@@ -27,7 +27,7 @@
   is a reaction to a button click, and in that function the controller will call
   `model.start_new_spline`.
 * Is there really a reason to put FrameInfo as a different class? It could just be a regular frame inside the view.
-* Move spline buttons and info to left sidebar
+* Move spline buttons and info to left sidebar, or some info to right sidebar.
 
 ##### Done
 
@@ -46,6 +46,7 @@
 * Create the file dialog in the view, inside the controller, ask for the destination, calling a method inside the view, that returns the path.
 * When writing the root glyph name, the points move when pressing qwerasdfzxcv...
 * Add loading of a glyph, after FMlines are set, remap those points to the current image
+* Show the `adjust_base/mean` state by changing the background color of the label
 
 ### Ideas
 

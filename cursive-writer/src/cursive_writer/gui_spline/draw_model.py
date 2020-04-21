@@ -214,7 +214,13 @@ class Model:
             elif current_state == "setting_base_mean_clicked":
                 # compute and save the font measurement info:
                 # get the new abs lines with current mouse pos
-                self.build_fm_lines_abs("base_mean")
+                self.build_fm_lines_abs(
+                    "base_mean",
+                    self.start_view_x,
+                    self.start_view_y,
+                    self.move_view_x,
+                    self.move_view_y,
+                )
                 # update the fm_lines_view with the current abs/mov/zoom
                 self.recompute_fm_lines_view()
 
@@ -262,7 +268,13 @@ class Model:
             elif current_state == "setting_base_mean_clicked":
                 # compute and save the font measurement info:
                 # get the new abs lines with current mouse pos
-                self.build_fm_lines_abs("base_mean")
+                self.build_fm_lines_abs(
+                    "base_mean",
+                    self.start_view_x,
+                    self.start_view_y,
+                    self.end_view_x,
+                    self.end_view_y,
+                )
                 # update the fm_lines_view with the current abs/mov/zoom
                 self.recompute_fm_lines_view()
                 # update the thick_segment_points now that FM are available
@@ -296,6 +308,7 @@ class Model:
         # very weird things
         else:
             logg.warn(f"{fmt_cn('Unrecognized', 'alert')} click_type {click_type}")
+            return
 
     def zoom_image(self, direction, view_x, view_y):
         """Zoom the image
@@ -793,7 +806,7 @@ class Model:
 
     ### FONT MEASUREMENTS ###
 
-    def build_fm_lines_abs(self, input_type):
+    def build_fm_lines_abs(self, input_type, start_vx, start_vy, end_vx, end_vy):
         """Build the font measurement line
 
         Given the current values of mouse pos and the start_pos, compute the
@@ -804,15 +817,9 @@ class Model:
         logg.trace(f"Start {fmt_cn('build_fm_lines_abs')} type {input_type}")
 
         if input_type == "base_mean":
-            vert_pt_view = line_curve_point(
-                self.start_view_x, self.start_view_y, self.move_view_x, self.move_view_y
-            )
-            base_pt_view = OrientedPoint(
-                self.start_view_x, self.start_view_y, vert_pt_view.ori_deg + 90
-            )
-            mean_pt_view = OrientedPoint(
-                self.move_view_x, self.move_view_y, vert_pt_view.ori_deg + 90
-            )
+            vert_pt_view = line_curve_point(start_vx, start_vy, end_vx, end_vy)
+            base_pt_view = OrientedPoint(start_vx, start_vy, vert_pt_view.ori_deg + 90)
+            mean_pt_view = OrientedPoint(end_vx, end_vy, vert_pt_view.ori_deg + 90)
 
             logg.trace(f"base_point: {base_pt_view} vert_point: {vert_pt_view}")
 
@@ -868,13 +875,48 @@ class Model:
 
         current_state = self.state.get()
 
-        if current_state == "adjusting_base":
-            # get the mean point in view coord
-            mean_view_op = self.rescale_point(mean_pt_abs, "abs2view")
-            # the base point is the released one
+        # use the mouse release pos to set the FM
+        if source == "mouse_release":
+            if current_state == "adjusting_base":
+                # get the mean point in view coord
+                mean_view_op = self.rescale_point(mean_pt_abs, "abs2view")
+                # the base point is the released one
+                self.build_fm_lines_abs(
+                    "base_mean",
+                    self.end_view_x,
+                    self.end_view_y,
+                    mean_view_op.x,
+                    mean_view_op.y,
+                )
+            elif current_state == "adjusting_mean":
+                # get the base point in view coord
+                base_view_op = self.rescale_point(base_pt_abs, "abs2view")
+                # the mean point is the released one
+                self.build_fm_lines_abs(
+                    "base_mean",
+                    base_view_op.x,
+                    base_view_op.y,
+                    self.end_view_x,
+                    self.end_view_y,
+                )
+
+            else:
+                logg.warn(
+                    f"{fmt_cn('Unrecognized', 'alert')} current_state {current_state}"
+                )
+                return
+
+        else:
+            logg.warn(f"{fmt_cn('Unrecognized', 'alert')} source {source}")
+            return
+
+        # update the fm_lines_view with the current abs/mov/zoom
+        self.recompute_fm_lines_view()
+        # update the thick_segment_points now that FM are available
+        self.update_thick_segments()
 
     def recompute_fm_lines_view(self):
-        """Updats the value in fm_lines_view to match the current abs/mov/zoom
+        """Updates the value in fm_lines_view to match the current abs/mov/zoom
         """
         curr_abs_lines = self.fm_lines_abs.get()
         if curr_abs_lines is not None:
@@ -1340,6 +1382,10 @@ class Model:
             dx_abs = clicked_abs_sp.x - curr_abs_sp.x
             dy_abs = clicked_abs_sp.y - curr_abs_sp.y
             self.translate_glyph(sel_idxs[0], dx_abs, dy_abs)
+
+        else:
+            logg.warn(f"{fmt_cn('Unrecognized', 'alert')} source {source}")
+            return
 
         # update the visible spline points
         self.compute_visible_spline_points()
