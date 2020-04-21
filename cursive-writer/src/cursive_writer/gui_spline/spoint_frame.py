@@ -26,8 +26,6 @@ class FrameSPoint(ttk.Frame):
         self.grid_columnconfigure(0, weight=1)
 
         # create the element
-        #  pos_str = f"{spoint.ori_deg:6.1f} @ ({spoint.x:6.1f}, {spoint.y:6.1f})"
-        #  self.pos_lab = ttk.Label(self, text=pos_str, style="sp_pos.sp_info.TLabel")
         self.pos_lab = ttk.Label(self, style="sp_pos.sp_info.TLabel")
         self.update_label()
 

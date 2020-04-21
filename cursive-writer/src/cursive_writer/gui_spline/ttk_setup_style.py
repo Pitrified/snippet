@@ -2,7 +2,8 @@ import logging
 import platform
 import tkinter as tk
 from tkinter import ttk
-from tkinter.font import Font
+
+# from tkinter.font import Font
 from cursive_writer.utils.color_utils import fmt_cn
 
 # color list
@@ -115,7 +116,7 @@ def setup_style(colorscheme="terra"):
     # check if we are in WSL
     if "Microsoft" in uname_version:
         o["font_std_size"] = 12
-        o["font_mono_size"] = 10
+        o["font_mono_size"] = 11
 
     # or regular Linux
     elif sys_type == "Linux":
@@ -127,16 +128,16 @@ def setup_style(colorscheme="terra"):
         o["font_std_size"] = 12
         o["font_mono_size"] = 10
 
-    # font_std = Font(font=(o["font_std_type"], o["font_std_size"]))
-    font_std = Font(family=o["font_std_type"], size=o["font_std_size"], weight='bold')
-    logg.debug(f"font_std.actual(): {font_std.actual()}")
-    font_mono = Font(font=(o["font_mono_type"], o["font_mono_size"]))
-    logg.debug(f"font_mono.actual(): {font_mono.actual()}")
+    # # font_std = Font(font=(o["font_std_type"], o["font_std_size"]))
+    # font_std = Font(family=o["font_std_type"], size=o["font_std_size"], weight='bold')
+    # logg.debug(f"font_std.actual(): {font_std.actual()}")
+    # font_mono = Font(font=(o["font_mono_type"], o["font_mono_size"]))
+    # logg.debug(f"font_mono.actual(): {font_mono.actual()}")
 
     s = ttk.Style()
 
     # configure root style
-    s.configure(".", font=font_std)
+    s.configure(".", font=(o["font_std_type"], o["font_std_size"]))
 
     ### FRAMES ###
 
@@ -153,10 +154,13 @@ def setup_style(colorscheme="terra"):
         "title.TLabel",
         background=o["bg_title"],
         foreground=o["fg_title"],
-        font=font_std,
-        padding=(0, 6, 0, 6),
+        font=(o["font_std_type"], o["font_std_size"] + 2),
+        # padding=(0, 6, 0, 6),
+        padding=(0, 9, 0, 9),
     )
-    s.configure("info.TLabel", background=o["bg_container"])
+    s.configure(
+        "info.TLabel", background=o["bg_container"], padding=(0, 2, 0, 2),
+    )
 
     s.configure(
         "sp_info.TLabel", background=o["bg_container"], anchor=tk.CENTER,
@@ -166,9 +170,15 @@ def setup_style(colorscheme="terra"):
         background=[("selected", o["bg_selected"]), ("active", o["bg_active"])],
     )
     s.configure(
-        "sp_header.sp_info.TLabel", font=font_mono, padding=(0, 3, 0, 3),
+        "sp_header.sp_info.TLabel",
+        font=("Consolas", o["font_mono_size"] + 2),
+        padding=(0, 3, 0, 3),
     )
-    s.configure("sp_pos.sp_info.TLabel", font=font_mono)
+    s.configure(
+        "sp_pos.sp_info.TLabel",
+        font=("Consolas", o["font_mono_size"]),
+        padding=(0, 1, 0, 1),
+    )
 
     ### ENTRY ###
 
