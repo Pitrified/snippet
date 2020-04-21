@@ -2,6 +2,8 @@
 
 ### TODO
 
+* When asking for file names, check in the controller if the action is allowed
+  (`fm_lines_abs is not None`) before showing the prompt.
 * Move FM lines, click button to enter base/mean movement mode, then usual qwerasdf movement
 * Move glyph with mouse click
 * Move glyph by selecting a point, then another, and translate the first over the second
@@ -16,6 +18,12 @@
 
 ### MAYBE
 
+* The function names in `model` are slightly wrong: it should not be called
+  `clicked_sh_btn_new_spline`, the model does not care what generated that. Call it
+  `start_new_spline` (as a bonus misleading name, this should be called `new_glyph`). In
+  the controller there is `clicked_sh_btn_new_spline`, that is correctly telling that this
+  is a reaction to a button click, and in that function the controller will call
+  `model.start_new_spline`.
 * Is there really a reason to put FrameInfo as a different class? It could just be a regular frame inside the view.
 * Move spline buttons and info to left sidebar
 
@@ -46,3 +54,40 @@
 
 * You can artificially _lower_ the loglevel inside a function to debug that, but in regular use you should not change it: that way it is controlled easily at app level.
 * I should try to change a level for an entire class and see if it works as I expect
+
+### Errors
+
+When clicking in the same spot twice thick segment update fails:
+
+```
+File "cursive-writer/src/cursive_writer/gui_spline/draw_controller.py", line 278, in released_canvas
+   self.model.release_click_canvas(click_type, event.x, event.y)
+File "cursive-writer/src/cursive_writer/gui_spline/draw_model.py", line 254, in release_click_canvas
+   self.add_spline_point()
+File "cursive-writer/src/cursive_writer/gui_spline/draw_model.py", line 936, in add_spline_point
+   self.add_spline_abs_point(abs_op)
+File "cursive-writer/src/cursive_writer/gui_spline/draw_model.py", line 966, in add_spline_abs_point
+   self.update_thick_segments()
+File "cursive-writer/src/cursive_writer/gui_spline/draw_model.py", line 1121, in update_thick_segments
+   self.spline_thick_holder.update_data(all_fm, path)
+File "cursive-writer/src/cursive_writer/utils/spline_segment_holder.py", line 88, in update_data
+   self.cached_pos[spid0], new_all_SP[spid1],
+File "cursive-writer/src/cursive_writer/utils/spline_segment_holder.py", line 114, in compute_segment_points
+   x_segment, y_segment = compute_thick_spline(p0, p1, self.thickness)
+File "cursive-writer/src/cursive_writer/spliner/spliner.py", line 416, in compute_thick_spline
+   coeff_t = fit_cubic(p0t, p1t)
+File "cursive-writer/src/cursive_writer/spliner/spliner.py", line 123, in fit_cubic
+   x = np.linalg.solve(A, b)
+File "<__array_function__ internals>", line 6, in solve
+File "ckages/numpy/linalg/linalg.py", line 399, in solve
+   r = gufunc(a, b, signature=signature, extobj=extobj)
+File "ckages/numpy/linalg/linalg.py", line 97, in _raise_linalgerror_singular
+   raise LinAlgError("Singular matrix")
+numpy.linalg.LinAlgError: Singular matrix   
+```
+
+Ideas:
+
+* Fix `fit_cubic`, hopefully thick will not fail with empty/small top contour (note that
+  this failed in `coeff_t = fit_cubic(p0t, p1t)`
+

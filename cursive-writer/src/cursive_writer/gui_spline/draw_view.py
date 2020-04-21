@@ -108,14 +108,14 @@ class View:
         """TODO: what are you changing when updating data_dir?
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_data_dir")
-        logg.debug(f"Start {fmt_cn('update_data_dir', 'a2')} {data}")
+        logg.debug(f"Start {fmt_cn('update_data_dir')} {data}")
 
     def ask_file_name(self, **kwargs):
         """TODO: what is ask_file_name doing?
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.ask_file_name")
         logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('ask_file_name', 'a2')}")
+        logg.info(f"Start {fmt_cn('ask_file_name')}")
 
         str_file_name = filedialog.askopenfilename(**kwargs)
 
@@ -126,7 +126,7 @@ class View:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.ask_folder")
         logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('ask_folder', 'a2')}")
+        logg.info(f"Start {fmt_cn('ask_folder')}")
 
         folder_name = filedialog.askdirectory(**kwargs)
 
@@ -192,6 +192,18 @@ class FrameInfo(ttk.Frame):
             self.font_measurement_frame, text="M - D", style="settings.TButton",
         )
 
+        self.fm_lab_adjust = ttk.Label(
+            self.font_measurement_frame, text="Adjust:", style="info.TLabel"
+        )
+
+        self.fm_btn_adjust_base = ttk.Button(
+            self.font_measurement_frame, text="Base", style="settings.TButton",
+        )
+
+        self.fm_btn_adjust_mean = ttk.Button(
+            self.font_measurement_frame, text="Mean", style="settings.TButton",
+        )
+
         # setup grid for font_measurement_frame
         self.font_measurement_frame.grid_columnconfigure(0, weight=1)
         self.font_measurement_frame.grid_columnconfigure(1, weight=1)
@@ -202,6 +214,9 @@ class FrameInfo(ttk.Frame):
         self.fm_btn_set_base_mean.grid(row=1, column=0, pady=4)
         self.fm_btn_set_base_ascent.grid(row=1, column=1, pady=4)
         self.fm_btn_set_mean_descent.grid(row=1, column=2, pady=4)
+        self.fm_lab_adjust.grid(row=2, column=0, pady=4)
+        self.fm_btn_adjust_base.grid(row=2, column=1, pady=4)
+        self.fm_btn_adjust_mean.grid(row=2, column=2, pady=4)
 
     def build_spoint_adjust_frame(self):
         """Build the monster with 12 buttons
@@ -259,7 +274,7 @@ class FrameInfo(ttk.Frame):
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.build_spline_adjust_frame")
         logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('build_spline_adjust_frame', 'a2')}")
+        logg.info(f"Start {fmt_cn('build_spline_adjust_frame')}")
 
         self.spla_title = ttk.Label(
             self.spline_adjust_frame, text="Spline adjust", style="title.TLabel"

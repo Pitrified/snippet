@@ -15,6 +15,7 @@ from cursive_writer.utils.utils import enumerate_double_list
 from cursive_writer.utils.utils import find_free_index
 from cursive_writer.utils.utils import iterate_double_list
 from cursive_writer.utils.utils import load_glyph
+from cursive_writer.utils.utils import load_spline
 
 
 class Model:
@@ -577,7 +578,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_move_glyph")
         logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('clicked_btn_move_glyph', 'a2')}")
+        logg.info(f"Start {fmt_cn('clicked_btn_move_glyph')}")
 
         if self.state.get() == "moving_glyph":
             self.state.set("free")
@@ -668,7 +669,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fl_btn_load_glyph")
         logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('clicked_fl_btn_load_glyph', 'a2')}")
+        logg.info(f"Start {fmt_cn('clicked_fl_btn_load_glyph')}")
 
         fm_lines_abs = self.fm_lines_abs.get()
         if fm_lines_abs is None:
@@ -676,14 +677,44 @@ class Model:
             return
         base_point_abs = fm_lines_abs["base_point"]
 
-        fm_points = load_glyph(path_input_glyph, dx=0, dy=0)
-        logg.trace(f"fm_points: {fm_points}")
+        fm_ops = load_glyph(path_input_glyph, dx=0, dy=0)
+        logg.trace(f"fm_ops: {fm_ops}")
 
-        for fm_op in fm_points:
+        for fm_op in fm_ops:
             abs_x, abs_y = apply_affine_transform(self.fm2abs, fm_op.x, fm_op.y)
             abs_ori_deg = -fm_op.ori_deg + base_point_abs.ori_deg
             abs_op = OrientedPoint(abs_x, abs_y, abs_ori_deg)
             self.add_spline_abs_point(abs_op)
+
+    def clicked_fl_btn_load_spline(self, path_input_spline):
+        """TODO: what is clicked_fl_btn_load_spline doing?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fl_btn_load_spline")
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('clicked_fl_btn_load_spline')}")
+
+        fm_lines_abs = self.fm_lines_abs.get()
+        if fm_lines_abs is None:
+            logg.warn(f"{fmt_cn('Set', 'alert')} the font measurements before loading")
+            return
+        base_point_abs = fm_lines_abs["base_point"]
+
+        data_dir = self.data_dir.get()
+
+        fm_ops = load_spline(path_input_spline, data_dir, dx=0, dy=0)
+        logg.trace(f"fm_ops: {fm_ops}")
+
+        # iterate each glyph seq of points
+        for glyph_ops in fm_ops:
+
+            # start new glyph
+            self.clicked_sh_btn_new_spline()
+
+            for fm_op in glyph_ops:
+                abs_x, abs_y = apply_affine_transform(self.fm2abs, fm_op.x, fm_op.y)
+                abs_ori_deg = -fm_op.ori_deg + base_point_abs.ori_deg
+                abs_op = OrientedPoint(abs_x, abs_y, abs_ori_deg)
+                self.add_spline_abs_point(abs_op)
 
     def redraw_canvas(self):
         """
@@ -1224,7 +1255,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.move_glyph")
         logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('move_glyph', 'a2')}")
+        logg.info(f"Start {fmt_cn('move_glyph')}")
 
         all_SP = self.all_SP.get()
         selected_spid_SP = self.selected_spid_SP.get()

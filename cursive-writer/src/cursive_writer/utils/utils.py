@@ -40,7 +40,7 @@ def find_free_index(folder, base_name_fmt):
             return i
 
 
-def load_glyph(pf_input_glyph, dx, dy):
+def load_glyph(pf_input_glyph, dx=0, dy=0):
     """TODO: what is load_glyph doing?
     """
     logg = logging.getLogger(f"c.{__name__}.load_glyph")
@@ -66,7 +66,7 @@ def load_glyph(pf_input_glyph, dx, dy):
     return glyph
 
 
-def load_spline(pf_input_spline, data_dir):
+def load_spline(pf_input_spline, data_dir, dx=0, dy=0):
     """TODO: what is load_spline doing?
     """
     logg = logging.getLogger(f"c.{__name__}.load_spline")
