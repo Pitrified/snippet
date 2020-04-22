@@ -389,6 +389,10 @@ class Controller:
         logg.info(f"\nStart {fmt_cn('clicked_fl_btn_load_glyph')}")
         self.view.reset_focus()
 
+        if self.model.fm_lines_abs.get() is None:
+            logg.warn(f"{fmt_cn('Set', 'alert')} the FM lines before loading a glyph")
+            return
+
         data_dir = self.model.data_dir.get()
         logg.debug(f"data_dir: {data_dir}")
         str_glyph_file_name = self.view.ask_file_name(initialdir=data_dir)
@@ -406,8 +410,12 @@ class Controller:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fl_btn_load_spline")
         logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('clicked_fl_btn_load_spline', 'a2')}")
+        logg.info(f"Start {fmt_cn('clicked_fl_btn_load_spline')}")
         self.view.reset_focus()
+
+        if self.model.fm_lines_abs.get() is None:
+            logg.warn(f"{fmt_cn('Set', 'alert')} the FM lines before loading a spline")
+            return
 
         data_dir = self.model.data_dir.get()
         logg.debug(f"data_dir: {data_dir}")
@@ -484,7 +492,7 @@ class Controller:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.focus_change_ent_root")
         logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('focus_change_ent_root', 'a2')} {change}")
+        logg.info(f"Start {fmt_cn('focus_change_ent_root')} {change}")
 
         if change == "in":
             logg.trace(f"Entry now has focus")

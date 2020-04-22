@@ -1,4 +1,5 @@
 import logging
+import math
 
 from cursive_writer.gui_spline.image_cropper import ImageCropper
 from cursive_writer.gui_spline.observable import Observable
@@ -105,7 +106,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.setup_adjust_dict")
         logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('setup_adjust_dict', 'a2')}")
+        logg.info(f"Start {fmt_cn('setup_adjust_dict')}")
 
         self.shift = 0.1
         self.very_shift = 1
@@ -409,6 +410,12 @@ class Model:
         #  logg.setLevel("INFO")
         logg.info(f"Start {fmt_cn('click_btn_set_fm')} - {fm_adjust_type}")
 
+        fm_lines_abs = self.fm_lines_abs.get()
+        if fm_lines_abs is None:
+            logg.warn(f"{fmt_cn('Set', 'alert')} the FM lines before adjusting them")
+            self.state.set("free")
+            return
+
         current_state = self.state.get()
 
         if fm_adjust_type == "base":
@@ -629,6 +636,13 @@ class Model:
         logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('clicked_btn_move_glyph')}")
 
+        all_SP = self.all_SP.get()
+        selected_spid_SP = self.selected_spid_SP.get()
+        if selected_spid_SP not in all_SP:
+            logg.warn(f"{fmt_cn('No glyph', 'alert')} to move")
+            self.state.set("free")
+            return
+
         if self.state.get() == "moving_glyph":
             self.state.set("free")
         else:
@@ -816,6 +830,12 @@ class Model:
         #  logg.setLevel("TRACE")
         logg.trace(f"Start {fmt_cn('build_fm_lines_abs')} type {input_type}")
 
+        if math.isclose(start_vx, end_vx) and math.isclose(start_vy, end_vy):
+            recap = f"{fmt_cn('Coincident', 'alert')} points"
+            recap += f" ({start_vx}, {start_vy}) ({end_vx}, {end_vy})"
+            logg.warn(recap)
+            return
+
         if input_type == "base_mean":
             vert_pt_view = line_curve_point(start_vx, start_vy, end_vx, end_vy)
             base_pt_view = OrientedPoint(start_vx, start_vy, vert_pt_view.ori_deg + 90)
@@ -862,7 +882,7 @@ class Model:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.adjust_fm_lines")
         logg.setLevel("TRACE")
-        logg.info(f"Start {fmt_cn('adjust_fm_lines', 'a2')} {source}")
+        logg.info(f"Start {fmt_cn('adjust_fm_lines')} {source}")
 
         fm_lines_abs = self.fm_lines_abs.get()
 
@@ -1398,6 +1418,11 @@ class Model:
         all_SP = self.all_SP.get()
         selected_spid_SP = self.selected_spid_SP.get()
         sel_idxs = self.selected_indexes
+
+        # check that the current selected_spid_SP is valid
+        if selected_spid_SP not in all_SP:
+            logg.warn(f"{fmt_cn('No glyph', 'alert')} to move")
+            return
 
         # get the current selected point
         curr_abs_sp = all_SP[selected_spid_SP]
