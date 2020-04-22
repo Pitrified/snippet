@@ -17,6 +17,8 @@
 * Make the point list scroll when adding points if it is filled
 * `redraw_canvas` should be done in `move_image`, not in `release_click_canvas`, and
   similar cases
+* Throttle keypress events, set a flag `active` and ignore other events? Why do they
+  even get caled so frequently if they are bound to `KeyRelease`?
 
 ### MAYBE
 

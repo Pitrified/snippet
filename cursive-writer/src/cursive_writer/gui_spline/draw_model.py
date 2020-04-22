@@ -61,10 +61,7 @@ class Model:
         self.normalized_dist_base_mean = 1000
 
         # how much the points are translated when adjusting
-        self.shift = 0.1
-        self.very_shift = 1
-        self.rot = 0.1
-        self.very_rot = 1
+        self.setup_adjust_dict()
 
         # info on the line from clicked point to current
         self.free_line = Observable()
@@ -102,6 +99,34 @@ class Model:
         self.visible_segment_SP = Observable()
         # TODO what structure does this have
         self.thick_segment_points = Observable()
+
+    def setup_adjust_dict(self):
+        """TODO: what is setup_adjust_dict doing?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.setup_adjust_dict")
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('setup_adjust_dict', 'a2')}")
+
+        self.shift = 0.1
+        self.very_shift = 1
+        self.rot = 0.1
+        self.very_rot = 1
+
+        self.adjust_shift = {}
+        self.adjust_shift["vl"] = (-self.very_shift, 0)
+        self.adjust_shift["l"] = (-self.shift, 0)
+        self.adjust_shift["r"] = (self.shift, 0)
+        self.adjust_shift["vr"] = (self.very_shift, 0)
+        self.adjust_shift["vb"] = (0, self.very_shift)
+        self.adjust_shift["b"] = (0, self.shift)
+        self.adjust_shift["u"] = (0, -self.shift)
+        self.adjust_shift["vu"] = (0, -self.very_shift)
+
+        self.adjust_rot = {}
+        self.adjust_rot["va"] = -self.very_rot
+        self.adjust_rot["a"] = -self.rot
+        self.adjust_rot["o"] = self.rot
+        self.adjust_rot["vo"] = self.very_rot
 
     ### OPERATIONS ON CANVAS ###
 
@@ -283,7 +308,7 @@ class Model:
                 self.state.set("free")
 
             # was adjusting base or mean
-            elif current_state == "adjusting_base" or current_state == "adjusting_mean":
+            elif current_state in ["adjusting_base", "adjusting_mean"]:
                 # update the FM lines using the clicked point as base or mean
                 self.adjust_fm_lines("mouse_release")
                 # after you release the mouse, *do not* go back to free state
@@ -557,57 +582,32 @@ class Model:
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('clicked_btn_adjust')}")
 
+        if self.state.get() in ["adjusting_base", "adjusting_mean"]:
+            self.adjust_fm_lines("adjust_btn", adjust_type)
+            return
+
         if self.selected_indexes[1] == -1:
             glyph_idx = self.selected_indexes[0]
             logg.debug(f"{fmt_cn('Moving', 'a1')} glyph {glyph_idx}")
-            if adjust_type == "vl":
-                self.translate_glyph(glyph_idx, -self.very_shift, 0)
-            elif adjust_type == "l":
-                self.translate_glyph(glyph_idx, -self.shift, 0)
-            elif adjust_type == "r":
-                self.translate_glyph(glyph_idx, self.shift, 0)
-            elif adjust_type == "vr":
-                self.translate_glyph(glyph_idx, self.very_shift, 0)
-            elif adjust_type == "vb":
-                self.translate_glyph(glyph_idx, 0, self.very_shift)
-            elif adjust_type == "b":
-                self.translate_glyph(glyph_idx, 0, self.shift)
-            elif adjust_type == "u":
-                self.translate_glyph(glyph_idx, 0, -self.shift)
-            elif adjust_type == "vu":
-                self.translate_glyph(glyph_idx, 0, -self.very_shift)
+
+            if adjust_type in self.adjust_shift:
+                self.translate_glyph(glyph_idx, *self.adjust_shift[adjust_type])
             else:
                 logg.warn(f"{fmt_cn('Cannot', 'warn')} rotate a glyph")
+                return
 
         # translate the current active point
         else:
             all_SP = self.all_SP.get()
             sel_pt = all_SP[self.selected_spid_SP.get()]
 
-            if adjust_type == "vl":
-                sel_pt.translate(-self.very_shift, 0)
-            elif adjust_type == "l":
-                sel_pt.translate(-self.shift, 0)
-            elif adjust_type == "r":
-                sel_pt.translate(self.shift, 0)
-            elif adjust_type == "vr":
-                sel_pt.translate(self.very_shift, 0)
-            elif adjust_type == "vb":
-                sel_pt.translate(0, self.very_shift)
-            elif adjust_type == "b":
-                sel_pt.translate(0, self.shift)
-            elif adjust_type == "u":
-                sel_pt.translate(0, -self.shift)
-            elif adjust_type == "vu":
-                sel_pt.translate(0, -self.very_shift)
-            elif adjust_type == "va":
-                sel_pt.rotate(-self.very_rot)
-            elif adjust_type == "a":
-                sel_pt.rotate(-self.rot)
-            elif adjust_type == "o":
-                sel_pt.rotate(self.rot)
-            elif adjust_type == "vo":
-                sel_pt.rotate(self.very_rot)
+            if adjust_type in self.adjust_shift:
+                sel_pt.translate(*self.adjust_shift[adjust_type])
+            elif adjust_type in self.adjust_rot:
+                sel_pt.rotate(self.adjust_rot[adjust_type])
+            else:
+                logg.warn(f"{fmt_cn('Unrecognized', 'warn')} adjust_type {adjust_type}")
+                return
 
             # update the point
             all_SP[self.selected_spid_SP.get()] = sel_pt
@@ -857,7 +857,7 @@ class Model:
 
         self.fm2abs, self.abs2fm = compute_affine_transform(base_pt_abs, basis_length)
 
-    def adjust_fm_lines(self, source):
+    def adjust_fm_lines(self, source, adjust_type=None):
         """TODO: what is adjust_fm_lines doing?
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.adjust_fm_lines")
@@ -901,9 +901,46 @@ class Model:
                 )
 
             else:
-                logg.warn(
-                    f"{fmt_cn('Unrecognized', 'alert')} current_state {current_state}"
+                logg.warn(f"{fmt_cn('Unrecognized', 'alert')} state {current_state}")
+                return
+
+        elif source == "adjust_btn":
+            # check that we are shifting
+            if adjust_type in self.adjust_shift:
+                dx, dy = self.adjust_shift[adjust_type]
+            else:
+                logg.warn(f"{fmt_cn('Cannot', 'warn')} rotate a FM")
+                return
+
+            if current_state == "adjusting_base":
+                new_base_abs_op = OrientedPoint(
+                    base_pt_abs.x + dx, base_pt_abs.y + dy, 0
                 )
+                new_base_view_op = self.rescale_point(new_base_abs_op, "abs2view")
+                mean_view_op = self.rescale_point(mean_pt_abs, "abs2view")
+                self.build_fm_lines_abs(
+                    "base_mean",
+                    new_base_view_op.x,
+                    new_base_view_op.y,
+                    mean_view_op.x,
+                    mean_view_op.y,
+                )
+            elif current_state == "adjusting_mean":
+                base_view_op = self.rescale_point(base_pt_abs, "abs2view")
+                new_mean_abs_op = OrientedPoint(
+                    mean_pt_abs.x + dx, mean_pt_abs.y + dy, 0
+                )
+                new_mean_view_op = self.rescale_point(new_mean_abs_op, "abs2view")
+                self.build_fm_lines_abs(
+                    "base_mean",
+                    base_view_op.x,
+                    base_view_op.y,
+                    new_mean_view_op.x,
+                    new_mean_view_op.y,
+                )
+
+            else:
+                logg.warn(f"{fmt_cn('Unrecognized', 'alert')} state {current_state}")
                 return
 
         else:
