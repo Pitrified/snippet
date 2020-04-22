@@ -103,6 +103,11 @@ def fit_cubic(p0, p1):
     # logg.setLevel("TRACE")
     logg.trace(f"Starting fit_cubic")
 
+    if math.isclose(p0.x, p1.x) and math.isclose(p0.y, p1.y):
+        logg.warn(f"Coincident points {p0} {p1}")
+        # return a line
+        return [0, 0, 1, 0]
+
     x0 = p0.x
     y0 = p0.y
     y0p = p0.ori_slo
@@ -175,7 +180,8 @@ def compute_cubic_segment(p0, p1, ax=None):
     logg.trace(f"Starting compute_cubic_segment")
 
     # if the points are actually the same, return just that
-    if p0.x == p1.x and p0.y == p1.y:
+    if math.isclose(p0.x, p1.x) and math.isclose(p0.y, p1.y):
+        logg.warn(f"Coincident points {p0} {p1}")
         return [p0.x], [p0.y]
 
     # translate and rotate the point to the origin
@@ -375,6 +381,11 @@ def compute_thick_spline(p0, p1, thickness, ax=None):
     # logg.setLevel("TRACE")
     logg.trace(f"Starting compute_spline {p0} :: {p1} :: {thickness}")
 
+    if math.isclose(p0.x, p1.x) and math.isclose(p0.y, p1.y):
+        # MAYBE return the entire segment p0t p0b
+        logg.warn(f"Coincident points {p0} {p1}")
+        return [p0.x], [p0.y]
+
     # translate and rotate the point to the origin
     rot_p0, rot_p1, dir_01 = translate_points_to_origin(p0, p1)
     logg.trace(f"rot_p0: {rot_p0} rot_p1: {rot_p1}")
@@ -536,8 +547,8 @@ def compute_aligned_cubic_segment(p0, p1, x_stride=1, ax=None):
     logg.debug(f"p0: {p0} p1: {p1}")
 
     # if the points are actually the same, return just that
-    # MAYBE use math.isclose instead of hard comparison
-    if p0.x == p1.x and p0.y == p1.y:
+    if math.isclose(p0.x, p1.x) and math.isclose(p0.y, p1.y):
+        logg.warn(f"Coincident points {p0} {p1}")
         return [p0.x], [p0.y]
 
     # translate the points to the origin

@@ -156,6 +156,11 @@ def exs_thick_spline():
     scale = 10
 
     thickness = 10
+    p0 = OrientedPoint(10, 10, 0)
+    p1 = OrientedPoint(20, 20, 90)
+    ex_thick_spline(p0, p1, thickness)
+
+    thickness = 10
     p0 = OrientedPoint(10, 2, -174)
     p1 = OrientedPoint(50, 3, -175)
     ex_thick_spline(p0, p1, thickness)
@@ -200,7 +205,6 @@ def exs_thick_spline():
     p0 = OrientedPoint(347.9917, 485.3683, 178.4224)
     p1 = OrientedPoint(380.3771, 486.2859, -158.1566)
     ex_thick_spline(p0, p1, thickness)
-    return
 
     # spline thickness
     thickness = 20
