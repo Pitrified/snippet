@@ -86,11 +86,11 @@ def setup_env():
     return args
 
 
-def scatter_plot(x, y, show=False, ax=None, **kwargs):
-    """TODO: what is scatter_plot doing?
+def plot_add_create(x, y, show=False, ax=None, **kwargs):
+    """TODO: what is plot_add_create doing?
     """
-    # logg = logging.getLogger(f"c.{__name__}.scatter_plot")
-    # logg.debug(f"Start scatter_plot")
+    # logg = logging.getLogger(f"c.{__name__}.plot_add_create")
+    # logg.debug(f"Start plot_add_create")
 
     if ax is None:
         fig, ax = plt.subplots(1, 1)
@@ -211,10 +211,10 @@ def extract_filt_lr(sector_wid, ranges, angles_rad, range_min, range_max):
     )
 
     # style = {"ls": "-", "marker": "."}
-    # ax = scatter_plot(left_filt_x, left_filt_y, **style)
+    # ax = plot_add_create(left_filt_x, left_filt_y, **style)
     # ax.set_title("Filtered left/right data")
-    # scatter_plot(0, 0, ax=ax, **style)
-    # scatter_plot(right_filt_x, right_filt_y, ax=ax, **style)
+    # plot_add_create(0, 0, ax=ax, **style)
+    # plot_add_create(right_filt_x, right_filt_y, ax=ax, **style)
 
     return left_filt_x, left_filt_y, right_filt_x, right_filt_y
 
@@ -239,16 +239,104 @@ def find_parallel_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
 
     # plot filtered points
     style = {"ls": "", "marker": "."}
-    ax = scatter_plot(left_filt_x, left_filt_y, **style)
-    scatter_plot(0, 0, ax=ax, **style)
-    scatter_plot(right_filt_x, right_filt_y, ax=ax, **style)
+    ax = plot_add_create(left_filt_x, left_filt_y, **style)
+    plot_add_create(0, 0, ax=ax, **style)
+    plot_add_create(right_filt_x, right_filt_y, ax=ax, **style)
 
     # plot fitted line
     style = {"ls": "-", "marker": ""}
-    scatter_plot(left_filt_x, left_fit_y, ax=ax, **style)
+    plot_add_create(left_filt_x, left_fit_y, ax=ax, **style)
     ax.set_title("Fitted left/right data")
-    scatter_plot(0, 0, ax=ax, **style)
-    scatter_plot(right_filt_x, right_fit_y, ax=ax, **style)
+    plot_add_create(0, 0, ax=ax, **style)
+    plot_add_create(right_filt_x, right_fit_y, ax=ax, **style)
+
+
+def dist_2D(x0, y0, x1, y1):
+    """TODO: what is dist_2D doing?
+    """
+    # logg = logging.getLogger(f"c.{__name__}.dist_2D")
+    # logg.debug(f"Start dist_2D")
+
+    return math.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2)
+
+
+def dist_line_point(l_x, l_y, l_rad, pt_x=0, pt_y=0):
+    """TODO: what is dist_line_point doing?
+    """
+    # logg = logging.getLogger(f"c.{__name__}.dist_line_point")
+    # logg.debug(f"Start dist_line_point")
+
+    # find the direction LP
+    # lp_rad = math.atan((l_y - pt_y) / (l_x - pt_x))
+    lp_rad = math.atan2(l_y - pt_y, l_x - pt_x)
+    # find the angle between line and LP
+    rel_lp_rad = l_rad - lp_rad
+    # the distance between L and P
+    lp_dist = dist_2D(l_x, l_y, pt_x, pt_y)
+    # distance from line l to P
+    dist = lp_dist * math.sin(rel_lp_rad)
+
+    # dist = abs(dist)
+
+    return dist
+
+
+def compute_hough_pt(pt_x, pt_y, bins, th_values, r_stride, r_min_dist, r_max_dist):
+    """TODO: what is compute_hough doing?
+    """
+    # logg = logging.getLogger(f"c.{__name__}.compute_hough")
+    # logg.debug(f"Start compute_hough")
+
+    dist_all = np.zeros_like(th_values)
+
+    # for each theta value
+    for i_th, th in enumerate(th_values):
+        # find the distance of this line from the origin
+        dist_all[i_th] = dist_line_point(pt_x, pt_y, th)
+
+    return dist_all
+
+
+def find_parallel_hough(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
+    """TODO: what is find_parallel_hough doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.find_parallel_hough")
+    logg.debug(f"Start find_parallel_hough")
+
+    # r dimension of the bins
+    r_stride = 0.01
+    r_min_dist = 0.1
+    r_max_dist = 0.6
+    r_bin_num = math.floor((r_max_dist - r_min_dist) / r_stride)
+
+    # number of bins in the [0, 180) interval
+    th_bin_num = 180
+    th_values = np.linspace(0, math.pi, th_bin_num, endpoint=False)
+
+    # keep track of where we see the lines
+    bins = np.zeros((th_bin_num, r_bin_num), dtype=np.uint16)
+
+    # setup plot
+    fig, ax = plt.subplots(1, 2)
+    fig.set_size_inches((16, 8))
+    ax_bins = ax[0]
+    ax_points = ax[1]
+    style_bins = {"ls": "-", "marker": "", "color": "y"}
+    style_points = {"ls": "", "marker": ".", "color": "r"}
+    style_points_all = {"ls": "", "marker": ".", "color": "k"}
+    ax_points.plot(left_filt_x, left_filt_y, **style_points_all)
+    ax_points.plot(right_filt_x, right_filt_y, **style_points_all)
+
+    # for i in [0, 10, 20, 30]:
+    # for i in range(0, left_filt_x.shape[0], 10):
+    for i in range(left_filt_x.shape[0]):
+        pt_x = left_filt_x[i]
+        pt_y = left_filt_y[i]
+        dist_all = compute_hough_pt(
+            pt_x, pt_y, bins, th_values, r_stride, r_min_dist, r_max_dist
+        )
+        ax_bins.plot(th_values, dist_all, **style_bins)
+        ax_points.plot(pt_x, pt_y, **style_points)
 
 
 def run_analyze_laser_data(args):
@@ -286,7 +374,8 @@ def run_analyze_laser_data(args):
         sector_wid, ranges, angles_rad, range_min, range_max
     )
 
-    find_parallel_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y)
+    # find_parallel_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y)
+    find_parallel_hough(left_filt_x, left_filt_y, right_filt_x, right_filt_y)
 
     t_analyze_end = timer()
     logg.debug(f"Analyzing took {t_analyze_end-t_analyze_start} seconds")
