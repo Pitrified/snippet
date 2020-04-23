@@ -86,7 +86,7 @@ def setup_env():
     return args
 
 
-def scatter_plot(x, y, show=True, ax=None, **kwargs):
+def scatter_plot(x, y, show=False, ax=None, **kwargs):
     """TODO: what is scatter_plot doing?
     """
     logg = logging.getLogger(f"c.{__name__}.scatter_plot")
@@ -130,6 +130,11 @@ def dump():
     # left_max = np.max(left_ranges)
     # left_min = np.min(left_ranges)
     # logg.debug(f"left_mean: {left_mean} left_max: {left_max} left_min: {left_min}")
+    # turn them to cartesian
+    # left_x, left_y = polar_to_cartesian(left_ranges, left_angles_rad)
+    # left_x, left_y = polar_to_cartesian(
+    #     left_ranges, left_angles_rad, odom_robot_yaw, *odom_robot_pose
+    # )
 
     # right_angles_deg = right_angles_rad * 180 / math.pi
     # right_pairs = np.vstack((right_ranges, right_angles_deg)).transpose()
@@ -139,45 +144,62 @@ def dump():
     # logg.debug(f"right_mean: {right_mean} max: {right_max} min: {right_min}")
     # logg.debug(f"right_pairs: shape {right_pairs.shape}\n{right_pairs}")
     # logg.debug(f"right_x: shape {right_x.shape}\n{right_x}")
+    # turn them to cartesian
+    # right_x, right_y = polar_to_cartesian(
+    #     right_ranges, right_angles_rad, odom_robot_yaw, *odom_robot_pose
+    # )
+
+    # plot non filtered values
+    # style = {"ls": "", "marker": "."}
+    # style = {"ls": "-", "marker": "."}
+    # ax = scatter_plot(left_x, left_y, show=False, **style)
+    # scatter_plot(*odom_robot_pose, ax=ax, show=False, **style)
+    # scatter_plot(right_x, right_y, ax=ax, show=False, **style)
+
+    # scatter_plot(*odom_robot_pose, ax=ax, show=False, **style)
 
 
-def run_analyze_laser_data(args):
-    """TODO: What is analyze_laser_data doing?
+def slice_data(center, sector_wid, *data):
+    """TODO: what is slice_data doing?
     """
-    logg = logging.getLogger(f"c.{__name__}.run_analyze_laser_data")
-    logg.debug(f"Starting run_analyze_laser_data")
+    logg = logging.getLogger(f"c.{__name__}.slice_data")
+    logg.debug(f"Start slice_data")
+
+    slice_ = slice(center - sector_wid, center + sector_wid)
+    logg.debug(f"slice_: {slice_}")
+    sliced_data = []
+    for arr in data:
+        sliced_data.append(arr[slice_])
+    return sliced_data
+
+
+def load_data(data_file_name):
+    """TODO: what is load_data doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.load_data")
+    logg.debug(f"Start load_data")
 
     # load the data
     main_dir = Path(__file__).resolve().parent
     # data_file = main_dir / "laser_data" / "laser_data_straight.txt"
-    data_file = main_dir / "laser_data" / "laser_data_16707.txt"
+    data_file = main_dir / "laser_data" / data_file_name
     with data_file.open() as fp:
         data = json.load(fp)
     logg.debug(f"data.keys(): {data.keys()}")
+    return data
 
-    tot_ray_number = data["tot_ray_number"]
-    logg.debug(f"tot_ray_number: {tot_ray_number}")
 
-    ranges = data["ranges"]
-    range_min = data["range_min"]
-    range_max = data["range_max"]
-    scan_angles = data["scan_angles"]
-    odom_robot_pose = data["odom_robot_pose"]
-    odom_robot_yaw = data["odom_robot_yaw"]
-
-    width = 50
+def extract_filt_lr(sector_wid, ranges, angles_rad, range_min, range_max):
+    """TODO: what is extract_filt_lr doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.extract_filt_lr")
+    logg.debug(f"Start extract_filt_lr")
 
     # get left values
     left_center = 300
-    left_slice = slice(left_center - width, left_center + width)
-    left_ranges = np.array(ranges[left_slice])
-    left_angles_rad = np.array(scan_angles[left_slice])
-
-    # turn them to cartesian
-    # left_x, left_y = polar_to_cartesian(left_ranges, left_angles_rad)
-    left_x, left_y = polar_to_cartesian(
-        left_ranges, left_angles_rad, odom_robot_yaw, *odom_robot_pose
-    )
+    left_slice = slice(left_center - sector_wid, left_center + sector_wid)
+    left_ranges = ranges[left_slice]
+    left_angles_rad = angles_rad[left_slice]
 
     # filter out overflow values
     left_condition = np.where(
@@ -188,19 +210,16 @@ def run_analyze_laser_data(args):
 
     left_filt_x, left_filt_y = polar_to_cartesian(
         left_ranges_filt, left_angles_rad_filt
-        # , odom_robot_yaw, *odom_robot_pose
     )
+    # , odom_robot_yaw, *odom_robot_pose
+    # we DO NOT rotate and translate the data, we work in the base_footprint frame to
+    # have better coefficient of the line, then we will translate the model found
 
     # get right values
     right_center = 100
-    right_slice = slice(right_center - width, right_center + width)
-    right_ranges = np.array(ranges[right_slice])
-    right_angles_rad = np.array(scan_angles[right_slice])
-
-    # turn them to cartesian
-    right_x, right_y = polar_to_cartesian(
-        right_ranges, right_angles_rad, odom_robot_yaw, *odom_robot_pose
-    )
+    right_slice = slice(right_center - sector_wid, right_center + sector_wid)
+    right_ranges = ranges[right_slice]
+    right_angles_rad = angles_rad[right_slice]
 
     # filter out overflow values
     right_condition = np.where(
@@ -211,20 +230,44 @@ def run_analyze_laser_data(args):
 
     right_filt_x, right_filt_y = polar_to_cartesian(
         right_ranges_filt, right_angles_rad_filt
-        # , odom_robot_yaw, *odom_robot_pose
     )
 
-    # plot non filtered values
-    # style = {"ls": "", "marker": "."}
-    # style = {"ls": "-", "marker": "."}
-    # ax = scatter_plot(left_x, left_y, show=False, **style)
-    # scatter_plot(*odom_robot_pose, ax=ax, show=False, **style)
-    # scatter_plot(right_x, right_y, ax=ax, show=False, **style)
-
     style = {"ls": "-", "marker": "."}
-    ax = scatter_plot(left_filt_x, left_filt_y, show=False, **style)
-    # scatter_plot(*odom_robot_pose, ax=ax, show=False, **style)
+    ax = scatter_plot(left_filt_x, left_filt_y, **style)
+    ax.set_title("Filtered left/right data")
+    scatter_plot(0, 0, ax=ax, **style)
     scatter_plot(right_filt_x, right_filt_y, ax=ax, **style)
+
+    return left_filt_x, left_filt_y, right_filt_x, right_filt_y
+
+
+def run_analyze_laser_data(args):
+    """TODO: What is analyze_laser_data doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.run_analyze_laser_data")
+    logg.debug(f"Starting run_analyze_laser_data")
+
+    data_file_name = "laser_data_16707.txt"
+    data = load_data(data_file_name)
+
+    tot_ray_number = data["tot_ray_number"]
+    logg.debug(f"tot_ray_number: {tot_ray_number}")
+
+    ranges = np.array(data["ranges"])
+    range_min = data["range_min"]
+    range_max = data["range_max"]
+    angles_rad = np.array(data["scan_angles"])
+    # odom_robot_pose = data["odom_robot_pose"]
+    # odom_robot_yaw = data["odom_robot_yaw"]
+
+    # how many rays to consider each side, around the center of the beam
+    sector_wid = 50
+
+    left_filt_x, left_filt_y, right_filt_x, right_filt_y = extract_filt_lr(
+        sector_wid, ranges, angles_rad, range_min, range_max
+    )
+
+    plt.show()
 
 
 if __name__ == "__main__":
