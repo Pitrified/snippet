@@ -1,10 +1,10 @@
 import argparse
 import json
 import logging
-
-# import math
+import math
 import numpy as np
 import matplotlib.pyplot as plt
+
 from pathlib import Path
 from random import seed as rseed
 from timeit import default_timer as timer
@@ -89,8 +89,8 @@ def setup_env():
 def scatter_plot(x, y, show=False, ax=None, **kwargs):
     """TODO: what is scatter_plot doing?
     """
-    logg = logging.getLogger(f"c.{__name__}.scatter_plot")
-    logg.debug(f"Start scatter_plot")
+    # logg = logging.getLogger(f"c.{__name__}.scatter_plot")
+    # logg.debug(f"Start scatter_plot")
 
     if ax is None:
         fig, ax = plt.subplots(1, 1)
@@ -103,12 +103,24 @@ def scatter_plot(x, y, show=False, ax=None, **kwargs):
     return ax
 
 
+def slope2deg(slope, direction=1):
+    """Convert the slope of a line to an angle in degrees
+    """
+    return math.degrees(np.arctan2(slope, direction))
+
+
+def slope2rad(slope, direction=1):
+    """Convert the slope of a line to an angle in radians
+    """
+    return np.arctan2(slope, direction)
+
+
 def polar_to_cartesian(ranges, angles_rad, dyaw=0, dx=0, dy=0):
     """TODO: what is polar_to_cartesian doing?
     """
     logg = logging.getLogger(f"c.{__name__}.polar_to_cartesian")
-    logg.debug(f"Start polar_to_cartesian")
-    logg.debug(f"dyaw: {dyaw} dx: {dx} dy: {dy}")
+    # logg.debug(f"Start polar_to_cartesian")
+    logg.debug(f"Polar to cartesian dyaw: {dyaw} dx: {dx} dy: {dy}")
 
     cosens = np.cos(angles_rad + dyaw)
     sins = np.sin(angles_rad + dyaw)
@@ -179,6 +191,8 @@ def load_data(data_file_name):
     logg = logging.getLogger(f"c.{__name__}.load_data")
     logg.debug(f"Start load_data")
 
+    t_load_start = timer()
+
     # load the data
     main_dir = Path(__file__).resolve().parent
     # data_file = main_dir / "laser_data" / "laser_data_straight.txt"
@@ -186,6 +200,10 @@ def load_data(data_file_name):
     with data_file.open() as fp:
         data = json.load(fp)
     logg.debug(f"data.keys(): {data.keys()}")
+
+    t_load_end = timer()
+    logg.debug(f"Loading took {t_load_end-t_load_start} seconds")
+
     return data
 
 
@@ -232,13 +250,45 @@ def extract_filt_lr(sector_wid, ranges, angles_rad, range_min, range_max):
         right_ranges_filt, right_angles_rad_filt
     )
 
-    style = {"ls": "-", "marker": "."}
+    # style = {"ls": "-", "marker": "."}
+    # ax = scatter_plot(left_filt_x, left_filt_y, **style)
+    # ax.set_title("Filtered left/right data")
+    # scatter_plot(0, 0, ax=ax, **style)
+    # scatter_plot(right_filt_x, right_filt_y, ax=ax, **style)
+
+    return left_filt_x, left_filt_y, right_filt_x, right_filt_y
+
+
+def find_parallel_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
+    """TODO: what is find_parallel_lines doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.find_parallel_lines")
+    logg.debug(f"Start find_parallel_lines")
+
+    left_coeff = np.polyfit(left_filt_x, left_filt_y, 1)
+    left_fit_y = np.polyval(left_coeff, left_filt_x)
+    right_coeff = np.polyfit(right_filt_x, right_filt_y, 1)
+    right_fit_y = np.polyval(right_coeff, right_filt_x)
+    logg.debug(f"left_coeff: {left_coeff} right_coeff {right_coeff}")
+    left_yaw_deg = slope2deg(left_coeff[0])
+    right_yaw_deg = slope2deg(right_coeff[0])
+    logg.debug(f"left_yaw_deg: {left_yaw_deg} right_yaw_deg {right_yaw_deg} degrees")
+    left_yaw_rad = slope2rad(left_coeff[0])
+    right_yaw_rad = slope2rad(right_coeff[0])
+    logg.debug(f"left_yaw_rad: {left_yaw_rad} right_yaw_rad {right_yaw_rad} radians")
+
+    # plot filtered points
+    style = {"ls": "", "marker": "."}
     ax = scatter_plot(left_filt_x, left_filt_y, **style)
-    ax.set_title("Filtered left/right data")
     scatter_plot(0, 0, ax=ax, **style)
     scatter_plot(right_filt_x, right_filt_y, ax=ax, **style)
 
-    return left_filt_x, left_filt_y, right_filt_x, right_filt_y
+    # plot fitted line
+    style = {"ls": "-", "marker": ""}
+    scatter_plot(left_filt_x, left_fit_y, ax=ax, **style)
+    ax.set_title("Fitted left/right data")
+    scatter_plot(0, 0, ax=ax, **style)
+    scatter_plot(right_filt_x, right_fit_y, ax=ax, **style)
 
 
 def run_analyze_laser_data(args):
@@ -263,9 +313,16 @@ def run_analyze_laser_data(args):
     # how many rays to consider each side, around the center of the beam
     sector_wid = 50
 
+    t_analyze_start = timer()
+
     left_filt_x, left_filt_y, right_filt_x, right_filt_y = extract_filt_lr(
         sector_wid, ranges, angles_rad, range_min, range_max
     )
+
+    find_parallel_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y)
+
+    t_analyze_end = timer()
+    logg.debug(f"Analyzing took {t_analyze_end-t_analyze_start} seconds")
 
     plt.show()
 
