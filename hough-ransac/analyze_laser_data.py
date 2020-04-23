@@ -1,7 +1,8 @@
 import argparse
 import json
 import logging
-import math
+
+# import math
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
@@ -107,6 +108,7 @@ def polar_to_cartesian(ranges, angles_rad, dyaw=0, dx=0, dy=0):
     """
     logg = logging.getLogger(f"c.{__name__}.polar_to_cartesian")
     logg.debug(f"Start polar_to_cartesian")
+    logg.debug(f"dyaw: {dyaw} dx: {dx} dy: {dy}")
 
     cosens = np.cos(angles_rad + dyaw)
     sins = np.sin(angles_rad + dyaw)
@@ -117,6 +119,28 @@ def polar_to_cartesian(ranges, angles_rad, dyaw=0, dx=0, dy=0):
     return x, y
 
 
+def dump():
+    """
+    """
+    # left_angles_deg = left_angles_rad * 180 / math.pi
+    # left_pairs = np.vstack((left_ranges, left_angles_deg)).transpose()
+    # logg.debug(f"left_pairs: shape {left_pairs.shape}\n{left_pairs}")
+    # logg.debug(f"left_x: shape {left_x.shape}\n{left_x}")
+    # left_mean = np.mean(left_ranges)
+    # left_max = np.max(left_ranges)
+    # left_min = np.min(left_ranges)
+    # logg.debug(f"left_mean: {left_mean} left_max: {left_max} left_min: {left_min}")
+
+    # right_angles_deg = right_angles_rad * 180 / math.pi
+    # right_pairs = np.vstack((right_ranges, right_angles_deg)).transpose()
+    # right_mean = np.mean(right_ranges)
+    # right_max = np.max(right_ranges)
+    # right_min = np.min(right_ranges)
+    # logg.debug(f"right_mean: {right_mean} max: {right_max} min: {right_min}")
+    # logg.debug(f"right_pairs: shape {right_pairs.shape}\n{right_pairs}")
+    # logg.debug(f"right_x: shape {right_x.shape}\n{right_x}")
+
+
 def run_analyze_laser_data(args):
     """TODO: What is analyze_laser_data doing?
     """
@@ -125,7 +149,8 @@ def run_analyze_laser_data(args):
 
     # load the data
     main_dir = Path(__file__).resolve().parent
-    data_file = main_dir / "laser_data" / "laser_data_straight.txt"
+    # data_file = main_dir / "laser_data" / "laser_data_straight.txt"
+    data_file = main_dir / "laser_data" / "laser_data_16707.txt"
     with data_file.open() as fp:
         data = json.load(fp)
     logg.debug(f"data.keys(): {data.keys()}")
@@ -134,46 +159,72 @@ def run_analyze_laser_data(args):
     logg.debug(f"tot_ray_number: {tot_ray_number}")
 
     ranges = data["ranges"]
+    range_min = data["range_min"]
+    range_max = data["range_max"]
     scan_angles = data["scan_angles"]
+    odom_robot_pose = data["odom_robot_pose"]
+    odom_robot_yaw = data["odom_robot_yaw"]
 
     width = 50
+
+    # get left values
     left_center = 300
     left_slice = slice(left_center - width, left_center + width)
     left_ranges = np.array(ranges[left_slice])
     left_angles_rad = np.array(scan_angles[left_slice])
-    left_angles_deg = left_angles_rad * 180 / math.pi
-    left_pairs = np.vstack((left_ranges, left_angles_deg)).transpose()
 
-    left_mean = np.mean(left_ranges)
-    left_max = np.max(left_ranges)
-    left_min = np.min(left_ranges)
-    logg.debug(f"left_mean: {left_mean} left_max: {left_max} left_min: {left_min}")
-    logg.debug(f"left_pairs: shape {left_pairs.shape}\n{left_pairs}")
+    # turn them to cartesian
+    # left_x, left_y = polar_to_cartesian(left_ranges, left_angles_rad)
+    left_x, left_y = polar_to_cartesian(
+        left_ranges, left_angles_rad, odom_robot_yaw, *odom_robot_pose
+    )
 
-    left_x, left_y = polar_to_cartesian(left_ranges, left_angles_rad)
-    logg.debug(f"left_x: shape {left_x.shape}\n{left_x}")
+    # filter out overflow values
+    left_condition = np.where(
+        (range_min < left_ranges) & (left_ranges < range_max), True, False
+    )
+    left_ranges_filt = np.extract(left_condition, left_ranges)
+    left_angles_rad_filt = np.extract(left_condition, left_angles_rad)
 
+    left_filt_x, left_filt_y = polar_to_cartesian(
+        left_ranges_filt, left_angles_rad_filt
+        # , odom_robot_yaw, *odom_robot_pose
+    )
+
+    # get right values
     right_center = 100
     right_slice = slice(right_center - width, right_center + width)
     right_ranges = np.array(ranges[right_slice])
     right_angles_rad = np.array(scan_angles[right_slice])
-    right_angles_deg = right_angles_rad * 180 / math.pi
-    right_pairs = np.vstack((right_ranges, right_angles_deg)).transpose()
 
-    right_mean = np.mean(right_ranges)
-    right_max = np.max(right_ranges)
-    right_min = np.min(right_ranges)
-    logg.debug(f"right_mean: {right_mean} max: {right_max} min: {right_min}")
-    logg.debug(f"right_pairs: shape {right_pairs.shape}\n{right_pairs}")
+    # turn them to cartesian
+    right_x, right_y = polar_to_cartesian(
+        right_ranges, right_angles_rad, odom_robot_yaw, *odom_robot_pose
+    )
 
-    right_x, right_y = polar_to_cartesian(right_ranges, right_angles_rad)
-    logg.debug(f"right_x: shape {right_x.shape}\n{right_x}")
+    # filter out overflow values
+    right_condition = np.where(
+        (range_min < right_ranges) & (right_ranges < range_max), True, False
+    )
+    right_ranges_filt = np.extract(right_condition, right_ranges)
+    right_angles_rad_filt = np.extract(right_condition, right_angles_rad)
 
+    right_filt_x, right_filt_y = polar_to_cartesian(
+        right_ranges_filt, right_angles_rad_filt
+        # , odom_robot_yaw, *odom_robot_pose
+    )
+
+    # plot non filtered values
     # style = {"ls": "", "marker": "."}
+    # style = {"ls": "-", "marker": "."}
+    # ax = scatter_plot(left_x, left_y, show=False, **style)
+    # scatter_plot(*odom_robot_pose, ax=ax, show=False, **style)
+    # scatter_plot(right_x, right_y, ax=ax, show=False, **style)
+
     style = {"ls": "-", "marker": "."}
-    ax = scatter_plot(left_x, left_y, show=False, **style)
-    ax = scatter_plot(0, 0, ax=ax, show=False, **style)
-    scatter_plot(right_x, right_y, ax=ax, **style)
+    ax = scatter_plot(left_filt_x, left_filt_y, show=False, **style)
+    # scatter_plot(*odom_robot_pose, ax=ax, show=False, **style)
+    scatter_plot(right_filt_x, right_filt_y, ax=ax, **style)
 
 
 if __name__ == "__main__":
