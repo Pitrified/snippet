@@ -87,7 +87,7 @@ def setup_env():
 
 
 def plot_add_create(x, y, show=False, ax=None, **kwargs):
-    """TODO: what is plot_add_create doing?
+    """Either add the data to the ax, or create and return a new one
     """
     # logg = logging.getLogger(f"c.{__name__}.plot_add_create")
     # logg.debug(f"Start plot_add_create")
@@ -116,7 +116,9 @@ def slope2rad(slope, direction=1):
 
 
 def polar_to_cartesian(ranges, angles_rad, dyaw=0, dx=0, dy=0):
-    """TODO: what is polar_to_cartesian doing?
+    """Converts points in (range, angle) polar coord to cartesian
+
+    Can translate and rotate them
     """
     logg = logging.getLogger(f"c.{__name__}.polar_to_cartesian")
     # logg.debug(f"Start polar_to_cartesian")
@@ -132,7 +134,7 @@ def polar_to_cartesian(ranges, angles_rad, dyaw=0, dx=0, dy=0):
 
 
 def slice_data(center, sector_wid, *data):
-    """TODO: what is slice_data doing?
+    """Given a center and a width, slice all the arrays passed via data around that
     """
     logg = logging.getLogger(f"c.{__name__}.slice_data")
     logg.debug(f"Start slice_data")
@@ -146,7 +148,7 @@ def slice_data(center, sector_wid, *data):
 
 
 def load_data(data_file_name):
-    """TODO: what is load_data doing?
+    """Load the data from a .json file
     """
     logg = logging.getLogger(f"c.{__name__}.load_data")
     logg.debug(f"Start load_data")
@@ -168,7 +170,7 @@ def load_data(data_file_name):
 
 
 def extract_filt_lr(sector_wid, ranges, angles_rad, range_min, range_max):
-    """TODO: what is extract_filt_lr doing?
+    """Extract and filter the LaserScan data
     """
     logg = logging.getLogger(f"c.{__name__}.extract_filt_lr")
     logg.debug(f"Start extract_filt_lr")
@@ -219,11 +221,11 @@ def extract_filt_lr(sector_wid, ranges, angles_rad, range_min, range_max):
     return left_filt_x, left_filt_y, right_filt_x, right_filt_y
 
 
-def find_parallel_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
-    """TODO: what is find_parallel_lines doing?
+def fit_parallel_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
+    """Fit two lines separately in the data
     """
-    logg = logging.getLogger(f"c.{__name__}.find_parallel_lines")
-    logg.debug(f"Start find_parallel_lines")
+    logg = logging.getLogger(f"c.{__name__}.fit_parallel_lines")
+    logg.debug(f"Start fit_parallel_lines")
 
     left_coeff = np.polyfit(left_filt_x, left_filt_y, 1)
     left_fit_y = np.polyval(left_coeff, left_filt_x)
@@ -252,7 +254,7 @@ def find_parallel_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
 
 
 def dist_2D(x0, y0, x1, y1):
-    """TODO: what is dist_2D doing?
+    """Computes the 2D distance between two points
     """
     # logg = logging.getLogger(f"c.{__name__}.dist_2D")
     # logg.debug(f"Start dist_2D")
@@ -260,19 +262,19 @@ def dist_2D(x0, y0, x1, y1):
     return math.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2)
 
 
-def dist_line_point(l_x, l_y, l_rad, pt_x=0, pt_y=0):
-    """TODO: what is dist_line_point doing?
+def dist_line_point(l_x, l_y, l_rad, orig_x=0, orig_y=0):
+    """Computes the distance between a line and a point
     """
     # logg = logging.getLogger(f"c.{__name__}.dist_line_point")
     # logg.debug(f"Start dist_line_point")
 
     # find the direction LP
-    # lp_rad = math.atan((l_y - pt_y) / (l_x - pt_x))
-    lp_rad = math.atan2(l_y - pt_y, l_x - pt_x)
+    # lp_rad = math.atan((l_y - orig_y) / (l_x - orig_x))
+    lp_rad = math.atan2(l_y - orig_y, l_x - orig_x)
     # find the angle between line and LP
     rel_lp_rad = l_rad - lp_rad
     # the distance between L and P
-    lp_dist = dist_2D(l_x, l_y, pt_x, pt_y)
+    lp_dist = dist_2D(l_x, l_y, orig_x, orig_y)
     # distance from line l to P
     dist = lp_dist * math.sin(rel_lp_rad)
 
@@ -282,26 +284,112 @@ def dist_line_point(l_x, l_y, l_rad, pt_x=0, pt_y=0):
 
 
 def compute_hough_pt(pt_x, pt_y, bins, th_values, r_stride, r_min_dist, r_max_dist):
-    """TODO: what is compute_hough doing?
+    """For a single point, compute the distance between all the rotated lines passing
+    through it and the origin
+
+    returns an array with th_values elements
     """
     # logg = logging.getLogger(f"c.{__name__}.compute_hough")
     # logg.debug(f"Start compute_hough")
 
-    dist_all = np.zeros_like(th_values)
+    dist_all_th = np.zeros_like(th_values)
 
     # for each theta value
     for i_th, th in enumerate(th_values):
         # find the distance of this line from the origin
-        dist_all[i_th] = dist_line_point(pt_x, pt_y, th)
+        dist_all_th[i_th] = dist_line_point(pt_x, pt_y, th)
 
-    return dist_all
+    return dist_all_th
+
+
+def compute_hough_pt_mat(pt_x, pt_y, bins, th_values, r_stride, r_min_dist, r_max_dist):
+    """For a single point, compute the distance between all the rotated lines passing
+    through it and the origin, using numpy functions
+    """
+    # logg = logging.getLogger(f"c.{__name__}.compute_hough_pt_mat")
+    # logg.debug(f"Start compute_hough_pt_mat")
+
+    # the distance between L and P
+    LP_dist = dist_2D(pt_x, pt_y, 0, 0)
+    # the direction LP (P is 0,0 now)
+    LP_rad = np.arctan2(pt_y, pt_x)
+    # the angle between all lines l and LP
+    rel_LP_rad = th_values - LP_rad
+    # distance from all lines l to P
+    dist_all_th = LP_dist * np.sin(rel_LP_rad)
+
+    return dist_all_th
+
+
+def do_parallel_hough(
+    left_filt_x, left_filt_y, bins, th_values, r_stride, r_min_dist, r_max_dist,
+):
+    """For each point given, computes the distance between the rotated lines
+
+    returns a list with left_filt_x.shape[0] elements, each with th_values.shape[0] elements
+    """
+    # logg = logging.getLogger(f"c.{__name__}.do_parallel_hough")
+    # logg.debug(f"Start do_parallel_hough")
+
+    all_pt_dist_all_th = []
+
+    # for i in [0, 10, 20, 30]:
+    # for i in range(0, left_filt_x.shape[0], 10):
+    for i in range(left_filt_x.shape[0]):
+        pt_x = left_filt_x[i]
+        pt_y = left_filt_y[i]
+        # dist_all_th = compute_hough_pt(
+        #     pt_x, pt_y, bins, th_values, r_stride, r_min_dist, r_max_dist
+        # )
+        dist_all_th = compute_hough_pt_mat(
+            pt_x, pt_y, bins, th_values, r_stride, r_min_dist, r_max_dist
+        )
+        all_pt_dist_all_th.append(dist_all_th)
+
+    return all_pt_dist_all_th
+
+
+def do_parallel_hough_mat(
+    left_filt_x, left_filt_y, bins, th_values, r_stride, r_min_dist, r_max_dist,
+):
+    """For each point given, computes the distance between the rotated lines
+
+    uses np functions
+    """
+    # logg = logging.getLogger(f"c.{__name__}.do_parallel_hough_mat")
+    # logg.debug(f"Start do_parallel_hough_mat")
+
+    # logg.debug(f"th_values.shape: {th_values.shape}")
+
+    # distance from all points to the origin
+    all_LP_dist = np.sqrt(np.square(left_filt_x) + np.square(left_filt_y))
+    # logg.debug(f"all_LP_dist.shape: {all_LP_dist.shape}")
+
+    # direction from all points to origin
+    all_LP_rad = np.arctan2(left_filt_y, left_filt_x)
+    # logg.debug(f"all_LP_rad.shape: {all_LP_rad.shape}")
+
+    # use broadcasting to stretch the arrays into common shapes
+    # https://numpy.org/devdocs/user/theory.broadcasting.html#figure-4
+    all_rel_LP_rad = th_values[:, np.newaxis] - all_LP_rad
+    # logg.debug(f"all_rel_LP_rad.shape: {all_rel_LP_rad.shape}")
+
+    sin_all_rel_LP_rad = np.sin(all_rel_LP_rad)
+    # logg.debug(f"sin_all_rel_LP_rad.shape: {sin_all_rel_LP_rad.shape}")
+
+    # all_pt_dist_all_th = all_LP_dist * sin_all_rel_LP_rad
+    all_pt_dist_all_th = np.multiply(all_LP_dist, sin_all_rel_LP_rad)
+    # logg.debug(f"all_pt_dist_all_th.shape: {all_pt_dist_all_th.shape}")
+
+    # return [[0] * 180]
+    return all_pt_dist_all_th
 
 
 def find_parallel_hough(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
-    """TODO: what is find_parallel_hough doing?
+    """Setup the bins for houghlines and
     """
-    logg = logging.getLogger(f"c.{__name__}.find_parallel_hough")
-    logg.debug(f"Start find_parallel_hough")
+    # logg = logging.getLogger(f"c.{__name__}.find_parallel_hough")
+    # logg.debug(f"Start find_parallel_hough")
 
     # r dimension of the bins
     r_stride = 0.01
@@ -316,27 +404,14 @@ def find_parallel_hough(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
     # keep track of where we see the lines
     bins = np.zeros((th_bin_num, r_bin_num), dtype=np.uint16)
 
-    # setup plot
-    fig, ax = plt.subplots(1, 2)
-    fig.set_size_inches((16, 8))
-    ax_bins = ax[0]
-    ax_points = ax[1]
-    style_bins = {"ls": "-", "marker": "", "color": "y"}
-    style_points = {"ls": "", "marker": ".", "color": "r"}
-    style_points_all = {"ls": "", "marker": ".", "color": "k"}
-    ax_points.plot(left_filt_x, left_filt_y, **style_points_all)
-    ax_points.plot(right_filt_x, right_filt_y, **style_points_all)
+    # all_pt_dist_all_th = do_parallel_hough(
+    #     left_filt_x, left_filt_y, bins, th_values, r_stride, r_min_dist, r_max_dist,
+    # )
+    all_pt_dist_all_th = do_parallel_hough_mat(
+        left_filt_x, left_filt_y, bins, th_values, r_stride, r_min_dist, r_max_dist,
+    )
 
-    # for i in [0, 10, 20, 30]:
-    # for i in range(0, left_filt_x.shape[0], 10):
-    for i in range(left_filt_x.shape[0]):
-        pt_x = left_filt_x[i]
-        pt_y = left_filt_y[i]
-        dist_all = compute_hough_pt(
-            pt_x, pt_y, bins, th_values, r_stride, r_min_dist, r_max_dist
-        )
-        ax_bins.plot(th_values, dist_all, **style_bins)
-        ax_points.plot(pt_x, pt_y, **style_points)
+    return all_pt_dist_all_th, th_values
 
 
 def run_analyze_laser_data(args):
@@ -349,9 +424,9 @@ def run_analyze_laser_data(args):
     data_file_name = "laser_data_straight.txt"
     data = load_data(data_file_name)
 
+    # extract the data
     tot_ray_number = data["tot_ray_number"]
     logg.debug(f"tot_ray_number: {tot_ray_number}")
-
     ranges = np.array(data["ranges"])
     range_min = data["range_min"]
     range_max = data["range_max"]
@@ -368,17 +443,41 @@ def run_analyze_laser_data(args):
     sector_wid = math.floor(sector_wid_deg / 180 * 200)
     logg.debug(f"sector_wid: {sector_wid} degrees {sector_wid_deg}")
 
-    t_analyze_start = timer()
+    t_filt_start = timer()
 
+    # filter the data from the lasers
     left_filt_x, left_filt_y, right_filt_x, right_filt_y = extract_filt_lr(
         sector_wid, ranges, angles_rad, range_min, range_max
     )
 
-    # find_parallel_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y)
-    find_parallel_hough(left_filt_x, left_filt_y, right_filt_x, right_filt_y)
+    t_filt_end = timer()
+    logg.debug(f"Filtering took {t_filt_end-t_filt_start} seconds")
+
+    t_analyze_start = timer()
+
+    # standard fitting of two independent lines
+    # fit_parallel_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y)
+
+    all_pt_dist_all_th, th_values = find_parallel_hough(
+        left_filt_x, left_filt_y, right_filt_x, right_filt_y
+    )
 
     t_analyze_end = timer()
     logg.debug(f"Analyzing took {t_analyze_end-t_analyze_start} seconds")
+
+    # setup plot
+    fig, ax = plt.subplots(1, 2)
+    fig.set_size_inches((16, 8))
+    ax_bins = ax[0]
+    ax_points = ax[1]
+    # plot the laser dataset
+    style_points_all = {"ls": "", "marker": ".", "color": "k"}
+    ax_points.plot(left_filt_x, left_filt_y, **style_points_all)
+    ax_points.plot(right_filt_x, right_filt_y, **style_points_all)
+    # plot all the sinusoids
+    style_bins = {"ls": "-", "marker": "", "color": "y"}
+    for dist_all_th in all_pt_dist_all_th.transpose():
+        ax_bins.plot(th_values, dist_all_th, **style_bins)
 
     plt.show()
 
