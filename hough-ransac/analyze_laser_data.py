@@ -131,46 +131,6 @@ def polar_to_cartesian(ranges, angles_rad, dyaw=0, dx=0, dy=0):
     return x, y
 
 
-def dump():
-    """
-    """
-    # left_angles_deg = left_angles_rad * 180 / math.pi
-    # left_pairs = np.vstack((left_ranges, left_angles_deg)).transpose()
-    # logg.debug(f"left_pairs: shape {left_pairs.shape}\n{left_pairs}")
-    # logg.debug(f"left_x: shape {left_x.shape}\n{left_x}")
-    # left_mean = np.mean(left_ranges)
-    # left_max = np.max(left_ranges)
-    # left_min = np.min(left_ranges)
-    # logg.debug(f"left_mean: {left_mean} left_max: {left_max} left_min: {left_min}")
-    # turn them to cartesian
-    # left_x, left_y = polar_to_cartesian(left_ranges, left_angles_rad)
-    # left_x, left_y = polar_to_cartesian(
-    #     left_ranges, left_angles_rad, odom_robot_yaw, *odom_robot_pose
-    # )
-
-    # right_angles_deg = right_angles_rad * 180 / math.pi
-    # right_pairs = np.vstack((right_ranges, right_angles_deg)).transpose()
-    # right_mean = np.mean(right_ranges)
-    # right_max = np.max(right_ranges)
-    # right_min = np.min(right_ranges)
-    # logg.debug(f"right_mean: {right_mean} max: {right_max} min: {right_min}")
-    # logg.debug(f"right_pairs: shape {right_pairs.shape}\n{right_pairs}")
-    # logg.debug(f"right_x: shape {right_x.shape}\n{right_x}")
-    # turn them to cartesian
-    # right_x, right_y = polar_to_cartesian(
-    #     right_ranges, right_angles_rad, odom_robot_yaw, *odom_robot_pose
-    # )
-
-    # plot non filtered values
-    # style = {"ls": "", "marker": "."}
-    # style = {"ls": "-", "marker": "."}
-    # ax = scatter_plot(left_x, left_y, show=False, **style)
-    # scatter_plot(*odom_robot_pose, ax=ax, show=False, **style)
-    # scatter_plot(right_x, right_y, ax=ax, show=False, **style)
-
-    # scatter_plot(*odom_robot_pose, ax=ax, show=False, **style)
-
-
 def slice_data(center, sector_wid, *data):
     """TODO: what is slice_data doing?
     """
@@ -297,7 +257,8 @@ def run_analyze_laser_data(args):
     logg = logging.getLogger(f"c.{__name__}.run_analyze_laser_data")
     logg.debug(f"Starting run_analyze_laser_data")
 
-    data_file_name = "laser_data_16707.txt"
+    # data_file_name = "laser_data_16707.txt"
+    data_file_name = "laser_data_straight.txt"
     data = load_data(data_file_name)
 
     tot_ray_number = data["tot_ray_number"]
@@ -308,10 +269,16 @@ def run_analyze_laser_data(args):
     range_max = data["range_max"]
     angles_rad = np.array(data["scan_angles"])
     # odom_robot_pose = data["odom_robot_pose"]
-    # odom_robot_yaw = data["odom_robot_yaw"]
+    odom_robot_yaw = data["odom_robot_yaw"]
+    logg.debug(f"odom_robot_yaw {odom_robot_yaw} relative {odom_robot_yaw-math.pi/2}")
 
     # how many rays to consider each side, around the center of the beam
     sector_wid = 50
+
+    # set sector_wid in degrees
+    sector_wid_deg = 30
+    sector_wid = math.floor(sector_wid_deg / 180 * 200)
+    logg.debug(f"sector_wid: {sector_wid} degrees {sector_wid_deg}")
 
     t_analyze_start = timer()
 
