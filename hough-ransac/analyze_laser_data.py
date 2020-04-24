@@ -148,9 +148,9 @@ def fit_parallel_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
     # logg.debug(f"Start fit_parallel_lines")
 
     left_coeff = np.polyfit(left_filt_x, left_filt_y, 1)
-    # left_fit_y = np.polyval(left_coeff, left_filt_x)
     right_coeff = np.polyfit(right_filt_x, right_filt_y, 1)
-    # right_fit_y = np.polyval(right_coeff, right_filt_x)
+
+    # # info on coeff found
     # logg.debug(f"left_coeff: {left_coeff} right_coeff {right_coeff}")
     # left_yaw_deg = slope2deg(left_coeff[0])
     # right_yaw_deg = slope2deg(right_coeff[0])
@@ -159,18 +159,22 @@ def fit_parallel_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
     # right_yaw_rad = slope2rad(right_coeff[0])
     # logg.debug(f"left_yaw_rad: {left_yaw_rad} right_yaw_rad {right_yaw_rad} radians")
 
-    # # plot filtered points
-    # style = {"ls": "", "marker": "."}
-    # ax = plot_add_create(left_filt_x, left_filt_y, **style)
-    # plot_add_create(0, 0, ax=ax, **style)
-    # plot_add_create(right_filt_x, right_filt_y, ax=ax, **style)
-
+    # # plot results
+    # fig, ax_points = plt.subplots(1, 1)
+    # fig.set_size_inches((8, 8))
+    # ax_points.set_title("Data in x-y parameter space")
+    # ax_points.set_xlabel("x")
+    # ax_points.set_ylabel("y")
+    # # plot the laser dataset
+    # style_points_all = {"ls": "", "marker": ".", "color": "k"}
+    # ax_points.plot(left_filt_x, left_filt_y, **style_points_all)
+    # ax_points.plot(right_filt_x, right_filt_y, **style_points_all)
+    # ax_points.plot(0, 0, **style_points_all)
     # # plot fitted line
-    # style = {"ls": "-", "marker": ""}
-    # plot_add_create(left_filt_x, left_fit_y, ax=ax, **style)
-    # ax.set_title("Fitted left/right data")
-    # plot_add_create(0, 0, ax=ax, **style)
-    # plot_add_create(right_filt_x, right_fit_y, ax=ax, **style)
+    # left_fit_y = np.polyval(left_coeff, left_filt_x)
+    # right_fit_y = np.polyval(right_coeff, right_filt_x)
+    # ax_points.plot(left_filt_x, left_fit_y)
+    # ax_points.plot(right_filt_x, right_fit_y)
 
     return left_coeff, right_coeff
 
@@ -178,9 +182,6 @@ def fit_parallel_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
 def dist_line_point(l_x, l_y, l_rad, orig_x=0, orig_y=0):
     """Computes the distance between a line and a point
     """
-    # logg = logging.getLogger(f"c.{__name__}.dist_line_point")
-    # logg.debug(f"Start dist_line_point")
-
     # find the direction LP
     # lp_rad = math.atan((l_y - orig_y) / (l_x - orig_x))
     lp_rad = math.atan2(l_y - orig_y, l_x - orig_x)
@@ -189,9 +190,16 @@ def dist_line_point(l_x, l_y, l_rad, orig_x=0, orig_y=0):
     # the distance between L and P
     lp_dist = dist_2D(l_x, l_y, orig_x, orig_y)
     # distance from line l to P
-    dist = lp_dist * math.sin(rel_lp_rad)
+    dist = lp_dist * math.cos(rel_lp_rad)
 
-    # dist = abs(dist)
+    logg = logging.getLogger(f"c.{__name__}.dist_line_point")
+    # recap = f"lp_rad: {lp_rad:.6f}"
+    recap = f"lp_rad: {math.degrees(lp_rad):.6f}"
+    # recap += f" rel_lp_rad {rel_lp_rad:.6f}"
+    recap += f" rel_lp_rad: {math.degrees(rel_lp_rad):.6f}"
+    recap += f" lp_dist {lp_dist:.6f}"
+    recap += f" dist {dist:.6f}"
+    logg.debug(recap)
 
     return dist
 
@@ -499,12 +507,13 @@ def run_analyze_laser_data(args):
     # setup plot
     fig, ax = plt.subplots(1, 2)
     fig.set_size_inches((16, 8))
-    ax_bins = ax[0]
-    ax_points = ax[1]
-    # plot the laser dataset
-    style_points_all = {"ls": "", "marker": ".", "color": "k"}
-    ax_points.plot(left_filt_x, left_filt_y, **style_points_all)
-    ax_points.plot(right_filt_x, right_filt_y, **style_points_all)
+    ax_points = ax[0]
+    ax_bins = ax[1]
+
+    # setup ax_bins
+    ax_bins.set_title("Data in r-theta parameter space")
+    ax_bins.set_xlabel("theta")
+    ax_bins.set_ylabel("r")
     # plot all the sinusoids
     style_int = {"ls": "", "marker": ".", "color": "c"}
     for dist_all_th in int_all_pt_dist_all_th:
@@ -513,12 +522,19 @@ def run_analyze_laser_data(args):
     for dist_all_th in all_pt_dist_all_th:
         ax_bins.plot(th_values, dist_all_th, **style_sin)
 
+    # setup ax_points
+    ax_points.set_title("Data in x-y parameter space")
+    ax_points.set_xlabel("x")
+    ax_points.set_ylabel("y")
+    # plot the laser dataset
+    style_points_all = {"ls": "", "marker": ".", "color": "k"}
+    ax_points.plot(left_filt_x, left_filt_y, **style_points_all)
+    ax_points.plot(right_filt_x, right_filt_y, **style_points_all)
     # plot the hough line
     line_coeff = rth2ab(best_r, best_th)
     line_y = np.polyval(line_coeff, left_filt_x)
     style_hough = {"ls": "-", "marker": "", "color": "r"}
     ax_points.plot(left_filt_x, line_y, **style_hough)
-
     # plot the fit line
     left_fit_y = np.polyval(left_coeff, left_filt_x)
     style_fit = {"ls": "-", "marker": "", "color": "b"}
