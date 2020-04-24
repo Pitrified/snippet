@@ -1,7 +1,6 @@
 import logging
 import math
 import numpy as np
-import matplotlib.pyplot as plt
 
 from utils import dist_2D
 
@@ -17,7 +16,7 @@ class HoughParallel:
         r_max_dist,
         th_bin_num,
     ):
-        """TODO: what is __init__ doing?
+        """Setup the analyzer
         """
         logg = logging.getLogger(f"c.{__name__}.__init__")
         logg.debug(f"Start __init__")
@@ -41,13 +40,26 @@ class HoughParallel:
         # precompute all the shifts of length corridor_width
         self.shift_val_x = np.cos(self.th_values) * self.corridor_width
         self.shift_val_y = np.sin(self.th_values) * self.corridor_width
-        # self.visual_test_shift()
 
     def find_parallel_lines_mat(self):
-        """TODO: what is find_parallel_lines_mat doing?
+        """Runs the algorithm on the current values
         """
-        logg = logging.getLogger(f"c.{__name__}.find_parallel_lines_mat")
+        # logg = logging.getLogger(f"c.{__name__}.find_parallel_lines_mat")
         # logg.debug(f"Start find_parallel_lines_mat")
+
+        self.compute_all_dist_all_th_mat()
+
+        self.fill_bins()
+
+        self.find_best_params()
+
+        return self.best_th, self.best_r
+
+    def compute_all_dist_all_th_mat(self):
+        """Computes the distances for all points and all rotations
+        """
+        # logg = logging.getLogger(f"c.{__name__}.compute_all_dist_all_th_mat")
+        # logg.debug(f"Start compute_all_dist_all_th_mat")
 
         # distance from all points to the origin
         all_PL_dist = np.sqrt(np.square(self.data_x) + np.square(self.data_y))
@@ -61,8 +73,11 @@ class HoughParallel:
 
         cos_all_rel_PL_rad = np.cos(all_rel_PL_rad)
 
+        # distances when considering the point on the left line
         self.all_dist_all_th_l = np.multiply(all_PL_dist, cos_all_rel_PL_rad)
         self.all_dist_all_th_l = self.all_dist_all_th_l.transpose()
+
+        # the distances when considering the point on the right are reduced by corridor width
         self.all_dist_all_th_r = self.all_dist_all_th_l - self.corridor_width
         # logg.debug(f"self.all_dist_all_th_l.shape: {self.all_dist_all_th_l.shape}")
         self.all_dist_all_th = np.vstack(
@@ -70,15 +85,21 @@ class HoughParallel:
         )
         # logg.debug(f"self.all_dist_all_th.shape: {self.all_dist_all_th.shape}")
 
+    def fill_bins(self):
+        """Count the lines found
+        """
+        logg = logging.getLogger(f"c.{__name__}.fill_bins")
+        logg.debug(f"Start fill_bins")
+
         # quantize the dist values along r_stride grid
         self.quant_all_dist_all_th = self.all_dist_all_th / self.r_stride
         self.int_all_dist_all_th = np.rint(self.quant_all_dist_all_th).astype(np.int16)
 
-        r_min = np.min(self.int_all_dist_all_th)
-        r_max = np.max(self.int_all_dist_all_th)
-        r_bin_num = r_max - r_min + 1
-        # logg.debug(f"r_min: {r_min} r_max {r_max} r_bin_num {r_bin_num}")
-        self.bins = np.zeros((self.th_bin_num, r_bin_num), dtype=np.uint16)
+        self.r_min = np.min(self.int_all_dist_all_th)
+        self.r_max = np.max(self.int_all_dist_all_th)
+        self.r_bin_num = self.r_max - self.r_min + 1
+        # logg.debug(f"r_min: {self.r_min} r_max {self.r_max} r_bin_num {self.r_bin_num}")
+        self.bins = np.zeros((self.th_bin_num, self.r_bin_num), dtype=np.uint16)
         # bin 0 is associated with value r_min, 1 with r_min + r_stride and so on
 
         # transpose the data to easily access by theta
@@ -87,12 +108,18 @@ class HoughParallel:
             # get unique values and their counts
             uniques, counts = np.unique(all_dist_th, return_counts=True)
             for i_u, u in enumerate(uniques):
-                i_r = u - r_min
+                i_r = u - self.r_min
                 self.bins[i_th][i_r] += counts[i_u]
 
             # recap = f"all_dist_th.shape: {all_dist_th.shape}"
             # recap += f" u.shape {u.shape}"
             # logg.debug(recap)
+
+    def find_best_params(self):
+        """Finds the most frequent line
+        """
+        logg = logging.getLogger(f"c.{__name__}.find_best_params")
+        logg.debug(f"Start find_best_params")
 
         # find the max
         max_bin = np.max(self.bins)
@@ -104,19 +131,16 @@ class HoughParallel:
         logg.debug(recap)
 
         # go from index to value
-        max_val = ind_argmax[1] + r_min
-        best_r = max_val * self.r_stride
-        best_th = self.th_values[ind_argmax[0]]
+        max_val = ind_argmax[1] + self.r_min
+        self.best_r = max_val * self.r_stride
+        self.best_th = self.th_values[ind_argmax[0]]
 
-        return best_th, best_r
-
-    def find_parallel_lines(self):
-        """TODO: what is find_parallel_lines doing?
+    def compute_all_dist_all_th(self):
+        """Computes the distances for all points and all rotations
         """
-        logg = logging.getLogger(f"c.{__name__}.find_parallel_lines")
-        logg.debug(f"Start find_parallel_lines")
+        logg = logging.getLogger(f"c.{__name__}.compute_all_dist_all_th")
+        logg.debug(f"Start compute_all_dist_all_th")
 
-        # self.all_dist_all_th = []
         self.all_dist_all_th_l = []
         self.all_dist_all_th_r = []
 
@@ -125,12 +149,10 @@ class HoughParallel:
             self.all_dist_all_th_l.append(dist_all_th_left)
             self.all_dist_all_th_r.append(dist_all_th_right)
 
-        # self.visual_test_all_dist_all_th()
-
         return 0, 0
 
     def compute_dist_all_th(self, i_line):
-        """TODO: what is compute_dist_all_th doing?
+        """Computes the distances for a single point and all rotations
         """
         logg = logging.getLogger(f"c.{__name__}.compute_dist_all_th")
         logg.setLevel("INFO")
@@ -151,11 +173,9 @@ class HoughParallel:
             # find the distance of this line from the origin
             dist_all_th_left[i_th] = self.dist_line_point(line_x, line_y, th)
 
-            # i_sh = self.index_wrap(i_th + self.th_bin_num_half, self.th_bin_num)
-            i_sh = i_th
-            s_x = self.shift_val_x[i_sh]
-            s_y = self.shift_val_y[i_sh]
-            logg.debug(f"\ti_sh: {i_sh} s_x {s_x:.6f} s_y {s_y:.6f}")
+            s_x = self.shift_val_x[i_th]
+            s_y = self.shift_val_y[i_th]
+            logg.debug(f"\ts_x {s_x:.6f} s_y {s_y:.6f}")
             # dist_all_th_right[i_th] = self.dist_line_point(line_x, line_y, th, s_x, s_y)
             dist_all_th_right[i_th] = self.dist_line_point(
                 line_x - s_x, line_y - s_y, th
@@ -219,92 +239,3 @@ class HoughParallel:
         logg.debug(recap)
 
         return dist
-
-    def index_wrap(self, index, vec_length):
-        """TODO: what is index_wrap doing?
-        """
-        # logg = logging.getLogger(f"c.{__name__}.index_wrap")
-        # logg.debug(f"Start index_wrap")
-        if index < 0:
-            return index + vec_length
-        if index >= vec_length:
-            return index - vec_length
-        return index
-
-    def visual_test_shift(self):
-        """TODO: what is visual_test_shift doing?
-        """
-        logg = logging.getLogger(f"c.{__name__}.visual_test_shift")
-        logg.debug(f"Start visual_test_shift")
-
-        # plot all the shift values
-        fig, ax = plt.subplots(1, 1)
-        fig.set_size_inches((8, 8))
-        ax.set_title("Shift test")
-        ax.set_xlabel("x")
-        ax.set_ylabel("y")
-        style = {"ls": "", "marker": ".", "color": "k"}
-        ax.plot(self.shift_val_x, self.shift_val_y, **style)
-
-    def visual_test_dist_all_th(self, dist_all_th_left, dist_all_th_right):
-        """TODO: what is visual_test_dist_all_th doing?
-        """
-        logg = logging.getLogger(f"c.{__name__}.visual_test_dist_all_th")
-        logg.debug(f"Start visual_test_dist_all_th")
-
-        # plot all the shift values
-        fig, ax = plt.subplots(1, 1)
-        fig.set_size_inches((8, 8))
-        ax.set_title("Test dist_all_th")
-        ax.set_xlabel("theta")
-        ax.set_ylabel("r")
-
-        style = {"ls": "", "marker": ".", "color": "k"}
-        ax.plot(self.th_values, dist_all_th_left, **style)
-        ax.plot(self.th_values, dist_all_th_right, **style)
-
-    def visual_test_all_dist_all_th(self, ax=None):
-        """TODO: what is visual_test_all_dist_all_th doing?
-        """
-        logg = logging.getLogger(f"c.{__name__}.visual_test_all_dist_all_th")
-        logg.debug(f"Start visual_test_all_dist_all_th")
-
-        if ax is None:
-            fig, ax = plt.subplots(1, 1)
-            fig.set_size_inches((8, 8))
-            ax.set_title("Test all_dist_all_th")
-            ax.set_xlabel("theta")
-            ax.set_ylabel("r")
-
-        style = {"ls": "-", "marker": "", "color": "y"}
-        # style = {"ls": "", "marker": ".", "color": "y"}
-        for dist_all_th in self.all_dist_all_th_l:
-            dist_all_th /= self.r_stride
-            ax.plot(self.th_values, dist_all_th, **style)
-        style["color"] = "g"
-        for dist_all_th in self.all_dist_all_th_r:
-            dist_all_th /= self.r_stride
-            ax.plot(self.th_values, dist_all_th, **style)
-
-        style = {"ls": "", "marker": ".", "color": "c"}
-        for dist_all_th in self.int_all_dist_all_th:
-            ax.plot(self.th_values, dist_all_th, **style)
-
-    def visual_test_bins(self, ax=None):
-        """TODO: what is visual_test_bins doing?
-
-        matplotlib.org/3.1.1/gallery/images_contours_and_fields/image_annotated_heatmap.html
-        """
-        if ax is None:
-            fig, ax = plt.subplots(1, 1)
-            fig.set_size_inches((8, 8))
-            ax.set_title("Test bins")
-            ax.set_xlabel("theta")
-            ax.set_ylabel("r")
-
-        im = ax.imshow(self.bins.T)
-        return im
-        # cbar_kw = {}
-        # cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw)
-        # cbarlabel = "Collinear points"
-        # cbar.ax.set_ylabel(cbarlabel, rotation=-90, va="bottom")

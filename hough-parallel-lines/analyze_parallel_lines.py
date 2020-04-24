@@ -87,8 +87,108 @@ def setup_env():
     return args
 
 
+def visual_test_shift(hp):
+    """TODO: what is visual_test_shift doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.visual_test_shift")
+    logg.debug(f"Start visual_test_shift")
+
+    # plot all the shift values
+    fig, ax = plt.subplots(1, 1)
+    fig.set_size_inches((8, 8))
+    ax.set_title("Shift test")
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    style = {"ls": "", "marker": ".", "color": "k"}
+    ax.plot(hp.shift_val_x, hp.shift_val_y, **style)
+
+
+def visual_test_dist_all_th(hp, dist_all_th_left, dist_all_th_right):
+    """TODO: what is visual_test_dist_all_th doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.visual_test_dist_all_th")
+    logg.debug(f"Start visual_test_dist_all_th")
+
+    # plot all the shift values
+    fig, ax = plt.subplots(1, 1)
+    fig.set_size_inches((8, 8))
+    ax.set_title("Test dist_all_th")
+    ax.set_xlabel("theta")
+    ax.set_ylabel("r")
+
+    style = {"ls": "", "marker": ".", "color": "k"}
+    ax.plot(hp.th_values, dist_all_th_left, **style)
+    ax.plot(hp.th_values, dist_all_th_right, **style)
+
+
+def visual_test_all_dist_all_th(hp, ax=None):
+    """TODO: what is visual_test_all_dist_all_th doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.visual_test_all_dist_all_th")
+    logg.debug(f"Start visual_test_all_dist_all_th")
+
+    if ax is None:
+        fig, ax = plt.subplots(1, 1)
+        fig.set_size_inches((8, 8))
+        ax.set_title("Test all_dist_all_th")
+        ax.set_xlabel("theta")
+        ax.set_ylabel("r")
+
+    style = {"ls": "-", "marker": "", "color": "y"}
+    # style = {"ls": "", "marker": ".", "color": "y"}
+    for dist_all_th in hp.all_dist_all_th_l:
+        dist_all_th /= hp.r_stride
+        ax.plot(hp.th_values, dist_all_th, **style)
+    style["color"] = "g"
+    for dist_all_th in hp.all_dist_all_th_r:
+        dist_all_th /= hp.r_stride
+        ax.plot(hp.th_values, dist_all_th, **style)
+
+    style = {"ls": "", "marker": ".", "color": "c"}
+    for dist_all_th in hp.int_all_dist_all_th:
+        ax.plot(hp.th_values, dist_all_th, **style)
+
+
+def visual_test_bins(hp, ax=None):
+    """TODO: what is visual_test_bins doing?
+
+    matplotlib.org/3.1.1/gallery/images_contours_and_fields/image_annotated_heatmap.html
+    """
+    if ax is None:
+        fig, ax = plt.subplots(1, 1)
+        fig.set_size_inches((8, 8))
+        ax.set_title("Test bins")
+        ax.set_xlabel("theta")
+        ax.set_ylabel("r")
+
+    im = ax.imshow(hp.bins.T)
+    return im
+    # cbar_kw = {}
+    # cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw)
+    # cbarlabel = "Collinear points"
+    # cbar.ax.set_ylabel(cbarlabel, rotation=-90, va="bottom")
+
+
+def fit_separate_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y, ax_points):
+    left_coeff = np.polyfit(left_filt_x, left_filt_y, 1)
+    right_coeff = np.polyfit(right_filt_x, right_filt_y, 1)
+    # plot the laser dataset
+    style_points_all = {"ls": "", "marker": ".", "color": "k"}
+    ax_points.plot(left_filt_x, left_filt_y, **style_points_all)
+    ax_points.plot(right_filt_x, right_filt_y, **style_points_all)
+    # plot the left fit line
+    left_fit_y = np.polyval(left_coeff, left_filt_x)
+    style_fit = {"ls": "-", "marker": "", "color": "b"}
+    ax_points.plot(left_filt_x, left_fit_y, **style_fit)
+    # plot the right fit line
+    right_fit_y = np.polyval(right_coeff, right_filt_x)
+    style_fit = {"ls": "-", "marker": "", "color": "b"}
+    ax_points.plot(right_filt_x, right_fit_y, **style_fit)
+
+
 def rth2ab(r, norm_th):
-    """TODO: what is rth2ab doing?
+    """Given the distance from the origin and the normal direction theta, compute the
+    coefficient of the line
     """
     logg = logging.getLogger(f"c.{__name__}.rth2ab")
     logg.debug(f"Start rth2ab")
@@ -141,8 +241,8 @@ def run_analyze_parallel_lines(args):
     # load the laser data #
     #######################
 
-    # data_file_name = "laser_data_16707.txt"
-    data_file_name = "laser_data_straight.txt"
+    data_file_name = "laser_data_16707.txt"
+    # data_file_name = "laser_data_straight.txt"
 
     left_filt_x, left_filt_y, right_filt_x, right_filt_y = load_filer_data(
         data_file_name, sector_wid
@@ -150,8 +250,13 @@ def run_analyze_parallel_lines(args):
 
     data_x = np.hstack((left_filt_x, right_filt_x))
     data_y = np.hstack((left_filt_y, right_filt_y))
+    # shifting the data can be interesting to see how the sinusoids change shape
     # data_y -= 1
     logg.debug(f"Loaded data_x.shape: {data_x.shape} data_y.shape {data_y.shape}")
+
+    #####################
+    # find the corridor #
+    #####################
 
     # create the HoughParallel analyzer
     hp = HoughParallel(
@@ -159,48 +264,30 @@ def run_analyze_parallel_lines(args):
     )
 
     t_analyze_start = timer()
-    # find the corridor
-    # best_th, best_r = hp.find_parallel_lines()
     best_th, best_r = hp.find_parallel_lines_mat()
-    logg.debug(f"best_th: {best_th} best_r {best_r} pi/2-best_th {math.pi/2-best_th}")
-
     t_analyze_end = timer()
+    logg.debug(f"best_th: {best_th} best_r {best_r} pi/2-best_th {math.pi/2-best_th}")
     logg.debug(f"Analyzing took {t_analyze_end-t_analyze_start} seconds")
 
-    #############################################
-    # standard fitting of two independent lines #
-    #############################################
-
-    left_coeff = np.polyfit(left_filt_x, left_filt_y, 1)
-    right_coeff = np.polyfit(right_filt_x, right_filt_y, 1)
-    logg.debug(f"left_coeff: {left_coeff} right_coeff {right_coeff}")
     # setup plot
     fig, ax = plt.subplots(1, 3)
     fig.set_size_inches((24, 8))
     ax_points = ax[0]
-    # plot the laser dataset
-    style_points_all = {"ls": "", "marker": ".", "color": "k"}
-    ax_points.plot(left_filt_x, left_filt_y, **style_points_all)
-    ax_points.plot(right_filt_x, right_filt_y, **style_points_all)
-    # plot the left fit line
-    left_fit_y = np.polyval(left_coeff, left_filt_x)
-    style_fit = {"ls": "-", "marker": "", "color": "b"}
-    ax_points.plot(left_filt_x, left_fit_y, **style_fit)
-    # plot the right fit line
-    right_fit_y = np.polyval(right_coeff, right_filt_x)
-    style_fit = {"ls": "-", "marker": "", "color": "b"}
-    ax_points.plot(right_filt_x, right_fit_y, **style_fit)
 
-    hp.visual_test_all_dist_all_th(ax[1])
-    hp.visual_test_bins(ax[2])
+    # standard fitting of two independent lines
+    fit_separate_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y, ax_points)
 
-    # plot the houghlines found
-    style_hough = {"ls": "-", "marker": "", "color": "r"}
+    # plot distances and heatmap
+    visual_test_all_dist_all_th(hp, ax[1])
+    visual_test_bins(hp, ax[2])
+
+    # compute and plot the houghlines found
     left_line_coeff = rth2ab(best_r, best_th)
-    left_line_y = np.polyval(left_line_coeff, left_filt_x)
-    ax_points.plot(left_filt_x, left_line_y, **style_hough)
     right_line_coeff = rth2ab(best_r + corridor_width, best_th)
+    left_line_y = np.polyval(left_line_coeff, left_filt_x)
     right_line_y = np.polyval(right_line_coeff, right_filt_x)
+    style_hough = {"ls": "-", "marker": "", "color": "r"}
+    ax_points.plot(left_filt_x, left_line_y, **style_hough)
     ax_points.plot(right_filt_x, right_line_y, **style_hough)
 
     plt.show()
