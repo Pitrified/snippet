@@ -46,7 +46,7 @@ class HoughParallel:
     def find_parallel_lines_mat(self):
         """TODO: what is find_parallel_lines_mat doing?
         """
-        # logg = logging.getLogger(f"c.{__name__}.find_parallel_lines_mat")
+        logg = logging.getLogger(f"c.{__name__}.find_parallel_lines_mat")
         # logg.debug(f"Start find_parallel_lines_mat")
 
         # distance from all points to the origin
@@ -89,13 +89,26 @@ class HoughParallel:
             for i_u, u in enumerate(uniques):
                 i_r = u - r_min
                 self.bins[i_th][i_r] += counts[i_u]
-                pass
 
             # recap = f"all_dist_th.shape: {all_dist_th.shape}"
             # recap += f" u.shape {u.shape}"
             # logg.debug(recap)
 
-        return 0, 0
+        # find the max
+        max_bin = np.max(self.bins)
+        argmax_bin = np.argmax(self.bins)
+        ind_argmax = np.unravel_index(argmax_bin, self.bins.shape)
+        recap = f"max_bin: {max_bin}"
+        recap += f" argmax_bin: {argmax_bin}"
+        recap += f" ind_argmax: {ind_argmax}"
+        logg.debug(recap)
+
+        # go from index to value
+        max_val = ind_argmax[1] + r_min
+        best_r = max_val * self.r_stride
+        best_th = self.th_values[ind_argmax[0]]
+
+        return best_th, best_r
 
     def find_parallel_lines(self):
         """TODO: what is find_parallel_lines doing?
@@ -295,6 +308,3 @@ class HoughParallel:
         # cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw)
         # cbarlabel = "Collinear points"
         # cbar.ax.set_ylabel(cbarlabel, rotation=-90, va="bottom")
-
-
-# TODO: heatmap per mostrare quanto pieni sono i bin

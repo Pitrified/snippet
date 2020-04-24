@@ -87,6 +87,22 @@ def setup_env():
     return args
 
 
+def rth2ab(r, norm_th):
+    """TODO: what is rth2ab doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.rth2ab")
+    logg.debug(f"Start rth2ab")
+
+    x = math.cos(norm_th) * r
+    y = math.sin(norm_th) * r
+
+    th = norm_th + math.pi / 2
+    a = math.tan(th)
+    b = y - a * x
+
+    return np.array([a, b])
+
+
 def run_analyze_parallel_lines(args):
     """TODO: What is analyze_parallel_lines doing?
     """
@@ -146,7 +162,7 @@ def run_analyze_parallel_lines(args):
     # find the corridor
     # best_th, best_r = hp.find_parallel_lines()
     best_th, best_r = hp.find_parallel_lines_mat()
-    logg.debug(f"best_th: {best_th} best_r {best_r} pi-best_th {math.pi-best_th}")
+    logg.debug(f"best_th: {best_th} best_r {best_r} pi/2-best_th {math.pi/2-best_th}")
 
     t_analyze_end = timer()
     logg.debug(f"Analyzing took {t_analyze_end-t_analyze_start} seconds")
@@ -177,6 +193,15 @@ def run_analyze_parallel_lines(args):
 
     hp.visual_test_all_dist_all_th(ax[1])
     hp.visual_test_bins(ax[2])
+
+    # plot the houghlines found
+    style_hough = {"ls": "-", "marker": "", "color": "r"}
+    left_line_coeff = rth2ab(best_r, best_th)
+    left_line_y = np.polyval(left_line_coeff, left_filt_x)
+    ax_points.plot(left_filt_x, left_line_y, **style_hough)
+    right_line_coeff = rth2ab(best_r + corridor_width, best_th)
+    right_line_y = np.polyval(right_line_coeff, right_filt_x)
+    ax_points.plot(right_filt_x, right_line_y, **style_hough)
 
     plt.show()
 
