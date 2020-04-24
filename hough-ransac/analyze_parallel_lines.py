@@ -87,24 +87,6 @@ def setup_env():
     return args
 
 
-def load_single_data(data_file_name, sector_wid):
-    """TODO: what is load_single_data doing?
-    """
-    logg = logging.getLogger(f"c.{__name__}.load_single_data")
-    logg.debug(f"Start load_single_data")
-
-    left_filt_x, left_filt_y, right_filt_x, right_filt_y = load_filer_data(
-        data_file_name, sector_wid
-    )
-
-    data_x = np.hstack((left_filt_x, right_filt_x))
-    data_y = np.hstack((left_filt_y, right_filt_y))
-
-    logg.debug(f"Loaded data_x.shape: {data_x.shape} data_y.shape {data_y.shape}")
-
-    return data_x, data_y
-
-
 def run_analyze_parallel_lines(args):
     """TODO: What is analyze_parallel_lines doing?
     """
@@ -117,21 +99,23 @@ def run_analyze_parallel_lines(args):
 
     # set sector_wid in degrees
     sector_wid_deg = 30
+    # sector_wid_deg = 60
     sector_wid = math.floor(sector_wid_deg / 180 * 200)
     logg.debug(f"sector_wid: {sector_wid} degrees {sector_wid_deg}")
 
     # r dimension of the bins
-    r_stride = 0.05
+    # r_stride = 0.05
     # r_stride = 0.01
-    # r_stride = 0.005
+    r_stride = 0.005
+    # r_stride = 0.0025
     r_min_dist = 0.1
     r_max_dist = 0.6
 
     # number of bins in the [0, 180) interval
-    th_bin_num = 12
+    # th_bin_num = 12
     # th_bin_num = 36
     # th_bin_num = 180
-    # th_bin_num = 360
+    th_bin_num = 360
     # th_bin_num = 720
 
     # the corridor width
@@ -142,18 +126,57 @@ def run_analyze_parallel_lines(args):
     #######################
 
     # data_file_name = "laser_data_16707.txt"
-    # data_file_name = "laser_data_straight.txt"
-    # data_x, data_y = load_single_data(data_file_name, sector_wid)
-    data_x, data_y = np.array([1]), np.array([1])
+    data_file_name = "laser_data_straight.txt"
+
+    left_filt_x, left_filt_y, right_filt_x, right_filt_y = load_filer_data(
+        data_file_name, sector_wid
+    )
+
+    data_x = np.hstack((left_filt_x, right_filt_x))
+    data_y = np.hstack((left_filt_y, right_filt_y))
+    # data_y -= 1
+    logg.debug(f"Loaded data_x.shape: {data_x.shape} data_y.shape {data_y.shape}")
 
     # create the HoughParallel analyzer
     hp = HoughParallel(
         data_x, data_y, corridor_width, r_stride, r_min_dist, r_max_dist, th_bin_num
     )
 
+    t_analyze_start = timer()
     # find the corridor
-    best_th, best_r = hp.find_parallel_lines()
+    # best_th, best_r = hp.find_parallel_lines()
+    best_th, best_r = hp.find_parallel_lines_mat()
     logg.debug(f"best_th: {best_th} best_r {best_r} pi-best_th {math.pi-best_th}")
+
+    t_analyze_end = timer()
+    logg.debug(f"Analyzing took {t_analyze_end-t_analyze_start} seconds")
+
+    #############################################
+    # standard fitting of two independent lines #
+    #############################################
+
+    left_coeff = np.polyfit(left_filt_x, left_filt_y, 1)
+    right_coeff = np.polyfit(right_filt_x, right_filt_y, 1)
+    logg.debug(f"left_coeff: {left_coeff} right_coeff {right_coeff}")
+    # setup plot
+    fig, ax = plt.subplots(1, 3)
+    fig.set_size_inches((24, 8))
+    ax_points = ax[0]
+    # plot the laser dataset
+    style_points_all = {"ls": "", "marker": ".", "color": "k"}
+    ax_points.plot(left_filt_x, left_filt_y, **style_points_all)
+    ax_points.plot(right_filt_x, right_filt_y, **style_points_all)
+    # plot the left fit line
+    left_fit_y = np.polyval(left_coeff, left_filt_x)
+    style_fit = {"ls": "-", "marker": "", "color": "b"}
+    ax_points.plot(left_filt_x, left_fit_y, **style_fit)
+    # plot the right fit line
+    right_fit_y = np.polyval(right_coeff, right_filt_x)
+    style_fit = {"ls": "-", "marker": "", "color": "b"}
+    ax_points.plot(right_filt_x, right_fit_y, **style_fit)
+
+    hp.visual_test_all_dist_all_th(ax[1])
+    hp.visual_test_bins(ax[2])
 
     plt.show()
 
