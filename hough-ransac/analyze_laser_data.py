@@ -115,6 +115,22 @@ def slope2rad(slope, direction=1):
     return np.arctan2(slope, direction)
 
 
+def rth2ab(r, th):
+    """TODO: what is rth2ab doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.rth2ab")
+    logg.debug(f"Start rth2ab")
+
+    norm_th = th - math.pi / 2
+    x = math.cos(norm_th) * r
+    y = math.sin(norm_th) * r
+
+    a = math.tan(th)
+    b = y - a * x
+
+    return np.array([a, b])
+
+
 def polar_to_cartesian(ranges, angles_rad, dyaw=0, dx=0, dy=0):
     """Converts points in (range, angle) polar coord to cartesian
 
@@ -283,7 +299,9 @@ def dist_line_point(l_x, l_y, l_rad, orig_x=0, orig_y=0):
     return dist
 
 
-def compute_hough_pt(pt_x, pt_y, bins, th_values, r_stride, r_min_dist, r_max_dist):
+def compute_hough_pt(
+    pt_x, pt_y, th_values,
+):
     """For a single point, compute the distance between all the rotated lines passing
     through it and the origin
 
@@ -302,7 +320,7 @@ def compute_hough_pt(pt_x, pt_y, bins, th_values, r_stride, r_min_dist, r_max_di
     return dist_all_th
 
 
-def compute_hough_pt_mat(pt_x, pt_y, bins, th_values, r_stride, r_min_dist, r_max_dist):
+def compute_hough_pt_mat(pt_x, pt_y, th_values):
     """For a single point, compute the distance between all the rotated lines passing
     through it and the origin, using numpy functions
     """
@@ -321,97 +339,145 @@ def compute_hough_pt_mat(pt_x, pt_y, bins, th_values, r_stride, r_min_dist, r_ma
     return dist_all_th
 
 
-def do_parallel_hough(
-    left_filt_x, left_filt_y, bins, th_values, r_stride, r_min_dist, r_max_dist,
-):
+def do_hough(data_x, data_y, th_values):
     """For each point given, computes the distance between the rotated lines
 
-    returns a list with left_filt_x.shape[0] elements, each with th_values.shape[0] elements
+    returns a list with data_x.shape[0] elements, each with th_values.shape[0] elements
     """
-    # logg = logging.getLogger(f"c.{__name__}.do_parallel_hough")
-    # logg.debug(f"Start do_parallel_hough")
+    # logg = logging.getLogger(f"c.{__name__}.do_hough")
+    # logg.debug(f"Start do_hough")
 
     all_pt_dist_all_th = []
 
     # for i in [0, 10, 20, 30]:
-    # for i in range(0, left_filt_x.shape[0], 10):
-    for i in range(left_filt_x.shape[0]):
-        pt_x = left_filt_x[i]
-        pt_y = left_filt_y[i]
+    # for i in range(0, data_x.shape[0], 10):
+    for i in range(data_x.shape[0]):
+        pt_x = data_x[i]
+        pt_y = data_y[i]
         # dist_all_th = compute_hough_pt(
-        #     pt_x, pt_y, bins, th_values, r_stride, r_min_dist, r_max_dist
+        #     pt_x, pt_y, th_values
         # )
-        dist_all_th = compute_hough_pt_mat(
-            pt_x, pt_y, bins, th_values, r_stride, r_min_dist, r_max_dist
-        )
+        dist_all_th = compute_hough_pt_mat(pt_x, pt_y, th_values)
         all_pt_dist_all_th.append(dist_all_th)
 
     return all_pt_dist_all_th
 
 
-def do_parallel_hough_mat(
-    left_filt_x, left_filt_y, bins, th_values, r_stride, r_min_dist, r_max_dist,
-):
+def do_hough_mat(data_x, data_y, th_values):
     """For each point given, computes the distance between the rotated lines
 
     uses np functions
     """
-    # logg = logging.getLogger(f"c.{__name__}.do_parallel_hough_mat")
-    # logg.debug(f"Start do_parallel_hough_mat")
-
-    # logg.debug(f"th_values.shape: {th_values.shape}")
 
     # distance from all points to the origin
-    all_LP_dist = np.sqrt(np.square(left_filt_x) + np.square(left_filt_y))
-    # logg.debug(f"all_LP_dist.shape: {all_LP_dist.shape}")
+    all_LP_dist = np.sqrt(np.square(data_x) + np.square(data_y))
 
     # direction from all points to origin
-    all_LP_rad = np.arctan2(left_filt_y, left_filt_x)
-    # logg.debug(f"all_LP_rad.shape: {all_LP_rad.shape}")
+    all_LP_rad = np.arctan2(data_y, data_x)
 
     # use broadcasting to stretch the arrays into common shapes
     # https://numpy.org/devdocs/user/theory.broadcasting.html#figure-4
     all_rel_LP_rad = th_values[:, np.newaxis] - all_LP_rad
-    # logg.debug(f"all_rel_LP_rad.shape: {all_rel_LP_rad.shape}")
 
     sin_all_rel_LP_rad = np.sin(all_rel_LP_rad)
-    # logg.debug(f"sin_all_rel_LP_rad.shape: {sin_all_rel_LP_rad.shape}")
 
     # all_pt_dist_all_th = all_LP_dist * sin_all_rel_LP_rad
     all_pt_dist_all_th = np.multiply(all_LP_dist, sin_all_rel_LP_rad)
+
+    # logg = logging.getLogger(f"c.{__name__}.do_hough_mat")
+    # logg.debug(f"th_values.shape: {th_values.shape}")
+    # logg.debug(f"all_LP_dist.shape: {all_LP_dist.shape}")
+    # logg.debug(f"all_LP_rad.shape: {all_LP_rad.shape}")
+    # logg.debug(f"all_rel_LP_rad.shape: {all_rel_LP_rad.shape}")
+    # logg.debug(f"sin_all_rel_LP_rad.shape: {sin_all_rel_LP_rad.shape}")
     # logg.debug(f"all_pt_dist_all_th.shape: {all_pt_dist_all_th.shape}")
 
-    # return [[0] * 180]
-    return all_pt_dist_all_th
+    return all_pt_dist_all_th.transpose()
 
 
-def find_parallel_hough(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
+def find_hough(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
     """Setup the bins for houghlines and
     """
-    # logg = logging.getLogger(f"c.{__name__}.find_parallel_hough")
-    # logg.debug(f"Start find_parallel_hough")
+    logg = logging.getLogger(f"c.{__name__}.find_hough")
+    logg.debug(f"Start find_hough")
 
     # r dimension of the bins
-    r_stride = 0.01
+    # r_stride = 0.05
+    # r_stride = 0.01
+    r_stride = 0.005
     r_min_dist = 0.1
     r_max_dist = 0.6
     r_bin_num = math.floor((r_max_dist - r_min_dist) / r_stride)
 
     # number of bins in the [0, 180) interval
-    th_bin_num = 180
+    # th_bin_num = 36
+    # th_bin_num = 180
+    th_bin_num = 720
     th_values = np.linspace(0, math.pi, th_bin_num, endpoint=False)
 
-    # keep track of where we see the lines
-    bins = np.zeros((th_bin_num, r_bin_num), dtype=np.uint16)
-
-    # all_pt_dist_all_th = do_parallel_hough(
-    #     left_filt_x, left_filt_y, bins, th_values, r_stride, r_min_dist, r_max_dist,
+    # all_pt_dist_all_th = do_hough(
+    #     left_filt_x, left_filt_y, th_values
     # )
-    all_pt_dist_all_th = do_parallel_hough_mat(
-        left_filt_x, left_filt_y, bins, th_values, r_stride, r_min_dist, r_max_dist,
-    )
+    # find all the sinusoids
+    all_pt_dist_all_th = do_hough_mat(left_filt_x, left_filt_y, th_values)
+    logg.debug(f"all_pt_dist_all_th.shape: {all_pt_dist_all_th.shape}")
 
-    return all_pt_dist_all_th, th_values
+    # on the theta it is automatically quantized, the data is aligned to th_values
+    # quantize the distances by dividing by r_stride and rounding
+    quant_all_pt_dist_all_th = all_pt_dist_all_th / r_stride
+    int_all_pt_dist_all_th = quant_all_pt_dist_all_th.astype(np.int16)
+    logg.debug(f"int_all_pt_dist_all_th.shape: {int_all_pt_dist_all_th.shape}")
+
+    # keep track of where we see the lines
+    # we *include* the min/max values for r, so we need an extra bin
+    bins_pos = np.zeros((th_bin_num, r_bin_num + 1), dtype=np.uint16)
+    bins_neg = np.zeros((th_bin_num, r_bin_num + 1), dtype=np.uint16)
+    logg.debug(f"bins_pos.shape: {bins_pos.shape}")
+
+    quant_r_min_dist = int(np.rint(r_min_dist / r_stride))
+    quant_r_max_dist = int(np.rint(r_max_dist / r_stride))
+    logg.debug(f"quant_r_min_dist: {quant_r_min_dist}")
+    logg.debug(f"quant_r_max_dist: {quant_r_max_dist}")
+
+    for _, dist_all_th in enumerate(int_all_pt_dist_all_th):
+        # logg.debug(f"dist_all_th.shape: {dist_all_th.shape}")
+        for i_th, dist in enumerate(dist_all_th):
+            if quant_r_min_dist <= dist <= quant_r_max_dist:
+                r_bin = dist - quant_r_min_dist
+                # logg.debug(f"i_th: {i_th} r_bin {r_bin}")
+                bins_pos[i_th][r_bin] += 1
+            elif -quant_r_min_dist >= dist >= -quant_r_max_dist:
+                r_bin = dist - quant_r_min_dist
+                # logg.debug(f"i_th: {i_th} r_bin {r_bin}")
+                bins_neg[i_th][r_bin] += 1
+
+    max_bin_pos = np.max(bins_pos)
+    argmax_bin_pos = np.argmax(bins_pos)
+    ind_argmax_pos = np.unravel_index(argmax_bin_pos, bins_pos.shape)
+    logg.debug(f"max_bin_pos: {max_bin_pos}")
+    logg.debug(f"argmax_bin_pos: {argmax_bin_pos}")
+    logg.debug(f"ind_argmax_pos: {ind_argmax_pos}")
+    max_bin_neg = np.max(bins_neg)
+    argmax_bin_neg = np.argmax(bins_neg)
+    ind_argmax_neg = np.unravel_index(argmax_bin_neg, bins_neg.shape)
+    logg.debug(f"max_bin_neg: {max_bin_neg}")
+    logg.debug(f"argmax_bin_neg: {argmax_bin_neg}")
+    logg.debug(f"ind_argmax_neg: {ind_argmax_neg}")
+
+    if max_bin_pos >= max_bin_neg:
+        i_best_th, i_best_r = ind_argmax_pos
+        best_th = th_values[i_best_th]
+        best_r = (i_best_r + quant_r_min_dist) * r_stride
+    else:
+        i_best_th, i_best_r = ind_argmax_neg
+        best_th = th_values[i_best_th]
+        best_r = -(i_best_r + quant_r_min_dist) * r_stride
+
+    logg.debug(f"best_th: {best_th} best_r {best_r}")
+
+    # return all_pt_dist_all_th, th_values
+    # return quant_all_pt_dist_all_th, th_values
+    return int_all_pt_dist_all_th, th_values, best_th, best_r
 
 
 def run_analyze_laser_data(args):
@@ -420,8 +486,8 @@ def run_analyze_laser_data(args):
     logg = logging.getLogger(f"c.{__name__}.run_analyze_laser_data")
     logg.debug(f"Starting run_analyze_laser_data")
 
-    # data_file_name = "laser_data_16707.txt"
-    data_file_name = "laser_data_straight.txt"
+    data_file_name = "laser_data_16707.txt"
+    # data_file_name = "laser_data_straight.txt"
     data = load_data(data_file_name)
 
     # extract the data
@@ -458,7 +524,7 @@ def run_analyze_laser_data(args):
     # standard fitting of two independent lines
     # fit_parallel_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y)
 
-    all_pt_dist_all_th, th_values = find_parallel_hough(
+    all_pt_dist_all_th, th_values, best_th, best_r = find_hough(
         left_filt_x, left_filt_y, right_filt_x, right_filt_y
     )
 
@@ -475,9 +541,15 @@ def run_analyze_laser_data(args):
     ax_points.plot(left_filt_x, left_filt_y, **style_points_all)
     ax_points.plot(right_filt_x, right_filt_y, **style_points_all)
     # plot all the sinusoids
-    style_bins = {"ls": "-", "marker": "", "color": "y"}
-    for dist_all_th in all_pt_dist_all_th.transpose():
+    # style_bins = {"ls": "-", "marker": "", "color": "y"}
+    style_bins = {"ls": "-", "marker": ".", "color": "y"}
+    for dist_all_th in all_pt_dist_all_th:
         ax_bins.plot(th_values, dist_all_th, **style_bins)
+
+    line_coeff = rth2ab(best_r, best_th)
+    line_x = np.linspace(min(left_filt_x), max(left_filt_x))
+    line_y = np.polyval(line_coeff, line_x)
+    ax_points.plot(line_x, line_y)
 
     plt.show()
 
