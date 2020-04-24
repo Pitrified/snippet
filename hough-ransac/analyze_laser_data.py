@@ -240,33 +240,35 @@ def extract_filt_lr(sector_wid, ranges, angles_rad, range_min, range_max):
 def fit_parallel_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
     """Fit two lines separately in the data
     """
-    logg = logging.getLogger(f"c.{__name__}.fit_parallel_lines")
-    logg.debug(f"Start fit_parallel_lines")
+    # logg = logging.getLogger(f"c.{__name__}.fit_parallel_lines")
+    # logg.debug(f"Start fit_parallel_lines")
 
     left_coeff = np.polyfit(left_filt_x, left_filt_y, 1)
-    left_fit_y = np.polyval(left_coeff, left_filt_x)
+    # left_fit_y = np.polyval(left_coeff, left_filt_x)
     right_coeff = np.polyfit(right_filt_x, right_filt_y, 1)
-    right_fit_y = np.polyval(right_coeff, right_filt_x)
-    logg.debug(f"left_coeff: {left_coeff} right_coeff {right_coeff}")
-    left_yaw_deg = slope2deg(left_coeff[0])
-    right_yaw_deg = slope2deg(right_coeff[0])
-    logg.debug(f"left_yaw_deg: {left_yaw_deg} right_yaw_deg {right_yaw_deg} degrees")
-    left_yaw_rad = slope2rad(left_coeff[0])
-    right_yaw_rad = slope2rad(right_coeff[0])
-    logg.debug(f"left_yaw_rad: {left_yaw_rad} right_yaw_rad {right_yaw_rad} radians")
+    # right_fit_y = np.polyval(right_coeff, right_filt_x)
+    # logg.debug(f"left_coeff: {left_coeff} right_coeff {right_coeff}")
+    # left_yaw_deg = slope2deg(left_coeff[0])
+    # right_yaw_deg = slope2deg(right_coeff[0])
+    # logg.debug(f"left_yaw_deg: {left_yaw_deg} right_yaw_deg {right_yaw_deg} degrees")
+    # left_yaw_rad = slope2rad(left_coeff[0])
+    # right_yaw_rad = slope2rad(right_coeff[0])
+    # logg.debug(f"left_yaw_rad: {left_yaw_rad} right_yaw_rad {right_yaw_rad} radians")
 
-    # plot filtered points
-    style = {"ls": "", "marker": "."}
-    ax = plot_add_create(left_filt_x, left_filt_y, **style)
-    plot_add_create(0, 0, ax=ax, **style)
-    plot_add_create(right_filt_x, right_filt_y, ax=ax, **style)
+    # # plot filtered points
+    # style = {"ls": "", "marker": "."}
+    # ax = plot_add_create(left_filt_x, left_filt_y, **style)
+    # plot_add_create(0, 0, ax=ax, **style)
+    # plot_add_create(right_filt_x, right_filt_y, ax=ax, **style)
 
-    # plot fitted line
-    style = {"ls": "-", "marker": ""}
-    plot_add_create(left_filt_x, left_fit_y, ax=ax, **style)
-    ax.set_title("Fitted left/right data")
-    plot_add_create(0, 0, ax=ax, **style)
-    plot_add_create(right_filt_x, right_fit_y, ax=ax, **style)
+    # # plot fitted line
+    # style = {"ls": "-", "marker": ""}
+    # plot_add_create(left_filt_x, left_fit_y, ax=ax, **style)
+    # ax.set_title("Fitted left/right data")
+    # plot_add_create(0, 0, ax=ax, **style)
+    # plot_add_create(right_filt_x, right_fit_y, ax=ax, **style)
+
+    return left_coeff, right_coeff
 
 
 def dist_2D(x0, y0, x1, y1):
@@ -403,8 +405,8 @@ def find_hough(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
 
     # r dimension of the bins
     # r_stride = 0.05
-    # r_stride = 0.01
-    r_stride = 0.005
+    r_stride = 0.01
+    # r_stride = 0.005
     r_min_dist = 0.1
     r_max_dist = 0.6
     r_bin_num = math.floor((r_max_dist - r_min_dist) / r_stride)
@@ -412,7 +414,8 @@ def find_hough(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
     # number of bins in the [0, 180) interval
     # th_bin_num = 36
     # th_bin_num = 180
-    th_bin_num = 720
+    th_bin_num = 360
+    # th_bin_num = 720
     th_values = np.linspace(0, math.pi, th_bin_num, endpoint=False)
 
     # all_pt_dist_all_th = do_hough(
@@ -425,7 +428,7 @@ def find_hough(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
     # on the theta it is automatically quantized, the data is aligned to th_values
     # quantize the distances by dividing by r_stride and rounding
     quant_all_pt_dist_all_th = all_pt_dist_all_th / r_stride
-    int_all_pt_dist_all_th = quant_all_pt_dist_all_th.astype(np.int16)
+    int_all_pt_dist_all_th = np.rint(quant_all_pt_dist_all_th).astype(np.int16)
     logg.debug(f"int_all_pt_dist_all_th.shape: {int_all_pt_dist_all_th.shape}")
 
     # keep track of where we see the lines
@@ -473,11 +476,11 @@ def find_hough(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
         best_th = th_values[i_best_th]
         best_r = -(i_best_r + quant_r_min_dist) * r_stride
 
-    logg.debug(f"best_th: {best_th} best_r {best_r}")
+    logg.debug(f"best_th: {best_th} best_r {best_r} pi-best_th {math.pi-best_th}")
 
     # return all_pt_dist_all_th, th_values
     # return quant_all_pt_dist_all_th, th_values
-    return int_all_pt_dist_all_th, th_values, best_th, best_r
+    return quant_all_pt_dist_all_th, int_all_pt_dist_all_th, th_values, best_th, best_r
 
 
 def run_analyze_laser_data(args):
@@ -519,12 +522,17 @@ def run_analyze_laser_data(args):
     t_filt_end = timer()
     logg.debug(f"Filtering took {t_filt_end-t_filt_start} seconds")
 
+    t_fit_start = timer()
+    # standard fitting of two independent lines
+    left_coeff, right_coeff = fit_parallel_lines(
+        left_filt_x, left_filt_y, right_filt_x, right_filt_y
+    )
+    t_fit_end = timer()
+    logg.debug(f"Fitting took {t_fit_end-t_fit_start} seconds")
+
     t_analyze_start = timer()
 
-    # standard fitting of two independent lines
-    # fit_parallel_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y)
-
-    all_pt_dist_all_th, th_values, best_th, best_r = find_hough(
+    all_pt_dist_all_th, int_all_pt_dist_all_th, th_values, best_th, best_r = find_hough(
         left_filt_x, left_filt_y, right_filt_x, right_filt_y
     )
 
@@ -541,15 +549,23 @@ def run_analyze_laser_data(args):
     ax_points.plot(left_filt_x, left_filt_y, **style_points_all)
     ax_points.plot(right_filt_x, right_filt_y, **style_points_all)
     # plot all the sinusoids
-    # style_bins = {"ls": "-", "marker": "", "color": "y"}
-    style_bins = {"ls": "-", "marker": ".", "color": "y"}
+    style_int = {"ls": "", "marker": ".", "color": "c"}
+    for dist_all_th in int_all_pt_dist_all_th:
+        ax_bins.plot(th_values, dist_all_th, **style_int)
+    style_sin = {"ls": "-", "marker": "", "color": "y"}
     for dist_all_th in all_pt_dist_all_th:
-        ax_bins.plot(th_values, dist_all_th, **style_bins)
+        ax_bins.plot(th_values, dist_all_th, **style_sin)
 
+    # plot the hough line
     line_coeff = rth2ab(best_r, best_th)
-    line_x = np.linspace(min(left_filt_x), max(left_filt_x))
-    line_y = np.polyval(line_coeff, line_x)
-    ax_points.plot(line_x, line_y)
+    line_y = np.polyval(line_coeff, left_filt_x)
+    style_hough = {"ls": "-", "marker": "", "color": "r"}
+    ax_points.plot(left_filt_x, line_y, **style_hough)
+
+    # plot the fit line
+    left_fit_y = np.polyval(left_coeff, left_filt_x)
+    style_fit = {"ls": "-", "marker": "", "color": "b"}
+    ax_points.plot(left_filt_x, left_fit_y, **style_fit)
 
     plt.show()
 
