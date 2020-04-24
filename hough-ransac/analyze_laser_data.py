@@ -1,13 +1,16 @@
 import argparse
-import json
 import logging
 import math
 import numpy as np
 import matplotlib.pyplot as plt
 
-from pathlib import Path
 from random import seed as rseed
 from timeit import default_timer as timer
+
+from utils import load_data
+from utils import rth2ab
+from utils import polar_to_cartesian
+from utils import dist_2D
 
 
 def parse_arguments():
@@ -84,105 +87,6 @@ def setup_env():
     logmain.info(recap)
 
     return args
-
-
-def plot_add_create(x, y, show=False, ax=None, **kwargs):
-    """Either add the data to the ax, or create and return a new one
-    """
-    # logg = logging.getLogger(f"c.{__name__}.plot_add_create")
-    # logg.debug(f"Start plot_add_create")
-
-    if ax is None:
-        fig, ax = plt.subplots(1, 1)
-
-    ax.plot(x, y, **kwargs)
-
-    if show:
-        plt.show()
-
-    return ax
-
-
-def slope2deg(slope, direction=1):
-    """Convert the slope of a line to an angle in degrees
-    """
-    return math.degrees(np.arctan2(slope, direction))
-
-
-def slope2rad(slope, direction=1):
-    """Convert the slope of a line to an angle in radians
-    """
-    return np.arctan2(slope, direction)
-
-
-def rth2ab(r, th):
-    """TODO: what is rth2ab doing?
-    """
-    logg = logging.getLogger(f"c.{__name__}.rth2ab")
-    logg.debug(f"Start rth2ab")
-
-    norm_th = th - math.pi / 2
-    x = math.cos(norm_th) * r
-    y = math.sin(norm_th) * r
-
-    a = math.tan(th)
-    b = y - a * x
-
-    return np.array([a, b])
-
-
-def polar_to_cartesian(ranges, angles_rad, dyaw=0, dx=0, dy=0):
-    """Converts points in (range, angle) polar coord to cartesian
-
-    Can translate and rotate them
-    """
-    logg = logging.getLogger(f"c.{__name__}.polar_to_cartesian")
-    # logg.debug(f"Start polar_to_cartesian")
-    logg.debug(f"Polar to cartesian dyaw: {dyaw} dx: {dx} dy: {dy}")
-
-    cosens = np.cos(angles_rad + dyaw)
-    sins = np.sin(angles_rad + dyaw)
-
-    x = np.multiply(ranges, cosens) + dx
-    y = np.multiply(ranges, sins) + dy
-
-    return x, y
-
-
-def slice_data(center, sector_wid, *data):
-    """Given a center and a width, slice all the arrays passed via data around that
-    """
-    logg = logging.getLogger(f"c.{__name__}.slice_data")
-    logg.debug(f"Start slice_data")
-
-    slice_ = slice(center - sector_wid, center + sector_wid)
-    logg.debug(f"slice_: {slice_}")
-    sliced_data = []
-    for arr in data:
-        sliced_data.append(arr[slice_])
-    return sliced_data
-
-
-def load_data(data_file_name):
-    """Load the data from a .json file
-    """
-    logg = logging.getLogger(f"c.{__name__}.load_data")
-    logg.debug(f"Start load_data")
-
-    t_load_start = timer()
-
-    # load the data
-    main_dir = Path(__file__).resolve().parent
-    # data_file = main_dir / "laser_data" / "laser_data_straight.txt"
-    data_file = main_dir / "laser_data" / data_file_name
-    with data_file.open() as fp:
-        data = json.load(fp)
-    logg.debug(f"data.keys(): {data.keys()}")
-
-    t_load_end = timer()
-    logg.debug(f"Loading took {t_load_end-t_load_start} seconds")
-
-    return data
 
 
 def extract_filt_lr(sector_wid, ranges, angles_rad, range_min, range_max):
@@ -269,15 +173,6 @@ def fit_parallel_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
     # plot_add_create(right_filt_x, right_fit_y, ax=ax, **style)
 
     return left_coeff, right_coeff
-
-
-def dist_2D(x0, y0, x1, y1):
-    """Computes the 2D distance between two points
-    """
-    # logg = logging.getLogger(f"c.{__name__}.dist_2D")
-    # logg.debug(f"Start dist_2D")
-
-    return math.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2)
 
 
 def dist_line_point(l_x, l_y, l_rad, orig_x=0, orig_y=0):
@@ -397,50 +292,13 @@ def do_hough_mat(data_x, data_y, th_values):
     return all_pt_dist_all_th.transpose()
 
 
-def find_hough(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
-    """Setup the bins for houghlines and
+def fill_bins(
+    int_all_pt_dist_all_th, quant_r_min_dist, quant_r_max_dist, bins_pos, bins_neg
+):
+    """TODO: what is fill_bins doing?
     """
-    logg = logging.getLogger(f"c.{__name__}.find_hough")
-    logg.debug(f"Start find_hough")
-
-    # r dimension of the bins
-    # r_stride = 0.05
-    r_stride = 0.01
-    # r_stride = 0.005
-    r_min_dist = 0.1
-    r_max_dist = 0.6
-    r_bin_num = math.floor((r_max_dist - r_min_dist) / r_stride)
-
-    # number of bins in the [0, 180) interval
-    # th_bin_num = 36
-    # th_bin_num = 180
-    th_bin_num = 360
-    # th_bin_num = 720
-    th_values = np.linspace(0, math.pi, th_bin_num, endpoint=False)
-
-    # all_pt_dist_all_th = do_hough(
-    #     left_filt_x, left_filt_y, th_values
-    # )
-    # find all the sinusoids
-    all_pt_dist_all_th = do_hough_mat(left_filt_x, left_filt_y, th_values)
-    logg.debug(f"all_pt_dist_all_th.shape: {all_pt_dist_all_th.shape}")
-
-    # on the theta it is automatically quantized, the data is aligned to th_values
-    # quantize the distances by dividing by r_stride and rounding
-    quant_all_pt_dist_all_th = all_pt_dist_all_th / r_stride
-    int_all_pt_dist_all_th = np.rint(quant_all_pt_dist_all_th).astype(np.int16)
-    logg.debug(f"int_all_pt_dist_all_th.shape: {int_all_pt_dist_all_th.shape}")
-
-    # keep track of where we see the lines
-    # we *include* the min/max values for r, so we need an extra bin
-    bins_pos = np.zeros((th_bin_num, r_bin_num + 1), dtype=np.uint16)
-    bins_neg = np.zeros((th_bin_num, r_bin_num + 1), dtype=np.uint16)
-    logg.debug(f"bins_pos.shape: {bins_pos.shape}")
-
-    quant_r_min_dist = int(np.rint(r_min_dist / r_stride))
-    quant_r_max_dist = int(np.rint(r_max_dist / r_stride))
-    logg.debug(f"quant_r_min_dist: {quant_r_min_dist}")
-    logg.debug(f"quant_r_max_dist: {quant_r_max_dist}")
+    logg = logging.getLogger(f"c.{__name__}.fill_bins")
+    logg.debug(f"Start fill_bins")
 
     for _, dist_all_th in enumerate(int_all_pt_dist_all_th):
         # logg.debug(f"dist_all_th.shape: {dist_all_th.shape}")
@@ -453,6 +311,17 @@ def find_hough(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
                 r_bin = dist - quant_r_min_dist
                 # logg.debug(f"i_th: {i_th} r_bin {r_bin}")
                 bins_neg[i_th][r_bin] += 1
+
+    return bins_pos, bins_neg
+
+
+def find_best_bin(
+    bins_pos, bins_neg, th_values, quant_r_min_dist, quant_r_max_dist, r_stride
+):
+    """TODO: what is find_best_bin doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.find_best_bin")
+    logg.debug(f"Start find_best_bin")
 
     max_bin_pos = np.max(bins_pos)
     argmax_bin_pos = np.argmax(bins_pos)
@@ -476,6 +345,53 @@ def find_hough(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
         best_th = th_values[i_best_th]
         best_r = -(i_best_r + quant_r_min_dist) * r_stride
 
+    return best_th, best_r
+
+
+def find_hough(
+    data_x, data_y, r_stride, r_min_dist, r_max_dist, th_bin_num,
+):
+    """Analyze the data and find the best line
+    """
+    logg = logging.getLogger(f"c.{__name__}.find_hough")
+    logg.debug(f"Start find_hough")
+
+    r_bin_num = math.floor((r_max_dist - r_min_dist) / r_stride)
+
+    th_values = np.linspace(0, math.pi, th_bin_num, endpoint=False)
+
+    # all_pt_dist_all_th = do_hough(
+    #     data_x, data_y, th_values
+    # )
+    # find all the sinusoids
+    all_pt_dist_all_th = do_hough_mat(data_x, data_y, th_values)
+    logg.debug(f"all_pt_dist_all_th.shape: {all_pt_dist_all_th.shape}")
+
+    # on the theta it is automatically quantized, the data is aligned to th_values
+    # quantize the distances by dividing by r_stride and rounding
+    quant_all_pt_dist_all_th = all_pt_dist_all_th / r_stride
+    int_all_pt_dist_all_th = np.rint(quant_all_pt_dist_all_th).astype(np.int16)
+    logg.debug(f"int_all_pt_dist_all_th.shape: {int_all_pt_dist_all_th.shape}")
+
+    # keep track of where we see the lines
+    # we *include* the min/max values for r, so we need an extra bin
+    bins_pos = np.zeros((th_bin_num, r_bin_num + 1), dtype=np.uint16)
+    bins_neg = np.zeros((th_bin_num, r_bin_num + 1), dtype=np.uint16)
+    logg.debug(f"bins_pos.shape: {bins_pos.shape}")
+
+    quant_r_min_dist = int(np.rint(r_min_dist / r_stride))
+    quant_r_max_dist = int(np.rint(r_max_dist / r_stride))
+    logg.debug(f"quant_r_min_dist: {quant_r_min_dist}")
+    logg.debug(f"quant_r_max_dist: {quant_r_max_dist}")
+
+    fill_bins(
+        int_all_pt_dist_all_th, quant_r_min_dist, quant_r_max_dist, bins_pos, bins_neg
+    )
+
+    best_th, best_r = find_best_bin(
+        bins_pos, bins_neg, th_values, quant_r_min_dist, quant_r_max_dist, r_stride
+    )
+
     logg.debug(f"best_th: {best_th} best_r {best_r} pi-best_th {math.pi-best_th}")
 
     # return all_pt_dist_all_th, th_values
@@ -483,14 +399,12 @@ def find_hough(left_filt_x, left_filt_y, right_filt_x, right_filt_y):
     return quant_all_pt_dist_all_th, int_all_pt_dist_all_th, th_values, best_th, best_r
 
 
-def run_analyze_laser_data(args):
-    """TODO: What is analyze_laser_data doing?
+def load_filer_data(data_file_name, sector_wid):
+    """TODO: what is load_filer_data doing?
     """
-    logg = logging.getLogger(f"c.{__name__}.run_analyze_laser_data")
-    logg.debug(f"Starting run_analyze_laser_data")
+    logg = logging.getLogger(f"c.{__name__}.load_filer_data")
+    logg.debug(f"Start load_filer_data")
 
-    data_file_name = "laser_data_16707.txt"
-    # data_file_name = "laser_data_straight.txt"
     data = load_data(data_file_name)
 
     # extract the data
@@ -504,14 +418,6 @@ def run_analyze_laser_data(args):
     odom_robot_yaw = data["odom_robot_yaw"]
     logg.debug(f"odom_robot_yaw {odom_robot_yaw} relative {odom_robot_yaw-math.pi/2}")
 
-    # how many rays to consider each side, around the center of the beam
-    sector_wid = 50
-
-    # set sector_wid in degrees
-    sector_wid_deg = 30
-    sector_wid = math.floor(sector_wid_deg / 180 * 200)
-    logg.debug(f"sector_wid: {sector_wid} degrees {sector_wid_deg}")
-
     t_filt_start = timer()
 
     # filter the data from the lasers
@@ -522,22 +428,73 @@ def run_analyze_laser_data(args):
     t_filt_end = timer()
     logg.debug(f"Filtering took {t_filt_end-t_filt_start} seconds")
 
+    return left_filt_x, left_filt_y, right_filt_x, right_filt_y
+
+
+def run_analyze_laser_data(args):
+    """TODO: What is analyze_laser_data doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.run_analyze_laser_data")
+    logg.debug(f"Starting run_analyze_laser_data")
+
+    ########################
+    # set hough parameters #
+    ########################
+
+    # set sector_wid in degrees
+    sector_wid_deg = 30
+    sector_wid = math.floor(sector_wid_deg / 180 * 200)
+    logg.debug(f"sector_wid: {sector_wid} degrees {sector_wid_deg}")
+
+    # r dimension of the bins
+    # r_stride = 0.05
+    r_stride = 0.01
+    # r_stride = 0.005
+    r_min_dist = 0.1
+    r_max_dist = 0.6
+
+    # number of bins in the [0, 180) interval
+    # th_bin_num = 36
+    # th_bin_num = 180
+    th_bin_num = 360
+    # th_bin_num = 720
+
+    #####################################
+    # load the laser data and filter it #
+    #####################################
+
+    data_file_name = "laser_data_16707.txt"
+    # data_file_name = "laser_data_straight.txt"
+
+    left_filt_x, left_filt_y, right_filt_x, right_filt_y = load_filer_data(
+        data_file_name, sector_wid
+    )
+
+    #############################################
+    # standard fitting of two independent lines #
+    #############################################
+
     t_fit_start = timer()
-    # standard fitting of two independent lines
     left_coeff, right_coeff = fit_parallel_lines(
-        left_filt_x, left_filt_y, right_filt_x, right_filt_y
+        left_filt_x, left_filt_y, right_filt_x, right_filt_y,
     )
     t_fit_end = timer()
     logg.debug(f"Fitting took {t_fit_end-t_fit_start} seconds")
 
+    ###################
+    # run hough lines #
+    ###################
+
     t_analyze_start = timer()
-
     all_pt_dist_all_th, int_all_pt_dist_all_th, th_values, best_th, best_r = find_hough(
-        left_filt_x, left_filt_y, right_filt_x, right_filt_y
+        left_filt_x, left_filt_y, r_stride, r_min_dist, r_max_dist, th_bin_num,
     )
-
     t_analyze_end = timer()
     logg.debug(f"Analyzing took {t_analyze_end-t_analyze_start} seconds")
+
+    ################
+    # plot results #
+    ################
 
     # setup plot
     fig, ax = plt.subplots(1, 2)
