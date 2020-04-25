@@ -150,8 +150,8 @@ def translate_point_dir(orig_point, dir_deg, shift):
 def translate_spline_sequence(spline_sequence, dx, dy):
     """Changes a spline, translating the points by (dx, dy)
     """
-    logg = logging.getLogger(f"c.{__name__}.translate_spline_sequence")
-    logg.debug(f"Start translate_spline_sequence")
+    # logg = logging.getLogger(f"c.{__name__}.translate_spline_sequence")
+    # logg.debug(f"Start translate_spline_sequence")
 
     for glyph in spline_sequence:
         for op in glyph:
@@ -589,8 +589,8 @@ def sample_parametric_aligned(
 def find_align_stride(glyphs):
     """Given an iterable of glyphs, finds the stride to sample them
     """
-    logg = logging.getLogger(f"c.{__name__}.find_align_stride")
-    logg.debug(f"Start find_align_stride")
+    # logg = logging.getLogger(f"c.{__name__}.find_align_stride")
+    # logg.debug(f"Start find_align_stride")
 
     x_strides = []
     for glyph in glyphs:
@@ -604,7 +604,7 @@ def find_align_stride(glyphs):
     # large segments will become too slow.
     x_stride = max(x_strides)
     x_stride = 10 ** math.floor(math.log(x_stride, 10))
-    logg.debug(f"x_stride: {x_stride}")
+    # logg.debug(f"x_stride: {x_stride}")
 
     return x_stride
 
@@ -612,8 +612,8 @@ def find_align_stride(glyphs):
 def find_spline_sequence_bbox(spline_sequence, old_xlim=None, old_ylim=None):
     """TODO: what is find_spline_sequence_bbox doing?
     """
-    logg = logging.getLogger(f"c.{__name__}.find_spline_sequence_bbox")
-    logg.debug(f"Start find_spline_sequence_bbox")
+    # logg = logging.getLogger(f"c.{__name__}.find_spline_sequence_bbox")
+    # logg.debug(f"Start find_spline_sequence_bbox")
 
     if old_xlim is None:
         min_x = float("inf")
@@ -637,6 +637,6 @@ def find_spline_sequence_bbox(spline_sequence, old_xlim=None, old_ylim=None):
                 max_y = point.y
             if point.y < min_y:
                 min_y = point.y
-    logg.debug(f"max_x: {max_x} min_x: {min_x} max_y: {max_y} min_y: {min_y}")
+    # logg.debug(f"max_x: {max_x} min_x: {min_x} max_y: {max_y} min_y: {min_y}")
 
     return (min_x, max_x), (min_y, max_y)

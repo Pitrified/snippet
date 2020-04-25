@@ -8,17 +8,26 @@ class Letter:
         self,
         letter,
         left_type,
-        right_preference,
+        right_type,
         pf_spline_alone=None,
         pf_spline_high=None,
         pf_spline_low=None,
     ):
         """TODO: what is __init__ doing?
 
-        right_preference and left_type are referred to the natural state of the letter:
+        right_type and left_type are referred to the natural state of the letter:
         high/low indicate the height of the attachment, up/down indicate the concavity
 
         all letters with left_type low_up also have the alternative version high_up
+
+              possible types:
+                    left_type          right_type
+
+                    high_down
+                      high_up          high_up
+                               letter
+                       low_up          low_up
+
         """
         logg = logging.getLogger(f"c.{__name__}.__init__")
         logg.debug(f"Start __init__ {letter}")
@@ -27,7 +36,7 @@ class Letter:
             logg.error(f"No file specified")
 
         self.letter = letter
-        self.right_preference = right_preference
+        self.right_type = right_type
         self.left_type = left_type
 
         self.pf_spline = {}
@@ -39,14 +48,15 @@ class Letter:
         self.gly_num = {}
         self.point_num = {}
 
-        self.data_dir = self.pf_spline["alone"].parent
-
         # if available, load alternate high splines
         if self.pf_spline["alone"] is not None:
+            self.data_dir = self.pf_spline["alone"].parent
             self.load_spline_info("alone")
         if self.pf_spline["high"] is not None:
+            self.data_dir = self.pf_spline["high"].parent
             self.load_spline_info("high")
         if self.pf_spline["low"] is not None:
+            self.data_dir = self.pf_spline["low"].parent
             self.load_spline_info("low")
 
     def load_spline_info(self, which):
@@ -65,9 +75,19 @@ class Letter:
         if self.gly_num[which] <= 2:
             logg.warn(f"Not enough glyphs in the spline '{which}'")
 
+    def get_pf(self, which):
+        """TODO: what is get_pf doing?
+        """
+        logg = logging.getLogger(f"c.{__name__}.get_pf")
+        logg.debug(f"Start get_pf")
+
+        # the requested type exists
+        if self.pf_spline[which] is not None:
+            return self.pf_spline[which]
+
     def __str__(self):
         the_str = f"'{self.letter}'"
-        the_str += f" r_pref '{self.right_preference}' l_type '{self.left_type}'"
+        the_str += f" r_type '{self.right_type}' l_type '{self.left_type}'"
 
         if self.pf_spline["alone"] is not None:
             the_str += f", glyphs_alone {self.gly_num['alone']}"

@@ -108,7 +108,7 @@ def find_best_shift(l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_str
     ext_y_as: y values of the connecting segment
     """
     logg = logging.getLogger(f"c.{__name__}.find_best_shift")
-    logg.debug(f"Start find_best_shift")
+    # logg.debug(f"Start find_best_shift")
 
     shift_start = timer()
 
@@ -120,9 +120,9 @@ def find_best_shift(l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_str
     shift_a_11 = math.floor(shift_11 / x_stride) * x_stride
     shift_a_10 = math.ceil(shift_10 / x_stride) * x_stride
     shift_range = np.arange(shift_a_11, shift_a_10 + x_stride / 2, x_stride)
-    recap = f"shift_11: {shift_11} shift_10: {shift_10}"
-    recap += f" shift_a_11: {shift_a_11} shift_a_10: {shift_a_10}"
-    logg.debug(recap)
+    # recap = f"shift_11: {shift_11} shift_10: {shift_10}"
+    # recap += f" shift_a_11: {shift_a_11} shift_a_10: {shift_a_10}"
+    # logg.debug(recap)
 
     best_dist_x_touch = float("inf")
     best_shift = None
@@ -179,7 +179,7 @@ def find_best_shift(l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_str
         # logg.debug(recap)
 
     tangent_time_mean = sum(tangent_times) / len(tangent_times)
-    logg.debug(f"Mean tangent time: {tangent_time_mean}")
+    logg.debug(f"Mean tangent time: {tangent_time_mean:.6f}")
 
     # extract the best value as current (r_x_as = r_x_orig_as + best_shift)
     r_x_as = best_r_x_as
@@ -257,8 +257,8 @@ def find_best_shift(l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_str
 def align_letter_1(spline_sequence_l, spline_sequence_r, x_stride):
     """TODO: what is align_letter_1 doing?
     """
-    logg = logging.getLogger(f"c.{__name__}.align_letter_1")
-    logg.debug(f"Start align_letter_1")
+    # logg = logging.getLogger(f"c.{__name__}.align_letter_1")
+    # logg.debug(f"Start align_letter_1")
 
     # extract the last and the first glyphs in the two letters
     gly_seq_l = spline_sequence_l[-1]
@@ -271,7 +271,7 @@ def align_letter_1(spline_sequence_l, spline_sequence_r, x_stride):
     (best_shift, _, _, _, _, l_p_ext, r_p_ext, _, _,) = find_best_shift(
         l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_stride
     )
-    logg.debug(f"best_shift: {best_shift}")
+    # logg.debug(f"best_shift: {best_shift}")
 
     # find where to chop the left glyph, at the last point left to l_p_ext
     for l_p_id, op in enumerate(gly_seq_l):
@@ -292,3 +292,42 @@ def align_letter_1(spline_sequence_l, spline_sequence_r, x_stride):
     spline_sequence_con = [gly_seq_con]
 
     return spline_sequence_con, gly_chop_l, gly_chop_r, best_shift
+
+
+def align_letter_2(spline_sequence_l, spline_sequence_r, x_stride):
+    """TODO: what is align_letter_2 doing?
+    """
+    # logg = logging.getLogger(f"c.{__name__}.align_letter_2")
+    # logg.debug(f"Start align_letter_2")
+
+    # extract the last and the first glyphs in the two letters
+    gly_seq_l = spline_sequence_l[-1]
+    gly_seq_r = spline_sequence_r[0]
+
+    # compute the data for the left and right glyph
+    _, l_x_as, l_y_as, l_yp_as = compute_aligned_glyph(gly_seq_l, x_stride)
+    _, r_x_orig_as, r_y_as, r_yp_as = compute_aligned_glyph(gly_seq_r, x_stride)
+
+    # build a point oriented like r_first_op on l_last_op
+    r_first_op_ori_deg = slope2deg(r_yp_as[0])
+    l_line_op = OrientedPoint(l_x_as[-1], l_y_as[-1], r_first_op_ori_deg)
+    a, b = l_line_op.to_ab_line()
+
+    # the x value of r_first_op.y along l_line_op
+    x_shift_r_first = (r_y_as[0] - b) / a
+    r_x_shift = x_shift_r_first - r_x_orig_as[0]
+    r_x_shift_al = math.floor(r_x_shift / x_stride) * x_stride
+
+    # create the OrientedPoint for the ligature
+    l_last_op_ori_deg = slope2deg(l_yp_as[-1])
+    l_last_op = OrientedPoint(l_x_as[-1], l_y_as[-1], l_last_op_ori_deg)
+    # r_first_op = OrientedPoint(r_x_as[0], r_y_as[0], r_first_op_ori_deg)
+    r_first_op = OrientedPoint(
+        r_x_orig_as[0] + r_x_shift_al, r_y_as[0], r_first_op_ori_deg
+    )
+
+    # build the connecting glyph
+    gly_seq_con = [l_last_op, r_first_op]
+    spline_sequence_con = [gly_seq_con]
+
+    return spline_sequence_con, r_x_shift_al, (a, b)

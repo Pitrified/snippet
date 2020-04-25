@@ -9,6 +9,7 @@ from timeit import default_timer as timer
 
 from cursive_writer.ligature.ligature import find_best_shift
 from cursive_writer.ligature.ligature import align_letter_1
+from cursive_writer.ligature.ligature import align_letter_2
 from cursive_writer.spliner.spliner import compute_aligned_cubic_segment
 from cursive_writer.spliner.spliner import compute_aligned_glyph
 from cursive_writer.spliner.spliner import compute_long_thick_spline
@@ -389,7 +390,7 @@ def ex_align_letters_1(pf_spline_left, pf_spline_right, data_dir, thickness):
         * low_up/low_up: mi
     """
     logg = logging.getLogger(f"c.{__name__}.ex_align_letters_1")
-    logg.debug(f"Start ex_align_letters_1")
+    logg.debug(f"\nStart ex_align_letters_1")
     recap = f"pf_spline_left.stem: {pf_spline_left.stem}"
     recap += f" pf_spline_right.stem {pf_spline_right.stem}"
     logg.debug(recap)
@@ -401,9 +402,12 @@ def ex_align_letters_1(pf_spline_left, pf_spline_right, data_dir, thickness):
     # find a proper x_stride for this pair of files
     x_stride = find_align_stride((*spline_sequence_l, *spline_sequence_r))
 
+    t_align1_start = timer()
     spline_sequence_con, gly_chop_l, gly_chop_r, best_shift = align_letter_1(
         spline_sequence_l, spline_sequence_r, x_stride
     )
+    t_align1_end = timer()
+    logg.debug(f"Time to align_letter_1: {t_align1_end - t_align1_start:.6f}")
 
     # translate the right spline along x axis
     translate_spline_sequence(spline_sequence_r, best_shift, 0)
@@ -450,7 +454,7 @@ def ex_align_letters_1(pf_spline_left, pf_spline_right, data_dir, thickness):
         [spline_samples_r, spline_samples_con, spline_samples_l]
     ):
         style = {"color": f"{col_list[i]}", "marker": ".", "ls": ""}
-        logg.debug(f"style: {style}")
+        # logg.debug(f"style: {style}")
         for glyph in spline:
             for segment in glyph:
                 ax.plot(*segment, **style)
@@ -460,43 +464,23 @@ def ex_align_letters_2(pf_spline_left, pf_spline_right, data_dir, thickness):
     """TODO: what is ex_align_letters_2 doing?
     """
     logg = logging.getLogger(f"c.{__name__}.ex_align_letters_2")
-    logg.debug(f"Start ex_align_letters_2")
+    logg.debug(f"\nStart ex_align_letters_2")
 
     spline_sequence_l = load_spline(pf_spline_left, data_dir)
-    gly_seq_l = spline_sequence_l[-1]
     spline_sequence_r = load_spline(pf_spline_right, data_dir)
-    gly_seq_r = spline_sequence_r[0]
 
     # find a proper x_stride for this pair of files
     x_stride = find_align_stride((*spline_sequence_l, *spline_sequence_r))
-    # compute the data for the left and right glyph
-    _, l_x_as, l_y_as, l_yp_as = compute_aligned_glyph(gly_seq_l, x_stride)
-    _, r_x_orig_as, r_y_as, r_yp_as = compute_aligned_glyph(gly_seq_r, x_stride)
 
-    # build a point oriented like r_first_op on l_last_op
-    r_first_op_ori_deg = slope2deg(r_yp_as[0])
-    l_line_op = OrientedPoint(l_x_as[-1], l_y_as[-1], r_first_op_ori_deg)
-    a, b = l_line_op.to_ab_line()
-
-    # the x value of r_first_op.y along l_line_op
-    x_shift_r_first = (r_y_as[0] - b) / a
-    r_x_shift = x_shift_r_first - r_x_orig_as[0]
-    r_x_shift_al = math.floor(r_x_shift / x_stride) * x_stride
-
-    # shift the right glyph
-    r_x_as = r_x_orig_as + r_x_shift_al
+    t_align2_start = timer()
+    spline_sequence_con, r_x_shift_al, con_line_coeff = align_letter_2(
+        spline_sequence_l, spline_sequence_r, x_stride
+    )
+    t_align2_end = timer()
+    logg.debug(f"Time to align_letter_2: {t_align2_end - t_align2_start:.6f}")
 
     # translate the right spline along x axis
     translate_spline_sequence(spline_sequence_r, r_x_shift_al, 0)
-
-    # create the OrientedPoint for the ligature
-    l_last_op_ori_deg = slope2deg(l_yp_as[-1])
-    l_last_op = OrientedPoint(l_x_as[-1], l_y_as[-1], l_last_op_ori_deg)
-    r_first_op = OrientedPoint(r_x_as[0], r_y_as[0], r_first_op_ori_deg)
-
-    # build the connecting glyph
-    gly_seq_con = [l_last_op, r_first_op]
-    spline_sequence_con = [gly_seq_con]
 
     # compute the thick spline
     spline_samples_con = compute_long_thick_spline(spline_sequence_con, thickness)
@@ -536,14 +520,16 @@ def ex_align_letters_2(pf_spline_left, pf_spline_right, data_dir, thickness):
         [spline_samples_r, spline_samples_con, spline_samples_l]
     ):
         style = {"color": f"{col_list[i]}", "marker": ".", "ls": ""}
-        logg.debug(f"style: {style}")
+        # logg.debug(f"style: {style}")
         for glyph in spline:
             for segment in glyph:
                 ax.plot(*segment, **style)
 
     # plot the line used
-    l_line_x_sample = np.linspace(l_x_as[0], r_x_as[-1])
-    l_line_y_a_sample = poly_model(l_line_x_sample, np.array([b, a]))
+    left_last_op = spline_sequence_l[-1][0]
+    right_first_op = spline_sequence_r[0][-1]
+    l_line_x_sample = np.linspace(left_last_op.x, right_first_op.x)
+    l_line_y_a_sample = poly_model(l_line_x_sample, con_line_coeff, flip_coeff=True)
     ax.plot(l_line_x_sample, l_line_y_a_sample, color="c", ls=":", marker="")
 
 

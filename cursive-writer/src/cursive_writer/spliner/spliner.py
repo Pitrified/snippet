@@ -516,8 +516,8 @@ def compute_long_thick_spline(spline_sequence, thickness=20):
     returns a list of list of 2-tuples
     spline_samples = [[(x12, y12), (x23, y23), ...], ...]
     """
-    logg = logging.getLogger(f"c.{__name__}.compute_long_thick_spline")
-    logg.debug(f"Start compute_long_thick_spline")
+    # logg = logging.getLogger(f"c.{__name__}.compute_long_thick_spline")
+    # logg.debug(f"Start compute_long_thick_spline")
 
     spline_samples = []
 
@@ -542,8 +542,8 @@ def compute_aligned_cubic_segment(p0, p1, x_stride=1, ax=None):
     TODO: better documentation of parameters/return
     """
     logg = logging.getLogger(f"c.{__name__}.compute_aligned_cubic_segment")
-    logg.debug(f"Start compute_aligned_cubic_segment")
     logg.setLevel("INFO")
+    logg.debug(f"Start compute_aligned_cubic_segment")
     logg.debug(f"p0: {p0} p1: {p1}")
 
     # if the points are actually the same, return just that
@@ -615,8 +615,8 @@ def compute_aligned_glyph(gly_seq, x_stride):
     """TODO: what is compute_aligned_glyph doing?
     """
     logg = logging.getLogger(f"c.{__name__}.compute_aligned_glyph")
-    logg.debug(f"Start compute_aligned_glyph")
     logg.setLevel("INFO")
+    logg.debug(f"Start compute_aligned_glyph")
 
     all_t_as = []
     all_x_as = []
