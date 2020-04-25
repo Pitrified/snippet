@@ -29,6 +29,7 @@
 * Throttle keypress events, set a flag `active` and ignore other events? Why do they
   even get caled so frequently if they are bound to `KeyRelease`?
 * Check if the FM lines are set before going to afjust fm lines state
+* When the canvas is vertical, change layout
 
 ### MAYBE
 

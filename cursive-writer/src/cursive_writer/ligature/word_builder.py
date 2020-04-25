@@ -50,10 +50,10 @@ def load_letter_dict(data_dir):
 
     letters_info = {}
     letters_info["i"] = Letter(
-        "i", "low_up", "low_up", data_dir / "i1_006.txt", data_dir / "i1_h_006.txt"
+        "i", "low_up", "low_up", data_dir / "i2_l_000.txt", data_dir / "i1_h_006.txt"
     )
     letters_info["v"] = Letter("v", "high_down", "high_up", data_dir / "v1_001.txt")
-    letters_info["m"] = Letter("m", "high_down", "low_up", data_dir / "m1_001.txt")
+    letters_info["m"] = Letter("m", "high_down", "low_up", data_dir / "m2_000.txt")
     return letters_info
 
 
@@ -78,7 +78,9 @@ def run_word_builder(args):
     logg.debug(f"data_dir: {data_dir}")
 
     letters_info = load_letter_dict(data_dir)
-    logg.debug(f"letters_info: {letters_info}")
+    logg.debug(f"letters_info:")
+    for letter in letters_info:
+        logg.debug(f"{letters_info[letter]}")
 
     ligature_info = {}
 
