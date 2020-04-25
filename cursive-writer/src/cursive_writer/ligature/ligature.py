@@ -5,6 +5,7 @@ import math
 from timeit import default_timer as timer
 
 from cursive_writer.spliner.spliner import compute_aligned_cubic_segment
+from cursive_writer.spliner.spliner import compute_aligned_glyph
 from cursive_writer.utils.geometric_utils import poly_model
 from cursive_writer.utils.geometric_utils import slope2deg
 from cursive_writer.utils.oriented_point import OrientedPoint
@@ -251,3 +252,43 @@ def find_best_shift(l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_str
         ext_x_as,
         ext_y_as,
     )
+
+
+def align_letter_1(spline_sequence_l, spline_sequence_r, x_stride):
+    """TODO: what is align_letter_1 doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.align_letter_1")
+    logg.debug(f"Start align_letter_1")
+
+    # extract the last and the first glyphs in the two letters
+    gly_seq_l = spline_sequence_l[-1]
+    gly_seq_r = spline_sequence_r[0]
+
+    # compute the data for the left and right glyph
+    _, l_x_as, l_y_as, l_yp_as = compute_aligned_glyph(gly_seq_l, x_stride)
+    _, r_x_orig_as, r_y_as, r_yp_as = compute_aligned_glyph(gly_seq_r, x_stride)
+
+    (best_shift, _, _, _, _, l_p_ext, r_p_ext, _, _,) = find_best_shift(
+        l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_stride
+    )
+    logg.debug(f"best_shift: {best_shift}")
+
+    # find where to chop the left glyph, at the last point left to l_p_ext
+    for l_p_id, op in enumerate(gly_seq_l):
+        if op.x >= l_p_ext.x:
+            break
+    # l_p_id is the first that is right of l_p_ext, the slice *excludes* it
+    gly_chop_l = gly_seq_l[:l_p_id]
+
+    # find where to chop the right glyph, at the first point right of r_p_ext
+    for r_p_id, op in enumerate(gly_seq_r):
+        if op.x > r_p_ext.x:
+            break
+    # r_p_id is the first that is right of r_p_ext, the slice *includes* it
+    gly_chop_r = gly_seq_r[r_p_id:]
+
+    # build the connecting glyph
+    gly_seq_con = [gly_chop_l[-1], l_p_ext, r_p_ext, gly_chop_r[0]]
+    spline_sequence_con = [gly_seq_con]
+
+    return spline_sequence_con, gly_chop_l, gly_chop_r, best_shift

@@ -8,6 +8,7 @@ from pathlib import Path
 from timeit import default_timer as timer
 
 from cursive_writer.ligature.ligature import find_best_shift
+from cursive_writer.ligature.ligature import align_letter_1
 from cursive_writer.spliner.spliner import compute_aligned_cubic_segment
 from cursive_writer.spliner.spliner import compute_aligned_glyph
 from cursive_writer.spliner.spliner import compute_long_thick_spline
@@ -393,57 +394,23 @@ def ex_align_letters_1(pf_spline_left, pf_spline_right, data_dir, thickness):
     recap += f" pf_spline_right.stem {pf_spline_right.stem}"
     logg.debug(recap)
 
+    # load the points in the splines
     spline_sequence_l = load_spline(pf_spline_left, data_dir)
-    gly_seq_l = spline_sequence_l[-1]
     spline_sequence_r = load_spline(pf_spline_right, data_dir)
-    gly_seq_r = spline_sequence_r[0]
 
     # find a proper x_stride for this pair of files
     x_stride = find_align_stride((*spline_sequence_l, *spline_sequence_r))
 
-    # compute the data for the left and right glyph
-    _, l_x_as, l_y_as, l_yp_as = compute_aligned_glyph(gly_seq_l, x_stride)
-    _, r_x_orig_as, r_y_as, r_yp_as = compute_aligned_glyph(gly_seq_r, x_stride)
-
-    (
-        best_shift,
-        best_r_x_as,
-        best_l_tang_y_as,
-        l_id_s_x,
-        r_id_s_x,
-        l_p_ext,
-        r_p_ext,
-        ext_x_as,
-        ext_y_as,
-    ) = find_best_shift(l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_stride)
-    logg.debug(f"best_shift: {best_shift}")
-
-    # find where to chop the left glyph, at the last point left to l_p_ext
-    for l_p_id, op in enumerate(gly_seq_l):
-        if op.x >= l_p_ext.x:
-            break
-    # l_p_id is the first that is right of l_p_ext, the slice *excludes* it
-    spline_sequence_l[-1] = gly_seq_l[:l_p_id]
-
-    # find where to chop the right glyph, at the first point right of r_p_ext
-    for r_p_id, op in enumerate(gly_seq_r):
-        if op.x > r_p_ext.x:
-            break
-    # r_p_id is the first that is right of r_p_ext, the slice *includes* it
-    spline_sequence_r[0] = gly_seq_r[r_p_id:]
+    spline_sequence_con, gly_chop_l, gly_chop_r, best_shift = align_letter_1(
+        spline_sequence_l, spline_sequence_r, x_stride
+    )
 
     # translate the right spline along x axis
     translate_spline_sequence(spline_sequence_r, best_shift, 0)
 
-    # build the connecting glyph
-    gly_seq_con = [spline_sequence_l[-1][-1], l_p_ext, r_p_ext, spline_sequence_r[0][0]]
-    spline_sequence_con = [gly_seq_con]
-
-    # build a single sequence
-    spline_sequence_all = []
-    spline_sequence_all.extend(spline_sequence_l)
-    spline_sequence_all.extend(spline_sequence_con)
-    spline_sequence_all.extend(spline_sequence_r)
+    # change the last/first glyphs of the splines
+    spline_sequence_l[-1] = gly_chop_l
+    spline_sequence_r[0] = gly_chop_r
 
     # compute the thick spline
     spline_samples_con = compute_long_thick_spline(spline_sequence_con, thickness)
@@ -457,7 +424,8 @@ def ex_align_letters_1(pf_spline_left, pf_spline_right, data_dir, thickness):
     spline_samples_all.extend(spline_samples_r)
 
     # find dimension of the plot
-    xlim, ylim = find_spline_sequence_bbox(spline_sequence_all)
+    xlim, ylim = find_spline_sequence_bbox(spline_sequence_l)
+    xlim, ylim = find_spline_sequence_bbox(spline_sequence_r, xlim, ylim)
     # inches to point
     ratio = 6 / 1000
     wid = xlim[1] - xlim[0]
@@ -472,20 +440,20 @@ def ex_align_letters_1(pf_spline_left, pf_spline_right, data_dir, thickness):
 
     # colors = False
     colors = True
+
     if colors:
-        for glyph in spline_samples_r:
-            for segment in glyph:
-                ax.plot(*segment, color="g", marker=".", ls="")
-        for glyph in spline_samples_con:
-            for segment in glyph:
-                ax.plot(*segment, color="r", marker=".", ls="")
-        for glyph in spline_samples_l:
-            for segment in glyph:
-                ax.plot(*segment, color="y", marker=".", ls="")
+        col_list = ["g", "r", "y"]
     else:
-        for glyph in spline_samples_all:
+        col_list = ["k", "k", "k"]
+
+    for i, spline in enumerate(
+        [spline_samples_r, spline_samples_con, spline_samples_l]
+    ):
+        style = {"color": f"{col_list[i]}", "marker": ".", "ls": ""}
+        logg.debug(f"style: {style}")
+        for glyph in spline:
             for segment in glyph:
-                ax.plot(*segment, color="k", marker=".", ls="")
+                ax.plot(*segment, **style)
 
 
 def ex_align_letters_2(pf_spline_left, pf_spline_right, data_dir, thickness):
@@ -530,12 +498,6 @@ def ex_align_letters_2(pf_spline_left, pf_spline_right, data_dir, thickness):
     gly_seq_con = [l_last_op, r_first_op]
     spline_sequence_con = [gly_seq_con]
 
-    # build a single sequence
-    spline_sequence_all = []
-    spline_sequence_all.extend(spline_sequence_l)
-    spline_sequence_all.extend(spline_sequence_con)
-    spline_sequence_all.extend(spline_sequence_r)
-
     # compute the thick spline
     spline_samples_con = compute_long_thick_spline(spline_sequence_con, thickness)
     spline_samples_l = compute_long_thick_spline(spline_sequence_l, thickness)
@@ -548,7 +510,8 @@ def ex_align_letters_2(pf_spline_left, pf_spline_right, data_dir, thickness):
     spline_samples_all.extend(spline_samples_r)
 
     # find dimension of the plot
-    xlim, ylim = find_spline_sequence_bbox(spline_sequence_all)
+    xlim, ylim = find_spline_sequence_bbox(spline_sequence_l)
+    xlim, ylim = find_spline_sequence_bbox(spline_sequence_r, xlim, ylim)
     # inches to point
     ratio = 6 / 1000
     wid = xlim[1] - xlim[0]
@@ -563,20 +526,20 @@ def ex_align_letters_2(pf_spline_left, pf_spline_right, data_dir, thickness):
 
     # colors = False
     colors = True
+
     if colors:
-        for glyph in spline_samples_r:
-            for segment in glyph:
-                ax.plot(*segment, color="g", marker=".", ls="")
-        for glyph in spline_samples_con:
-            for segment in glyph:
-                ax.plot(*segment, color="r", marker=".", ls="")
-        for glyph in spline_samples_l:
-            for segment in glyph:
-                ax.plot(*segment, color="y", marker=".", ls="")
+        col_list = ["g", "r", "y"]
     else:
-        for glyph in spline_samples_all:
+        col_list = ["k", "k", "k"]
+
+    for i, spline in enumerate(
+        [spline_samples_r, spline_samples_con, spline_samples_l]
+    ):
+        style = {"color": f"{col_list[i]}", "marker": ".", "ls": ""}
+        logg.debug(f"style: {style}")
+        for glyph in spline:
             for segment in glyph:
-                ax.plot(*segment, color="k", marker=".", ls="")
+                ax.plot(*segment, **style)
 
     # plot the line used
     l_line_x_sample = np.linspace(l_x_as[0], r_x_as[-1])
@@ -596,11 +559,12 @@ def exs_align_letters(data_dir, thickness):
     # ex_align_letters_1(pf_i, pf_ol, data_dir, thickness)
 
     # pf_m = data_dir / "m1_001.txt"
+    pf_m = data_dir / "m2_000.txt"
     # pf_i = data_dir / "i1_006.txt"
     # pf_i = data_dir / "i1_007.txt"
     pf_i = data_dir / "i2_l_000.txt"
     # pf_ih = data_dir / "i1_h_006.txt"
-    # pf_v = data_dir / "v1_001.txt"
+    pf_v = data_dir / "v1_001.txt"
     # pf_o = data_dir / "o1_002.txt"
     # pf_oh = data_dir / "o1_h_001.txt"
     # pf_ol = data_dir / f"o1_l_004.txt"
@@ -613,9 +577,8 @@ def exs_align_letters(data_dir, thickness):
 
     ex_align_letters_1(pf_i, pf_ol, data_dir, thickness)
     ex_align_letters_1(pf_i, pf_i, data_dir, thickness)
-    # ex_align_letters_1(pf_m, pf_ol, data_dir, thickness)
+    ex_align_letters_1(pf_m, pf_ol, data_dir, thickness)
     # ex_align_letters_1(pf_v, pf_oh, data_dir, thickness)
-    # ex_align_letters_2(pf_i, pf_ol, data_dir, thickness)
 
     # ex_align_letters_1(pf_m, pf_i, data_dir, thickness)
     # ex_align_letters_1(pf_o, pf_ih, data_dir, thickness)
@@ -623,9 +586,9 @@ def exs_align_letters(data_dir, thickness):
     # ex_align_letters_1(pf_v, pf_ih, data_dir, thickness)
     # ex_align_letters_1(pf_v, pf_m, data_dir, thickness)
 
-    # ex_align_letters_2(pf_i, pf_v, data_dir, thickness)
+    ex_align_letters_2(pf_i, pf_v, data_dir, thickness)
     # ex_align_letters_2(pf_ih, pf_m, data_dir, thickness)
-    # ex_align_letters_2(pf_m, pf_v, data_dir, thickness)
+    ex_align_letters_2(pf_m, pf_v, data_dir, thickness)
 
 
 def run_ligature_examples(args):
