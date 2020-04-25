@@ -6,9 +6,12 @@ import matplotlib.pyplot as plt
 
 from random import seed as rseed
 from timeit import default_timer as timer
+from pathlib import Path
 
 from analyze_laser_data import load_filer_data
 from hough_parallel import HoughParallel
+from utils import slope2deg
+from utils import slope2rad
 
 
 def parse_arguments():
@@ -146,7 +149,8 @@ def visual_test_all_dist_all_th(hp, ax=None):
 
     style = {"ls": "", "marker": ".", "color": "c"}
     for dist_all_th in hp.int_all_dist_all_th:
-        ax.plot(hp.th_values, dist_all_th, **style)
+        # ax.plot(hp.th_values, dist_all_th, **style)
+        pass
 
 
 def visual_test_bins(hp, ax=None):
@@ -179,28 +183,157 @@ def fit_separate_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y, ax_
     # plot the left fit line
     left_fit_y = np.polyval(left_coeff, left_filt_x)
     style_fit = {"ls": "-", "marker": "", "color": "b"}
-    ax_points.plot(left_filt_x, left_fit_y, **style_fit)
+    ax_points.plot(left_filt_x, left_fit_y, label="Left line", **style_fit)
     # plot the right fit line
     right_fit_y = np.polyval(right_coeff, right_filt_x)
-    style_fit = {"ls": "-", "marker": "", "color": "b"}
-    ax_points.plot(right_filt_x, right_fit_y, **style_fit)
+    # style_fit = {"ls": "-", "marker": "", "color": "b"}
+    style_fit["color"] = "g"
+    ax_points.plot(right_filt_x, right_fit_y, label="Right line", **style_fit)
+
+    logg = logging.getLogger(f"c.{__name__}.fit_separate_lines")
+    logg.debug(f"left_coeff: {left_coeff} right_coeff {right_coeff}")
+    left_deg = slope2deg(left_coeff[0])
+    right_deg = slope2deg(right_coeff[0])
+    logg.debug(f"left_deg: {left_deg} right_deg {right_deg}")
+    left_rad = slope2rad(left_coeff[0])
+    right_rad = slope2rad(right_coeff[0])
+    logg.debug(f"left_rad: {left_rad} right_rad {right_rad}")
 
 
 def rth2ab(r, norm_th):
     """Given the distance from the origin and the normal direction theta, compute the
     coefficient of the line
     """
-    logg = logging.getLogger(f"c.{__name__}.rth2ab")
-    logg.debug(f"Start rth2ab")
+    # logg = logging.getLogger(f"c.{__name__}.rth2ab")
+    # logg.debug(f"Start rth2ab")
 
+    # point on the line
     x = math.cos(norm_th) * r
     y = math.sin(norm_th) * r
 
+    # direction of the line
     th = norm_th + math.pi / 2
+
+    # coefficients
     a = math.tan(th)
     b = y - a * x
-
     return np.array([a, b])
+
+
+def run_compare(args):
+    """TODO: what is run_compare doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.run_compare")
+    logg.debug(f"Start run_compare")
+
+    ########################
+    # set hough parameters #
+    ########################
+
+    # set sector_wid in degrees
+    # sector_wid_deg = 30
+    sector_wid_deg = 60
+    sector_wid = math.floor(sector_wid_deg / 180 * 200)
+    logg.debug(f"sector_wid: {sector_wid} degrees {sector_wid_deg}")
+
+    # r dimension of the bins
+    # r_stride = 0.05
+    # r_stride = 0.01
+    r_stride = 0.005
+    # r_stride = 0.0025
+    r_min_dist = 0.1
+    r_max_dist = 0.6
+
+    # number of bins in the [0, 180) interval
+    # th_bin_num = 12
+    # th_bin_num = 36
+    # th_bin_num = 180
+    th_bin_num = 360
+    # th_bin_num = 720
+
+    # the corridor width
+    corridor_width = 0.56
+
+    # create the HoughParallel analyzer
+    hp = HoughParallel(
+        0, 0, corridor_width, r_stride, r_min_dist, r_max_dist, th_bin_num
+    )
+
+    separate_delta = []
+    separate_values = []
+    separate_errors = []
+    all_t_analyze = []
+    all_t_fit = []
+    parallel_values = []
+    parallel_errors = []
+
+    base_name_fmt = "ld_03_{:03d}.txt"
+    main_dir = Path(__file__).resolve().parent
+    for i in range(1000):
+        data_file_name = base_name_fmt.format(i)
+        data_file = main_dir / "laser_data" / data_file_name
+        if not data_file.exists():
+            break
+
+        logg.debug(f"\ndata_file.name: {data_file.name}")
+
+        # load the data
+        left_filt_x, left_filt_y, right_filt_x, right_filt_y, data = load_filer_data(
+            data_file_name, sector_wid
+        )
+        data_x = np.hstack((left_filt_x, right_filt_x))
+        data_y = np.hstack((left_filt_y, right_filt_y))
+        true_yaw = data["odom_robot_yaw"]
+
+        hp.data_x = data_x
+        hp.data_y = data_y
+
+        # separate lines
+        t_fit_start = timer()
+        left_coeff = np.polyfit(left_filt_x, left_filt_y, 1)
+        right_coeff = np.polyfit(right_filt_x, right_filt_y, 1)
+        t_fit_end = timer()
+        all_t_fit.append(t_fit_end - t_fit_start)
+
+        # save results
+        left_rad = slope2rad(left_coeff[0])
+        right_rad = slope2rad(right_coeff[0])
+        separate_delta.append(left_rad - right_rad)
+        separate_yaw = (left_rad + right_rad) / 2
+        separate_values.append(separate_yaw)
+        separate_errors.append(true_yaw + separate_yaw - math.pi / 2)
+
+        # parallel lines
+        t_analyze_start = timer()
+        best_th, best_r = hp.find_parallel_lines_mat()
+        t_analyze_end = timer()
+        all_t_analyze.append(t_analyze_end - t_analyze_start)
+        left_line_coeff = rth2ab(best_r, best_th)
+        left_line_rad = slope2rad(left_line_coeff[0])
+
+        # save results
+        parallel_values.append(left_line_rad)
+        parallel_errors.append(true_yaw + left_line_rad - math.pi / 2)
+
+        recap = f"true_yaw: {true_yaw:.4f}"
+        recap += f" separate_yaw: {separate_yaw:.4f}"
+        recap += f" parallel_yaw: {left_line_rad:.4f}"
+        logg.debug(recap)
+
+    mean_separate_value = np.mean(separate_values)
+    mean_separate_errors = np.mean(np.abs(separate_errors))
+    mean_separate_delta = np.mean(np.abs(separate_delta))
+    mean_parallel_value = np.mean(parallel_values)
+    mean_parallel_errors = np.mean(np.abs(parallel_errors))
+    mean_all_t_analyze = np.mean(all_t_analyze)
+    mean_all_t_fit = np.mean(all_t_fit)
+    logg.debug(f"mean_separate_value:  {mean_separate_value:9.6f}")
+    logg.debug(f"mean_separate_errors: {mean_separate_errors:9.6f}")
+    logg.debug(f"mean_separate_delta:  {mean_separate_delta:9.6f}")
+    logg.debug(f"mean_parallel_value:  {mean_parallel_value:9.6f}")
+    logg.debug(f"mean_parallel_errors: {mean_parallel_errors:9.6f}")
+    logg.debug(f"mean_all_t_analyze:   {mean_all_t_analyze:9.6f}")
+    logg.debug(f"mean_all_t_fit:       {mean_all_t_fit:9.6f}")
 
 
 def run_analyze_parallel_lines(args):
@@ -241,10 +374,11 @@ def run_analyze_parallel_lines(args):
     # load the laser data #
     #######################
 
-    data_file_name = "laser_data_16707.txt"
-    # data_file_name = "laser_data_straight.txt"
+    # data_file_name = "laser_data_16707.txt"
+    # data_file_name = "ld_03_059.txt"
+    data_file_name = "laser_data_straight.txt"
 
-    left_filt_x, left_filt_y, right_filt_x, right_filt_y = load_filer_data(
+    left_filt_x, left_filt_y, right_filt_x, right_filt_y, data = load_filer_data(
         data_file_name, sector_wid
     )
 
@@ -282,17 +416,20 @@ def run_analyze_parallel_lines(args):
     visual_test_bins(hp, ax[2])
 
     # compute and plot the houghlines found
-    left_line_coeff = rth2ab(best_r, best_th)
-    right_line_coeff = rth2ab(best_r + corridor_width, best_th)
+    left_line_coeff = rth2ab(best_r + corridor_width, best_th)
+    right_line_coeff = rth2ab(best_r, best_th)
     left_line_y = np.polyval(left_line_coeff, left_filt_x)
     right_line_y = np.polyval(right_line_coeff, right_filt_x)
     style_hough = {"ls": "-", "marker": "", "color": "r"}
-    ax_points.plot(left_filt_x, left_line_y, **style_hough)
+    ax_points.plot(left_filt_x, left_line_y, label="HoughParallel", **style_hough)
     ax_points.plot(right_filt_x, right_line_y, **style_hough)
+    ax_points.legend(loc="center left")
 
+    fig.tight_layout()
     plt.show()
 
 
 if __name__ == "__main__":
     args = setup_env()
     run_analyze_parallel_lines(args)
+    # run_compare(args)

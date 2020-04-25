@@ -20,7 +20,7 @@ def load_data(data_file_name):
     """Load the data from a .json file
     """
     logg = logging.getLogger(f"c.{__name__}.load_data")
-    logg.debug(f"Start load_data")
+    # logg.debug(f"Start load_data")
 
     t_load_start = timer()
 
@@ -30,7 +30,9 @@ def load_data(data_file_name):
     data_file = main_dir / "laser_data" / data_file_name
     with data_file.open() as fp:
         data = json.load(fp)
-    logg.debug(f"data.keys(): {data.keys()}")
+    # logg.debug(f"data.keys(): {data.keys()}")
+
+    # logg.debug(f"data['odom_robot_yaw']: {data['odom_robot_yaw']}")
 
     t_load_end = timer()
     logg.debug(f"Loading took {t_load_end-t_load_start} seconds")
@@ -71,9 +73,9 @@ def polar_to_cartesian(ranges, angles_rad, dyaw=0, dx=0, dy=0):
 
     Can translate and rotate them
     """
-    logg = logging.getLogger(f"c.{__name__}.polar_to_cartesian")
+    # logg = logging.getLogger(f"c.{__name__}.polar_to_cartesian")
     # logg.debug(f"Start polar_to_cartesian")
-    logg.debug(f"Polar to cartesian dyaw: {dyaw} dx: {dx} dy: {dy}")
+    # logg.debug(f"Polar to cartesian dyaw: {dyaw} dx: {dx} dy: {dy}")
 
     cosens = np.cos(angles_rad + dyaw)
     sins = np.sin(angles_rad + dyaw)

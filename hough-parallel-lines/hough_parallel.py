@@ -88,8 +88,8 @@ class HoughParallel:
     def fill_bins(self):
         """Count the lines found
         """
-        logg = logging.getLogger(f"c.{__name__}.fill_bins")
-        logg.debug(f"Start fill_bins")
+        # logg = logging.getLogger(f"c.{__name__}.fill_bins")
+        # logg.debug(f"Start fill_bins")
 
         # quantize the dist values along r_stride grid
         self.quant_all_dist_all_th = self.all_dist_all_th / self.r_stride
@@ -118,17 +118,17 @@ class HoughParallel:
     def find_best_params(self):
         """Finds the most frequent line
         """
-        logg = logging.getLogger(f"c.{__name__}.find_best_params")
-        logg.debug(f"Start find_best_params")
+        # logg = logging.getLogger(f"c.{__name__}.find_best_params")
+        # logg.debug(f"Start find_best_params")
 
         # find the max
-        max_bin = np.max(self.bins)
+        # max_bin = np.max(self.bins)
         argmax_bin = np.argmax(self.bins)
         ind_argmax = np.unravel_index(argmax_bin, self.bins.shape)
-        recap = f"max_bin: {max_bin}"
-        recap += f" argmax_bin: {argmax_bin}"
-        recap += f" ind_argmax: {ind_argmax}"
-        logg.debug(recap)
+        # recap = f"max_bin: {max_bin}"
+        # recap += f" argmax_bin: {argmax_bin}"
+        # recap += f" ind_argmax: {ind_argmax}"
+        # logg.debug(recap)
 
         # go from index to value
         max_val = ind_argmax[1] + self.r_min

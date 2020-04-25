@@ -92,8 +92,8 @@ def setup_env():
 def extract_filt_lr(sector_wid, ranges, angles_rad, range_min, range_max):
     """Extract and filter the LaserScan data
     """
-    logg = logging.getLogger(f"c.{__name__}.extract_filt_lr")
-    logg.debug(f"Start extract_filt_lr")
+    # logg = logging.getLogger(f"c.{__name__}.extract_filt_lr")
+    # logg.debug(f"Start extract_filt_lr")
 
     # get left values
     left_center = 300
@@ -411,20 +411,20 @@ def load_filer_data(data_file_name, sector_wid):
     """TODO: what is load_filer_data doing?
     """
     logg = logging.getLogger(f"c.{__name__}.load_filer_data")
-    logg.debug(f"Start load_filer_data")
+    # logg.debug(f"Start load_filer_data")
 
     data = load_data(data_file_name)
 
     # extract the data
-    tot_ray_number = data["tot_ray_number"]
-    logg.debug(f"tot_ray_number: {tot_ray_number}")
+    # tot_ray_number = data["tot_ray_number"]
+    # logg.debug(f"tot_ray_number: {tot_ray_number}")
     ranges = np.array(data["ranges"])
     range_min = data["range_min"]
     range_max = data["range_max"]
     angles_rad = np.array(data["scan_angles"])
     # odom_robot_pose = data["odom_robot_pose"]
-    odom_robot_yaw = data["odom_robot_yaw"]
-    logg.debug(f"odom_robot_yaw {odom_robot_yaw} relative {odom_robot_yaw-math.pi/2}")
+    # odom_robot_yaw = data["odom_robot_yaw"]
+    # logg.debug(f"odom_robot_yaw {odom_robot_yaw} relative {odom_robot_yaw-math.pi/2}")
 
     t_filt_start = timer()
 
@@ -436,7 +436,7 @@ def load_filer_data(data_file_name, sector_wid):
     t_filt_end = timer()
     logg.debug(f"Filtering took {t_filt_end-t_filt_start} seconds")
 
-    return left_filt_x, left_filt_y, right_filt_x, right_filt_y
+    return left_filt_x, left_filt_y, right_filt_x, right_filt_y, data
 
 
 def run_analyze_laser_data(args):
@@ -474,7 +474,7 @@ def run_analyze_laser_data(args):
     data_file_name = "laser_data_16707.txt"
     # data_file_name = "laser_data_straight.txt"
 
-    left_filt_x, left_filt_y, right_filt_x, right_filt_y = load_filer_data(
+    left_filt_x, left_filt_y, right_filt_x, right_filt_y, data = load_filer_data(
         data_file_name, sector_wid
     )
 
