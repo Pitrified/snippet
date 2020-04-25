@@ -2,16 +2,25 @@
 
 ### TODO
 
+* Add button to hide glyph in thick view
+* When saving, skip empty glyphs
+* Better support for blank image:
+    * background color
+    * autoset FM lines
+* Use shift to align FM
+* When moving glyphs, use shoft to move along axis
+* Interactive moving of glyphs, redraw only the thin segment
+* If a segment was only translated, there is no need to recompute everything, just,
+  well, translate it
 * When asking for file names, check in the controller if the action is allowed
-  (`fm_lines_abs is not None`) before showing the prompt.
+  (`fm_lines_abs is not None`) before showing the prompt
 * Move FM lines, click button to enter base/mean movement mode, then usual qwerasdf movement
-* Move glyph with mouse click
-* Move glyph by selecting a point, then another, and translate the first over the second
 * Duplicate glyph, add it a bit translated to show it
 * Rotate glyph
 * Rotate glyph 180
 * Rotate point 180
-* The letters are drawn with thickness 10: when joining two glyphs at 90 deg angle with a different thickness, it does not look good
+* The letters are drawn with thickness 10: when joining two glyphs at 90 deg angle with
+  a different thickness, it does not look good
 * GUI to build splines by assembling glyphs
 * Control more things with keyboard
 * Make the point list scroll when adding points if it is filled
@@ -34,6 +43,8 @@
 
 ##### Done
 
+* Move glyph with mouse click
+* Move glyph by selecting a point, then another, and translate the first over the second
 * Make scrollable the point frame list
 * When hovering a FrameSPoint, turn the correspondent arrow a different color
 * When clicking a FrameSPoint, set that as selectedSP

@@ -743,6 +743,9 @@ class Model:
         fm_ops = load_glyph(path_input_glyph, dx=0, dy=0)
         logg.trace(f"fm_ops: {fm_ops}")
 
+        # start new glyph
+        self.clicked_sh_btn_new_spline()
+
         for fm_op in fm_ops:
             abs_x, abs_y = apply_affine_transform(self.fm2abs, fm_op.x, fm_op.y)
             abs_ori_deg = -fm_op.ori_deg + base_point_abs.ori_deg

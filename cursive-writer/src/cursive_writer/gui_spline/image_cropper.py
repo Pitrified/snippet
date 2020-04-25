@@ -26,8 +26,11 @@ class ImageCropper:
 
         # load the image
         self._photo_name_full = photo_name_full
-        self._image = Image.open(self._photo_name_full)
-        self._image_wid, self._image_hei = self._image.size
+        if self._photo_name_full.exists():
+            self._image = Image.open(self._photo_name_full)
+            self._image_wid, self._image_hei = self._image.size
+        else:
+            self.create_blank_image()
 
         # setup parameters for resizing
         self.upscaling_mode = Image.NEAREST
@@ -48,6 +51,19 @@ class ImageCropper:
         # position of the region you crop inside the image
         self._mov_x = 0
         self._mov_y = 0
+
+    def create_blank_image(self):
+        """TODO: what is create_blank_image doing?
+        """
+        logg = logging.getLogger(f"c.{__class__.__name__}.create_blank_image")
+        logg.setLevel("TRACE")
+        logg.info(f"Start {fmt_cn('create_blank_image', 'a2')}")
+
+        self._image_wid = 1000
+        self._image_hei = 1000
+        image_size = (self._image_wid, self._image_hei)
+        blank_color = (73, 109, 137)
+        self._image = Image.new("RGB", image_size, color=blank_color)
 
     def reset_image(self, widget_wid=-1, widget_hei=-1):
         """Resets zoom level and position of the image
