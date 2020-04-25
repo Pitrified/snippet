@@ -140,11 +140,11 @@ def visual_test_all_dist_all_th(hp, ax=None):
     style = {"ls": "-", "marker": "", "color": "y"}
     # style = {"ls": "", "marker": ".", "color": "y"}
     for dist_all_th in hp.all_dist_all_th_l:
-        dist_all_th /= hp.r_stride
+        # dist_all_th /= hp.r_stride
         ax.plot(hp.th_values, dist_all_th, **style)
     style["color"] = "g"
     for dist_all_th in hp.all_dist_all_th_r:
-        dist_all_th /= hp.r_stride
+        # dist_all_th /= hp.r_stride
         ax.plot(hp.th_values, dist_all_th, **style)
 
     style = {"ls": "", "marker": ".", "color": "c"}
@@ -166,30 +166,40 @@ def visual_test_bins(hp, ax=None):
         ax.set_ylabel("r")
 
     im = ax.imshow(hp.bins.T)
-    return im
-    # cbar_kw = {}
+
+    ax.invert_yaxis()
+    ax.set_title("Lines per bin")
+
+    cbar = 0
+    # cbar_kw = {"orientation": "horizontal"}
     # cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw)
-    # cbarlabel = "Collinear points"
-    # cbar.ax.set_ylabel(cbarlabel, rotation=-90, va="bottom")
+    # cbarlabel = "Lines per bin"
+    # cbar.ax.set_ylabel(cbarlabel, rotation=90, va="baseline")
+    # cbar.ax.set_ylabel(cbarlabel)
+
+    return im, cbar
 
 
 def fit_separate_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y, ax_points):
     left_coeff = np.polyfit(left_filt_x, left_filt_y, 1)
     right_coeff = np.polyfit(right_filt_x, right_filt_y, 1)
+
     # plot the laser dataset
     style_points_all = {"ls": "", "marker": ".", "color": "k"}
     ax_points.plot(left_filt_x, left_filt_y, **style_points_all)
     ax_points.plot(right_filt_x, right_filt_y, **style_points_all)
+
     # plot the left fit line
     left_fit_y = np.polyval(left_coeff, left_filt_x)
     style_fit = {"ls": "-", "marker": "", "color": "b"}
     ax_points.plot(left_filt_x, left_fit_y, label="Left line", **style_fit)
+
     # plot the right fit line
     right_fit_y = np.polyval(right_coeff, right_filt_x)
-    # style_fit = {"ls": "-", "marker": "", "color": "b"}
     style_fit["color"] = "g"
     ax_points.plot(right_filt_x, right_fit_y, label="Right line", **style_fit)
 
+    # some info on the result
     logg = logging.getLogger(f"c.{__name__}.fit_separate_lines")
     logg.debug(f"left_coeff: {left_coeff} right_coeff {right_coeff}")
     left_deg = slope2deg(left_coeff[0])
