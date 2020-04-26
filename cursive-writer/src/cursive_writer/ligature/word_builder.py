@@ -23,7 +23,7 @@ def parse_arguments():
         "-i",
         "--input_str",
         type=str,
-        default="imvivmivimvim",
+        default="vivvmmiimv",
         help="Input string to write",
     )
 
@@ -60,14 +60,18 @@ def load_letter_dict(data_dir):
         "i",
         left_type="low_up",
         right_type="low_up",
-        pf_spline_low=data_dir / "i2_l_000.txt",
-        pf_spline_high=data_dir / "i1_h_006.txt",
+        # pf_spline_low=data_dir / "i2_l_000.txt",
+        pf_spline_low=data_dir / "i2_l_dot_000.txt",
+        # pf_spline_high=data_dir / "i1_h_006.txt",
+        # pf_spline_high=data_dir / "i2_h_000.txt",
+        pf_spline_high=data_dir / "i2_h_dot_000.txt",
     )
     letters_info["v"] = Letter(
         "v",
         left_type="high_down",
         right_type="high_up",
-        pf_spline_alone=data_dir / "v1_001.txt",
+        # pf_spline_alone=data_dir / "v1_001.txt",
+        pf_spline_alone=data_dir / "v2_002.txt",
     )
     letters_info["m"] = Letter(
         "m",

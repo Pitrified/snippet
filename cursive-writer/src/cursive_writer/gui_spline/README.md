@@ -2,76 +2,90 @@
 
 ### TODO
 
+* Add entry to set offset of loading glyph/spline
 * Add button to hide glyph in thick view
 * When saving, skip empty glyphs
 * Better support for blank image:
     * background color
     * autoset FM lines
 * Use shift to align FM
-* When moving glyphs, use shoft to move along axis
+* When moving glyphs, use shift to move along axis
 * Interactive moving of glyphs, redraw only the thin segment
-* If a segment was only translated, there is no need to recompute everything, just,
-  well, translate it
-* When asking for file names, check in the controller if the action is allowed
-  (`fm_lines_abs is not None`) before showing the prompt
-* Move FM lines, click button to enter base/mean movement mode, then usual qwerasdf movement
+* If a segment was only translated, there is no need to recompute everything,
+  just, well, translate it
 * Duplicate glyph, add it a bit translated to show it
 * Rotate glyph
 * Rotate glyph 180
 * Rotate point 180
-* The letters are drawn with thickness 10: when joining two glyphs at 90 deg angle with
-  a different thickness, it does not look good
-* GUI to build splines by assembling glyphs
+* The letters are drawn with thickness 10: when joining two glyphs at 90 deg
+  angle with a different thickness, it does not look good
 * Control more things with keyboard
 * Make the point list scroll when adding points if it is filled
-* `redraw_canvas` should be done in `move_image`, not in `release_click_canvas`, and
-  similar cases
-* Throttle keypress events, set a flag `active` and ignore other events? Why do they
-  even get caled so frequently if they are bound to `KeyRelease`?
-* Check if the FM lines are set before going to afjust fm lines state
-* When the canvas is vertical, change layout
+* Throttle keypress events, set a flag `active` and ignore other events? Why do
+  they even get called so frequently if they are bound to `KeyRelease`?
 
 ### MAYBE
 
 * The function names in `model` are slightly wrong: it should not be called
-  `clicked_sh_btn_new_spline`, the model does not care what generated that. Call it
-  `start_new_spline` (as a bonus misleading name, this should be called `new_glyph`). In
-  the controller there is `clicked_sh_btn_new_spline`, that is correctly telling that this
-  is a reaction to a button click, and in that function the controller will call
-  `model.start_new_spline`.
-* Is there really a reason to put FrameInfo as a different class? It could just be a regular frame inside the view.
+  `clicked_sh_btn_new_spline`, the model does not care what generated that.
+Call it `start_new_spline` (as a bonus misleading name, this should be called
+`new_glyph`). In the controller there is `clicked_sh_btn_new_spline`, that is
+correctly telling that this is a reaction to a button click, and in that
+function the controller will call `model.start_new_spline`.
+* Is there really a reason to put FrameInfo as a different class? It could just
+  be a regular frame inside the view.
 * Move spline buttons and info to left sidebar, or some info to right sidebar.
+* When the canvas is vertical, change layout
+* `redraw_canvas` should be done in `move_image`, not in
+  `release_click_canvas`, and similar cases
+* GUI to build splines by assembling glyphs; this already happens in the main GUI
 
 ##### Done
 
 * Move glyph with mouse click
-* Move glyph by selecting a point, then another, and translate the first over the second
+* Move glyph by selecting a point, then another, and translate the first over
+  the second
 * Make scrollable the point frame list
 * When hovering a FrameSPoint, turn the correspondent arrow a different color
 * When clicking a FrameSPoint, set that as selectedSP
 * Button to delete FSP in the spline info pane
 * If deleting when a header is selected, merge the two glyphs before/after that
-* After deleting a point set as selected the previous one, if it is the first select the spline header
+* After deleting a point set as selected the previous one, if it is the first
+  select the spline header
 * Rescale from abs (image) to normalized (FM coord)
 * Add buttons to change selected SP data, left, very left, orientation
 * File dialog to save glyphs
 * Do not draw segments between glyphs, they are there for a reason
 * Dark mode
 * Set from CLI theme and thickness and loglevel
-* Create the file dialog in the view, inside the controller, ask for the destination, calling a method inside the view, that returns the path.
-* When writing the root glyph name, the points move when pressing qwerasdfzxcv...
-* Add loading of a glyph, after FMlines are set, remap those points to the current image
-* Show the `adjust_base/mean` state by changing the background color of the label
+* Create the file dialog in the view, inside the controller, ask for the
+  destination, calling a method inside the view, that returns the path.
+* When writing the root glyph name, the points move when pressing
+  qwerasdfzxcv...
+* Add loading of a glyph, after FMlines are set, remap those points to the
+  current image
+* Show the `adjust_base/mean` state by changing the background color of the
+  label
+* When asking for file names, check in the controller if the action is allowed
+  (`fm_lines_abs is not None`) before showing the prompt
+* Move FM lines, click button to enter base/mean movement mode, then usual
+  qwerasdf movement
+* Check if the FM lines are set before going to adjust FM lines state
 
 ### Ideas
 
 * Each spline point has unique ID, the splines are list of IDs
-* For the ligatures: disregard the glyphs and look at the points orientation, chop off the letter wherever needed. Different version of a letter with different left attach point (high/low) are needed.
+* For the ligatures: disregard the glyphs and look at the points orientation,
+  chop off the letter wherever needed. Different version of a letter with
+different left attach point (high/low) are needed.
 
 ### On logging
 
-* You can artificially _lower_ the loglevel inside a function to debug that, but in regular use you should not change it: that way it is controlled easily at app level.
-* I should try to change a level for an entire class and see if it works as I expect
+* You can artificially _lower_ the loglevel inside a function to debug that,
+  but in regular use you should not change it: that way it is controlled easily
+at app level.
+* I should try to change a level for an entire class and see if it works as I
+  expect
 
 ### Errors
 
