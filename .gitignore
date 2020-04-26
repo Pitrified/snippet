@@ -1,4 +1,9 @@
 *.pyc
+__pycache__/
+.pytest_cache/
+*.egg-info
+.mypy_cache/
+
 *.obj
 *.o
 *.out
