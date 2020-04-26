@@ -35,7 +35,7 @@ class FrameSPoint(ttk.Frame):
     def register_scroll_func(self, func):
         logg = logging.getLogger(f"c.{__class__.__name__}.register_scroll_func")
         #  logg.setLevel("TRACE")
-        logg.trace(f"{fmt_cn('Register')} scroll function")
+        logg.log(5, f"{fmt_cn('Register')} scroll function")
 
         self.pos_lab.bind("<4>", func)
         self.pos_lab.bind("<5>", func)
@@ -53,10 +53,10 @@ class FrameSPoint(ttk.Frame):
     def on_enter(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.on_enter")
         #  logg.setLevel("TRACE")
-        logg.trace(f"{fmt_cn('Enter')} FrameSPoint {self.spoint.spid}")
-        logg.trace(f"Event {event} fired by {event.widget}")
+        logg.log(5, f"{fmt_cn('Enter')} FrameSPoint {self.spoint.spid}")
+        logg.log(5, f"Event {event} fired by {event.widget}")
         spid = event.widget.spoint.spid
-        logg.trace(f"event.widget.spoint.spid: {spid}")
+        logg.log(5, f"event.widget.spoint.spid: {spid}")
 
         self.event_generate("<<sp_frame_enter>>")
         self.set_state("active")
@@ -64,7 +64,7 @@ class FrameSPoint(ttk.Frame):
     def on_leave(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.on_leave")
         #  logg.setLevel("TRACE")
-        logg.trace(f"{fmt_cn('Leave')} FrameSPoint {self.spoint.spid}")
+        logg.log(5, f"{fmt_cn('Leave')} FrameSPoint {self.spoint.spid}")
 
         self.event_generate("<<sp_frame_leave>>")
         self.set_state("!active")
@@ -72,7 +72,7 @@ class FrameSPoint(ttk.Frame):
     def on_button1_press(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.on_button1_press")
         #  logg.setLevel("TRACE")
-        logg.trace(f"Clicked {fmt_cn('Button-1')} on FrameSPoint {self.spoint.spid}")
+        logg.log(5, f"Clicked {fmt_cn('Button-1')} on FrameSPoint {self.spoint.spid}")
 
         self.event_generate("<<sp_frame_btn1_press>>")
 
@@ -87,7 +87,7 @@ class FrameSPoint(ttk.Frame):
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.set_state")
         #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('set_state')} {the_state}")
+        logg.log(5, f"Start {fmt_cn('set_state')} {the_state}")
 
         self.pos_lab.state([the_state])
 
@@ -96,7 +96,7 @@ class FrameSPoint(ttk.Frame):
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_label")
         #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('update_label')}")
+        logg.log(5, f"Start {fmt_cn('update_label')}")
 
         pos_str = f"{self.spoint.ori_deg:6.1f} @"
         pos_str += f" ({self.spoint.x:6.1f}, {self.spoint.y:6.1f})"

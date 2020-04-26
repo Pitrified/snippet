@@ -11,8 +11,12 @@ from cursive_writer.utils.geometric_utils import sample_parametric_aligned
 from cursive_writer.utils.oriented_point import OrientedPoint
 from cursive_writer.utils.utils import print_coeff
 
+from typing import Tuple
 
-def translate_points_to_origin(p0, p1):
+
+def translate_points_to_origin(
+    p0: OrientedPoint, p1: OrientedPoint
+) -> Tuple[OrientedPoint, OrientedPoint, float]:
     """Translate to the origin and rotate the oriented points to have both on the x axis
 
     Returns
@@ -21,11 +25,11 @@ def translate_points_to_origin(p0, p1):
     """
     logg = logging.getLogger(f"c.{__name__}.translate_points_to_origin")
     # logg.setLevel("TRACE")
-    logg.trace(f"Starting translate_points_to_origin")
+    logg.log(5, f"Starting translate_points_to_origin")
 
     # direction from point 0 to 1
     dir_01 = math.degrees(math.atan2(p1.y - p0.y, p1.x - p0.x))
-    logg.trace(f"dir_01: {dir_01}")
+    logg.log(5, f"dir_01: {dir_01}")
 
     # rotate the point and translate them in the origin
     rot_p0 = OrientedPoint(0, 0, p0.ori_deg - dir_01)
@@ -36,12 +40,18 @@ def translate_points_to_origin(p0, p1):
     # rotate p1 position by dir_01
     rototran_p1 = rotate_point(np.array([tran_p1x, tran_p1y]), dir_01)
     rot_p1 = OrientedPoint(rototran_p1[0], rototran_p1[1], p1.ori_deg - dir_01)
-    logg.trace(f"rot_p0: {rot_p0} rot_p1: {rot_p1}")
+    logg.log(5, f"rot_p0: {rot_p0} rot_p1: {rot_p1}")
 
     return rot_p0, rot_p1, dir_01
 
 
-def rototranslate_points(x_sample, y_segment, offset_angle, offset_x, offset_y):
+def rototranslate_points(
+    x_sample: np.ndarray,
+    y_segment: np.ndarray,
+    offset_angle: float,
+    offset_x: float,
+    offset_y: float,
+) -> Tuple[np.ndarray, np.ndarray]:
     """Rototranslate the 2d points [x_sample, y_segment]
 
     Apply first the rotation by offset_angle, then the translation by
@@ -51,42 +61,42 @@ def rototranslate_points(x_sample, y_segment, offset_angle, offset_x, offset_y):
     """
     logg = logging.getLogger(f"c.{__name__}.rototranslate_points")
     # logg.setLevel("TRACE")
-    logg.trace(f"Starting rototranslate_points")
+    logg.log(5, f"Starting rototranslate_points")
 
     # rotate the points back
     all_segment = np.array([x_sample, y_segment]).transpose()
-    logg.trace(f"all_segment.shape: {all_segment.shape}")
+    logg.log(5, f"all_segment.shape: {all_segment.shape}")
     rotated_segment = rotate_point(all_segment, offset_angle)
-    logg.trace(f"rotated_segment.shape: {rotated_segment.shape}")
+    logg.log(5, f"rotated_segment.shape: {rotated_segment.shape}")
 
     # translate them
     tran_segment = rotated_segment + np.array([offset_x, offset_y])
     tran_segment = tran_segment.transpose()
-    logg.trace(f"tran_segment.shape: {tran_segment.shape}")
+    logg.log(5, f"tran_segment.shape: {tran_segment.shape}")
     rototran_x = tran_segment[0]
     rototran_y = tran_segment[1]
 
     return rototran_x, rototran_y
 
 
-def fit_line(p0, p1):
+def fit_line(p0: OrientedPoint, p1: OrientedPoint) -> np.ndarray:
     """Find the coefficient for a line passing through two points
 
     y = ax + b
     """
     logg = logging.getLogger(f"c.{__name__}.fit_line")
     # logg.setLevel("TRACE")
-    logg.trace(f"Starting fit_line")
+    logg.log(5, f"Starting fit_line")
 
     a = (p1.y - p0.y) / (p1.x - p0.x)
     b = p0.y - a * p0.x
 
-    logg.trace(f"y = {a:.4f}*x + {b:.4f}")
+    logg.log(5, f"y = {a:.4f}*x + {b:.4f}")
 
     return np.array([a, b])
 
 
-def fit_cubic(p0, p1):
+def fit_cubic(p0: OrientedPoint, p1: OrientedPoint):
     """Find the coefficient for a cubic curve passing through two points
 
     Tangents are the slope of the curve on the point
@@ -101,7 +111,7 @@ def fit_cubic(p0, p1):
     """
     logg = logging.getLogger(f"c.{__name__}.fit_cubic")
     # logg.setLevel("TRACE")
-    logg.trace(f"Starting fit_cubic")
+    logg.log(5, f"Starting fit_cubic")
 
     if math.isclose(p0.x, p1.x) and math.isclose(p0.y, p1.y):
         logg.warn(f"Coincident points {p0} {p1}")
@@ -127,8 +137,8 @@ def fit_cubic(p0, p1):
     # x are the coefficients of the curve
     x = np.linalg.solve(A, b)
 
-    #  logg.trace(f"x: {x}")
-    logg.trace(f"y = {x[0]:.4f}*x^3 + {x[1]:.4f}*x^2 + {x[2]:.4f}*x + {x[3]:.4f}")
+    #  logg.log(5, f"x: {x}")
+    logg.log(5, f"y = {x[0]:.4f}*x^3 + {x[1]:.4f}*x^2 + {x[2]:.4f}*x + {x[3]:.4f}")
 
     return x
 
@@ -149,7 +159,7 @@ def sample_nat_segment_points(x_start, x_end, coeff):
     """
     logg = logging.getLogger(f"c.{__name__}.sample_nat_segment_points")
     # logg.setLevel("TRACE")
-    logg.trace(f"Starting sample_nat_segment_points")
+    logg.log(5, f"Starting sample_nat_segment_points")
 
     if x_start > x_end:
         x_start, x_end = x_end, x_start
@@ -157,12 +167,12 @@ def sample_nat_segment_points(x_start, x_end, coeff):
     # align x_start and x_end to grid step
     x_start_align = math.ceil(x_start)
     x_end_align = math.floor(x_end)
-    logg.trace(f"x_start_align: {x_start_align} x_end_align: {x_end_align}")
+    logg.log(5, f"x_start_align: {x_start_align} x_end_align: {x_end_align}")
 
     # sample from x_start_align to x_end_align included
     x_sample = np.arange(x_start_align, x_end_align + 1)
-    logg.trace(f"x_sample.shape: {x_sample.shape}")
-    #  logg.trace(f"x_sample: {x_sample}")
+    logg.log(5, f"x_sample.shape: {x_sample.shape}")
+    #  logg.log(5, f"x_sample: {x_sample}")
 
     y_segment = poly_model(x_sample, np.flip(coeff))
     return x_sample, y_segment
@@ -177,7 +187,7 @@ def compute_cubic_segment(p0, p1, ax=None):
     """
     logg = logging.getLogger(f"c.{__name__}.compute_cubic_segment")
     # logg.setLevel("TRACE")
-    logg.trace(f"Starting compute_cubic_segment")
+    logg.log(5, f"Starting compute_cubic_segment")
 
     # if the points are actually the same, return just that
     if math.isclose(p0.x, p1.x) and math.isclose(p0.y, p1.y):
@@ -238,17 +248,17 @@ def build_contour(
     """
     logg = logging.getLogger(f"c.{__name__}.build_contour")
     # logg.setLevel("TRACE")
-    logg.trace(f"Starting build_contour")
+    logg.log(5, f"Starting build_contour")
 
     # regular case, no overlaps
     if p0t.x <= p1t.x and p0b.x <= p1b.x:
-        logg.trace(f"Regular case")
+        logg.log(5, f"Regular case")
 
         # sample the whole line
         x_sample_l, y_segment_l = sample_nat_segment_points(p0t.x, p0b.x, coeff_l)
         x_sample_r, y_segment_r = sample_nat_segment_points(p1t.x, p1b.x, coeff_r)
-        logg.trace(f"x_sample_l.shape: {x_sample_l.shape}")
-        logg.trace(f"x_sample_r.shape: {x_sample_r.shape}")
+        logg.log(5, f"x_sample_l.shape: {x_sample_l.shape}")
+        logg.log(5, f"x_sample_r.shape: {x_sample_r.shape}")
 
         # plot everything to debug things
         if ax is not None:
@@ -258,28 +268,28 @@ def build_contour(
 
         # /\
         if coeff_l[0] >= 0 and coeff_r[0] <= 0:
-            logg.trace(f"/\\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            logg.log(5, f"/\\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
             x_sample = np.hstack((x_sample_l, x_sample_t, x_sample_r))
             contour_t = np.hstack((y_segment_l, y_segment_t, y_segment_r))
             contour_b = y_segment_b
 
         # //
         elif coeff_l[0] >= 0 and coeff_r[0] >= 0:
-            logg.trace(f"// coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            logg.log(5, f"// coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
             x_sample = np.hstack((x_sample_l, x_sample_t))
             contour_t = np.hstack((y_segment_l, y_segment_t))
             contour_b = np.hstack((y_segment_b, y_segment_r))
 
         # \\
         elif coeff_l[0] <= 0 and coeff_r[0] <= 0:
-            logg.trace(f"\\\\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            logg.log(5, f"\\\\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
             x_sample = np.hstack((x_sample_l, x_sample_b))
             contour_t = np.hstack((y_segment_t, y_segment_r))
             contour_b = np.hstack((y_segment_l, y_segment_b))
 
         # \/
         elif coeff_l[0] <= 0 and coeff_r[0] >= 0:
-            logg.trace(f"\\/ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            logg.log(5, f"\\/ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
             x_sample = np.hstack((x_sample_l, x_sample_b, x_sample_r))
             contour_t = y_segment_t
             contour_b = np.hstack((y_segment_l, y_segment_b, y_segment_r))
@@ -295,7 +305,7 @@ def build_contour(
     # x = (b2-b1)/(a1-a2)
     i_x = (coeff_l[1] - coeff_r[1]) / (coeff_r[0] - coeff_l[0])
     i_y = coeff_l[0] * i_x + coeff_l[1]
-    logg.trace(f"i_x: {i_x} i_y: {i_y}")
+    logg.log(5, f"i_x: {i_x} i_y: {i_y}")
 
     # /\ // \\ type, keep the lower part
     if p0t.x > p1t.x and p0b.x <= p1b.x:
@@ -307,21 +317,21 @@ def build_contour(
 
         # /\
         if coeff_l[0] >= 0 and coeff_r[0] <= 0:
-            logg.trace(f"/\\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            logg.log(5, f"/\\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
             x_sample = np.hstack((x_sample_l, x_sample_r))
             contour_t = np.hstack((y_segment_l, y_segment_r))
             contour_b = y_segment_b
 
         # //
         elif coeff_l[0] >= 0 and coeff_r[0] >= 0:
-            logg.trace(f"// coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            logg.log(5, f"// coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
             x_sample = np.hstack((x_sample_l))
             contour_t = np.hstack((y_segment_l))
             contour_b = np.hstack((y_segment_b, y_segment_r))
 
         # \\
         elif coeff_l[0] <= 0 and coeff_r[0] <= 0:
-            logg.trace(f"\\\\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            logg.log(5, f"\\\\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
             x_sample = np.hstack((x_sample_r))
             contour_t = np.hstack((y_segment_r))
             contour_b = np.hstack((y_segment_l, y_segment_b))
@@ -336,21 +346,21 @@ def build_contour(
 
         # //
         if coeff_l[0] >= 0 and coeff_r[0] >= 0:
-            logg.trace(f"// coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            logg.log(5, f"// coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
             x_sample = np.hstack((x_sample_l, x_sample_t))
             contour_t = np.hstack((y_segment_l, y_segment_t))
             contour_b = np.hstack((y_segment_r))
 
         # \\
         elif coeff_l[0] <= 0 and coeff_r[0] <= 0:
-            logg.trace(f"\\\\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            logg.log(5, f"\\\\ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
             x_sample = np.hstack((x_sample_l))
             contour_t = np.hstack((y_segment_t, y_segment_r))
             contour_b = np.hstack((y_segment_l))
 
         # \/
         elif coeff_l[0] <= 0 and coeff_r[0] >= 0:
-            logg.trace(f"\\/ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
+            logg.log(5, f"\\/ coeff_l[0]: {coeff_l[0]} coeff_r[0]: {coeff_r[0]}")
             x_sample = np.hstack((x_sample_l, x_sample_r))
             contour_t = y_segment_t
             contour_b = np.hstack((y_segment_l, y_segment_r))
@@ -379,7 +389,7 @@ def compute_thick_spline(p0, p1, thickness, ax=None):
     """
     logg = logging.getLogger(f"c.{__name__}.compute_spline")
     # logg.setLevel("TRACE")
-    logg.trace(f"Starting compute_spline {p0} :: {p1} :: {thickness}")
+    logg.log(5, f"Starting compute_spline {p0} :: {p1} :: {thickness}")
 
     if math.isclose(p0.x, p1.x) and math.isclose(p0.y, p1.y):
         # MAYBE return the entire segment p0t p0b
@@ -388,17 +398,17 @@ def compute_thick_spline(p0, p1, thickness, ax=None):
 
     # translate and rotate the point to the origin
     rot_p0, rot_p1, dir_01 = translate_points_to_origin(p0, p1)
-    logg.trace(f"rot_p0: {rot_p0} rot_p1: {rot_p1}")
+    logg.log(5, f"rot_p0: {rot_p0} rot_p1: {rot_p1}")
 
     # check that the rotated points are in the right direction: if they point
     # outside the [-90, 90] range, we assume that the arrow is reversed, and
     # bring that back to the allowed range
     if not -90 < rot_p0.ori_deg < 90:
         rot_p0.set_ori_deg(rot_p0.ori_deg + 180)
-        logg.trace(f"NEW rot_p0.ori_deg: {rot_p0.ori_deg}")
+        logg.log(5, f"NEW rot_p0.ori_deg: {rot_p0.ori_deg}")
     if not -90 < rot_p1.ori_deg < 90:
         rot_p1.set_ori_deg(rot_p1.ori_deg + 180)
-        logg.trace(f"NEW rot_p1.ori_deg: {rot_p1.ori_deg}")
+        logg.log(5, f"NEW rot_p1.ori_deg: {rot_p1.ori_deg}")
 
     # compute the normal direction to the vectors
     np0_ori_rad = rot_p0.ori_rad + math.pi / 2
@@ -407,29 +417,29 @@ def compute_thick_spline(p0, p1, thickness, ax=None):
     # compute the corner points of the thick spline
     offset_x_0 = math.cos(np0_ori_rad) * thickness
     offset_y_0 = math.sin(np0_ori_rad) * thickness
-    logg.trace(f"offset_x_0: {offset_x_0} offset_y_0: {offset_y_0}")
+    logg.log(5, f"offset_x_0: {offset_x_0} offset_y_0: {offset_y_0}")
     p0t = OrientedPoint(rot_p0.x + offset_x_0, rot_p0.y + offset_y_0, rot_p0.ori_deg)
     p0b = OrientedPoint(rot_p0.x - offset_x_0, rot_p0.y - offset_y_0, rot_p0.ori_deg)
-    logg.trace(f"p0t: {p0t} p0b: {p0b}")
+    logg.log(5, f"p0t: {p0t} p0b: {p0b}")
     offset_x_1 = math.cos(np1_ori_rad) * thickness
     offset_y_1 = math.sin(np1_ori_rad) * thickness
-    logg.trace(f"offset_x_1: {offset_x_1} offset_y_1: {offset_y_1}")
+    logg.log(5, f"offset_x_1: {offset_x_1} offset_y_1: {offset_y_1}")
     p1t = OrientedPoint(rot_p1.x + offset_x_1, rot_p1.y + offset_y_1, rot_p1.ori_deg)
     p1b = OrientedPoint(rot_p1.x - offset_x_1, rot_p1.y - offset_y_1, rot_p1.ori_deg)
-    logg.trace(f"p1t: {p1t} p1b: {p1b}")
+    logg.log(5, f"p1t: {p1t} p1b: {p1b}")
 
     # compute the coeff of the line passing through the points
     coeff_l = fit_line(p0t, p0b)
     coeff_r = fit_line(p1t, p1b)
-    logg.trace(f"coeff_l: {coeff_l} coeff_r: {coeff_r}")
+    logg.log(5, f"coeff_l: {coeff_l} coeff_r: {coeff_r}")
 
     # compute the spline points
     coeff_t = fit_cubic(p0t, p1t)
     coeff_b = fit_cubic(p0b, p1b)
     x_sample_t, y_segment_t = sample_nat_segment_points(p0t.x, p1t.x, coeff_t)
     x_sample_b, y_segment_b = sample_nat_segment_points(p0b.x, p1b.x, coeff_b)
-    logg.trace(f"x_sample_t.shape: {x_sample_t.shape}")
-    logg.trace(f"x_sample_b.shape: {x_sample_b.shape}")
+    logg.log(5, f"x_sample_t.shape: {x_sample_t.shape}")
+    logg.log(5, f"x_sample_b.shape: {x_sample_b.shape}")
 
     contour_t, contour_b, x_sample = build_contour(
         p0t,
@@ -446,28 +456,28 @@ def compute_thick_spline(p0, p1, thickness, ax=None):
     )
 
     # compute the top and bottom contours
-    logg.trace(f"x_sample.shape: {x_sample.shape}")
-    logg.trace(f"contour_t.shape: {contour_t.shape}")
-    logg.trace(f"contour_b.shape: {contour_b.shape}")
+    logg.log(5, f"x_sample.shape: {x_sample.shape}")
+    logg.log(5, f"contour_t.shape: {contour_t.shape}")
+    logg.log(5, f"contour_b.shape: {contour_b.shape}")
 
-    logg.trace(f"contour_t: {contour_t}")
-    logg.trace(f"contour_b: {contour_b}")
+    logg.log(5, f"contour_t: {contour_t}")
+    logg.log(5, f"contour_b: {contour_b}")
 
     # get the max and min y, aligned on the grid
     max_y = np.amax(contour_t)
     min_y = np.amin(contour_b)
-    logg.trace(f"max_y: {max_y} min_y: {min_y}")
+    logg.log(5, f"max_y: {max_y} min_y: {min_y}")
     max_y_aligned = math.floor(max_y)
     min_y_aligned = math.ceil(min_y)
-    logg.trace(f"max_y_aligned: {max_y_aligned} min_y_aligned: {min_y_aligned}")
+    logg.log(5, f"max_y_aligned: {max_y_aligned} min_y_aligned: {min_y_aligned}")
 
     #  sample all the points inside the spline, aligned on the grid
     on_points_x = []
     on_points_y = []
     for i, x_curr in enumerate(x_sample):
-        # logg.trace(f"Doing i {i} x_curr: {x_curr}")
+        # logg.log(5, f"Doing i {i} x_curr: {x_curr}")
         for y_curr in range(min_y_aligned, max_y_aligned + 1):
-            # logg.trace(f"Testing {contour_b[i]} <= {y_curr} <= {contour_t[i]}")
+            # logg.log(5, f"Testing {contour_b[i]} <= {y_curr} <= {contour_t[i]}")
             if contour_b[i] <= y_curr <= contour_t[i]:
                 on_points_x.append(x_curr)
                 on_points_y.append(y_curr)
@@ -476,8 +486,8 @@ def compute_thick_spline(p0, p1, thickness, ax=None):
     rototran_x, rototran_y = rototranslate_points(
         on_points_x, on_points_y, -dir_01, p0.x, p0.y,
     )
-    logg.trace(f"rototran_x.shape: {rototran_x.shape}")
-    logg.trace(f"rototran_y.shape: {rototran_y.shape}")
+    logg.log(5, f"rototran_x.shape: {rototran_x.shape}")
+    logg.log(5, f"rototran_y.shape: {rototran_y.shape}")
 
     # plot everything to debug things
     if ax is not None:

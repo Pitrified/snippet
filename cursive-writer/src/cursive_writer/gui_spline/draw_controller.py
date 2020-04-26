@@ -10,7 +10,7 @@ from cursive_writer.utils.color_utils import fmt_cn
 class Controller:
     def __init__(self, pf_input_image, data_dir, thickness, colorscheme):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")
-        #  logg.setLevel("TRACE")
+        # logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('init')}")
 
         self.root = tk.Tk()
@@ -223,7 +223,7 @@ class Controller:
 
     def clicked_canvas(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_canvas")
-        #  logg.setLevel("TRACE")
+        # logg.setLevel("TRACE")
         recap = f"\n{fmt_cn('Clicked')} mouse on canvas"
         recap += f" - event: {event} event.state: {event.state}"
         recap += f" - event.x: {event.x} event.y: {event.y}"
@@ -254,7 +254,7 @@ class Controller:
 
     def released_canvas(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.released_canvas")
-        #  logg.setLevel("TRACE")
+        # logg.setLevel("TRACE")
         recap = f"\n{fmt_cn('Released')} mouse on canvas"
         recap += f" - event: {event} event.state: {event.state}"
         recap += f" - event.x: {event.x} event.y: {event.y}"
@@ -287,13 +287,13 @@ class Controller:
 
     def moved_canvas_mouse(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.moved_canvas_mouse")
-        #  logg.setLevel("TRACE")
-        #  logg.setLevel("DEBUG")
-        #  logg.setLevel("INFO")
+        # logg.setLevel("TRACE")
+        # logg.setLevel("DEBUG")
+        # logg.setLevel("INFO")
         recap = f"\n{fmt_cn('Moved')} mouse on canvas"
         recap += f" - event: {event} event.state: {event.state}"
         recap += f" - event.x: {event.x} event.y: {event.y}"
-        logg.trace(recap)
+        logg.log(5, recap)
 
         # TODO Shift+LeftMove (273): fm_lines with forced horizontal base
         # TODO add entry to set degrees of vertical line
@@ -301,16 +301,16 @@ class Controller:
         the_state = event.state
         # these were brutally harvested by reading the logs...
         if the_state == 16:
-            logg.trace(f"Regular movement!")
+            logg.log(5, f"Regular movement!")
             move_type = "move_free"
         elif the_state == 272:
-            logg.trace(f"Click left movement!")
+            logg.log(5, f"Click left movement!")
             move_type = "move_left_clicked"
         elif the_state == 1040:
-            logg.trace(f"Click right movement!")
+            logg.log(5, f"Click right movement!")
             move_type = "move_right_clicked"
         elif the_state == 528:
-            logg.trace(f"Click wheel movement!")
+            logg.log(5, f"Click wheel movement!")
             move_type = "move_wheel_clicked"
             return
         else:
@@ -321,7 +321,7 @@ class Controller:
 
     def clicked_btn_set_fm(self, fm_set_type):
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_fm")
-        #  logg.setLevel("TRACE")
+        # logg.setLevel("TRACE")
         logg.info(f"\nStart {fmt_cn('clicked_btn_set_fm')}")
         logg.debug(f"fm_set_type: {fm_set_type}")
         self.model.clicked_btn_set_fm(fm_set_type)
@@ -329,7 +329,7 @@ class Controller:
 
     def clicked_btn_adjust_fm(self, fm_adjust_type):
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_adjust_fm")
-        #  logg.setLevel("TRACE")
+        # logg.setLevel("TRACE")
         logg.info(f"\nStart {fmt_cn('clicked_btn_adjust_fm')}")
         logg.debug(f"fm_adjust_type: {fm_adjust_type}")
         self.model.clicked_btn_adjust_fm(fm_adjust_type)
@@ -337,7 +337,7 @@ class Controller:
 
     def clicked_sh_btn_new_spline(self):
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_sh_btn_new_spline")
-        #  logg.setLevel("TRACE")
+        # logg.setLevel("TRACE")
         logg.info(f"\nStart {fmt_cn('clicked_sh_btn_new_spline')}")
         self.model.clicked_sh_btn_new_spline()
         self.view.reset_focus()
@@ -433,57 +433,57 @@ class Controller:
         """Callback for buttons to adjust spline points
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_adjust")
-        #  logg.setLevel("TRACE")
+        # logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('clicked_btn_adjust')} {adjust_type}")
         self.model.clicked_btn_adjust(adjust_type)
         self.view.reset_focus()
 
     def sp_frame_entered(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_entered")
-        #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('sp_frame_entered')}")
-        #  logg.trace(f"Event {event} fired by {event.widget}")
+        # logg.setLevel("TRACE")
+        logg.log(5, f"Start {fmt_cn('sp_frame_entered')}")
+        # logglogt5, race(f"Event {event} fired by {event.widget}")
 
         spid = event.widget.spoint.spid
         self.model.sp_frame_entered(spid)
 
     def sp_frame_left(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_left")
-        #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('sp_frame_left')}")
-        logg.trace(f"Event {event} fired by {event.widget}")
+        # logg.setLevel("TRACE")
+        logg.log(5, f"Start {fmt_cn('sp_frame_left')}")
+        logg.log(5, f"Event {event} fired by {event.widget}")
         spid = event.widget.spoint.spid
         self.model.sp_frame_left(spid)
 
     def sp_frame_btn1_pressed(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_btn1_pressed")
-        #  logg.setLevel("TRACE")
+        # logg.setLevel("TRACE")
         logg.info(f"\nStart {fmt_cn('sp_frame_btn1_pressed')}")
-        logg.trace(f"Event {event} fired by {event.widget}")
+        logg.log(5, f"Event {event} fired by {event.widget}")
         spid = event.widget.spoint.spid
         self.model.sp_frame_btn1_pressed(spid)
 
     def sp_header_entered(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_header_entered")
-        #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('sp_header_entered')}")
-        logg.trace(f"Event {event} fired by {event.widget}")
+        # logg.setLevel("TRACE")
+        logg.log(5, f"Start {fmt_cn('sp_header_entered')}")
+        logg.log(5, f"Event {event} fired by {event.widget}")
         hid = event.widget.id_
         self.model.sp_header_entered(hid)
 
     def sp_header_left(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_header_left")
-        #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('sp_header_left')}")
-        logg.trace(f"Event {event} fired by {event.widget}")
+        # logg.setLevel("TRACE")
+        logg.log(5, f"Start {fmt_cn('sp_header_left')}")
+        logg.log(5, f"Event {event} fired by {event.widget}")
         hid = event.widget.id_
         self.model.sp_header_left(hid)
 
     def sp_header_btn1_pressed(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_header_btn1_pressed")
-        #  logg.setLevel("TRACE")
+        # logg.setLevel("TRACE")
         logg.info(f"\nStart {fmt_cn('sp_header_btn1_pressed')}")
-        logg.trace(f"Event {event} fired by {event.widget}")
+        logg.log(5, f"Event {event} fired by {event.widget}")
         hid = event.widget.id_
         self.model.sp_header_btn1_pressed(hid)
 
@@ -495,10 +495,10 @@ class Controller:
         logg.info(f"Start {fmt_cn('focus_change_ent_root')} {change}")
 
         if change == "in":
-            logg.trace(f"Entry now has focus")
+            logg.log(5, f"Entry now has focus")
             self.has_focus_ent_root = True
         elif change == "out":
-            logg.trace(f"Entry has lost focus")
+            logg.log(5, f"Entry has lost focus")
             self.has_focus_ent_root = False
         else:
             logg.warn(f"{fmt_cn('Unrecognized', 'alert')} focus change {change}")
@@ -523,26 +523,26 @@ class Controller:
 
     def updated_crop_input_image(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_crop_input_image")
-        logg.trace(f"Start {fmt_cn('updated_crop_input_image')}")
+        logg.log(5, f"Start {fmt_cn('updated_crop_input_image')}")
         self.view.frame_image.update_crop_input_image(data)
 
     def updated_free_line(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_free_line")
-        logg.trace(f"Start {fmt_cn('updated_free_line')}")
+        logg.log(5, f"Start {fmt_cn('updated_free_line')}")
         self.view.frame_image.update_free_line(data)
 
     def updated_curr_mouse_pos_info(self, data):
         """
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_curr_mouse_pos_info")
-        #  logg.setLevel("INFO")
-        logg.trace(f"Start {fmt_cn('updated_curr_mouse_pos_info')}")
+        # logg.setLevel("INFO")
+        logg.log(5, f"Start {fmt_cn('updated_curr_mouse_pos_info')}")
 
         self.view.frame_info.update_curr_mouse_pos_info(data)
 
     def updated_fm_lines(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_fm_lines")
-        logg.trace(f"Start {fmt_cn('updated_fm_lines')}")
+        logg.log(5, f"Start {fmt_cn('updated_fm_lines')}")
         self.view.frame_image.update_fm_lines(data)
 
     def updated_click_left_start_pos(self, data):
@@ -564,7 +564,7 @@ class Controller:
 
     def updated_visible_SP(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_visible_SP")
-        logg.trace(f"Start {fmt_cn('updated_visible_SP')}")
+        logg.log(5, f"Start {fmt_cn('updated_visible_SP')}")
         self.view.frame_image.update_visible_SP(data)
 
     def updated_path_SP(self, data):
@@ -584,7 +584,7 @@ class Controller:
 
     def updated_visible_segment_SP(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_visible_segment_SP")
-        logg.trace(f"Start {fmt_cn('updated_visible_segment_SP')}")
+        logg.log(5, f"Start {fmt_cn('updated_visible_segment_SP')}")
         self.view.frame_image.update_visible_segment_SP(data)
 
     def updated_thick_segment_points(self, data):

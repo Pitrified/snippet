@@ -118,7 +118,7 @@ def translate_line(line_coeff, shift_x, shift_y):
     Remember that tkinter has y axis toward the bottom
     """
     logg = logging.getLogger(f"c.{__name__}.translate_line")
-    #  logg.setLevel("INFO")
+    # logg.setLevel("INFO")
     logg.debug(f"{fmt_cn('Starting')} translate_line {line_coeff} {shift_x} {shift_y}")
 
     a, b = line_coeff
@@ -171,8 +171,8 @@ def apply_affine_transform(F, x, y):
     res = F * p
     """
     logg = logging.getLogger(f"c.{__name__}.apply_affine_transform")
-    #  logg.setLevel("TRACE")
-    logg.trace(f"Start {fmt_cn('apply_affine_transform')}")
+    # logg.setLevel("TRACE")
+    logg.log(5, f"Start {fmt_cn('apply_affine_transform')}")
 
     hom_point = np.array([x, y, 1])
     transform_point = np.dot(F, hom_point)
@@ -263,14 +263,14 @@ def compute_affine_transform(base_pt_abs, basis_length):
     http://www.cs.cornell.edu/courses/cs4620/2014fa/lectures/08transforms2d.pdf
     """
     logg = logging.getLogger(f"c.{__name__}.compute_affine_transform")
-    #  logg.setLevel("TRACE")
-    logg.trace(f"Start {fmt_cn('compute_affine_transform')}")
-    logg.trace(f"base_point: {base_pt_abs}")
+    # logg.setLevel("TRACE")
+    logg.log(5, f"Start {fmt_cn('compute_affine_transform')}")
+    logg.log(5, f"base_point: {base_pt_abs}")
 
     # the orientation are aligned with abs, so y is flipped
     # this is ok, will be fixed in the affine transform
     base_ori_rad = base_pt_abs.ori_rad
-    logg.trace(f"base_ori_rad: {base_ori_rad} radians")
+    logg.log(5, f"base_ori_rad: {base_ori_rad} radians")
 
     # basis vector of the FM frame, in img coord
     u = [math.cos(base_ori_rad) * basis_length, math.sin(base_ori_rad) * basis_length]
@@ -278,9 +278,9 @@ def compute_affine_transform(base_pt_abs, basis_length):
     p = base_pt_abs
 
     fm2abs = np.array([[u[0], v[0], p.x], [u[1], v[1], p.y], [0, 0, 1]])
-    logg.trace(f"fm2abs: {fm2abs}")
+    logg.log(5, f"fm2abs: {fm2abs}")
     abs2fm = np.linalg.inv(fm2abs)
-    logg.trace(f"abs2fm: {abs2fm}")
+    logg.log(5, f"abs2fm: {abs2fm}")
 
     return fm2abs, abs2fm
 

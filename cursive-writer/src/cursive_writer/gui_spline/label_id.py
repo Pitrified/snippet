@@ -18,7 +18,7 @@ class LabelId(ttk.Label):
     def register_scroll_func(self, func):
         logg = logging.getLogger(f"c.{__class__.__name__}.register_scroll_func")
         #  logg.setLevel("TRACE")
-        logg.trace(f"{fmt_cn('Register')} scroll function")
+        logg.log(5, f"{fmt_cn('Register')} scroll function")
 
         self.bind("<4>", func)
         self.bind("<5>", func)
@@ -27,10 +27,10 @@ class LabelId(ttk.Label):
     def on_enter(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.on_enter")
         #  logg.setLevel("TRACE")
-        logg.trace(f"{fmt_cn('Enter')} LabelId {self.id_}")
-        logg.trace(f"Event {event} fired by {event.widget}")
+        logg.log(5, f"{fmt_cn('Enter')} LabelId {self.id_}")
+        logg.log(5, f"Event {event} fired by {event.widget}")
         id_ = event.widget.id_
-        logg.trace(f"event.widget.id_: {id_}")
+        logg.log(5, f"event.widget.id_: {id_}")
 
         self.event_generate("<<sp_header_enter>>")
         self.set_state("active")
@@ -38,7 +38,7 @@ class LabelId(ttk.Label):
     def on_leave(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.on_leave")
         #  logg.setLevel("TRACE")
-        logg.trace(f"{fmt_cn('Leave')} LabelId {self.id_}")
+        logg.log(5, f"{fmt_cn('Leave')} LabelId {self.id_}")
 
         self.event_generate("<<sp_header_leave>>")
         self.set_state("!active")
@@ -54,6 +54,6 @@ class LabelId(ttk.Label):
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.set_state")
         #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('set_state')} {the_state}")
+        logg.log(5, f"Start {fmt_cn('set_state')} {the_state}")
 
         self.state([the_state])

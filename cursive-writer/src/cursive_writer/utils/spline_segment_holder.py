@@ -33,8 +33,8 @@ class SplineSegmentHolder:
         # logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('update_data')}")
 
-        logg.trace(f"new_all_SP: {new_all_SP}")
-        logg.trace(f"new_path_SP: {new_path_SP}")
+        logg.log(5, f"new_all_SP: {new_all_SP}")
+        logg.log(5, f"new_path_SP: {new_path_SP}")
 
         full_path = list(iterate_double_list(new_path_SP))
 
@@ -46,16 +46,16 @@ class SplineSegmentHolder:
             logg.warn(f"The path has {fmt_cn('one', 'alert')} element")
             spid0 = full_path[0]
             self.cached_pos[spid0] = copy.copy(new_all_SP[spid0])
-            logg.trace(f"self.cached_pos[spid0]: {self.cached_pos[spid0]}")
-            logg.trace(f"id(self.cached_pos[spid0]): {id(self.cached_pos[spid0])}")
-            logg.trace(f"new_all_SP[spid0]: {new_all_SP[spid0]}")
-            logg.trace(f"id(new_all_SP[spid0]): {id(new_all_SP[spid0])}")
+            logg.log(5, f"self.cached_pos[spid0]: {self.cached_pos[spid0]}")
+            logg.log(5, f"id(self.cached_pos[spid0]): {id(self.cached_pos[spid0])}")
+            logg.log(5, f"new_all_SP[spid0]: {new_all_SP[spid0]}")
+            logg.log(5, f"id(new_all_SP[spid0]): {id(new_all_SP[spid0])}")
             return
 
         spid0 = full_path[0]
         for spid1 in full_path[1:]:
             pair = (spid0, spid1)
-            logg.trace(f"Processing pair: {pair}")
+            logg.log(5, f"Processing pair: {pair}")
 
             # both points already seen
             if spid0 in self.cached_pos and spid1 in self.cached_pos:
@@ -69,14 +69,14 @@ class SplineSegmentHolder:
                     # check if the segment between them is already computed
                     if pair in self.segments:
                         # nothing to recompute
-                        logg.trace(f"Already computed pair: {pair}")
+                        logg.log(5, f"Already computed pair: {pair}")
 
                         # get ready for next iteration
                         spid0 = spid1
                         continue
 
             # if any of the conditions fail, save the points and recompute the segment
-            logg.trace(f"Now computing pair: {pair}")
+            logg.log(5, f"Now computing pair: {pair}")
 
             # only update the cached pos of the left point, the right one has
             # to still be wrong in the next iteration, when it will be the left
@@ -104,17 +104,17 @@ class SplineSegmentHolder:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.compute_segment_points")
         # logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('compute_segment_points')} {p0} :: {p1}")
+        logg.log(5, f"Start {fmt_cn('compute_segment_points')} {p0} :: {p1}")
 
         # if thickness is set, compute the thick spline
         if self.thickness == -1:
             x_segment, y_segment = compute_cubic_segment(p0, p1)
         else:
-            logg.trace(f"self.thickness: {self.thickness}")
+            logg.log(5, f"self.thickness: {self.thickness}")
             x_segment, y_segment = compute_thick_spline(p0, p1, self.thickness)
 
         the_points = list(zip(x_segment, y_segment))
 
-        logg.trace(f"the_points: {the_points}")
+        logg.log(5, f"the_points: {the_points}")
 
         return the_points

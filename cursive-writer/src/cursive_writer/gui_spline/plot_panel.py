@@ -16,7 +16,7 @@ class PlotPanel(ttk.Frame):
 
         self.style_option = style_option
 
-        logg.trace(f"self: {self}")
+        logg.log(5, f"self: {self}")
 
         # setup grid for this frame
         self.grid_rowconfigure(0, weight=1)
@@ -42,7 +42,7 @@ class PlotPanel(ttk.Frame):
         # self.canvas.draw()
         # self.fig.canvas.draw()
 
-        logg.trace(f"self.canvas.get_tk_widget(): {self.canvas.get_tk_widget()}")
+        logg.log(5, f"self.canvas.get_tk_widget(): {self.canvas.get_tk_widget()}")
 
     def update_plot(self, x, y):
         self.ax0.clear()

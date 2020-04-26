@@ -2,9 +2,11 @@ from math import tan
 from math import radians
 from math import isclose
 
+from typing import List
 
-class OrientedPoint:
-    def __init__(self, x, y, ori_deg):
+
+class OrientedPoint(object):
+    def __init__(self, x: float, y: float, ori_deg: float) -> None:
         """Create a point with orientation
 
         point (x,y) with orientation in degrees, ranging [-180, 180)
@@ -13,19 +15,19 @@ class OrientedPoint:
         self.y = y
         self.set_ori_deg(ori_deg)
 
-    def translate(self, dx, dy):
+    def translate(self, dx: float, dy: float) -> None:
         """
         """
         self.x += dx
         self.y += dy
 
-    def rotate(self, dt):
-        """Rotate a point of dt degrees and validate the orientation
+    def rotate(self, dt: float) -> None:
+        """Rotate this point of dt degrees and validate the orientation
         """
         ori_deg = self.ori_deg + dt
         self.set_ori_deg(ori_deg)
 
-    def set_ori_deg(self, ori_deg):
+    def set_ori_deg(self, ori_deg: float) -> None:
         """Set the orientation of the points in degrees
 
         Updates the orientation in radians and slope as well
@@ -38,11 +40,11 @@ class OrientedPoint:
 
         self.ori_deg = ori_deg
         # convert it to radians
-        self.ori_rad = radians(self.ori_deg)
+        self.ori_rad: float = radians(self.ori_deg)
         # convert to slope of a line
-        self.ori_slo = tan(self.ori_rad)
+        self.ori_slo: float = tan(self.ori_rad)
 
-    def to_ab_line(self):
+    def to_ab_line(self) -> List[float]:
         """Return the ax+b coeff of the line passing through this point
         """
         a = self.ori_slo

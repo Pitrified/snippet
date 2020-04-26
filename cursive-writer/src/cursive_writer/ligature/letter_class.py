@@ -1,5 +1,8 @@
 import logging
 
+from pathlib import Path
+from typing import cast, Optional, Literal, Dict
+
 from cursive_writer.utils.utils import load_spline
 from cursive_writer.spliner.spliner import compute_long_thick_spline
 
@@ -7,13 +10,13 @@ from cursive_writer.spliner.spliner import compute_long_thick_spline
 class Letter:
     def __init__(
         self,
-        letter,
-        left_type,
-        right_type,
-        pf_spline_alone=None,
-        pf_spline_high=None,
-        pf_spline_low=None,
-        thickness=10,
+        letter: str,
+        left_type: Literal["high_down", "high_up", "low_up"],
+        right_type: Literal["high_up", "low_up"],
+        pf_spline_alone: Optional[Path] = None,
+        pf_spline_high: Optional[Path] = None,
+        pf_spline_low: Optional[Path] = None,
+        thickness: int = 10,
     ):
         """TODO: what is __init__ doing?
 
@@ -42,15 +45,15 @@ class Letter:
         self.left_type = left_type
         self.thickness = thickness
 
-        self.pf_spline = {}
+        self.pf_spline: Dict[str, Optional[Path]] = {}
         self.pf_spline["alone"] = pf_spline_alone
         self.pf_spline["high"] = pf_spline_high
         self.pf_spline["low"] = pf_spline_low
 
         self.spline_seq = {}
         self.spline_thick_samples = {}
-        self.gly_num = {}
-        self.point_num = {}
+        self.gly_num: Dict[str, int] = {}
+        self.point_num: Dict[str, int] = {}
 
         # if available, load alternate high splines
         if self.pf_spline["alone"] is not None:
@@ -63,7 +66,7 @@ class Letter:
             self.data_dir = self.pf_spline["low"].parent
             self.load_spline_info("low")
 
-    def load_spline_info(self, which):
+    def load_spline_info(self, which: str) -> None:
         """TODO: what is load_spline_info doing?
         """
         logg = logging.getLogger(f"c.{__name__}.load_spline_info")
@@ -80,15 +83,15 @@ class Letter:
         if self.gly_num[which] <= 2:
             logg.warn(f"Not enough glyphs in the spline '{which}'")
 
-    def get_pf(self, which):
+    def get_pf(self, which: str) -> Path:
         """TODO: what is get_pf doing?
         """
         # logg = logging.getLogger(f"c.{__name__}.get_pf")
         # logg.debug(f"Start get_pf")
         valid_which = self.get_valid_type(which)
-        return self.pf_spline[valid_which]
+        return cast(Path, self.pf_spline[valid_which])
 
-    def get_spline_seq(self, which):
+    def get_spline_seq(self, which: str) -> None:
         """TODO: what is get_spline_seq doing?
         """
         # logg = logging.getLogger(f"c.{__name__}.get_spline_seq")
@@ -96,7 +99,7 @@ class Letter:
         valid_which = self.get_valid_type(which)
         return self.spline_seq[valid_which]
 
-    def get_thick_samples(self, which):
+    def get_thick_samples(self, which: str) -> None:
         """TODO: what is get_thick_samples doing?
         """
         # logg = logging.getLogger(f"c.{__name__}.get_thick_samples")
@@ -104,7 +107,7 @@ class Letter:
         valid_which = self.get_valid_type(which)
         return self.spline_thick_samples[valid_which]
 
-    def get_valid_type(self, which):
+    def get_valid_type(self, which: str) -> str:
         """TODO: what is get_valid_type doing?
         """
         logg = logging.getLogger(f"c.{__name__}.get_valid_type")
@@ -137,6 +140,10 @@ class Letter:
             if self.pf_spline["high"] is not None:
                 logg.warn(f"Missing data for {self.letter}: '{which}' - return 'high'")
                 return "high"
+
+        # something went wrong
+        logg.error(f"Unable to find data for: {which}")
+        return "error"
 
     def __str__(self):
         the_str = f"'{self.letter}'"

@@ -410,15 +410,15 @@ class FrameInfo(ttk.Frame):
     def update_curr_mouse_pos_info(self, pos_info):
         logg = logging.getLogger(f"c.{__class__.__name__}.update_curr_mouse_pos_info")
         #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('update_curr_mouse_pos_info')}")
+        logg.log(5, f"Start {fmt_cn('update_curr_mouse_pos_info')}")
 
         for pos_type in ["view", "canvas"]:
             pos_str = f"{pos_type.capitalize()} ({pos_info[pos_type][0]}, {pos_info[pos_type][1]})"
-            logg.trace(f"pos_str: {pos_str}")
+            logg.log(5, f"pos_str: {pos_str}")
             self.mi_var_pos_info[pos_type].set(pos_str)
         for pos_type in ["abs", "fm"]:
             pos_str = f"{pos_type.capitalize()} ({pos_info[pos_type][0]:.4f}, {pos_info[pos_type][1]:.4f})"
-            logg.trace(f"pos_str: {pos_str}")
+            logg.log(5, f"pos_str: {pos_str}")
             self.mi_var_pos_info[pos_type].set(pos_str)
 
     def update_state(self, state):
@@ -523,7 +523,7 @@ class FrameImage(ttk.Frame):
     def update_crop_input_image(self, data):
         logg = logging.getLogger(f"c.{__class__.__name__}.update_crop_input_image")
         #  logg.setLevel("INFO")
-        logg.trace(f"Start {fmt_cn('update_crop_input_image')}")
+        logg.log(5, f"Start {fmt_cn('update_crop_input_image')}")
 
         image = data["image_res"]
         self.widget_shift_x = data["widget_shift_x"]
@@ -548,14 +548,14 @@ class FrameImage(ttk.Frame):
         top = self.widget_shift_y
         right = left + self.resized_wid
         bot = top + self.resized_hei
-        logg.trace(f"left: {left} top: {top} right: {right} bot: {bot}")
+        logg.log(5, f"left: {left} top: {top} right: {right} bot: {bot}")
         self.image_bbox = (left, top, right, bot)
 
     def update_free_line(self, line_point):
         """
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_free_line")
-        logg.trace(f"Start {fmt_cn('update_free_line')} {line_point}")
+        logg.log(5, f"Start {fmt_cn('update_free_line')} {line_point}")
 
         if line_point is None:
             self.image_canvas.delete("free_line")
@@ -567,7 +567,7 @@ class FrameImage(ttk.Frame):
         """
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_fm_lines")
-        logg.trace(f"Start {fmt_cn('update_fm_lines')} {fm_lines}")
+        logg.log(5, f"Start {fmt_cn('update_fm_lines')} {fm_lines}")
 
         self.draw_line(
             fm_lines["vert_point"], tag="vert_point", dash=(6, 6), fill="red"
@@ -608,7 +608,7 @@ class FrameImage(ttk.Frame):
         """Update the drawn arrows
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_visible_SP")
-        logg.trace(f"Start {fmt_cn('update_visible_SP')}")
+        logg.log(5, f"Start {fmt_cn('update_visible_SP')}")
 
         self.image_canvas.delete("spline_point")
 
@@ -629,7 +629,7 @@ class FrameImage(ttk.Frame):
         """TODO: what are you changing when updating visible_segment_SP?
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_visible_segment_SP")
-        logg.trace(f"Start {fmt_cn('update_visible_segment_SP')}")
+        logg.log(5, f"Start {fmt_cn('update_visible_segment_SP')}")
 
         tag = "segment"
         self.image_canvas.delete(tag)
@@ -650,7 +650,7 @@ class FrameImage(ttk.Frame):
         logg = logging.getLogger(f"c.{__class__.__name__}.update_thick_segment_points")
         # logg.setLevel("TRACE")
         logg.debug(f"Start {fmt_cn('update_thick_segment_points')}")
-        # logg.trace(f"Points: {data}")
+        # logglogt5, race(f"Points: {data}")
 
         x, y = data
         self.plot_frame.update_plot(x, y)
@@ -677,7 +677,7 @@ class FrameImage(ttk.Frame):
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.draw_line")
         #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('draw_line')}")
+        logg.log(5, f"Start {fmt_cn('draw_line')}")
 
         # delete the old free_line in the canvas
         self.image_canvas.delete(tag)
@@ -693,7 +693,7 @@ class FrameImage(ttk.Frame):
         admissible_inter = collide_line_box(self.image_bbox, canv_point)
 
         if len(admissible_inter) == 0:
-            logg.trace(f"No line found inside the image")
+            logg.log(5, f"No line found inside the image")
             return
         elif len(admissible_inter) != 2:
             logg.warn(f"Weird amount of intersections found {len(admissible_inter)}")

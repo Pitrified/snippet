@@ -1,9 +1,11 @@
 import argparse
 import logging
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # type: ignore
 
 from pathlib import Path
 from copy import deepcopy
+
+from typing import Dict
 
 from cursive_writer.ligature.letter_class import Letter
 from cursive_writer.ligature.ligature import align_letter_1
@@ -49,13 +51,13 @@ def setup_env():
     return args
 
 
-def load_letter_dict(data_dir):
+def load_letter_dict(data_dir: Path) -> Dict[str, Letter]:
     """TODO: what is load_letter_dict doing?
     """
     logg = logging.getLogger(f"c.{__name__}.load_letter_dict")
     logg.debug(f"Start load_letter_dict")
 
-    letters_info = {}
+    letters_info: Dict[str, Letter] = {}
     letters_info["i"] = Letter(
         "i",
         left_type="low_up",
@@ -82,7 +84,9 @@ def load_letter_dict(data_dir):
     return letters_info
 
 
-def compute_letter_alignement(f_let, s_let, x_stride, data_dir):
+def compute_letter_alignement(
+    f_let: Letter, s_let: Letter, x_stride: float, data_dir: Path
+):
     """TODO: what is compute_letter_alignement doing?
     """
     logg = logging.getLogger(f"c.{__name__}.compute_letter_alignement")

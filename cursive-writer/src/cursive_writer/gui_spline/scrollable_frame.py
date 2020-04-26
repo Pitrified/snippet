@@ -59,5 +59,5 @@ class ScrollableFrame(ttk.Frame):
         else:
             logg.error(f"Errors when scrolling {event}")
 
-        logg.trace(f"Scrolling list {number} units, event {event} from {event.widget}")
+        logg.log(5, f"Scrolling list {number} units, event {event} from {event.widget}")
         self.scroll_canvas.yview_scroll(number, "units")

@@ -77,7 +77,7 @@ class ImageCropper:
         logg = logging.getLogger(f"c.{__class__.__name__}.reset_image")
         #  logg.setLevel("TRACE")
         logg.info(f"{fmt_cn('Resetting')} image")
-        logg.trace(f"widget_wid: {widget_wid} widget_hei: {widget_hei}")
+        logg.log(5, f"widget_wid: {widget_wid} widget_hei: {widget_hei}")
 
         if widget_wid != -1:
             self.widget_wid = widget_wid
@@ -109,11 +109,11 @@ class ImageCropper:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_crop")
         #  logg.setLevel("TRACE")
-        logg.trace(f"{fmt_cn('Updating')} crop zoom {self._zoom_level:.4f}")
+        logg.log(5, f"{fmt_cn('Updating')} crop zoom {self._zoom_level:.4f}")
 
         # zoom in linear scale
         zoom = self._zoom_base ** self._zoom_level
-        logg.trace(f"Linear zoom: {zoom}")
+        logg.log(5, f"Linear zoom: {zoom}")
 
         # dimension of the virtual zoomed image
         zoom_wid = math.ceil(self._image_wid * zoom)
@@ -121,7 +121,7 @@ class ImageCropper:
 
         # the zoomed photo fits inside the widget
         if zoom_wid <= self.widget_wid and zoom_hei <= self.widget_hei:
-            logg.trace(f"The zoomed photo fits {fmt_cn('inside', 'a1')} the widget")
+            logg.log(5, f"The zoomed photo fits {fmt_cn('inside', 'a1')} the widget")
             # resize the pic, don't cut it
             resized_dim = (zoom_wid, zoom_hei)
             # take the entire image
@@ -132,7 +132,7 @@ class ImageCropper:
 
         # the zoomed photo is wider than the widget
         elif zoom_wid > self.widget_wid and zoom_hei <= self.widget_hei:
-            logg.trace(f"The zoomed photo is {fmt_cn('wider', 'a1')} than the widget")
+            logg.log(5, f"The zoomed photo is {fmt_cn('wider', 'a1')} than the widget")
             # target dimension as wide as the widget
             resized_dim = (self.widget_wid, zoom_hei)
             # from top to bottom, only keep a vertical stripe
@@ -148,7 +148,7 @@ class ImageCropper:
 
         # the zoomed photo is taller than the widget
         elif zoom_wid <= self.widget_wid and zoom_hei > self.widget_hei:
-            logg.trace(f"The zoomed photo is {fmt_cn('taller', 'a1')} than the widget")
+            logg.log(5, f"The zoomed photo is {fmt_cn('taller', 'a1')} than the widget")
             resized_dim = (zoom_wid, self.widget_hei)
             region = [
                 0,
@@ -162,7 +162,7 @@ class ImageCropper:
 
         # the zoomed photo is bigger than the widget
         elif zoom_wid > self.widget_wid and zoom_hei > self.widget_hei:
-            logg.trace(f"The zoomed photo is {fmt_cn('bigger', 'a1')} than the widget")
+            logg.log(5, f"The zoomed photo is {fmt_cn('bigger', 'a1')} than the widget")
             resized_dim = (self.widget_wid, self.widget_hei)
             region = [
                 self._mov_x / zoom,
@@ -176,13 +176,14 @@ class ImageCropper:
 
         self._validate_region(region)
 
-        logg.trace(
-            f"self._image_wid {self._image_wid} self._image_hei {self._image_hei}"
+        logg.log(
+            5, f"self._image_wid {self._image_wid} self._image_hei {self._image_hei}"
         )
-        logg.trace(f"zoom_wid {zoom_wid} zoom_hei {zoom_hei}")
-        logg.trace(f"resized_dim {resized_dim} region {region}")
-        logg.trace(
-            f"widget_shift_x {self.widget_shift_x} widget_shift_y {self.widget_shift_y}"
+        logg.log(5, f"zoom_wid {zoom_wid} zoom_hei {zoom_hei}")
+        logg.log(5, f"resized_dim {resized_dim} region {region}")
+        logg.log(
+            5,
+            f"widget_shift_x {self.widget_shift_x} widget_shift_y {self.widget_shift_y}",
         )
         # save the positions
         self.resized_dim = resized_dim
@@ -229,11 +230,11 @@ class ImageCropper:
         new_zoom = self._zoom_base ** self._zoom_level
         new_zoom_wid = self._image_wid * new_zoom
         new_zoom_hei = self._image_hei * new_zoom
-        logg.trace(f"old_zoom {old_zoom} new_zoom {new_zoom}")
+        logg.log(5, f"old_zoom {old_zoom} new_zoom {new_zoom}")
         recap = f"image ({self._image_wid}, {self._image_hei})"
         recap += f" old_zoom ({old_zoom_wid}, {old_zoom_hei})"
         recap += f" new_zoom ({new_zoom_wid}, {new_zoom_hei})"
-        logg.trace(recap)
+        logg.log(5, recap)
 
         # find the center of the photo on the screen if not set
         if rel_x == -1 or rel_y == -1:
@@ -251,15 +252,15 @@ class ImageCropper:
                 rel_y = self.widget_hei / 2
         recap = f"rel_x {rel_x} rel_y {rel_y}"
         recap += f" widget ({self.widget_wid}, {self.widget_hei})"
-        logg.trace(recap)
+        logg.log(5, recap)
         recap = f"mov_x/old_zoom {self._mov_x / old_zoom}"
         recap += f" mov_x/new_zoom {self._mov_x / new_zoom}"
         recap += f" rel_x/old_zoom {rel_x / old_zoom}"
         recap += f" rel_x/new_zoom {rel_x / new_zoom}"
-        logg.trace(recap)
+        logg.log(5, recap)
         recap = f"(mov_x+rel_x)*new_z/old_z {(self._mov_x+rel_x)*new_zoom/old_zoom}"
         recap += f" (mov_y+rel_y)*new_z/old_z {(self._mov_y+rel_y)*new_zoom/old_zoom}"
-        logg.trace(recap)
+        logg.log(5, recap)
 
         # source of hell was that the formula *is* right, but sometimes to keep
         # a point fixed you need *negative* mov_x, implemented by moving the
@@ -269,26 +270,26 @@ class ImageCropper:
         new_mov_y = (self._mov_y + rel_y) * new_zoom / old_zoom - rel_y
 
         if new_zoom_wid < self.widget_wid and new_zoom_hei < self.widget_hei:
-            logg.trace(f'new_zoom photo {fmt_cn("smaller", "a1")} than frame')
+            logg.log(5, f'new_zoom photo {fmt_cn("smaller", "a1")} than frame')
             self._mov_x = 0
             self._mov_y = 0
         elif new_zoom_wid >= self.widget_wid and new_zoom_hei < self.widget_hei:
-            logg.trace(f'new_zoom photo {fmt_cn("wider", "a1")} than frame')
+            logg.log(5, f'new_zoom photo {fmt_cn("wider", "a1")} than frame')
             self._mov_x = new_mov_x
             self._mov_y = 0
         elif new_zoom_wid < self.widget_wid and new_zoom_hei >= self.widget_hei:
-            logg.trace(f'new_zoom photo {fmt_cn("taller", "a1")} than frame')
+            logg.log(5, f'new_zoom photo {fmt_cn("taller", "a1")} than frame')
             self._mov_x = 0
             self._mov_y = new_mov_y
         elif new_zoom_wid >= self.widget_wid and new_zoom_hei >= self.widget_hei:
-            logg.trace(f'new_zoom photo {fmt_cn("larger", "a1")} than frame')
+            logg.log(5, f'new_zoom photo {fmt_cn("larger", "a1")} than frame')
             self._mov_x = new_mov_x
             self._mov_y = new_mov_y
 
         self._validate_mov()
 
         recap = f"mov_x {self._mov_x} mov_y {self._mov_y}"
-        logg.trace(recap)
+        logg.log(5, recap)
 
         self.update_crop()
 
@@ -339,7 +340,7 @@ class ImageCropper:
         """
         logg = logging.getLogger(f"c.{__class__.__name__}._validate_region")
         #  logg.setLevel("TRACE")
-        logg.trace(f"Start {fmt_cn('_validate_region')}")
+        logg.log(5, f"Start {fmt_cn('_validate_region')}")
 
         # left
         if region[0] < 0:

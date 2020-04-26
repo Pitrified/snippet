@@ -99,7 +99,7 @@ def setup_style(colorscheme="terra"):
     rgb = tk.Button().winfo_rgb(o["bg_container"])
     # matplotlib wants colors in [0,1] range
     o["bg_container_rgb"] = tuple(c / 65535 for c in rgb)
-    logg.trace(f"o['bg_container_rgb']: {o['bg_container_rgb']}")
+    logg.log(5, f"o['bg_container_rgb']: {o['bg_container_rgb']}")
 
     # font setup
     # o["font_std_type"] = "DejaVu Sans Mono"
