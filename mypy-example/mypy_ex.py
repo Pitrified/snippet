@@ -138,6 +138,11 @@ class SplinePoint(OrientedPoint):
         return the_repr_str
 
 
+def translate_point(pt: OrientedPoint) -> None:
+    pt.x += 1
+    pt.y += 1
+
+
 def run_mypy_ex(args: argparse.Namespace) -> None:
     """TODO: What is mypy_ex doing?
     """
@@ -150,6 +155,8 @@ def run_mypy_ex(args: argparse.Namespace) -> None:
     sp = SplinePoint(0, 0, 0, 0)
     logg.debug(f"sp: {sp}")
     sp.spid = 4
+
+    translate_point(sp)
 
 
 if __name__ == "__main__":
