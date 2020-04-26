@@ -421,12 +421,6 @@ def ex_align_letters_1(pf_spline_left, pf_spline_right, data_dir, thickness):
     spline_samples_l = compute_long_thick_spline(spline_sequence_l, thickness)
     spline_samples_r = compute_long_thick_spline(spline_sequence_r, thickness)
 
-    # merge in a single one
-    spline_samples_all = []
-    spline_samples_all.extend(spline_samples_l)
-    spline_samples_all.extend(spline_samples_con)
-    spline_samples_all.extend(spline_samples_r)
-
     # find dimension of the plot
     xlim, ylim = find_spline_sequence_bbox(spline_sequence_l)
     xlim, ylim = find_spline_sequence_bbox(spline_sequence_r, xlim, ylim)
@@ -486,12 +480,6 @@ def ex_align_letters_2(pf_spline_left, pf_spline_right, data_dir, thickness):
     spline_samples_con = compute_long_thick_spline(spline_sequence_con, thickness)
     spline_samples_l = compute_long_thick_spline(spline_sequence_l, thickness)
     spline_samples_r = compute_long_thick_spline(spline_sequence_r, thickness)
-
-    # merge in a single one
-    spline_samples_all = []
-    spline_samples_all.extend(spline_samples_l)
-    spline_samples_all.extend(spline_samples_con)
-    spline_samples_all.extend(spline_samples_r)
 
     # find dimension of the plot
     xlim, ylim = find_spline_sequence_bbox(spline_sequence_l)

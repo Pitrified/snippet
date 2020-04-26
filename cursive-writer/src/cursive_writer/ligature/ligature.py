@@ -2,6 +2,7 @@ import logging
 import numpy as np
 import math
 
+from copy import deepcopy
 from timeit import default_timer as timer
 
 from cursive_writer.spliner.spliner import compute_aligned_cubic_segment
@@ -9,6 +10,7 @@ from cursive_writer.spliner.spliner import compute_aligned_glyph
 from cursive_writer.utils.geometric_utils import poly_model
 from cursive_writer.utils.geometric_utils import slope2deg
 from cursive_writer.utils.oriented_point import OrientedPoint
+from cursive_writer.utils.geometric_utils import translate_spline_sequence
 
 
 def find_lower_tangent(l_x_as, l_y_as, r_x_as, r_y_as, r_yp_as):
@@ -261,8 +263,10 @@ def align_letter_1(spline_sequence_l, spline_sequence_r, x_stride):
     # logg.debug(f"Start align_letter_1")
 
     # extract the last and the first glyphs in the two letters
-    gly_seq_l = spline_sequence_l[-1]
-    gly_seq_r = spline_sequence_r[0]
+    # gly_seq_l = spline_sequence_l[-1]
+    # gly_seq_r = spline_sequence_r[0]
+    gly_seq_l = deepcopy(spline_sequence_l[-1])
+    gly_seq_r = deepcopy(spline_sequence_r[0])
 
     # compute the data for the left and right glyph
     _, l_x_as, l_y_as, l_yp_as = compute_aligned_glyph(gly_seq_l, x_stride)
@@ -286,6 +290,7 @@ def align_letter_1(spline_sequence_l, spline_sequence_r, x_stride):
             break
     # r_p_id is the first that is right of r_p_ext, the slice *includes* it
     gly_chop_r = gly_seq_r[r_p_id:]
+    translate_spline_sequence([gly_chop_r], best_shift, 0)
 
     # build the connecting glyph
     gly_seq_con = [gly_chop_l[-1], l_p_ext, r_p_ext, gly_chop_r[0]]

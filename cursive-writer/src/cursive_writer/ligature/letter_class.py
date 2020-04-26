@@ -1,6 +1,7 @@
 import logging
 
 from cursive_writer.utils.utils import load_spline
+from cursive_writer.spliner.spliner import compute_long_thick_spline
 
 
 class Letter:
@@ -12,6 +13,7 @@ class Letter:
         pf_spline_alone=None,
         pf_spline_high=None,
         pf_spline_low=None,
+        thickness=10,
     ):
         """TODO: what is __init__ doing?
 
@@ -38,6 +40,7 @@ class Letter:
         self.letter = letter
         self.right_type = right_type
         self.left_type = left_type
+        self.thickness = thickness
 
         self.pf_spline = {}
         self.pf_spline["alone"] = pf_spline_alone
@@ -45,6 +48,7 @@ class Letter:
         self.pf_spline["low"] = pf_spline_low
 
         self.spline_seq = {}
+        self.spline_thick_samples = {}
         self.gly_num = {}
         self.point_num = {}
 
@@ -66,10 +70,11 @@ class Letter:
         # logg.debug(f"Start load_spline_info {which}")
 
         self.spline_seq[which] = load_spline(self.pf_spline[which], self.data_dir)
+        self.spline_thick_samples[which] = compute_long_thick_spline(
+            self.spline_seq[which], self.thickness
+        )
         self.gly_num[which] = len(self.spline_seq[which])
-        self.point_num[which] = 0
-        for glyph in self.spline_seq[which]:
-            self.point_num[which] += len(glyph)
+        self.point_num[which] = sum(map(len, self.spline_seq[which]))
 
         # check that there is a left glyph, a main spline and a right one
         if self.gly_num[which] <= 2:
@@ -78,12 +83,60 @@ class Letter:
     def get_pf(self, which):
         """TODO: what is get_pf doing?
         """
-        logg = logging.getLogger(f"c.{__name__}.get_pf")
-        logg.debug(f"Start get_pf")
+        # logg = logging.getLogger(f"c.{__name__}.get_pf")
+        # logg.debug(f"Start get_pf")
+        valid_which = self.get_valid_type(which)
+        return self.pf_spline[valid_which]
+
+    def get_spline_seq(self, which):
+        """TODO: what is get_spline_seq doing?
+        """
+        # logg = logging.getLogger(f"c.{__name__}.get_spline_seq")
+        # logg.debug(f"Start get_spline_seq")
+        valid_which = self.get_valid_type(which)
+        return self.spline_seq[valid_which]
+
+    def get_thick_samples(self, which):
+        """TODO: what is get_thick_samples doing?
+        """
+        # logg = logging.getLogger(f"c.{__name__}.get_thick_samples")
+        # logg.debug(f"Start get_thick_samples")
+        valid_which = self.get_valid_type(which)
+        return self.spline_thick_samples[valid_which]
+
+    def get_valid_type(self, which):
+        """TODO: what is get_valid_type doing?
+        """
+        logg = logging.getLogger(f"c.{__name__}.get_valid_type")
 
         # the requested type exists
         if self.pf_spline[which] is not None:
-            return self.pf_spline[which]
+            return which
+
+        # fallback to some other option
+        if which == "high":
+            if self.pf_spline["alone"] is not None:
+                logg.warn(f"Missing data for {self.letter}: '{which}' - return 'alone'")
+                return "alone"
+            if self.pf_spline["low"] is not None:
+                logg.warn(f"Missing data for {self.letter}: '{which}' - return 'low'")
+                return "low"
+
+        if which == "low":
+            if self.pf_spline["alone"] is not None:
+                logg.warn(f"Missing data for {self.letter}: '{which}' - 'alone'")
+                return "alone"
+            if self.pf_spline["high"] is not None:
+                logg.warn(f"Missing data for {self.letter}: '{which}' - return 'high'")
+                return "high"
+
+        if which == "alone":
+            if self.pf_spline["low"] is not None:
+                logg.warn(f"Missing data for {self.letter}: '{which}' - return 'low'")
+                return "low"
+            if self.pf_spline["high"] is not None:
+                logg.warn(f"Missing data for {self.letter}: '{which}' - return 'high'")
+                return "high"
 
     def __str__(self):
         the_str = f"'{self.letter}'"

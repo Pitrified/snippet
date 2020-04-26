@@ -1,12 +1,17 @@
 import argparse
 import logging
+import matplotlib.pyplot as plt
 
 from pathlib import Path
+from copy import deepcopy
 
-from cursive_writer.utils.setup import setup_logger
 from cursive_writer.ligature.letter_class import Letter
+from cursive_writer.ligature.ligature import align_letter_1
 from cursive_writer.ligature.ligature import align_letter_2
-from cursive_writer.utils.utils import load_spline
+from cursive_writer.spliner.spliner import compute_long_thick_spline
+from cursive_writer.utils.geometric_utils import find_spline_sequence_bbox
+from cursive_writer.utils.geometric_utils import translate_spline_sequence
+from cursive_writer.utils.setup import setup_logger
 
 
 def parse_arguments():
@@ -16,10 +21,10 @@ def parse_arguments():
 
     parser.add_argument(
         "-i",
-        "--path_input",
+        "--input_str",
         type=str,
-        default="hp.jpg",
-        help="path to input image to use",
+        default="imvivmivimvim",
+        help="Input string to write",
     )
 
     # last line to parse the args
@@ -77,7 +82,7 @@ def compute_letter_alignement(f_let, s_let, x_stride, data_dir):
     """TODO: what is compute_letter_alignement doing?
     """
     logg = logging.getLogger(f"c.{__name__}.compute_letter_alignement")
-    logg.debug(f"Start compute_letter_alignement {f_let} {s_let}")
+    logg.debug(f"Start compute_letter_alignement {f_let.letter} {s_let.letter}")
 
     # pick the correct align strategy
 
@@ -85,14 +90,12 @@ def compute_letter_alignement(f_let, s_let, x_stride, data_dir):
     if f_let.right_type == "low_up" and s_let.left_type == "high_down":
 
         # the right side at the moment does not change, so get any one
-        pf_spline_left = f_let.get_pf("alone")
+        spline_seq_l = f_let.get_spline_seq("alone")
 
         # we request the high because this *is* a high letter
-        pf_spline_right = s_let.get_pf("high")
+        spline_seq_r = s_let.get_spline_seq("high")
 
         # load and compute
-        spline_seq_l = load_spline(pf_spline_left, data_dir)
-        spline_seq_r = load_spline(pf_spline_right, data_dir)
         spline_seq_con, shift, _ = align_letter_2(spline_seq_l, spline_seq_r, x_stride)
 
         # there is no need to chop the last/first glyphs
@@ -105,23 +108,30 @@ def compute_letter_alignement(f_let, s_let, x_stride, data_dir):
         # need to pick the correct version of the letters to join
 
         # the right side at the moment does not change, so get any one
-        pf_spline_left = f_let.get_pf("alone")
+        spline_seq_l = f_let.get_spline_seq("alone")
+
         # look at the right of the first letter
         if f_let.right_type == "high_up":
             # use high version of the second letter
-            pf_spline_right = s_let.get_pf("high")
+            spline_seq_r = s_let.get_spline_seq("high")
         elif f_let.right_type == "low_up":
             # use low version of the second letter
-            pf_spline_right = s_let.get_pf("low")
+            spline_seq_r = s_let.get_spline_seq("low")
 
         # load and compute
-        spline_seq_l = load_spline(pf_spline_left, data_dir)
-        spline_seq_r = load_spline(pf_spline_right, data_dir)
-        spline_seq_con, gly_chop_l, gly_chop_r, shift, = align_letter_2(
+        spline_seq_con, gly_chop_l, gly_chop_r, shift, = align_letter_1(
             spline_seq_l, spline_seq_r, x_stride
         )
 
-    return spline_seq_con, gly_chop_l, gly_chop_r, shift
+    con_info = {}
+    con_info["spline_seq_con"] = spline_seq_con
+    con_info["spline_seq_l"] = spline_seq_l
+    con_info["spline_seq_r"] = spline_seq_r
+    con_info["gly_chop_l"] = gly_chop_l
+    con_info["gly_chop_r"] = gly_chop_r
+    con_info["shift"] = shift
+    # logg.debug(f"con_info: {con_info}")
+    return con_info
 
 
 def run_word_builder(args):
@@ -140,18 +150,96 @@ def run_word_builder(args):
     for letter in letters_info:
         logg.debug(f"{letters_info[letter]}")
 
+    # where to keep the connection info
     ligature_info = {}
 
+    # the sampling precision when shifting
     x_stride = 1
 
-    pair = "ii"
+    thickness = 10
 
-    if pair not in ligature_info:
-        f_let = letters_info[pair[0]]
-        s_let = letters_info[pair[1]]
-        ligature_info[pair] = compute_letter_alignement(
-            f_let, s_let, x_stride, data_dir
-        )
+    # all the spline_seq points
+    all_glyphs = []
+
+    # the accumulated shift
+    acc_shift = 0
+
+    # draw the first letter
+    all_glyphs.extend(letters_info[args.input_str[0]].get_spline_seq("alone"))
+
+    for i in range(len(args.input_str) - 1):
+        # get the current pair
+        pair = args.input_str[i : i + 2]
+        logg.debug(f"Doing pair: {pair}")
+
+        # compute info for this pair if needed
+        if pair not in ligature_info:
+            f_let = letters_info[pair[0]]
+            s_let = letters_info[pair[1]]
+            ligature_info[pair] = compute_letter_alignement(
+                f_let, s_let, x_stride, data_dir
+            )
+
+        # edit the previous/first (if needed, some times it will be the same)
+        # make a copy so that we do not modify the original
+        gly_chop_l = deepcopy(ligature_info[pair]["gly_chop_l"])
+        translate_spline_sequence([gly_chop_l], acc_shift, 0)
+        all_glyphs[-1] = gly_chop_l
+
+        # add the translated connection
+        spline_seq_con = deepcopy(ligature_info[pair]["spline_seq_con"])
+        translate_spline_sequence(spline_seq_con, acc_shift, 0)
+        all_glyphs.extend(spline_seq_con)
+        logg.debug(f"spline_seq_con: {spline_seq_con}")
+
+        # update the total shift
+        acc_shift += ligature_info[pair]["shift"]
+
+        # add the second
+        # translate the connection
+        gly_chop_r = deepcopy(ligature_info[pair]["gly_chop_r"])
+        translate_spline_sequence([gly_chop_r], acc_shift, 0)
+        # translate the spline
+        spline_seq_r = deepcopy(ligature_info[pair]["spline_seq_r"])
+        translate_spline_sequence(spline_seq_r, acc_shift, 0)
+        # change the first glyph of the spline
+        spline_seq_r[0] = gly_chop_r
+        # add the spline to the glyphs
+        all_glyphs.extend(spline_seq_r)
+
+    # plot results
+
+    # find dimension of the plot
+    xlim, ylim = find_spline_sequence_bbox(all_glyphs)
+    # inches to point
+    ratio = 3 / 1000
+    wid = xlim[1] - xlim[0]
+    hei = ylim[1] - ylim[0]
+    fig_dims = (wid * ratio, hei * ratio)
+    # create plot
+    fig = plt.figure(figsize=fig_dims, frameon=False)
+    ax = fig.add_axes((0, 0, 1, 1))
+    fig.canvas.set_window_title(f"Writing {args.input_str}")
+    ax.set_axis_off()
+
+    # compute the thick spline
+
+    all_glyphs_thick = compute_long_thick_spline(all_glyphs, thickness)
+    # style = {"color": "k", "marker": ".", "ls": ""}
+    # col_list = ["g", "r", "y", "c", "m", "k", "b"]
+    col_list = ["k"]
+    # i_s = 0
+    for i_g, glyph in enumerate(all_glyphs_thick):
+        # logg.debug(f"Plotting glyph: {glyph}")
+        cc = col_list[i_g % len(col_list)]
+        style = {"color": cc, "marker": ".", "ls": ""}
+        for segment in glyph:
+            # cc = col_list[i_s % len(col_list)]
+            # i_s += 1
+            # style = {"color": cc, "marker": ".", "ls": ""}
+            ax.plot(*segment, **style)
+
+    plt.show()
 
 
 if __name__ == "__main__":
