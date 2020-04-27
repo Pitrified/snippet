@@ -5,7 +5,7 @@ class SplinePoint(OrientedPoint):
     """Spline Point: an OrientedPoint with additional info
     """
 
-    def __init__(self, x, y, ori_deg, spid):
+    def __init__(self, x: float, y: float, ori_deg: float, spid: int) -> None:
         """Create a point with orientation
 
         point (x,y) with orientation in degrees, ranging [-180, 180)

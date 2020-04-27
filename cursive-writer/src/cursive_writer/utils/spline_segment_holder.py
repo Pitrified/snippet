@@ -8,8 +8,9 @@ from cursive_writer.spliner.spliner import compute_thick_spline
 
 
 class SplineSegmentHolder:
-    def __init__(self, thickness=-1):
-        logg = logging.getLogger(f"c.{__class__.__name__}.init")
+    def __init__(self, thickness: float = -1) -> None:
+        self.cn = self.__class__.__name__
+        logg = logging.getLogger(f"c.{self.cn}.init")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('init')}")
 
@@ -29,7 +30,7 @@ class SplineSegmentHolder:
     def update_data(self, new_all_SP, new_path_SP):
         """TODO: what is update_data doing?
         """
-        logg = logging.getLogger(f"c.{__class__.__name__}.update_data")
+        logg = logging.getLogger(f"c.{self.cn}.update_data")
         # logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('update_data')}")
 
@@ -102,7 +103,7 @@ class SplineSegmentHolder:
         TODO: do this with multiprocessing
         MAYBE: resample the segment with different precision for different zoom levels?
         """
-        logg = logging.getLogger(f"c.{__class__.__name__}.compute_segment_points")
+        logg = logging.getLogger(f"c.{self.cn}.compute_segment_points")
         # logg.setLevel("TRACE")
         logg.log(5, f"Start {fmt_cn('compute_segment_points')} {p0} :: {p1}")
 

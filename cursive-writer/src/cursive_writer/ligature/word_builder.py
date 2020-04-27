@@ -16,7 +16,7 @@ from cursive_writer.utils.geometric_utils import translate_spline_sequence
 from cursive_writer.utils.setup import setup_logger
 
 
-def parse_arguments():
+def parse_arguments() -> argparse.Namespace:
     """Setup CLI interface
     """
     parser = argparse.ArgumentParser(description="")
@@ -34,7 +34,7 @@ def parse_arguments():
     return args
 
 
-def setup_env():
+def setup_env() -> argparse.Namespace:
     setup_logger()
 
     args = parse_arguments()
@@ -131,6 +131,7 @@ def compute_letter_alignement(
             spline_seq_l, spline_seq_r, x_stride
         )
 
+    # TODO turn this into a class
     con_info = {}
     con_info["spline_seq_con"] = spline_seq_con
     con_info["spline_seq_l"] = spline_seq_l
@@ -142,7 +143,7 @@ def compute_letter_alignement(
     return con_info
 
 
-def run_word_builder(args):
+def run_word_builder(args: argparse.Namespace) -> None:
     """TODO: What is word_builder doing?
     """
     logg = logging.getLogger(f"c.{__name__}.run_word_builder")

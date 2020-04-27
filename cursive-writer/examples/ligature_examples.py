@@ -1,8 +1,8 @@
 import argparse
 import logging
 import math
-import matplotlib.pyplot as plt
-import numpy as np
+import matplotlib.pyplot as plt  # type: ignore
+import numpy as np  # type: ignore
 
 from pathlib import Path
 from timeit import default_timer as timer
@@ -536,9 +536,9 @@ def exs_align_letters(data_dir, thickness):
     pf_m = data_dir / "m2_000.txt"
     # pf_i = data_dir / "i1_006.txt"
     # pf_i = data_dir / "i1_007.txt"
-    pf_i = data_dir / "i2_l_000.txt"
-    # pf_ih = data_dir / "i1_h_006.txt"
-    pf_v = data_dir / "v1_001.txt"
+    pf_i = data_dir / "i2_l_dot_000.txt"
+    pf_ih = data_dir / "i2_h_dot_000.txt"
+    pf_v = data_dir / "v2_002.txt"
     # pf_o = data_dir / "o1_002.txt"
     # pf_oh = data_dir / "o1_h_001.txt"
     # pf_ol = data_dir / f"o1_l_004.txt"
@@ -557,11 +557,11 @@ def exs_align_letters(data_dir, thickness):
     # ex_align_letters_1(pf_m, pf_i, data_dir, thickness)
     # ex_align_letters_1(pf_o, pf_ih, data_dir, thickness)
     # ex_align_letters_1(pf_o, pf_m, data_dir, thickness)
-    # ex_align_letters_1(pf_v, pf_ih, data_dir, thickness)
+    ex_align_letters_1(pf_v, pf_ih, data_dir, thickness)
     # ex_align_letters_1(pf_v, pf_m, data_dir, thickness)
 
     ex_align_letters_2(pf_i, pf_v, data_dir, thickness)
-    # ex_align_letters_2(pf_ih, pf_m, data_dir, thickness)
+    ex_align_letters_2(pf_ih, pf_m, data_dir, thickness)
     ex_align_letters_2(pf_m, pf_v, data_dir, thickness)
 
 

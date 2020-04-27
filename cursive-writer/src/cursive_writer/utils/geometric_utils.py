@@ -1,14 +1,19 @@
 import logging
-import numpy as np
+import numpy as np  # type: ignore
+import math
+
+from typing import Iterable, List, Optional, Tuple
+
+from cursive_writer.utils.type_utils import DArray
+from cursive_writer.utils.type_utils import Glyph
+from cursive_writer.utils.type_utils import Spline
 
 from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.oriented_point import OrientedPoint
 from cursive_writer.utils.utils import print_coeff
 
-import math
 
-
-def line_curve_ab_coeff(x0, y0, x1, y1):
+def line_curve_ab_coeff(x0: float, y0: float, x1: float, y1: float) -> List[float]:
     """Find the coefficient for a linear curve passing through two points
 
     y = ax + b
@@ -28,14 +33,16 @@ def line_curve_ab_coeff(x0, y0, x1, y1):
     return [a, b]
 
 
-def line_curve_point(x0, y0, x1, y1):
+def line_curve_point(x0: float, y0: float, x1: float, y1: float) -> OrientedPoint:
     """Find a point on the line with appropriate orientation
     """
     ori_deg = math.degrees(math.atan2(y1 - y0, x1 - x0))
     return OrientedPoint(x0, y0, ori_deg)
 
 
-def collide_line_box(bbox, line_point):
+def collide_line_box(
+    bbox: List[float], line_point: OrientedPoint
+) -> List[Tuple[float, float]]:
     """Collide a line with a rectangular box
 
     line_coeff = [a, b]
@@ -60,6 +67,7 @@ def collide_line_box(bbox, line_point):
 
     a = line_coeff[0]
     b = line_coeff[1]
+
     # horizontal line
     if a == 0:
         if top < b < bot:
@@ -111,7 +119,7 @@ def collide_line_box(bbox, line_point):
     return admissible_inter
 
 
-def translate_line(line_coeff, shift_x, shift_y):
+def translate_line(line_coeff: DArray, shift_x: float, shift_y: float) -> List[float]:
     """Translate a line by changing the b coeff
 
     y = ax + b
@@ -131,7 +139,9 @@ def translate_line(line_coeff, shift_x, shift_y):
     return [a, b]
 
 
-def translate_point_dxy(orig_point, shift_x, shift_y):
+def translate_point_dxy(
+    orig_point: OrientedPoint, shift_x: float, shift_y: float
+) -> OrientedPoint:
     """Translate the orig_point of dx, dy and return a new one
     """
     return OrientedPoint(
@@ -139,15 +149,17 @@ def translate_point_dxy(orig_point, shift_x, shift_y):
     )
 
 
-def translate_point_dir(orig_point, dir_deg, shift):
-    """Translate the point along a direction of a certain amount
+def translate_point_dir(
+    orig_point: OrientedPoint, dir_deg: float, shift: float
+) -> OrientedPoint:
+    """Translate the point along a direction of a certain amount and return a new one
     """
     new_x = orig_point.x + shift * math.cos(math.radians(dir_deg))
     new_y = orig_point.y + shift * math.sin(math.radians(dir_deg))
     return OrientedPoint(new_x, new_y, orig_point.ori_deg)
 
 
-def translate_spline_sequence(spline_sequence, dx, dy):
+def translate_spline_sequence(spline_sequence: Spline, dx: float, dy: float) -> None:
     """Changes a spline, translating the points by (dx, dy)
     """
     # logg = logging.getLogger(f"c.{__name__}.translate_spline_sequence")
@@ -159,13 +171,13 @@ def translate_spline_sequence(spline_sequence, dx, dy):
             op.y += dy
 
 
-def dist2D(p0, p1):
+def dist2D(p0: OrientedPoint, p1: OrientedPoint) -> float:
     """Distance between two points
     """
     return math.sqrt((p0.x - p1.x) ** 2 + (p0.y - p1.y) ** 2)
 
 
-def apply_affine_transform(F, x, y):
+def apply_affine_transform(F: DArray, x: float, y: float) -> List[float]:
     """Left multiply the homogeneous point by the matrix
 
     res = F * p
@@ -179,7 +191,7 @@ def apply_affine_transform(F, x, y):
     return [transform_point[0], transform_point[1]]
 
 
-def poly_model(x, coeff, flip_coeff=False):
+def poly_model(x: np.ndarray, coeff: DArray, flip_coeff: bool = False) -> np.ndarray:
     """Compute y values of a polynomial
 
     The coeff start with the low degrees first
@@ -201,19 +213,19 @@ def poly_model(x, coeff, flip_coeff=False):
     return y_true
 
 
-def slope2deg(slope, direction=1):
+def slope2deg(slope: float, direction: float = 1) -> float:
     """Convert the slope of a line to an angle in degrees
     """
     return math.degrees(np.arctan2(slope, direction))
 
 
-def slope2rad(slope, direction=1):
+def slope2rad(slope: float, direction: int = 1) -> float:
     """Convert the slope of a line to an angle in radians
     """
     return np.arctan2(slope, direction)
 
 
-def compute_rot_matrix(theta_deg):
+def compute_rot_matrix(theta_deg: float) -> np.ndarray:
     """Compute the 2x2 rotation matrix for angle theta_deg in degrees
     """
     logg = logging.getLogger(f"c.{__name__}.compute_rot_matrix")
@@ -228,7 +240,7 @@ def compute_rot_matrix(theta_deg):
     return rot_mat
 
 
-def rotate_point(point, theta_deg):
+def rotate_point(point: DArray, theta_deg: float) -> np.ndarray:
     """Rotate a point (or Nx2 array of points) by theta_deg degree
 
     MAYBE automagically transpose the point mat if it is 2xN instead of Nx2
@@ -237,7 +249,9 @@ def rotate_point(point, theta_deg):
     return np.matmul(point, rot_mat)
 
 
-def compute_affine_transform(base_pt_abs, basis_length):
+def compute_affine_transform(
+    base_pt_abs: OrientedPoint, basis_length: float
+) -> Tuple[np.ndarray, np.ndarray]:
     """Update the affine transform matrix fm <-> abs coord
 
     Given basis e1, e2 at 0, moved into u, v at p
@@ -285,7 +299,14 @@ def compute_affine_transform(base_pt_abs, basis_length):
     return fm2abs, abs2fm
 
 
-def bisect_poly(coeff, d_coeff, y_target, tolerance=1e-6, x_low=0, x_high=1):
+def bisect_poly(
+    coeff: DArray,
+    d_coeff: DArray,
+    y_target: float,
+    tolerance: float = 1e-6,
+    x_low: float = 0,
+    x_high: float = 1,
+) -> float:
     """Finds a value of x so that |y-p(x)| < tolerance
 
     Also returns when |x_low-x_high| < tolerance
@@ -371,7 +392,7 @@ def bisect_poly(coeff, d_coeff, y_target, tolerance=1e-6, x_low=0, x_high=1):
     return (x_low + x_high) / 2
 
 
-def rotate_coeff(coeff, theta_deg):
+def rotate_coeff(coeff: DArray, theta_deg: float) -> Tuple[List[float], List[float]]:
     """Returns the parametric expression of the rotated coeff
 
     Given a cubic curve
@@ -414,7 +435,9 @@ def rotate_coeff(coeff, theta_deg):
     return x_rot_coeff, y_rot_coeff
 
 
-def rotate_derive_coeff(coeff, theta_deg):
+def rotate_derive_coeff(
+    coeff: DArray, theta_deg: float
+) -> Tuple[List[float], List[float]]:
     """Returns the parametric expression of the derivative of the rotated coeff
 
     Given a cubic curve
@@ -458,17 +481,17 @@ def rotate_derive_coeff(coeff, theta_deg):
 
 
 def sample_parametric_aligned(
-    x_coeff,
-    y_coeff,
-    x_d_coeff,
-    y_d_coeff,
-    x_min,
-    x_max,
-    x_stride,
-    x_offset=0,
-    x_low=None,
-    x_high=None,
-):
+    x_coeff: DArray,
+    y_coeff: DArray,
+    x_d_coeff: DArray,
+    y_d_coeff: DArray,
+    x_min: float,
+    x_max: float,
+    x_stride: float,
+    x_offset: float = 0,
+    x_low: float = None,
+    x_high: float = None,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Sample a parametric curve along a grid
 
     Given a parametric curve and its derivative and an interval [x_min, x_max]
@@ -586,7 +609,7 @@ def sample_parametric_aligned(
     return t_a_sample, x_a_sample, y_a_sample, yp_a_sample
 
 
-def find_align_stride(glyphs):
+def find_align_stride(glyphs: Iterable[Glyph]) -> float:
     """Given an iterable of glyphs, finds the stride to sample them
     """
     # logg = logging.getLogger(f"c.{__name__}.find_align_stride")
@@ -609,7 +632,11 @@ def find_align_stride(glyphs):
     return x_stride
 
 
-def find_spline_sequence_bbox(spline_sequence, old_xlim=None, old_ylim=None):
+def find_spline_sequence_bbox(
+    spline_sequence: Spline,
+    old_xlim: Optional[Tuple[float, float]] = None,
+    old_ylim: Optional[Tuple[float, float]] = None,
+) -> Tuple[Tuple[float, float], Tuple[float, float]]:
     """TODO: what is find_spline_sequence_bbox doing?
     """
     # logg = logging.getLogger(f"c.{__name__}.find_spline_sequence_bbox")
@@ -620,7 +647,7 @@ def find_spline_sequence_bbox(spline_sequence, old_xlim=None, old_ylim=None):
         max_x = float("-inf")
     else:
         min_x, max_x = old_xlim
-    if old_xlim is None:
+    if old_ylim is None:
         min_y = float("inf")
         max_y = float("-inf")
     else:

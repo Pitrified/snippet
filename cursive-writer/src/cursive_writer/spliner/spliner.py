@@ -1,6 +1,7 @@
 import logging
-import numpy as np
+import numpy as np  # type: ignore
 import math
+import matplotlib.pyplot as plt  # type: ignore
 
 from cursive_writer.utils import plot_utils
 from cursive_writer.utils.geometric_utils import poly_model
@@ -11,7 +12,9 @@ from cursive_writer.utils.geometric_utils import sample_parametric_aligned
 from cursive_writer.utils.oriented_point import OrientedPoint
 from cursive_writer.utils.utils import print_coeff
 
-from typing import Tuple
+from typing import Optional, Tuple
+
+from cursive_writer.utils.type_utils import DArray, Glyph, Spline, ThickSpline
 
 
 def translate_points_to_origin(
@@ -143,7 +146,9 @@ def fit_cubic(p0: OrientedPoint, p1: OrientedPoint):
     return x
 
 
-def linspace_segment_points(x_start, x_end, coeff, num_samples=50):
+def linspace_segment_points(
+    x_start: float, x_end: float, coeff, num_samples: int = 50
+) -> Tuple[np.ndarray, np.ndarray]:
     """Uniformly sample a poly_model in the [x_start, x_end] range
     """
     if x_start > x_end:
@@ -154,7 +159,9 @@ def linspace_segment_points(x_start, x_end, coeff, num_samples=50):
     return x_sample, y_segment
 
 
-def sample_nat_segment_points(x_start, x_end, coeff):
+def sample_nat_segment_points(
+    x_start: float, x_end: float, coeff: DArray
+) -> Tuple[np.ndarray, np.ndarray]:
     """Sample a poly_model in the [x_start, x_end] range on natural numbers
     """
     logg = logging.getLogger(f"c.{__name__}.sample_nat_segment_points")
@@ -178,7 +185,9 @@ def sample_nat_segment_points(x_start, x_end, coeff):
     return x_sample, y_segment
 
 
-def compute_cubic_segment(p0, p1, ax=None):
+def compute_cubic_segment(
+    p0: OrientedPoint, p1: OrientedPoint, ax: Optional[plt.Axes] = None
+) -> Tuple[np.ndarray, np.ndarray]:
     """Compute the cubic segment between two points
 
     * translate to the origin and rotate the points to have both on the x axis
@@ -219,18 +228,18 @@ def compute_cubic_segment(p0, p1, ax=None):
 
 
 def build_contour(
-    p0t,
-    p0b,
-    p1t,
-    p1b,
-    coeff_l,
-    coeff_r,
-    x_sample_t,
-    y_segment_t,
-    x_sample_b,
-    y_segment_b,
-    ax,
-):
+    p0t: OrientedPoint,
+    p0b: OrientedPoint,
+    p1t: OrientedPoint,
+    p1b: OrientedPoint,
+    coeff_l: DArray,
+    coeff_r: DArray,
+    x_sample_t: DArray,
+    y_segment_t: DArray,
+    x_sample_b: DArray,
+    y_segment_b: DArray,
+    ax: Optional[plt.Axes],
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """TODO: Docstring for build_contour.
 
     :p0t: TODO
@@ -379,7 +388,12 @@ def build_contour(
     return contour_t, contour_b, x_sample
 
 
-def compute_thick_spline(p0, p1, thickness, ax=None):
+def compute_thick_spline(
+    p0: OrientedPoint,
+    p1: OrientedPoint,
+    thickness: float,
+    ax: Optional[plt.Axes] = None,
+) -> Tuple[np.ndarray, np.ndarray]:
     """Compute the thick cubic spline between two points
 
     * translate to the origin and rotate the points to have both on the x axis
@@ -519,7 +533,9 @@ def compute_thick_spline(p0, p1, thickness, ax=None):
     return rototran_x, rototran_y
 
 
-def compute_long_thick_spline(spline_sequence, thickness=20):
+def compute_long_thick_spline(
+    spline_sequence: Spline, thickness: int = 20
+) -> ThickSpline:
     """Compute thick spline points for a spline spline_sequence
 
     spline_sequence = [[OP1, OP2, ...], [OP6, OP7, ...], ...]
@@ -546,7 +562,12 @@ def compute_long_thick_spline(spline_sequence, thickness=20):
     return spline_samples
 
 
-def compute_aligned_cubic_segment(p0, p1, x_stride=1, ax=None):
+def compute_aligned_cubic_segment(
+    p0: OrientedPoint,
+    p1: OrientedPoint,
+    x_stride: float = 1,
+    ax: Optional[plt.Axes] = None,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Compute the aligned cubic segment between two points
 
     TODO: better documentation of parameters/return
@@ -559,7 +580,8 @@ def compute_aligned_cubic_segment(p0, p1, x_stride=1, ax=None):
     # if the points are actually the same, return just that
     if math.isclose(p0.x, p1.x) and math.isclose(p0.y, p1.y):
         logg.warn(f"Coincident points {p0} {p1}")
-        return [p0.x], [p0.y]
+        # TODO do these value make sense?
+        return 0, [p0.x], [p0.y], 0
 
     # translate the points to the origin
     rot_p0, rot_p1, dir_01 = translate_points_to_origin(p0, p1)
@@ -621,7 +643,9 @@ def compute_aligned_cubic_segment(p0, p1, x_stride=1, ax=None):
     return t_a_sample, x_a_sample, y_a_sample, yp_a_sample
 
 
-def compute_aligned_glyph(gly_seq, x_stride):
+def compute_aligned_glyph(
+    gly_seq: Glyph, x_stride: float
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """TODO: what is compute_aligned_glyph doing?
     """
     logg = logging.getLogger(f"c.{__name__}.compute_aligned_glyph")

@@ -2,6 +2,7 @@ import logging
 
 from pathlib import Path
 from typing import cast, Optional, Literal, Dict
+from cursive_writer.utils.type_utils import Spline, ThickSpline
 
 from cursive_writer.utils.utils import load_spline
 from cursive_writer.spliner.spliner import compute_long_thick_spline
@@ -50,8 +51,8 @@ class Letter:
         self.pf_spline["high"] = pf_spline_high
         self.pf_spline["low"] = pf_spline_low
 
-        self.spline_seq = {}
-        self.spline_thick_samples = {}
+        self.spline_seq: Dict[str, Spline] = {}
+        self.spline_thick_samples: Dict[str, ThickSpline] = {}
         self.gly_num: Dict[str, int] = {}
         self.point_num: Dict[str, int] = {}
 
@@ -72,7 +73,9 @@ class Letter:
         logg = logging.getLogger(f"c.{__name__}.load_spline_info")
         # logg.debug(f"Start load_spline_info {which}")
 
-        self.spline_seq[which] = load_spline(self.pf_spline[which], self.data_dir)
+        self.spline_seq[which] = load_spline(
+            cast(Path, self.pf_spline[which]), self.data_dir
+        )
         self.spline_thick_samples[which] = compute_long_thick_spline(
             self.spline_seq[which], self.thickness
         )
@@ -91,7 +94,7 @@ class Letter:
         valid_which = self.get_valid_type(which)
         return cast(Path, self.pf_spline[valid_which])
 
-    def get_spline_seq(self, which: str) -> None:
+    def get_spline_seq(self, which: str) -> Spline:
         """TODO: what is get_spline_seq doing?
         """
         # logg = logging.getLogger(f"c.{__name__}.get_spline_seq")
@@ -99,7 +102,7 @@ class Letter:
         valid_which = self.get_valid_type(which)
         return self.spline_seq[valid_which]
 
-    def get_thick_samples(self, which: str) -> None:
+    def get_thick_samples(self, which: str) -> ThickSpline:
         """TODO: what is get_thick_samples doing?
         """
         # logg = logging.getLogger(f"c.{__name__}.get_thick_samples")
