@@ -1,5 +1,6 @@
 import argparse
 import logging
+import jsons  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
 
 from pathlib import Path
@@ -9,13 +10,15 @@ from typing import Dict, List
 from cursive_writer.utils.type_utils import Glyph
 
 from cursive_writer.ligature.letter_class import Letter
-from cursive_writer.ligature.ligature_info import LigatureInfo
 from cursive_writer.ligature.ligature import align_letter_1
 from cursive_writer.ligature.ligature import align_letter_2
+from cursive_writer.ligature.ligature_info import LigatureInfo
 from cursive_writer.spliner.spliner import compute_long_thick_spline
 from cursive_writer.utils.geometric_utils import find_spline_sequence_bbox
 from cursive_writer.utils.geometric_utils import translate_spline_sequence
+from cursive_writer.utils.oriented_point import OrientedPoint
 from cursive_writer.utils.setup import setup_logger
+from cursive_writer.utils.utils import serializer_oriented_point
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -87,7 +90,7 @@ def load_letter_dict(data_dir: Path) -> Dict[str, Letter]:
 
 
 def compute_letter_alignement(
-    f_let: Letter, s_let: Letter, x_stride: float, data_dir: Path
+    f_let: Letter, s_let: Letter, x_stride: float, data_dir: Path, ligature_dir: Path
 ) -> LigatureInfo:
     """TODO: what is compute_letter_alignement doing?
     """
@@ -98,6 +101,7 @@ def compute_letter_alignement(
 
     # something like im or iv
     if f_let.right_type == "low_up" and s_let.left_type == "high_down":
+        strategy = "align_letter_2"
 
         # the right side at the moment does not change, so get any one
         f_let_type = "alone"
@@ -111,15 +115,9 @@ def compute_letter_alignement(
         s_pf_name = s_let.get_pf(s_let_type).name
         s_hash_sha1 = s_let.get_hash(s_let_type)
 
-        # load and compute
-        spline_seq_con, shift, _ = align_letter_2(f_spline_seq, s_spline_seq, x_stride)
-
-        # there is no need to chop the last/first glyphs
-        f_gly_chop = f_spline_seq[-1]
-        s_gly_chop = s_spline_seq[0]
-
     # all other cases use align_letter_1
     else:
+        strategy = "align_letter_1"
 
         # need to pick the correct version of the letters to join
 
@@ -142,6 +140,24 @@ def compute_letter_alignement(
         s_pf_name = s_let.get_pf(s_let_type).name
         s_hash_sha1 = s_let.get_hash(s_let_type)
 
+    # load, if available, the ligature for this
+    ligature_pf = ligature_dir / f"{f_let.letter}{s_let.letter}.txt"
+
+    if ligature_pf.exists():
+        logg.debug(f"ligature_pf {ligature_pf} exists")
+        # decide if the ligature loaded is the same
+        con_info_old = jsons.loads(ligature_pf.read_text(), LigatureInfo)
+        logg.debug(f"\ncon_info_old: {con_info_old!r}")
+
+    if strategy == "align_letter_2":
+        # load and compute
+        spline_seq_con, shift, _ = align_letter_2(f_spline_seq, s_spline_seq, x_stride)
+
+        # there is no need to chop the last/first glyphs
+        f_gly_chop = f_spline_seq[-1]
+        s_gly_chop = s_spline_seq[0]
+
+    else:
         # load and compute
         spline_seq_con, f_gly_chop, s_gly_chop, shift, = align_letter_1(
             f_spline_seq, s_spline_seq, x_stride
@@ -159,7 +175,15 @@ def compute_letter_alignement(
         f_hash_sha1=f_hash_sha1,
         s_hash_sha1=s_hash_sha1,
     )
-    logg.debug(f"con_info: {con_info}")
+    logg.debug(f"\ncon_info: {con_info!r}")
+
+    # save the LigatureInfo
+    jsons.set_serializer(serializer_oriented_point, OrientedPoint)
+    ligature_info_encoded = jsons.dumps(con_info, indent=4)
+    logg.debug(f"\nligature_info_encoded: {ligature_info_encoded}")
+
+    with ligature_pf.open("w") as f_li:
+        f_li.write(ligature_info_encoded)
 
     return con_info
 
@@ -174,6 +198,10 @@ def run_word_builder(args: argparse.Namespace) -> None:
     logg.debug(f"main_dir: {main_dir}")
     data_dir = main_dir.parent / "data"
     logg.debug(f"data_dir: {data_dir}")
+    ligature_dir = main_dir.parent / "connections"
+    logg.debug(f"ligature_dir {ligature_dir}")
+    if not ligature_dir.exists():
+        ligature_dir.mkdir(parents=True)
 
     letters_info = load_letter_dict(data_dir)
     logg.debug(f"letters_info:")
@@ -207,7 +235,7 @@ def run_word_builder(args: argparse.Namespace) -> None:
             f_let = letters_info[pair[0]]
             s_let = letters_info[pair[1]]
             ligature_info[pair] = compute_letter_alignement(
-                f_let, s_let, x_stride, data_dir
+                f_let, s_let, x_stride, data_dir, ligature_dir
             )
 
         # edit the previous/first (if needed, some times it will be the same)

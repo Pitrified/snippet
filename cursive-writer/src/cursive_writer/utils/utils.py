@@ -1,4 +1,5 @@
 import logging
+import json
 import numpy as np  # type: ignore
 
 from hashlib import sha1
@@ -148,3 +149,48 @@ def print_coeff(coeff: DArray) -> str:
         eq_str += f" + {c} * x^{i}"
 
     return eq_str
+
+
+class OrientedPointEncoder(json.JSONEncoder):
+    """Encoder for an OrientedPoint
+    """
+
+    def default(self, obj):
+        """TODO: what is default doing?
+        """
+        if isinstance(obj, OrientedPoint):
+            return {
+                "_type": "OrientedPoint",
+                "x": obj.x,
+                "y": obj.y,
+                "ori_deg": obj.ori_deg,
+            }
+        return super().default(obj)
+
+
+class OrientedPointDecoder(json.JSONDecoder):
+    """Decoder for OrientedPoint
+    """
+
+    def __init__(self, *args, **kwargs):
+        """TODO: what is __init__ doing?
+        """
+        super().__init__(object_hook=self.object_hook, *args, **kwargs)
+
+    def object_hook(self, obj):
+        """TODO: what is object_hook doing?
+        """
+        if "_type" not in obj:
+            return obj
+        if obj["_type"] == "OrientedPoint":
+            x = obj["x"]
+            y = obj["y"]
+            ori_deg = obj["ori_deg"]
+            return OrientedPoint(x, y, ori_deg)
+        return obj
+
+
+def serializer_oriented_point(obj: OrientedPoint, **kwargs):
+    """
+    """
+    return {"x": obj.x, "y": obj.y, "ori_deg": obj.ori_deg}

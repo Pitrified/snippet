@@ -45,3 +45,10 @@ class LigatureInfo:
         the_str += f", s_gly {len(self.s_gly_chop)}"
         the_str += f", spline {len(self.spline_seq_con)}]"
         return the_str
+
+    def __repr__(self):
+        the_repr = self.__str__()
+        the_repr += f"\nf_hash_sha1 {self.f_hash_sha1} s_hash_sha1 {self.s_hash_sha1}"
+        the_repr += f"\nf_gly_chop {self.f_gly_chop} s_gly_chop {self.s_gly_chop}"
+        the_repr += f"\nspline_seq_con {self.spline_seq_con}"
+        return the_repr
