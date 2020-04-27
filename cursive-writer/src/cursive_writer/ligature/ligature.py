@@ -5,6 +5,9 @@ import math
 from copy import deepcopy
 from timeit import default_timer as timer
 
+from typing import Tuple
+from cursive_writer.utils.type_utils import Spline, Glyph
+
 from cursive_writer.spliner.spliner import compute_aligned_cubic_segment
 from cursive_writer.spliner.spliner import compute_aligned_glyph
 from cursive_writer.utils.geometric_utils import poly_model
@@ -256,7 +259,9 @@ def find_best_shift(l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_str
     )
 
 
-def align_letter_1(spline_sequence_l, spline_sequence_r, x_stride):
+def align_letter_1(
+    spline_sequence_l: Spline, spline_sequence_r: Spline, x_stride: float
+) -> Tuple[Spline, Glyph, Glyph, float]:
     """TODO: what is align_letter_1 doing?
     """
     # logg = logging.getLogger(f"c.{__name__}.align_letter_1")
@@ -299,7 +304,9 @@ def align_letter_1(spline_sequence_l, spline_sequence_r, x_stride):
     return spline_sequence_con, gly_chop_l, gly_chop_r, best_shift
 
 
-def align_letter_2(spline_sequence_l, spline_sequence_r, x_stride):
+def align_letter_2(
+    spline_sequence_l: Spline, spline_sequence_r: Spline, x_stride: float
+) -> Tuple[Spline, float, Tuple[float, float]]:
     """TODO: what is align_letter_2 doing?
     """
     # logg = logging.getLogger(f"c.{__name__}.align_letter_2")

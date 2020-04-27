@@ -1,7 +1,7 @@
 import logging
 
 from pathlib import Path
-from typing import cast, Optional, Literal, Dict
+from typing import cast, Optional, Dict
 from cursive_writer.utils.type_utils import Spline, ThickSpline
 
 from cursive_writer.utils.utils import load_spline
@@ -12,8 +12,8 @@ class Letter:
     def __init__(
         self,
         letter: str,
-        left_type: Literal["high_down", "high_up", "low_up"],
-        right_type: Literal["high_up", "low_up"],
+        left_type: str,
+        right_type: str,
         pf_spline_alone: Optional[Path] = None,
         pf_spline_high: Optional[Path] = None,
         pf_spline_low: Optional[Path] = None,
@@ -34,6 +34,8 @@ class Letter:
                                letter
                        low_up          low_up
 
+        TODO: find better names for type: now it is both the letter type (alone, high,
+        low) and the letter extreme type (high_up, low_up...)
         """
         logg = logging.getLogger(f"c.{__name__}.__init__")
         logg.debug(f"Start __init__ {letter}")
@@ -146,6 +148,7 @@ class Letter:
 
         # something went wrong
         logg.error(f"Unable to find data for: {which}")
+        # MAYBE raise KeyError? it will fail the next instruciton anyway
         return "error"
 
     def __str__(self):
