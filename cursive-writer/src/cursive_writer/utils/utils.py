@@ -1,10 +1,11 @@
 import logging
 import numpy as np  # type: ignore
 
+from hashlib import sha1
+from pathlib import Path
+
 from typing import Iterable, Iterator, Optional, Tuple, TypeVar
 from cursive_writer.utils.type_utils import DArray, Glyph, Spline
-
-from pathlib import Path
 
 from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.oriented_point import OrientedPoint
@@ -115,6 +116,25 @@ def load_spline(
             spline.append(glyph)
 
     return spline
+
+
+def compute_hash_spline(pf_spline: Path, data_dir: Path) -> str:
+    """TODO: what is compute_hash_spline doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.compute_hash_spline")
+    logg.debug(f"Start compute_hash_spline")
+
+    hash_sha1 = sha1()
+    hash_sha1.update(pf_spline.read_bytes())
+
+    with pf_spline.open() as fs:
+        # in each line there is a glyph name, offset x y
+        for line in fs:
+            glyph_name, _, _ = line.rstrip().split("\t")
+            current_glyph = data_dir / glyph_name
+            hash_sha1.update(current_glyph.read_bytes())
+
+    return hash_sha1.hexdigest()
 
 
 def print_coeff(coeff: DArray) -> str:

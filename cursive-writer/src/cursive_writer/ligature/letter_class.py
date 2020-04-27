@@ -5,6 +5,7 @@ from typing import cast, Optional, Dict
 from cursive_writer.utils.type_utils import Spline, ThickSpline
 
 from cursive_writer.utils.utils import load_spline
+from cursive_writer.utils.utils import compute_hash_spline
 from cursive_writer.spliner.spliner import compute_long_thick_spline
 
 
@@ -57,16 +58,14 @@ class Letter:
         self.spline_thick_samples: Dict[str, ThickSpline] = {}
         self.gly_num: Dict[str, int] = {}
         self.point_num: Dict[str, int] = {}
+        self.hash_sha1: Dict[str, str] = {}
 
-        # if available, load alternate high splines
+        # load available alternate splines
         if self.pf_spline["alone"] is not None:
-            self.data_dir = self.pf_spline["alone"].parent
             self.load_spline_info("alone")
         if self.pf_spline["high"] is not None:
-            self.data_dir = self.pf_spline["high"].parent
             self.load_spline_info("high")
         if self.pf_spline["low"] is not None:
-            self.data_dir = self.pf_spline["low"].parent
             self.load_spline_info("low")
 
     def load_spline_info(self, which: str) -> None:
@@ -75,18 +74,30 @@ class Letter:
         logg = logging.getLogger(f"c.{__name__}.load_spline_info")
         # logg.debug(f"Start load_spline_info {which}")
 
+        # we assume all splines are in the same folder
+        self.data_dir = cast(Path, self.pf_spline[which]).parent
+
+        # load the spline
         self.spline_seq[which] = load_spline(
             cast(Path, self.pf_spline[which]), self.data_dir
         )
+
+        # compute the thick version
         self.spline_thick_samples[which] = compute_long_thick_spline(
             self.spline_seq[which], self.thickness
         )
+
+        # count the number of points and glyphs
         self.gly_num[which] = len(self.spline_seq[which])
         self.point_num[which] = sum(map(len, self.spline_seq[which]))
 
         # check that there is a left glyph, a main spline and a right one
         if self.gly_num[which] <= 2:
             logg.warn(f"Not enough glyphs in the spline '{which}'")
+
+        self.hash_sha1[which] = compute_hash_spline(
+            cast(Path, self.pf_spline[which]), self.data_dir
+        )
 
     def get_pf(self, which: str) -> Path:
         """TODO: what is get_pf doing?
@@ -112,6 +123,14 @@ class Letter:
         valid_which = self.get_valid_type(which)
         return self.spline_thick_samples[valid_which]
 
+    def get_hash(self, which: str) -> str:
+        """TODO: what is get_hash doing?
+        """
+        # logg = logging.getLogger(f"c.{__name__}.get_hash")
+        # logg.debug(f"Start get_hash")
+        valid_which = self.get_valid_type(which)
+        return self.hash_sha1[valid_which]
+
     def get_valid_type(self, which: str) -> str:
         """TODO: what is get_valid_type doing?
         """
@@ -123,20 +142,20 @@ class Letter:
 
         # fallback to some other option
         if which == "high":
-            if self.pf_spline["alone"] is not None:
-                logg.warn(f"Missing data for {self.letter}: '{which}' - return 'alone'")
-                return "alone"
             if self.pf_spline["low"] is not None:
                 logg.warn(f"Missing data for {self.letter}: '{which}' - return 'low'")
                 return "low"
+            if self.pf_spline["alone"] is not None:
+                logg.warn(f"Missing data for {self.letter}: '{which}' - return 'alone'")
+                return "alone"
 
         if which == "low":
-            if self.pf_spline["alone"] is not None:
-                logg.warn(f"Missing data for {self.letter}: '{which}' - 'alone'")
-                return "alone"
             if self.pf_spline["high"] is not None:
                 logg.warn(f"Missing data for {self.letter}: '{which}' - return 'high'")
                 return "high"
+            if self.pf_spline["alone"] is not None:
+                logg.warn(f"Missing data for {self.letter}: '{which}' - 'alone'")
+                return "alone"
 
         if which == "alone":
             if self.pf_spline["low"] is not None:
@@ -166,6 +185,3 @@ class Letter:
             the_str += f", points_low {self.point_num['low']}"
 
         return the_str
-
-    def __repr__(self):
-        return self.__str__()

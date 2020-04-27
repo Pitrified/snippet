@@ -102,10 +102,14 @@ def compute_letter_alignement(
         # the right side at the moment does not change, so get any one
         f_let_type = "alone"
         f_spline_seq = f_let.get_spline_seq(f_let_type)
+        f_pf_name = f_let.get_pf(f_let_type).name
+        f_hash_sha1 = f_let.get_hash(f_let_type)
 
         # we request the high because this *is* a high letter
         s_let_type = "high"
         s_spline_seq = s_let.get_spline_seq(s_let_type)
+        s_pf_name = s_let.get_pf(s_let_type).name
+        s_hash_sha1 = s_let.get_hash(s_let_type)
 
         # load and compute
         spline_seq_con, shift, _ = align_letter_2(f_spline_seq, s_spline_seq, x_stride)
@@ -122,6 +126,8 @@ def compute_letter_alignement(
         # the right side at the moment does not change, so get any one
         f_let_type = "alone"
         f_spline_seq = f_let.get_spline_seq(f_let_type)
+        f_pf_name = f_let.get_pf(f_let_type).name
+        f_hash_sha1 = f_let.get_hash(f_let_type)
 
         # look at the right of the first letter
         if f_let.right_type == "high_up":
@@ -130,7 +136,11 @@ def compute_letter_alignement(
         elif f_let.right_type == "low_up":
             # use low version of the second letter
             s_let_type = "low"
+
+        # get relevant informations
         s_spline_seq = s_let.get_spline_seq(s_let_type)
+        s_pf_name = s_let.get_pf(s_let_type).name
+        s_hash_sha1 = s_let.get_hash(s_let_type)
 
         # load and compute
         spline_seq_con, f_gly_chop, s_gly_chop, shift, = align_letter_1(
@@ -138,14 +148,19 @@ def compute_letter_alignement(
         )
 
     con_info = LigatureInfo(
+        f_pf_name=f_pf_name,
+        s_pf_name=s_pf_name,
         f_let_type=f_let_type,
         s_let_type=s_let_type,
         spline_seq_con=spline_seq_con,
         f_gly_chop=f_gly_chop,
         s_gly_chop=s_gly_chop,
         shift=shift,
+        f_hash_sha1=f_hash_sha1,
+        s_hash_sha1=s_hash_sha1,
     )
-    # logg.debug(f"con_info: {con_info}")
+    logg.debug(f"con_info: {con_info}")
+
     return con_info
 
 
@@ -205,7 +220,7 @@ def run_word_builder(args: argparse.Namespace) -> None:
         spline_seq_con = deepcopy(ligature_info[pair].spline_seq_con)
         translate_spline_sequence(spline_seq_con, acc_shift, 0)
         all_glyphs.extend(spline_seq_con)
-        logg.debug(f"spline_seq_con: {spline_seq_con}")
+        # logg.debug(f"spline_seq_con: {spline_seq_con}")
 
         # update the total shift
         acc_shift += ligature_info[pair].shift
@@ -227,6 +242,10 @@ def run_word_builder(args: argparse.Namespace) -> None:
         # add the spline to the glyphs
         all_glyphs.extend(s_spline_seq)
 
+    # compute the thick spline
+    # TODO: only recompute the connecting glyphs, the rest of the letter is static
+    all_glyphs_thick = compute_long_thick_spline(all_glyphs, thickness)
+
     # plot results
 
     # find dimension of the plot
@@ -242,9 +261,6 @@ def run_word_builder(args: argparse.Namespace) -> None:
     fig.canvas.set_window_title(f"Writing {args.input_str}")
     ax.set_axis_off()
 
-    # compute the thick spline
-
-    all_glyphs_thick = compute_long_thick_spline(all_glyphs, thickness)
     # style = {"color": "k", "marker": ".", "ls": ""}
     # col_list = ["g", "r", "y", "c", "m", "k", "b"]
     col_list = ["k"]
