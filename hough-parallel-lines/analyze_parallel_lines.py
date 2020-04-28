@@ -1,8 +1,8 @@
 import argparse
 import logging
 import math
-import numpy as np
-import matplotlib.pyplot as plt
+import numpy as np  # type: ignore
+import matplotlib.pyplot as plt  # type: ignore
 
 from random import seed as rseed
 from timeit import default_timer as timer
@@ -10,6 +10,8 @@ from pathlib import Path
 
 from analyze_laser_data import load_filer_data
 from hough_parallel import HoughParallel
+# from double_hough import DoubleHough
+from double_hough import VisualDoubleHough
 from utils import slope2deg
 from utils import slope2rad
 
@@ -45,10 +47,10 @@ def setup_logger(logLevel="DEBUG"):
 
     module_console_handler = logging.StreamHandler()
 
-    #  log_format_module = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    #  log_format_module = "%(name)s - %(levelname)s: %(message)s"
-    #  log_format_module = '%(levelname)s: %(message)s'
-    #  log_format_module = '%(name)s: %(message)s'
+    # log_format_module = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    # log_format_module = "%(name)s - %(levelname)s: %(message)s"
+    # log_format_module = '%(levelname)s: %(message)s'
+    # log_format_module = '%(name)s: %(message)s'
     log_format_module = "%(message)s"
 
     formatter = logging.Formatter(log_format_module)
@@ -439,7 +441,131 @@ def run_analyze_parallel_lines(args):
     plt.show()
 
 
+def run_double_hough(args):
+    """TODO: what is run_double_hough doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.run_double_hough")
+    logg.debug(f"Start run_double_hough")
+
+    ########################
+    # set hough parameters #
+    ########################
+
+    # set sector_wid in degrees
+    sector_wid_deg = 30
+    # sector_wid_deg = 60
+    sector_wid = math.floor(sector_wid_deg / 180 * 200)
+    logg.debug(f"sector_wid: {sector_wid} degrees {sector_wid_deg}")
+
+    # r dimension of the bins (cm)
+    r_stride_fp = 0.025
+
+    # number of bins in the [0, 180) interval
+    th_bin_num_fp = 60
+
+    # r dimension of the bins in the second pass (cm)
+    r_stride_sp = 0.0025
+
+    # number of bins in the precise interval in the second pass
+    th_bin_num_sp = 81
+
+    # the corridor width
+    corridor_width = 0.56
+
+    #######################
+    # load the laser data #
+    #######################
+
+    # data_file_name = "laser_data_16707.txt"
+    # data_file_name = "ld_03_059.txt"
+    data_file_name = "laser_data_straight.txt"
+
+    left_filt_x, left_filt_y, right_filt_x, right_filt_y, data = load_filer_data(
+        data_file_name, sector_wid
+    )
+
+    data_x = np.hstack((left_filt_x, right_filt_x))
+    data_y = np.hstack((left_filt_y, right_filt_y))
+    # shifting the data can be interesting to see how the sinusoids change shape
+    # data_y -= 1
+    logg.debug(f"Loaded data_x.shape: {data_x.shape} data_y.shape {data_y.shape}")
+
+    #####################
+    # find the corridor #
+    #####################
+
+    # dh = DoubleHough(
+    dh = VisualDoubleHough(
+        data_x,
+        data_y,
+        r_stride_fp,
+        th_bin_num_fp,
+        r_stride_sp,
+        th_bin_num_sp,
+        corridor_width,
+    )
+
+    t_analyze_start = timer()
+    best_th, best_r = dh.find_parallel_lines()
+    t_analyze_end = timer()
+    recap = f"\nbest_th: {best_th:.6f} ({math.degrees(best_th):.6f})"
+    recap += f" best_r {best_r}"
+    recap += f" best_th-pi/2 {best_th-math.pi/2:.6f}"
+    recap += f" ({math.degrees(best_th-math.pi/2):.6f})\n"
+    logg.debug(recap)
+    logg.debug(f"Analyzing took {t_analyze_end-t_analyze_start} seconds")
+
+    ################
+    # plot results #
+    ################
+
+    # setup plot
+    fig, ax = plt.subplots(1, 3)
+    fig.set_size_inches((24, 8))
+    ax_points = ax[0]
+
+    # standard fitting of two independent lines
+    fit_separate_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y, ax_points)
+
+    # plot distances and heatmap
+    dh.visual_test_all_dist_sp_th(ax[1])
+    dh.visual_test_bins_sp(ax[2])
+
+    # compute and plot the houghlines found
+    left_line_coeff = rth2ab(best_r + corridor_width, best_th)
+    right_line_coeff = rth2ab(best_r, best_th)
+    left_line_y = np.polyval(left_line_coeff, left_filt_x)
+    right_line_y = np.polyval(right_line_coeff, right_filt_x)
+    style_hough = {"ls": "-", "marker": "", "color": "r"}
+    ax_points.plot(left_filt_x, left_line_y, label="HoughParallel", **style_hough)
+    ax_points.plot(right_filt_x, right_line_y, **style_hough)
+    ax_points.legend(loc="center left")
+
+    fig.tight_layout()
+    plt.show()
+
+
+def load_laser_data(data_file_name, sector_wid):
+    """TODO: what is load_laser_data doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.load_laser_data")
+    logg.debug(f"Start load_laser_data")
+
+    left_filt_x, left_filt_y, right_filt_x, right_filt_y, data = load_filer_data(
+        data_file_name, sector_wid
+    )
+
+    data_x = np.hstack((left_filt_x, right_filt_x))
+    data_y = np.hstack((left_filt_y, right_filt_y))
+    # shifting the data can be interesting to see how the sinusoids change shape
+    # data_y -= 1
+    logg.debug(f"Loaded data_x.shape: {data_x.shape} data_y.shape {data_y.shape}")
+
+    return data_x, data_y
+
+
 if __name__ == "__main__":
     args = setup_env()
-    run_analyze_parallel_lines(args)
+    # run_analyze_parallel_lines(args)
     # run_compare(args)
+    run_double_hough(args)

@@ -1,7 +1,7 @@
 import json
 import logging
 import math
-import numpy as np
+import numpy as np  # type: ignore
 
 from pathlib import Path
 from timeit import default_timer as timer

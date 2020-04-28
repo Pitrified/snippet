@@ -1,6 +1,6 @@
 import logging
 import math
-import numpy as np
+import numpy as np  # type: ignore
 
 from utils import dist_2D
 

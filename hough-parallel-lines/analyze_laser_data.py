@@ -1,8 +1,8 @@
 import argparse
 import logging
 import math
-import numpy as np
-import matplotlib.pyplot as plt
+import numpy as np  # type: ignore
+import matplotlib.pyplot as plt  # type: ignore
 
 from random import seed as rseed
 from timeit import default_timer as timer
