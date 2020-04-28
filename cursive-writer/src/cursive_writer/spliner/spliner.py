@@ -536,11 +536,12 @@ def compute_thick_spline(
 def compute_long_thick_spline(
     spline_sequence: Spline, thickness: int = 20
 ) -> ThickSpline:
-    """Compute thick spline points for a spline spline_sequence
+    """Compute thick spline points for a Spline
 
     spline_sequence = [[OP1, OP2, ...], [OP6, OP7, ...], ...]
     returns a list of list of 2-tuples
     spline_samples = [[(x12, y12), (x23, y23), ...], ...]
+    where each (x12, y12) is a segment of points of the glpyh of the spline
     """
     # logg = logging.getLogger(f"c.{__name__}.compute_long_thick_spline")
     # logg.debug(f"Start compute_long_thick_spline")

@@ -7,14 +7,14 @@ from pathlib import Path
 from copy import deepcopy
 
 from typing import Dict, List
-from cursive_writer.utils.type_utils import Glyph
+from cursive_writer.utils.type_utils import Glyph, ThickSpline
 
 from cursive_writer.ligature.letter_class import Letter
 from cursive_writer.ligature.ligature import align_letter_1
 from cursive_writer.ligature.ligature import align_letter_2
 from cursive_writer.ligature.ligature_info import LigatureInfo
 from cursive_writer.spliner.spliner import compute_long_thick_spline
-from cursive_writer.utils.geometric_utils import find_spline_sequence_bbox
+from cursive_writer.utils.geometric_utils import find_thick_spline_bbox
 from cursive_writer.utils.geometric_utils import translate_spline_sequence
 from cursive_writer.utils.oriented_point import OrientedPoint
 from cursive_writer.utils.setup import setup_logger
@@ -142,12 +142,27 @@ def compute_letter_alignement(
 
     # load, if available, the ligature for this
     ligature_pf = ligature_dir / f"{f_let.letter}{s_let.letter}.txt"
-
     if ligature_pf.exists():
-        logg.debug(f"ligature_pf {ligature_pf} exists")
+        # load the saved LigatureInfo
+        ci_load = jsons.loads(ligature_pf.read_text(), LigatureInfo)
+
         # decide if the ligature loaded is the same
-        con_info_old = jsons.loads(ligature_pf.read_text(), LigatureInfo)
-        logg.debug(f"\ncon_info_old: {con_info_old!r}")
+        logg.debug(f"\nci_load: {ci_load!r}")
+        if f_pf_name != ci_load.f_pf_name or s_pf_name != ci_load.s_pf_name:
+            logg.debug(f"The names in the loaded info are different than the current")
+            equals = False
+        elif f_let_type != ci_load.f_let_type or s_let_type != ci_load.s_let_type:
+            logg.debug(f"The letter types in the loaded info are different")
+            equals = False
+        elif f_hash_sha1 != ci_load.f_hash_sha1 or s_hash_sha1 != ci_load.s_hash_sha1:
+            logg.debug(f"The hash_sha1 in the loaded info are different")
+            equals = False
+        else:
+            logg.debug(f"The ligature is valid!")
+            equals = True
+
+        if equals:
+            return ci_load
 
     if strategy == "align_letter_2":
         # load and compute
@@ -188,6 +203,66 @@ def compute_letter_alignement(
     return con_info
 
 
+def fill_ligature_info(
+    input_str: str,
+    letters_info: Dict[str, Letter],
+    x_stride: float,
+    data_dir: Path,
+    ligature_dir: Path,
+) -> Dict[str, LigatureInfo]:
+    """TODO: what is fill_ligature_info doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.fill_ligature_info")
+    logg.debug(f"Start fill_ligature_info")
+
+    # where to keep the connection info
+    ligature_info: Dict[str, LigatureInfo] = {}
+
+    for i in range(len(input_str) - 1):
+        # get the current pair
+        pair = input_str[i : i + 2]
+        logg.debug(f"Doing pair: {pair}")
+
+        # compute info for this pair if needed
+        if pair not in ligature_info:
+            f_let = letters_info[pair[0]]
+            s_let = letters_info[pair[1]]
+            ligature_info[pair] = compute_letter_alignement(
+                f_let, s_let, x_stride, data_dir, ligature_dir
+            )
+
+    return ligature_info
+
+
+def plot_results(all_glyphs_thick: ThickSpline) -> None:
+    # find dimension of the plot
+    xlim, ylim = find_thick_spline_bbox(all_glyphs_thick)
+    # inches to point
+    ratio = 3 / 1000
+    wid = xlim[1] - xlim[0]
+    hei = ylim[1] - ylim[0]
+    fig_dims = (wid * ratio, hei * ratio)
+    # create plot
+    fig = plt.figure(figsize=fig_dims, frameon=False)
+    ax = fig.add_axes((0, 0, 1, 1))
+    fig.canvas.set_window_title(f"Writing {args.input_str}")
+    ax.set_axis_off()
+
+    # style = {"color": "k", "marker": ".", "ls": ""}
+    # col_list = ["g", "r", "y", "c", "m", "k", "b"]
+    col_list = ["k"]
+    # i_s = 0
+    for i_g, glyph in enumerate(all_glyphs_thick):
+        # logg.debug(f"Plotting glyph: {glyph}")
+        cc = col_list[i_g % len(col_list)]
+        style = {"color": cc, "marker": ".", "ls": ""}
+        for segment in glyph:
+            # cc = col_list[i_s % len(col_list)]
+            # i_s += 1
+            # style = {"color": cc, "marker": ".", "ls": ""}
+            ax.plot(*segment, **style)
+
+
 def run_word_builder(args: argparse.Namespace) -> None:
     """TODO: What is word_builder doing?
     """
@@ -208,13 +283,16 @@ def run_word_builder(args: argparse.Namespace) -> None:
     for letter in letters_info:
         logg.debug(f"{letters_info[letter]}")
 
-    # where to keep the connection info
-    ligature_info: Dict[str, LigatureInfo] = {}
-
     # the sampling precision when shifting
     x_stride: float = 1
 
+    # the thickness of the letters
     thickness: int = 10
+
+    # the information on how to link the letter
+    ligature_info = fill_ligature_info(
+        args.input_str, letters_info, x_stride, data_dir, ligature_dir
+    )
 
     # all the spline_seq points
     all_glyphs: List[Glyph] = []
@@ -230,13 +308,8 @@ def run_word_builder(args: argparse.Namespace) -> None:
         pair = args.input_str[i : i + 2]
         logg.debug(f"Doing pair: {pair}")
 
-        # compute info for this pair if needed
-        if pair not in ligature_info:
-            f_let = letters_info[pair[0]]
-            s_let = letters_info[pair[1]]
-            ligature_info[pair] = compute_letter_alignement(
-                f_let, s_let, x_stride, data_dir, ligature_dir
-            )
+        # f_let = letters_info[pair[0]]
+        s_let = letters_info[pair[1]]
 
         # edit the previous/first (if needed, some times it will be the same)
         # make a copy so that we do not modify the original
@@ -275,34 +348,7 @@ def run_word_builder(args: argparse.Namespace) -> None:
     all_glyphs_thick = compute_long_thick_spline(all_glyphs, thickness)
 
     # plot results
-
-    # find dimension of the plot
-    xlim, ylim = find_spline_sequence_bbox(all_glyphs)
-    # inches to point
-    ratio = 3 / 1000
-    wid = xlim[1] - xlim[0]
-    hei = ylim[1] - ylim[0]
-    fig_dims = (wid * ratio, hei * ratio)
-    # create plot
-    fig = plt.figure(figsize=fig_dims, frameon=False)
-    ax = fig.add_axes((0, 0, 1, 1))
-    fig.canvas.set_window_title(f"Writing {args.input_str}")
-    ax.set_axis_off()
-
-    # style = {"color": "k", "marker": ".", "ls": ""}
-    # col_list = ["g", "r", "y", "c", "m", "k", "b"]
-    col_list = ["k"]
-    # i_s = 0
-    for i_g, glyph in enumerate(all_glyphs_thick):
-        # logg.debug(f"Plotting glyph: {glyph}")
-        cc = col_list[i_g % len(col_list)]
-        style = {"color": cc, "marker": ".", "ls": ""}
-        for segment in glyph:
-            # cc = col_list[i_s % len(col_list)]
-            # i_s += 1
-            # style = {"color": cc, "marker": ".", "ls": ""}
-            ax.plot(*segment, **style)
-
+    plot_results(all_glyphs_thick)
     plt.show()
 
 

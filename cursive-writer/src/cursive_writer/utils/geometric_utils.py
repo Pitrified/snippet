@@ -7,6 +7,7 @@ from typing import Iterable, List, Optional, Tuple
 from cursive_writer.utils.type_utils import DArray
 from cursive_writer.utils.type_utils import Glyph
 from cursive_writer.utils.type_utils import Spline
+from cursive_writer.utils.type_utils import ThickSpline
 
 from cursive_writer.utils.color_utils import fmt_cn
 from cursive_writer.utils.oriented_point import OrientedPoint
@@ -665,5 +666,45 @@ def find_spline_sequence_bbox(
             if point.y < min_y:
                 min_y = point.y
     # logg.debug(f"max_x: {max_x} min_x: {min_x} max_y: {max_y} min_y: {min_y}")
+
+    return (min_x, max_x), (min_y, max_y)
+
+
+def find_thick_spline_bbox(
+    thick_spline: ThickSpline,
+    old_xlim: Optional[Tuple[float, float]] = None,
+    old_ylim: Optional[Tuple[float, float]] = None,
+) -> Tuple[Tuple[float, float], Tuple[float, float]]:
+    """TODO: what is find_thick_spline_bbox doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.find_thick_spline_bbox")
+    logg.debug(f"Start find_thick_spline_bbox")
+
+    if old_xlim is None:
+        min_x = float("inf")
+        max_x = float("-inf")
+    else:
+        min_x, max_x = old_xlim
+    if old_ylim is None:
+        min_y = float("inf")
+        max_y = float("-inf")
+    else:
+        min_y, max_y = old_ylim
+
+    for thick_glyph in thick_spline:
+        for segment in thick_glyph:
+            seg_max_x = np.max(segment[0])
+            seg_max_y = np.max(segment[1])
+            seg_min_x = np.min(segment[0])
+            seg_min_y = np.min(segment[1])
+
+            if seg_max_x > max_x:
+                max_x = seg_max_x
+            if seg_min_x < min_x:
+                min_x = seg_min_x
+            if seg_max_y > max_y:
+                max_y = seg_max_y
+            if seg_min_y < min_y:
+                min_y = seg_min_y
 
     return (min_x, max_x), (min_y, max_y)
