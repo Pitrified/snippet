@@ -1,4 +1,6 @@
-# Hough lines in a corridor
+# Improvement on the HoughLines algorithm
+
+## Hough lines in a corridor
 
 If the input data contains two *parallel* lines, and the distance between them is known
 a priori, that information can be used to extract more information when analyzing each
@@ -67,3 +69,14 @@ axis and PT. |PT| is |PL|*cos(TPL), and TPL = TPx - LPx = l_rad - PL_rad.
        o-----------------------> x
 ```
 
+## Two step refinement
+
+The size of the bins heavily influences the speed of the execution. We can first find
+the maximum with a coarse grain, then refine it by using a finer grain, but only near
+the partial result obtained.
+
+## Gaussian filter
+
+If the data is very noisy, with a fine grain the correct line might be spread over
+several nearby bins. We use a gaussian filter to compute the score of a bin considering
+also its neightbors.
