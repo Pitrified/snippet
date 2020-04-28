@@ -2,12 +2,10 @@ import json
 import jsons  # type: ignore
 import math
 
-from points import OrientedPoint, SplinePoint
+from points import OrientedPoint, SplinePoint, LigatureInfo
+from points import Glyph, Spline
 
-from typing import Any, Dict, List, Union
-
-Glyph = List[OrientedPoint]
-Spline = List[Glyph]
+from typing import Any, Dict, Union
 
 # https://gist.github.com/simonw/7000493
 
@@ -128,6 +126,17 @@ def run_custom_json():
     print(f"spt_decoded: {spt_decoded}")
 
 
+def serializer_oriented_point(obj: OrientedPoint, **kwargs):
+    """
+    """
+    return {
+        # "_type": "OrientedPoint",
+        "x": obj.x,
+        "y": obj.y,
+        "ori_deg": obj.ori_deg,
+    }
+
+
 def run_jsons():
     """
     """
@@ -148,7 +157,7 @@ def run_jsons():
         [
             OrientedPoint(2, -1, 3),
             OrientedPoint(0.7436723, 0, 3.1511),
-            OrientedPoint(2, 0.21, 3),
+            OrientedPoint(math.e, 0.21, 3),
         ],
     ]
     spline_encoded = jsons.dumps(spline)
@@ -165,6 +174,21 @@ def run_jsons():
     print(f"\nan_spline_encoded:\n{an_spline_encoded}")
     an_spline_decoded = jsons.loads(an_spline_encoded, Dict[str, Union[Spline, Any]])
     print(f"an_spline_decoded:\n{an_spline_decoded}")
+
+    li = LigatureInfo(glyph, spline)
+    print(f"li: {li}")
+    li_enc = jsons.dumps(li, indent=4)
+    print(f"\nli_enc:\n{li_enc}")
+    li_dec = jsons.loads(li_enc, cls=LigatureInfo)
+    print(f"\nli_dec:\n{li_dec}")
+
+    jsons.set_serializer(serializer_oriented_point, OrientedPoint)
+    li = LigatureInfo(glyph, spline)
+    print(f"\nCustom serializer_oriented_point li: {li}")
+    li_enc = jsons.dumps(li, indent=4)
+    print(f"\nli_enc:\n{li_enc}")
+    li_dec = jsons.loads(li_enc, cls=LigatureInfo)
+    print(f"\nli_dec:\n{li_dec}")
 
 
 if __name__ == "__main__":

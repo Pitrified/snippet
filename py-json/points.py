@@ -1,5 +1,7 @@
 import math
 
+from typing import List
+
 
 class OrientedPoint:
     def __init__(self, x: float, y: float, ori_deg: float) -> None:
@@ -52,3 +54,19 @@ class SplinePoint(OrientedPoint):
         the_repr_str = super().__repr__()
         the_repr_str += f" SPID: {self.spid}"
         return the_repr_str
+
+
+Glyph = List[OrientedPoint]
+Spline = List[Glyph]
+
+
+class LigatureInfo:
+    def __init__(self, glyph: Glyph, spline: Spline) -> None:
+        """
+        """
+        self.spline = spline
+        self.glyph = glyph
+
+    def __str__(self) -> str:
+        the_str_str = f"glyph {self.glyph} spline {self.spline}"
+        return the_str_str
