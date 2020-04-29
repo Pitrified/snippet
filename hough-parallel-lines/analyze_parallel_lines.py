@@ -10,6 +10,7 @@ from pathlib import Path
 
 from analyze_laser_data import load_filer_data
 from hough_parallel import HoughParallel
+
 # from double_hough import DoubleHough
 from double_hough import VisualDoubleHough
 from utils import slope2deg
@@ -464,16 +465,15 @@ def run_double_hough(args):
     th_bin_num_fp = 60
 
     # r dimension of the bins in the second pass (cm)
-    r_stride_sp = 0.0025
-    # r_stride_sp = 0.05
+    # r_stride_sp = 0.0025
+    r_stride_sp = 0.005
 
     # how many distance bin to consider
     r_num_sp = 20
-    # r_num_sp = 5
 
     # number of bins in the precise interval in the second pass
-    th_bin_num_sp = 81
-    # th_bin_num_sp = 11
+    # th_bin_num_sp = 81
+    th_bin_num_sp = 41
 
     # the corridor width
     corridor_width = 0.56
@@ -527,16 +527,17 @@ def run_double_hough(args):
     ################
 
     # setup plot
-    fig, ax = plt.subplots(1, 3)
+    fig, ax = plt.subplots(2, 2)
     fig.set_size_inches((24, 8))
-    ax_points = ax[0]
+    ax_points = ax[0][0]
 
     # standard fitting of two independent lines
     fit_separate_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y, ax_points)
 
     # plot distances and heatmap
-    dh.visual_test_all_dist_sp_th(ax[1])
-    dh.visual_test_bins_sp(ax[2])
+    dh.visual_test_all_dist_sp_th(ax[0][1])
+    dh.visual_test_bins_sp("original", ax[1][0])
+    dh.visual_test_bins_sp("smooth", ax[1][1])
 
     # compute and plot the houghlines found
     left_line_coeff = rth2ab(best_r + corridor_width, best_th)

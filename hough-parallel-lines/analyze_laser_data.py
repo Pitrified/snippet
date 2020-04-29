@@ -423,8 +423,8 @@ def load_filer_data(data_file_name, sector_wid):
     range_max = data["range_max"]
     angles_rad = np.array(data["scan_angles"])
     # odom_robot_pose = data["odom_robot_pose"]
-    # odom_robot_yaw = data["odom_robot_yaw"]
-    # logg.debug(f"odom_robot_yaw {odom_robot_yaw} relative {odom_robot_yaw-math.pi/2}")
+    odom_robot_yaw = data["odom_robot_yaw"]
+    logg.debug(f"odom_robot_yaw {odom_robot_yaw} relative {odom_robot_yaw-math.pi/2}")
 
     t_filt_start = timer()
 

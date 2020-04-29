@@ -2,6 +2,7 @@ import logging
 import math
 import numpy as np  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
+from scipy.ndimage import gaussian_filter  # type: ignore
 
 from typing import Tuple, Optional
 
@@ -68,6 +69,7 @@ class DoubleHough:
             bins_fp, r_min_fp, self.r_stride_fp, self.th_values_fp
         )
         # best_th_fp = math.radians(90)
+        # best_r_fp = -0.28
         logg.debug(f"best_th_fp: {best_th_fp} best_r_fp {best_r_fp}")
 
         ######################
@@ -80,27 +82,11 @@ class DoubleHough:
             best_th_fp + self.th_fp_wid * 2,
             self.th_bin_num_sp,
         )
-        logg.debug(f"th_values_sp.shape: {self.th_values_sp.shape}")
-        logg.debug(f"th_values_sp deg: {np.degrees(self.th_values_sp)}")
+        # logg.debug(f"th_values_sp.shape: {self.th_values_sp.shape}")
+        # logg.debug(f"th_values_sp deg: {np.degrees(self.th_values_sp)}")
 
         # compute the distances
         self.all_dist_sp_th = self.compute_all_dist_from_th_mat(self.th_values_sp)
-
-        # r_sup = -0.2
-        # r_inf = -0.4
-
-        # # remove lines that are too far from the partial max
-        # self.filt_dist_sp_th = np.where(
-        #     np.logical_and(
-        #         np.less_equal(self.all_dist_sp_th, r_sup),
-        #         np.greater_equal(self.all_dist_sp_th, r_inf),
-        #     ),
-        #     self.all_dist_sp_th,
-        #     np.nan,
-        # )
-        # logg.debug(f"self.all_dist_sp_th: {self.all_dist_sp_th}")
-        # logg.debug(f"self.filt_dist_sp_th: {self.filt_dist_sp_th}")
-        # logg.debug(f"self.filt_dist_sp_th.shape: {self.filt_dist_sp_th.shape}")
 
         # fill the bins
         self.bins_sp, r_min_sp = self.fill_bins(
@@ -111,9 +97,12 @@ class DoubleHough:
             self.r_num_sp,
         )
 
+        # smooth the bins
+        self.smooth_bins_sp = gaussian_filter(self.bins_sp, 1)
+
         # find the max
         best_th_sp, best_r_sp = self.find_max(
-            self.bins_sp, r_min_sp, self.r_stride_sp, self.th_values_sp
+            self.smooth_bins_sp, r_min_sp, self.r_stride_sp, self.th_values_sp
         )
 
         return best_th_sp, best_r_sp
@@ -172,9 +161,7 @@ class DoubleHough:
 
         # quantize the dist values along r_stride grid by zooming in and rounding
         quant_all_dist_from_th = all_dist_from_th / r_stride
-        # int_all_dist_from_th = np.rint(quant_all_dist_from_th).astype(np.int16)
         int_all_dist_from_th = np.rint(quant_all_dist_from_th)
-        logg.debug(f"min {np.min(int_all_dist_from_th)} max {np.max(int_all_dist_from_th)}")
 
         # filter int_all_th_all_dist
         if r_central is not None and r_num_sp is not None:
@@ -197,13 +184,21 @@ class DoubleHough:
                 np.nan,
             )
 
+            # save a bunch of info for plotting
+            self.int_r_sup = int_r_sup
+            self.int_r_inf = int_r_inf
+            self.quant_all_dist_from_th = quant_all_dist_from_th
+            self.int_all_dist_from_th = int_all_dist_from_th
+
         # find the extremes of the distance interval
         r_min = np.nanmin(int_all_dist_from_th)
+        int_r_min = int(r_min)
+        self.int_r_min = int_r_min
         r_max = np.nanmax(int_all_dist_from_th)
         r_bin_num = int(r_max - r_min + 1)
         logg.debug(f"r_min: {r_min} r_max {r_max} r_bin_num {r_bin_num}")
 
-        bins = np.zeros((th_bin_num, r_bin_num), dtype=np.uint16)
+        bins = np.zeros((th_bin_num, r_bin_num), dtype=np.uint32)
         # bin 0 is associated with value r_min, 1 with r_min + r_stride and so on
         logg.debug(f"bins.shape: {bins.shape}")
 
@@ -211,12 +206,14 @@ class DoubleHough:
         int_from_th_all_dist = int_all_dist_from_th.T
         for i_th, all_dist_th in enumerate(int_from_th_all_dist):
             # get unique values and their counts
-            uniques, counts = np.unique(all_dist_th, return_counts=True)
+            # avoid nan values
+            uniques, counts = np.unique(
+                all_dist_th[~np.isnan(all_dist_th)], return_counts=True
+            )
+            # cast uniques back to int
+            uniques = uniques.astype(np.int32)
             for i_u, u in enumerate(uniques):
-                # NaNs are still counted by unique
-                if np.isnan(u):
-                    continue
-                i_r = int(u - r_min)
+                i_r = u - int_r_min
                 bins[i_th][i_r] += counts[i_u]
 
         return bins, r_min
@@ -288,11 +285,23 @@ class VisualDoubleHough(DoubleHough):
 
         style = {"ls": "-", "marker": "", "color": "y"}
         # style = {"ls": "", "marker": ".", "color": "y"}
-        for dist_all_th in self.all_dist_sp_th:
-            # dist_all_th /= hp.r_stride
+
+        # for dist_all_th in self.all_dist_sp_th:
+        #     ax.plot(self.th_values_sp, dist_all_th, **style)
+
+        quant_all_dist_from_th = np.where(
+            np.logical_and(
+                np.less_equal(self.quant_all_dist_from_th, self.int_r_sup),
+                np.greater_equal(self.quant_all_dist_from_th, self.int_r_inf),
+            ),
+            self.quant_all_dist_from_th,
+            np.nan,
+        )
+        for dist_all_th in quant_all_dist_from_th:
+            dist_all_th *= self.r_stride_sp
             ax.plot(self.th_values_sp, dist_all_th, **style)
 
-    def visual_test_bins_sp(self, ax=None):
+    def visual_test_bins_sp(self, which="smooth", ax=None):
         """TODO: what is visual_test_bins_sp doing?
         """
         logg = logging.getLogger(f"c.{__name__}.visual_test_bins_sp")
@@ -301,24 +310,29 @@ class VisualDoubleHough(DoubleHough):
         if ax is None:
             fig, ax = plt.subplots(1, 1)
             fig.set_size_inches((8, 8))
-            ax.set_title("Test bins second pass")
-            ax.set_xlabel("theta")
-            ax.set_ylabel("r")
 
-        im = ax.imshow(self.bins_sp.T)
+        if which == "smooth":
+            im = ax.imshow(self.smooth_bins_sp.T)
+        else:
+            im = ax.imshow(self.bins_sp.T)
 
-        logg.debug(f"ax.get_xticks(): {ax.get_xticks()}")
-        logg.debug(f"ax.get_xticklabels(): {ax.get_xticklabels()}")
         th_xticks = list(range(0, self.th_values_sp.shape[0], 5))
-        logg.debug(f"th_xticks: {th_xticks}")
         th_xticklabels = list(
-            [f"{math.degrees(self.th_values_sp[t]):.0f}" for t in th_xticks]
+            [f"{math.degrees(self.th_values_sp[t]):.1f}" for t in th_xticks]
         )
-        logg.debug(f"th_xticklabels: {th_xticklabels}")
         ax.set_xticks(th_xticks)
         ax.set_xticklabels(th_xticklabels, rotation=45)
 
+        r_yticks = list(range(0, self.bins_sp.shape[1], 5))
+        r_yticklabels = list(
+            [f"{(t+self.int_r_min)*self.r_stride_sp:.3f}" for t in th_xticks]
+        )
+        ax.set_yticks(r_yticks)
+        ax.set_yticklabels(r_yticklabels, rotation=90)
+
         ax.invert_yaxis()
-        ax.set_title("Lines per bin")
+        ax.set_title(f"Lines per bin second pass {which}")
+        ax.set_xlabel("theta (deg)")
+        ax.set_ylabel("r (m)")
 
         return im
