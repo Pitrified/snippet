@@ -465,9 +465,15 @@ def run_double_hough(args):
 
     # r dimension of the bins in the second pass (cm)
     r_stride_sp = 0.0025
+    # r_stride_sp = 0.05
+
+    # how many distance bin to consider
+    r_num_sp = 20
+    # r_num_sp = 5
 
     # number of bins in the precise interval in the second pass
     th_bin_num_sp = 81
+    # th_bin_num_sp = 11
 
     # the corridor width
     corridor_width = 0.56
@@ -498,10 +504,11 @@ def run_double_hough(args):
     dh = VisualDoubleHough(
         data_x,
         data_y,
-        r_stride_fp,
         th_bin_num_fp,
-        r_stride_sp,
+        r_stride_fp,
         th_bin_num_sp,
+        r_stride_sp,
+        r_num_sp,
         corridor_width,
     )
 

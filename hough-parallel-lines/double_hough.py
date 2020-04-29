@@ -3,7 +3,7 @@ import math
 import numpy as np  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
 
-from typing import Tuple
+from typing import Tuple, Optional
 
 
 class DoubleHough:
@@ -11,10 +11,11 @@ class DoubleHough:
         self,
         data_x: np.ndarray,
         data_y: np.ndarray,
-        r_stride_fp: float,
         th_bin_num_fp: int,
-        r_stride_sp: float,
+        r_stride_fp: float,
         th_bin_num_sp: int,
+        r_stride_sp: float,
+        r_num_sp: int,
         corridor_width: float,
     ):
         """Setup the analyzer
@@ -33,6 +34,7 @@ class DoubleHough:
         # params for the second sampling pass
         self.r_stride_sp = r_stride_sp
         self.th_bin_num_sp = th_bin_num_sp
+        self.r_num_sp = r_num_sp
 
         # distance between the two lines
         self.corridor_width = corridor_width
@@ -59,7 +61,7 @@ class DoubleHough:
         all_dist_fp_th = self.compute_all_dist_from_th_mat(self.th_values_fp)
         # fill the bins
         bins_fp, r_min_fp = self.fill_bins(
-            self.th_bin_num_fp, self.r_stride_fp, all_dist_fp_th
+            all_dist_fp_th, self.th_bin_num_fp, self.r_stride_fp
         )
         # find the max
         best_th_fp, best_r_fp = self.find_max(
@@ -96,10 +98,17 @@ class DoubleHough:
         #     self.all_dist_sp_th,
         #     np.nan,
         # )
+        # logg.debug(f"self.all_dist_sp_th: {self.all_dist_sp_th}")
+        # logg.debug(f"self.filt_dist_sp_th: {self.filt_dist_sp_th}")
+        # logg.debug(f"self.filt_dist_sp_th.shape: {self.filt_dist_sp_th.shape}")
 
         # fill the bins
         self.bins_sp, r_min_sp = self.fill_bins(
-            self.th_bin_num_sp, self.r_stride_sp, self.all_dist_sp_th
+            self.all_dist_sp_th,
+            self.th_bin_num_sp,
+            self.r_stride_sp,
+            best_r_fp,
+            self.r_num_sp,
         )
 
         # find the max
@@ -148,7 +157,12 @@ class DoubleHough:
         return all_dist_from_th
 
     def fill_bins(
-        self, th_bin_num: int, r_stride: float, all_dist_from_th: np.ndarray
+        self,
+        all_dist_from_th: np.ndarray,
+        th_bin_num: int,
+        r_stride: float,
+        r_central: Optional[float] = None,
+        r_num_sp: Optional[int] = None,
     ) -> Tuple[np.ndarray, float]:
         """TODO: what is fill_bins doing?
         """
@@ -158,13 +172,37 @@ class DoubleHough:
 
         # quantize the dist values along r_stride grid by zooming in and rounding
         quant_all_dist_from_th = all_dist_from_th / r_stride
-        int_all_dist_from_th = np.rint(quant_all_dist_from_th).astype(np.int16)
+        # int_all_dist_from_th = np.rint(quant_all_dist_from_th).astype(np.int16)
+        int_all_dist_from_th = np.rint(quant_all_dist_from_th)
+        logg.debug(f"min {np.min(int_all_dist_from_th)} max {np.max(int_all_dist_from_th)}")
+
+        # filter int_all_th_all_dist
+        if r_central is not None and r_num_sp is not None:
+            # the extremes in the regular coord
+            r_sup = r_central + r_num_sp * r_stride
+            r_inf = r_central - r_num_sp * r_stride
+            logg.debug(f"r_sup: {r_sup} r_inf {r_inf}")
+            # the extremes in the translated coord
+            int_r_sup = int(np.rint(r_sup / r_stride))
+            int_r_inf = int(np.rint(r_inf / r_stride))
+            logg.debug(f"int_r_sup: {int_r_sup} int_r_inf {int_r_inf}")
+
+            # as we use NaNs, this is cast to float
+            int_all_dist_from_th = np.where(
+                np.logical_and(
+                    np.less_equal(int_all_dist_from_th, int_r_sup),
+                    np.greater_equal(int_all_dist_from_th, int_r_inf),
+                ),
+                int_all_dist_from_th,
+                np.nan,
+            )
 
         # find the extremes of the distance interval
-        r_min = np.min(int_all_dist_from_th)
-        r_max = np.max(int_all_dist_from_th)
-        r_bin_num = r_max - r_min + 1
+        r_min = np.nanmin(int_all_dist_from_th)
+        r_max = np.nanmax(int_all_dist_from_th)
+        r_bin_num = int(r_max - r_min + 1)
         logg.debug(f"r_min: {r_min} r_max {r_max} r_bin_num {r_bin_num}")
+
         bins = np.zeros((th_bin_num, r_bin_num), dtype=np.uint16)
         # bin 0 is associated with value r_min, 1 with r_min + r_stride and so on
         logg.debug(f"bins.shape: {bins.shape}")
@@ -175,7 +213,10 @@ class DoubleHough:
             # get unique values and their counts
             uniques, counts = np.unique(all_dist_th, return_counts=True)
             for i_u, u in enumerate(uniques):
-                i_r = u - r_min
+                # NaNs are still counted by unique
+                if np.isnan(u):
+                    continue
+                i_r = int(u - r_min)
                 bins[i_th][i_r] += counts[i_u]
 
         return bins, r_min
@@ -209,10 +250,11 @@ class VisualDoubleHough(DoubleHough):
         self,
         data_x: np.ndarray,
         data_y: np.ndarray,
-        r_stride_fp: float,
         th_bin_num_fp: int,
-        r_stride_sp: float,
+        r_stride_fp: float,
         th_bin_num_sp: int,
+        r_stride_sp: float,
+        r_num_sp: int,
         corridor_width: float,
     ):
         """Setup the analyzer
@@ -223,10 +265,11 @@ class VisualDoubleHough(DoubleHough):
         super().__init__(
             data_x,
             data_y,
-            r_stride_fp,
             th_bin_num_fp,
-            r_stride_sp,
+            r_stride_fp,
             th_bin_num_sp,
+            r_stride_sp,
+            r_num_sp,
             corridor_width,
         )
 
