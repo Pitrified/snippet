@@ -63,18 +63,18 @@ class DoubleHough:
         #     math.pi * 2 / 5, math.pi * 3 / 5, self.th_bin_num_fp, endpoint=False
         # )
 
-        # # compute the distances
-        # all_dist_fp_th = self.compute_all_dist_from_th_mat(self.th_values_fp)
-        # # fill the bins
-        # bins_fp, r_min_fp = self.fill_bins(
-        #     all_dist_fp_th, self.th_bin_num_fp, self.r_stride_fp
-        # )
-        # # find the max
-        # best_th_fp, best_r_fp = self.find_max(
-        #     bins_fp, r_min_fp, self.r_stride_fp, self.th_values_fp
-        # )
-        best_th_fp = math.radians(90)
-        best_r_fp = -0.28
+        # compute the distances
+        all_dist_fp_th = self.compute_all_dist_from_th_mat(self.th_values_fp)
+        # fill the bins
+        bins_fp, r_min_fp = self.fill_bins(
+            all_dist_fp_th, self.th_bin_num_fp, self.r_stride_fp
+        )
+        # find the max
+        best_th_fp, best_r_fp = self.find_max(
+            bins_fp, r_min_fp, self.r_stride_fp, self.th_values_fp
+        )
+        # best_th_fp = math.radians(90)
+        # best_r_fp = -0.28
         # logg.debug(f"best_th_fp: {best_th_fp} best_r_fp {best_r_fp}")
         print(f"best_th_fp: {best_th_fp} best_r_fp {best_r_fp}")
 

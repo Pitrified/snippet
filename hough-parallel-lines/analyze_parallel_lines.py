@@ -249,28 +249,71 @@ def run_compare(args):
     sector_wid = math.floor(sector_wid_deg / 180 * 200)
     logg.debug(f"sector_wid: {sector_wid} degrees {sector_wid_deg}")
 
-    # r dimension of the bins
-    # r_stride = 0.05
-    # r_stride = 0.01
-    r_stride = 0.005
-    # r_stride = 0.0025
-    r_min_dist = 0.1
-    r_max_dist = 0.6
+    hough_type = "double"
 
-    # number of bins in the [0, 180) interval
-    # th_bin_num = 12
-    # th_bin_num = 36
-    # th_bin_num = 180
-    th_bin_num = 360
-    # th_bin_num = 720
+    if hough_type == "old":
+        # r dimension of the bins
+        # r_stride = 0.05
+        # r_stride = 0.01
+        r_stride = 0.005
+        # r_stride = 0.0025
+        r_min_dist = 0.1
+        r_max_dist = 0.6
 
-    # the corridor width
-    corridor_width = 0.56
+        # number of bins in the [0, 180) interval
+        # th_bin_num = 12
+        # th_bin_num = 36
+        # th_bin_num = 180
+        th_bin_num = 360
+        # th_bin_num = 720
 
-    # create the HoughParallel analyzer
-    hp = HoughParallel(
-        0, 0, corridor_width, r_stride, r_min_dist, r_max_dist, th_bin_num
-    )
+        # the corridor width
+        corridor_width = 0.56
+
+        # create the HoughParallel analyzer
+        hp = HoughParallel(
+            0, 0, corridor_width, r_stride, r_min_dist, r_max_dist, th_bin_num
+        )
+        print(hp)
+
+    else:
+        # set sector_wid in degrees
+        sector_wid_deg = 30
+        # sector_wid_deg = 60
+        sector_wid = math.floor(sector_wid_deg / 180 * 200)
+        logg.debug(f"sector_wid: {sector_wid} degrees {sector_wid_deg}")
+
+        # r dimension of the bins (cm)
+        r_stride_fp = 0.025
+
+        # number of bins in the [0, 180) interval
+        # th_bin_num_fp = 60
+        th_bin_num_fp = 20
+
+        # r dimension of the bins in the second pass (cm)
+        # r_stride_sp = 0.0025
+        r_stride_sp = 0.005
+
+        # how many distance bin to consider
+        r_num_sp = 20
+
+        # number of bins in the precise interval in the second pass
+        th_bin_num_sp = 81
+        # th_bin_num_sp = 41
+
+        # the corridor width
+        corridor_width = 0.56
+
+        dh = VisualDoubleHough(
+            0,
+            0,
+            th_bin_num_fp,
+            r_stride_fp,
+            th_bin_num_sp,
+            r_stride_sp,
+            r_num_sp,
+            corridor_width,
+        )
 
     separate_delta = []
     separate_values = []
@@ -298,8 +341,10 @@ def run_compare(args):
         data_y = np.hstack((left_filt_y, right_filt_y))
         true_yaw = data["odom_robot_yaw"]
 
-        hp.data_x = data_x
-        hp.data_y = data_y
+        # hp.data_x = data_x
+        # hp.data_y = data_y
+        dh.data_x = data_x
+        dh.data_y = data_y
 
         # separate lines
         t_fit_start = timer()
@@ -318,7 +363,8 @@ def run_compare(args):
 
         # parallel lines
         t_analyze_start = timer()
-        best_th, best_r = hp.find_parallel_lines_mat()
+        # best_th, best_r = hp.find_parallel_lines_mat()
+        best_th, best_r = dh.find_parallel_lines()
         t_analyze_end = timer()
         all_t_analyze.append(t_analyze_end - t_analyze_start)
         left_line_coeff = rth2ab(best_r, best_th)
@@ -484,8 +530,8 @@ def run_double_hough(args):
     #######################
 
     # data_file_name = "laser_data_16707.txt"
-    # data_file_name = "ld_03_059.txt"
-    data_file_name = "laser_data_straight.txt"
+    data_file_name = "ld_03_059.txt"
+    # data_file_name = "laser_data_straight.txt"
 
     left_filt_x, left_filt_y, right_filt_x, right_filt_y, data = load_filer_data(
         data_file_name, sector_wid
