@@ -462,7 +462,8 @@ def run_double_hough(args):
     r_stride_fp = 0.025
 
     # number of bins in the [0, 180) interval
-    th_bin_num_fp = 60
+    # th_bin_num_fp = 60
+    th_bin_num_fp = 20
 
     # r dimension of the bins in the second pass (cm)
     # r_stride_sp = 0.0025
@@ -472,8 +473,8 @@ def run_double_hough(args):
     r_num_sp = 20
 
     # number of bins in the precise interval in the second pass
-    # th_bin_num_sp = 81
-    th_bin_num_sp = 41
+    th_bin_num_sp = 81
+    # th_bin_num_sp = 41
 
     # the corridor width
     corridor_width = 0.56
@@ -521,6 +522,8 @@ def run_double_hough(args):
     recap += f" ({math.degrees(best_th-math.pi/2):.6f})\n"
     logg.debug(recap)
     logg.debug(f"Analyzing took {t_analyze_end-t_analyze_start} seconds")
+
+    # return
 
     ################
     # plot results #

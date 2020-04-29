@@ -21,8 +21,8 @@ class DoubleHough:
     ):
         """Setup the analyzer
         """
-        logg = logging.getLogger(f"c.{__name__}.__init__")
-        logg.debug(f"Start __init__")
+        # logg = logging.getLogger(f"c.{__name__}.__init__")
+        # logg.debug(f"Start __init__")
 
         # points in cartesian space
         self.data_x = data_x
@@ -43,13 +43,13 @@ class DoubleHough:
         # all the values of possible rotations of the corridor in the first pass
         self.th_values_fp = np.linspace(0, math.pi, self.th_bin_num_fp, endpoint=False)
         self.th_fp_wid = math.radians(180 / self.th_bin_num_fp)
-        logg.debug(f"First th bins are {math.degrees(self.th_fp_wid):.4f} degrees wide")
+        # logg.debug(f"First th bins are {math.degrees(self.th_fp_wid):.4f} degrees wide")
 
     def find_parallel_lines(self) -> Tuple[float, float]:
         """Runs the algorithm on the current values
         """
-        logg = logging.getLogger(f"c.{__name__}.find_parallel_lines")
-        logg.debug(f"Start find_parallel_lines")
+        # logg = logging.getLogger(f"c.{__name__}.find_parallel_lines")
+        # logg.debug(f"Start find_parallel_lines")
 
         # precompute values common to both passes
         self.precompute_values()
@@ -58,19 +58,25 @@ class DoubleHough:
         # do the first pass #
         #####################
 
-        # compute the distances
-        all_dist_fp_th = self.compute_all_dist_from_th_mat(self.th_values_fp)
-        # fill the bins
-        bins_fp, r_min_fp = self.fill_bins(
-            all_dist_fp_th, self.th_bin_num_fp, self.r_stride_fp
-        )
-        # find the max
-        best_th_fp, best_r_fp = self.find_max(
-            bins_fp, r_min_fp, self.r_stride_fp, self.th_values_fp
-        )
-        # best_th_fp = math.radians(90)
-        # best_r_fp = -0.28
-        logg.debug(f"best_th_fp: {best_th_fp} best_r_fp {best_r_fp}")
+        # # use some prior knowledge on the orientation of the corridor
+        # self.th_values_fp = np.linspace(
+        #     math.pi * 2 / 5, math.pi * 3 / 5, self.th_bin_num_fp, endpoint=False
+        # )
+
+        # # compute the distances
+        # all_dist_fp_th = self.compute_all_dist_from_th_mat(self.th_values_fp)
+        # # fill the bins
+        # bins_fp, r_min_fp = self.fill_bins(
+        #     all_dist_fp_th, self.th_bin_num_fp, self.r_stride_fp
+        # )
+        # # find the max
+        # best_th_fp, best_r_fp = self.find_max(
+        #     bins_fp, r_min_fp, self.r_stride_fp, self.th_values_fp
+        # )
+        best_th_fp = math.radians(90)
+        best_r_fp = -0.28
+        # logg.debug(f"best_th_fp: {best_th_fp} best_r_fp {best_r_fp}")
+        print(f"best_th_fp: {best_th_fp} best_r_fp {best_r_fp}")
 
         ######################
         # do the second pass #
@@ -105,13 +111,15 @@ class DoubleHough:
             self.smooth_bins_sp, r_min_sp, self.r_stride_sp, self.th_values_sp
         )
 
+        print(f"best_th_sp: {best_th_sp} best_r_sp {best_r_sp}")
+
         return best_th_sp, best_r_sp
 
     def precompute_values(self):
         """TODO: what is precompute_values doing?
         """
-        logg = logging.getLogger(f"c.{__name__}.precompute_values")
-        logg.debug(f"Start precompute_values")
+        # logg = logging.getLogger(f"c.{__name__}.precompute_values")
+        # logg.debug(f"Start precompute_values")
 
         # distance from all points to the origin
         self.all_OL_dist = np.sqrt(np.square(self.data_x) + np.square(self.data_y))
@@ -122,8 +130,8 @@ class DoubleHough:
     def compute_all_dist_from_th_mat(self, th_values: np.ndarray) -> np.ndarray:
         """Computes the distances for all points and all given rotations values
         """
-        logg = logging.getLogger(f"c.{__name__}.compute_all_dist_from_th_mat")
-        logg.debug(f"Start compute_all_dist_from_th_mat")
+        # logg = logging.getLogger(f"c.{__name__}.compute_all_dist_from_th_mat")
+        # logg.debug(f"Start compute_all_dist_from_th_mat")
 
         # use broadcasting to stretch the arrays into common shapes
         # https://numpy.org/devdocs/user/theory.broadcasting.html#figure-4
@@ -138,11 +146,11 @@ class DoubleHough:
 
         # the distances when considering the point on the right are reduced by corridor width
         all_dist_from_th_r = all_dist_from_th_l - self.corridor_width
-        logg.debug(f"all_dist_from_th_l.shape: {all_dist_from_th_l.shape}")
+        # logg.debug(f"all_dist_from_th_l.shape: {all_dist_from_th_l.shape}")
 
         # stack the two sets of sinusoids
         all_dist_from_th = np.vstack((all_dist_from_th_l, all_dist_from_th_r))
-        logg.debug(f"all_dist_from_th.shape: {all_dist_from_th.shape}")
+        # logg.debug(f"all_dist_from_th.shape: {all_dist_from_th.shape}")
         return all_dist_from_th
 
     def fill_bins(
@@ -155,9 +163,9 @@ class DoubleHough:
     ) -> Tuple[np.ndarray, float]:
         """TODO: what is fill_bins doing?
         """
-        logg = logging.getLogger(f"c.{__name__}.fill_bins")
-        logg.debug(f"Start fill_bins")
-        logg.debug(f"min {np.min(all_dist_from_th)} max {np.max(all_dist_from_th)}")
+        # logg = logging.getLogger(f"c.{__name__}.fill_bins")
+        # logg.debug(f"Start fill_bins")
+        # logg.debug(f"min {np.min(all_dist_from_th)} max {np.max(all_dist_from_th)}")
 
         # quantize the dist values along r_stride grid by zooming in and rounding
         quant_all_dist_from_th = all_dist_from_th / r_stride
@@ -168,11 +176,11 @@ class DoubleHough:
             # the extremes in the regular coord
             r_sup = r_central + r_num_sp * r_stride
             r_inf = r_central - r_num_sp * r_stride
-            logg.debug(f"r_sup: {r_sup} r_inf {r_inf}")
+            # logg.debug(f"r_sup: {r_sup} r_inf {r_inf}")
             # the extremes in the translated coord
             int_r_sup = int(np.rint(r_sup / r_stride))
             int_r_inf = int(np.rint(r_inf / r_stride))
-            logg.debug(f"int_r_sup: {int_r_sup} int_r_inf {int_r_inf}")
+            # logg.debug(f"int_r_sup: {int_r_sup} int_r_inf {int_r_inf}")
 
             # as we use NaNs, this is cast to float
             int_all_dist_from_th = np.where(
@@ -188,7 +196,7 @@ class DoubleHough:
             self.int_r_sup = int_r_sup
             self.int_r_inf = int_r_inf
             self.quant_all_dist_from_th = quant_all_dist_from_th
-            self.int_all_dist_from_th = int_all_dist_from_th
+            # self.int_all_dist_from_th = int_all_dist_from_th
 
         # find the extremes of the distance interval
         r_min = np.nanmin(int_all_dist_from_th)
@@ -196,11 +204,11 @@ class DoubleHough:
         self.int_r_min = int_r_min
         r_max = np.nanmax(int_all_dist_from_th)
         r_bin_num = int(r_max - r_min + 1)
-        logg.debug(f"r_min: {r_min} r_max {r_max} r_bin_num {r_bin_num}")
+        # logg.debug(f"r_min: {r_min} r_max {r_max} r_bin_num {r_bin_num}")
 
         bins = np.zeros((th_bin_num, r_bin_num), dtype=np.uint32)
         # bin 0 is associated with value r_min, 1 with r_min + r_stride and so on
-        logg.debug(f"bins.shape: {bins.shape}")
+        # logg.debug(f"bins.shape: {bins.shape}")
 
         # transpose the data to easily access by theta
         int_from_th_all_dist = int_all_dist_from_th.T
@@ -223,16 +231,16 @@ class DoubleHough:
     ) -> Tuple[float, float]:
         """TODO: what is find_max doing?
         """
-        logg = logging.getLogger(f"c.{__name__}.find_max")
-        logg.debug(f"Start find_max")
+        # logg = logging.getLogger(f"c.{__name__}.find_max")
+        # logg.debug(f"Start find_max")
 
-        max_bin = np.max(bins)
+        # max_bin = np.max(bins)
         argmax_bin = np.argmax(bins)
         ind_argmax = np.unravel_index(argmax_bin, bins.shape)
-        recap = f"max_bin: {max_bin}"
-        recap += f" argmax_bin: {argmax_bin}"
-        recap += f" ind_argmax: {ind_argmax}"
-        logg.debug(recap)
+        # recap = f"max_bin: {max_bin}"
+        # recap += f" argmax_bin: {argmax_bin}"
+        # recap += f" ind_argmax: {ind_argmax}"
+        # logg.debug(recap)
 
         # go from index to value
         max_val = ind_argmax[1] + r_min
