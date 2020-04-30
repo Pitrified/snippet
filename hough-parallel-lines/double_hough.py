@@ -106,20 +106,9 @@ class DoubleHough:
         # smooth the bins
         self.smooth_bins_sp = gaussian_filter(self.bins_sp, 1)
 
-        tile_size = 3
-        kromat = np.ones((tile_size, tile_size))
-        # inflate the bins
-        self.inflate_bins_sp = np.kron(
-            self.smooth_bins_sp, kromat, dtype=self.smooth_bins_sp.dtype
-        )
-
         # find the max
         best_th_sp, best_r_sp = self.find_max(
-            self.smooth_bins_sp,
-            r_min_sp,
-            self.r_stride_sp,
-            self.th_values_sp,
-            tile_size,
+            self.smooth_bins_sp, r_min_sp, self.r_stride_sp, self.th_values_sp,
         )
 
         print(f"best_th_sp: {best_th_sp} best_r_sp {best_r_sp}")
@@ -238,12 +227,7 @@ class DoubleHough:
         return bins, r_min
 
     def find_max(
-        self,
-        bins: np.ndarray,
-        r_min: float,
-        r_stride: float,
-        th_values: np.ndarray,
-        tile_size: Optional[int] = None,
+        self, bins: np.ndarray, r_min: float, r_stride: float, th_values: np.ndarray,
     ) -> Tuple[float, float]:
         """TODO: what is find_max doing?
         """
@@ -257,10 +241,6 @@ class DoubleHough:
         # recap += f" argmax_bin: {argmax_bin}"
         # recap += f" ind_argmax: {ind_argmax}"
         # logg.debug(recap)
-
-        # adjust the values considering the tile_size
-        if tile_size is not None:
-            pass
 
         # go from index to value
         max_val = ind_argmax[1] + r_min
