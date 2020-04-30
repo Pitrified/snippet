@@ -6,16 +6,19 @@ import matplotlib.pyplot as plt  # type: ignore
 from pathlib import Path
 from copy import deepcopy
 
-from typing import Dict, List
-from cursive_writer.utils.type_utils import Glyph, ThickSpline
+# from cursive_writer.utils.type_utils import Glyph
+from typing import Dict, List, Tuple
+from cursive_writer.utils.type_utils import ThickSpline
+from cursive_writer.utils.type_utils import ThickGlyph
 
+from cursive_writer.utils.geometric_utils import translate_spline_sequence
 from cursive_writer.ligature.letter_class import Letter
 from cursive_writer.ligature.ligature import align_letter_1
 from cursive_writer.ligature.ligature import align_letter_2
 from cursive_writer.ligature.ligature_info import LigatureInfo
 from cursive_writer.spliner.spliner import compute_long_thick_spline
 from cursive_writer.utils.geometric_utils import find_thick_spline_bbox
-from cursive_writer.utils.geometric_utils import translate_spline_sequence
+from cursive_writer.utils.geometric_utils import translate_thick_spline
 from cursive_writer.utils.oriented_point import OrientedPoint
 from cursive_writer.utils.setup import setup_logger
 from cursive_writer.utils.utils import serializer_oriented_point
@@ -34,15 +37,24 @@ def parse_arguments() -> argparse.Namespace:
         help="Input string to write",
     )
 
+    parser.add_argument(
+        "-llt",
+        "--log_level_type",
+        type=str,
+        default="m",
+        help="Message format for the debugging logger",
+        choices=["anlm", "nlm", "lm", "nm", "m"],
+    )
+
     # last line to parse the args
     args = parser.parse_args()
     return args
 
 
 def setup_env() -> argparse.Namespace:
-    setup_logger()
-
     args = parse_arguments()
+
+    setup_logger("DEBUG", args.log_level_type)
 
     # build command string to repeat this run
     # FIXME if an option is a flag this does not work, sorry
@@ -147,7 +159,8 @@ def compute_letter_alignement(
         ci_load = jsons.loads(ligature_pf.read_text(), LigatureInfo)
 
         # decide if the ligature loaded is the same
-        logg.debug(f"\nci_load: {ci_load!r}")
+        # logg.debug(f"ci_load: {ci_load!r}")
+        logg.debug(f"ci_load: {ci_load}")
         if f_pf_name != ci_load.f_pf_name or s_pf_name != ci_load.s_pf_name:
             logg.debug(f"The names in the loaded info are different than the current")
             equals = False
@@ -190,7 +203,8 @@ def compute_letter_alignement(
         f_hash_sha1=f_hash_sha1,
         s_hash_sha1=s_hash_sha1,
     )
-    logg.debug(f"\ncon_info: {con_info!r}")
+    # logg.debug(f"con_info: {con_info!r}")
+    logg.debug(f"con_info: {con_info}")
 
     # save the LigatureInfo
     jsons.set_serializer(serializer_oriented_point, OrientedPoint)
@@ -209,7 +223,8 @@ def fill_ligature_info(
     x_stride: float,
     data_dir: Path,
     ligature_dir: Path,
-) -> Dict[str, LigatureInfo]:
+    thickness: int,
+) -> Tuple[Dict[str, LigatureInfo], Dict[str, ThickSpline]]:
     """TODO: what is fill_ligature_info doing?
     """
     logg = logging.getLogger(f"c.{__name__}.fill_ligature_info")
@@ -217,11 +232,12 @@ def fill_ligature_info(
 
     # where to keep the connection info
     ligature_info: Dict[str, LigatureInfo] = {}
+    thick_con_info: Dict[str, ThickSpline] = {}
 
     for i in range(len(input_str) - 1):
         # get the current pair
         pair = input_str[i : i + 2]
-        logg.debug(f"Doing pair: {pair}")
+        logg.debug(f"\nDoing pair: {pair}")
 
         # compute info for this pair if needed
         if pair not in ligature_info:
@@ -231,12 +247,25 @@ def fill_ligature_info(
                 f_let, s_let, x_stride, data_dir, ligature_dir
             )
 
-    return ligature_info
+        # link all the spline info
+        full_spline_con = [ligature_info[pair].f_gly_chop]
+        full_spline_con.extend(ligature_info[pair].spline_seq_con)
+        # shift the second glyph
+        s_gly_chop = deepcopy(ligature_info[pair].s_gly_chop)
+        shift = ligature_info[pair].shift
+        translate_spline_sequence([s_gly_chop], shift, 0)
+        full_spline_con.append(s_gly_chop)
+
+        # precompute the full thick ligature information
+        full_thick_con = compute_long_thick_spline(full_spline_con, thickness)
+        thick_con_info[pair] = full_thick_con
+
+    return ligature_info, thick_con_info
 
 
-def plot_results(all_glyphs_thick: ThickSpline) -> None:
+def plot_results(all_thick_glyphs: ThickSpline) -> None:
     # find dimension of the plot
-    xlim, ylim = find_thick_spline_bbox(all_glyphs_thick)
+    xlim, ylim = find_thick_spline_bbox(all_thick_glyphs)
     # inches to point
     ratio = 3 / 1000
     wid = xlim[1] - xlim[0]
@@ -252,7 +281,7 @@ def plot_results(all_glyphs_thick: ThickSpline) -> None:
     # col_list = ["g", "r", "y", "c", "m", "k", "b"]
     col_list = ["k"]
     # i_s = 0
-    for i_g, glyph in enumerate(all_glyphs_thick):
+    for i_g, glyph in enumerate(all_thick_glyphs):
         # logg.debug(f"Plotting glyph: {glyph}")
         cc = col_list[i_g % len(col_list)]
         style = {"color": cc, "marker": ".", "ls": ""}
@@ -290,18 +319,27 @@ def run_word_builder(args: argparse.Namespace) -> None:
     thickness: int = 10
 
     # the information on how to link the letter
-    ligature_info = fill_ligature_info(
-        args.input_str, letters_info, x_stride, data_dir, ligature_dir
+    ligature_info, thick_con_info = fill_ligature_info(
+        args.input_str, letters_info, x_stride, data_dir, ligature_dir, thickness
     )
 
     # all the spline_seq points
-    all_glyphs: List[Glyph] = []
+    # all_glyphs: List[Glyph] = []
+
+    # all the glyphs in the thick spline (so basically a ThickSpline)
+    all_thick_glyphs: List[ThickGlyph] = []
 
     # the accumulated shift
     acc_shift: float = 0
 
-    # draw the first letter
-    all_glyphs.extend(letters_info[args.input_str[0]].get_spline_seq("alone"))
+    # the first letter of the word
+    first_letter = args.input_str[0]
+
+    # save the first letter
+    # all_glyphs.extend(letters_info[first_letter].get_spline_seq("alone"))
+
+    # save the first thick letter
+    all_thick_glyphs.extend(letters_info[first_letter].get_thick_samples("alone"))
 
     for i in range(len(args.input_str) - 1):
         # get the current pair
@@ -311,44 +349,61 @@ def run_word_builder(args: argparse.Namespace) -> None:
         # f_let = letters_info[pair[0]]
         s_let = letters_info[pair[1]]
 
-        # edit the previous/first (if needed, some times it will be the same)
-        # make a copy so that we do not modify the original
-        f_gly_chop = deepcopy(ligature_info[pair].f_gly_chop)
-        translate_spline_sequence([f_gly_chop], acc_shift, 0)
-        all_glyphs[-1] = f_gly_chop
+        # # edit the previous/first (if needed, some times it will be the same)
+        # # make a copy so that we do not modify the original
+        # f_gly_chop = deepcopy(ligature_info[pair].f_gly_chop)
+        # translate_spline_sequence([f_gly_chop], acc_shift, 0)
+        # all_glyphs[-1] = f_gly_chop
 
-        # add the translated connection
-        spline_seq_con = deepcopy(ligature_info[pair].spline_seq_con)
-        translate_spline_sequence(spline_seq_con, acc_shift, 0)
-        all_glyphs.extend(spline_seq_con)
-        # logg.debug(f"spline_seq_con: {spline_seq_con}")
+        # # add the translated connection
+        # spline_seq_con = deepcopy(ligature_info[pair].spline_seq_con)
+        # translate_spline_sequence(spline_seq_con, acc_shift, 0)
+        # all_glyphs.extend(spline_seq_con)
+        # # logg.debug(f"spline_seq_con: {spline_seq_con}")
+
+        # remove the last glyph: it will be updated with the first of the thick_spline_con
+        all_thick_glyphs.pop()
+
+        # add the thick connection
+        # there is no need for deepcopy because translate_thick_spline returns a
+        # translated copy of the spline
+        thick_spline_con = thick_con_info[pair]
+        tra_thick_spline_con = translate_thick_spline(thick_spline_con, acc_shift, 0)
+        all_thick_glyphs.extend(tra_thick_spline_con)
 
         # update the total shift
         acc_shift += ligature_info[pair].shift
 
-        # add the second
-        # translate the connection
-        s_gly_chop = deepcopy(ligature_info[pair].s_gly_chop)
-        translate_spline_sequence([s_gly_chop], acc_shift, 0)
+        # # add the second
+        # # translate the connection
+        # s_gly_chop = deepcopy(ligature_info[pair].s_gly_chop)
+        # translate_spline_sequence([s_gly_chop], acc_shift, 0)
 
-        # extract the type of the second letter to use
-        s_spline_seq = s_let.get_spline_seq(ligature_info[pair].s_let_type)
-        # copy it to avoid modifying it
-        # TODO add a flag in get_spline_seq to get a copy or the original
-        s_spline_seq = deepcopy(s_spline_seq)
-        # translate the spline
-        translate_spline_sequence(s_spline_seq, acc_shift, 0)
-        # change the first glyph of the spline
-        s_spline_seq[0] = s_gly_chop
-        # add the spline to the glyphs
-        all_glyphs.extend(s_spline_seq)
+        # # extract the spline of the correct type of the second letter to use
+        # s_spline_seq = s_let.get_spline_seq(ligature_info[pair].s_let_type)
+        # # copy it to avoid modifying it
+        # # TODO add a flag in get_spline_seq to get a copy or the original
+        # s_spline_seq = deepcopy(s_spline_seq)
+        # # translate the spline
+        # translate_spline_sequence(s_spline_seq, acc_shift, 0)
+        # # change the first glyph of the spline
+        # s_spline_seq[0] = s_gly_chop
+        # # add the spline to the glyphs
+        # all_glyphs.extend(s_spline_seq)
+
+        # extract the thick spline of the correct type of the second letter to use
+        s_thick_spline = s_let.get_thick_samples(ligature_info[pair].s_let_type)
+        # translate it
+        s_tra_thick_spline = translate_thick_spline(s_thick_spline, acc_shift, 0)
+        # add it to the list of glyphs, without the first glyph
+        all_thick_glyphs.extend(s_tra_thick_spline[1:])
 
     # compute the thick spline
     # TODO: only recompute the connecting glyphs, the rest of the letter is static
-    all_glyphs_thick = compute_long_thick_spline(all_glyphs, thickness)
+    # all_thick_glyphs = compute_long_thick_spline(all_glyphs, thickness)
 
     # plot results
-    plot_results(all_glyphs_thick)
+    plot_results(all_thick_glyphs)
     plt.show()
 
 

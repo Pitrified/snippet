@@ -1,4 +1,4 @@
-import logging
+# import logging
 
 from cursive_writer.utils.type_utils import Glyph, Spline
 
@@ -21,8 +21,8 @@ class LigatureInfo:
 
         TODO: also needs some versioning of the Letter used to build the connection
         """
-        logg = logging.getLogger(f"c.{__name__}.__init__")
-        logg.debug(f"Start __init__")
+        # logg = logging.getLogger(f"c.{__name__}.__init__")
+        # logg.debug(f"Start __init__")
 
         self.f_pf_name = f_pf_name
         self.s_pf_name = s_pf_name

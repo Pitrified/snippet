@@ -143,26 +143,26 @@ class Letter:
         # fallback to some other option
         if which == "high":
             if self.pf_spline["low"] is not None:
-                logg.warn(f"Missing data for {self.letter}: '{which}' - return 'low'")
+                # logg.warn(f"Missing data for {self.letter}: '{which}' - return 'low'")
                 return "low"
             if self.pf_spline["alone"] is not None:
-                logg.warn(f"Missing data for {self.letter}: '{which}' - return 'alone'")
+                # logg.warn(f"Missing data for {self.letter}: '{which}' - return 'alone'")
                 return "alone"
 
         if which == "low":
             if self.pf_spline["high"] is not None:
-                logg.warn(f"Missing data for {self.letter}: '{which}' - return 'high'")
+                # logg.warn(f"Missing data for {self.letter}: '{which}' - return 'high'")
                 return "high"
             if self.pf_spline["alone"] is not None:
-                logg.warn(f"Missing data for {self.letter}: '{which}' - 'alone'")
+                # logg.warn(f"Missing data for {self.letter}: '{which}' - 'alone'")
                 return "alone"
 
         if which == "alone":
             if self.pf_spline["low"] is not None:
-                logg.warn(f"Missing data for {self.letter}: '{which}' - return 'low'")
+                # logg.warn(f"Missing data for {self.letter}: '{which}' - return 'low'")
                 return "low"
             if self.pf_spline["high"] is not None:
-                logg.warn(f"Missing data for {self.letter}: '{which}' - return 'high'")
+                # logg.warn(f"Missing data for {self.letter}: '{which}' - return 'high'")
                 return "high"
 
         # something went wrong

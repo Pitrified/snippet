@@ -162,6 +162,9 @@ def translate_point_dir(
 
 def translate_spline_sequence(spline_sequence: Spline, dx: float, dy: float) -> None:
     """Changes a spline, translating the points by (dx, dy)
+
+    NOTE: changes the spline *in place*
+    FIXME: return a translated copy instead
     """
     # logg = logging.getLogger(f"c.{__name__}.translate_spline_sequence")
     # logg.debug(f"Start translate_spline_sequence")
@@ -170,6 +173,24 @@ def translate_spline_sequence(spline_sequence: Spline, dx: float, dy: float) -> 
         for op in glyph:
             op.x += dx
             op.y += dy
+
+
+def translate_thick_spline(
+    thick_spline: ThickSpline, dx: float, dy: float
+) -> ThickSpline:
+    """TODO: what is translate_thick_spline doing?
+    """
+    # logg = logging.getLogger(f"c.{__name__}.translate_thick_spline")
+    # logg.debug(f"Start translate_thick_spline")
+
+    new_spline = []
+    for thick_glyph in thick_spline:
+        new_glyph = []
+        for thick_segment in thick_glyph:
+            new_segment = (thick_segment[0] + dx, thick_segment[1] + dy)
+            new_glyph.append(new_segment)
+        new_spline.append(new_glyph)
+    return new_spline
 
 
 def dist2D(p0: OrientedPoint, p1: OrientedPoint) -> float:
