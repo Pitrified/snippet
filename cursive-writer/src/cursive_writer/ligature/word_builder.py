@@ -36,6 +36,10 @@ def parse_arguments() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "-t", "--thickness", type=int, default=10, help="Thickness of the pen"
+    )
+
+    parser.add_argument(
         "-llt",
         "--log_level_type",
         type=str,
@@ -66,7 +70,7 @@ def setup_env() -> argparse.Namespace:
     return args
 
 
-def load_letter_dict(data_dir: Path) -> Dict[str, Letter]:
+def load_letter_dict(thickness: int, data_dir: Path) -> Dict[str, Letter]:
     """TODO: what is load_letter_dict doing?
     """
     logg = logging.getLogger(f"c.{__name__}.load_letter_dict")
@@ -82,6 +86,7 @@ def load_letter_dict(data_dir: Path) -> Dict[str, Letter]:
         # pf_spline_high=data_dir / "i1_h_006.txt",
         # pf_spline_high=data_dir / "i2_h_000.txt",
         pf_spline_high=data_dir / "i2_h_dot_000.txt",
+        thickness=thickness,
     )
     letters_info["v"] = Letter(
         "v",
@@ -89,12 +94,14 @@ def load_letter_dict(data_dir: Path) -> Dict[str, Letter]:
         right_type="high_up",
         # pf_spline_alone=data_dir / "v1_001.txt",
         pf_spline_alone=data_dir / "v2_002.txt",
+        thickness=thickness,
     )
     letters_info["m"] = Letter(
         "m",
         left_type="high_down",
         right_type="low_up",
         pf_spline_alone=data_dir / "m2_000.txt",
+        thickness=thickness,
     )
     return letters_info
 
@@ -244,6 +251,8 @@ def fill_ligature_info(
             ligature_info[pair] = compute_letter_alignement(
                 f_let, s_let, x_stride, data_dir, ligature_dir
             )
+        else:
+            logg.debug(f"Pair already computed")
 
         # link all the spline info
         full_spline_con = [ligature_info[pair].f_gly_chop]
@@ -359,16 +368,15 @@ def run_word_builder(args: argparse.Namespace) -> None:
     if not ligature_dir.exists():
         ligature_dir.mkdir(parents=True)
 
-    letters_info = load_letter_dict(data_dir)
+    thickness = args.thickness if args.thickness > 0 else 1
+
+    letters_info = load_letter_dict(thickness, data_dir)
     logg.debug(f"letters_info:")
     for letter in letters_info:
         logg.debug(f"{letters_info[letter]}")
 
     # the sampling precision when shifting
     x_stride: float = 1
-
-    # the thickness of the letters
-    thickness: int = 10
 
     # the information on how to link the letters
     ligature_info, thick_con_info = fill_ligature_info(
