@@ -1,4 +1,4 @@
 i2_l_000_000.txt	0	0
 i2_l_000_001.txt	0	0
-_i_circle.txt	690	1300
+_i_circle.txt	700	1300
 i2_l_000_002.txt	0	0
