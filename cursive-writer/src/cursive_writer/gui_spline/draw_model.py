@@ -250,6 +250,21 @@ class Model:
                 # update the fm_lines_view with the current abs/mov/zoom
                 self.recompute_fm_lines_view()
 
+        # moved the mouse while left button clicked with shift held down
+        elif move_type == "move_left_clicked_shift":
+            # setting BM
+            if current_state == "setting_base_mean_clicked":
+                # squared FM
+                self.build_fm_lines_abs(
+                    "base_mean",
+                    self.start_view_x,
+                    self.start_view_y,
+                    self.start_view_x,
+                    self.move_view_y,
+                )
+                # update the fm_lines_view with the current abs/mov/zoom
+                self.recompute_fm_lines_view()
+
         # moved the mouse while right button clicked
         elif move_type == "move_right_clicked":
             if current_state == "free_clicked_right":
@@ -318,6 +333,39 @@ class Model:
             elif current_state == "moving_glyph":
                 # move the glyph using the selected point and the released pos
                 self.move_glyph("mouse_release")
+                # after you release the mouse, go back to free state
+                self.state.set("free")
+
+        # handle left click while shift is pressed
+        elif click_type == "left_shift_click":
+            # was clicked left, do not add the spline point
+            if current_state == "free_clicked_left":
+                self.state.set("free")
+                self.free_line.set(None)
+                self.click_left_start_pos.set(None)
+
+            # was clicked SBM: set the font measurements
+            elif current_state == "setting_base_mean_clicked":
+                # compute and save the font measurement info:
+                # get the new abs lines with current mouse pos
+                self.build_fm_lines_abs(
+                    "base_mean",
+                    self.start_view_x,
+                    self.start_view_y,
+                    self.start_view_x,
+                    self.end_view_y,
+                )
+                # update the fm_lines_view with the current abs/mov/zoom
+                self.recompute_fm_lines_view()
+                # update the thick_segment_points now that FM are available
+                self.update_thick_segments()
+                # after you release the mouse, go back to free state
+                self.state.set("free")
+
+            # was moving glyph
+            elif current_state == "moving_glyph":
+                # move the glyph using the selected point and the released pos
+                self.move_glyph("mouse_release_shift")
                 # after you release the mouse, go back to free state
                 self.state.set("free")
 
@@ -1088,7 +1136,7 @@ class Model:
             return
 
         view_op = line_curve_point(
-            self.start_view_x, self.start_view_y, self.move_view_x, self.move_view_y
+            self.start_view_x, self.start_view_y, self.end_view_x, self.end_view_y
         )
 
         # MAYBE add button to flip this behaviour
@@ -1440,6 +1488,17 @@ class Model:
             dx_abs = release_abs_op.x - curr_abs_sp.x
             dy_abs = release_abs_op.y - curr_abs_sp.y
             self.translate_glyph(sel_idxs[0], dx_abs, dy_abs)
+
+        # move the currently selected point to the x of where the mouse was released
+        elif source == "mouse_release_shift":
+            # the released point is in view coordinate
+            release_view_op = OrientedPoint(self.end_view_x, self.end_view_y, 0)
+            # convert it to abs
+            release_abs_op = self.rescale_point(release_view_op, "view2abs")
+            # and compute the delta in abs coord to shift the glyph
+            dx_abs = release_abs_op.x - curr_abs_sp.x
+            # shift only on x axis
+            self.translate_glyph(sel_idxs[0], dx_abs, 0)
 
         # move the currently selected point to the clicked point position
         elif source == "clicked_point":

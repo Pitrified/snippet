@@ -252,39 +252,6 @@ class Controller:
 
         self.model.save_click_canvas(click_type, event.x, event.y)
 
-    def released_canvas(self, event):
-        logg = logging.getLogger(f"c.{__class__.__name__}.released_canvas")
-        # logg.setLevel("TRACE")
-        recap = f"\n{fmt_cn('Released')} mouse on canvas"
-        recap += f" - event: {event} event.state: {event.state}"
-        recap += f" - event.x: {event.x} event.y: {event.y}"
-        logg.info(recap)
-
-        the_num = event.num
-        if the_num == 1:
-            logg.debug(f"Left click")
-            click_type = "left_click"
-        elif the_num == 2:
-            logg.debug(f"Wheel click")
-            click_type = "wheel_click"
-            return
-        elif the_num == 3:
-            logg.debug(f"Right click")
-            click_type = "right_click"
-        elif the_num == 4:
-            logg.debug(f"Scroll up")
-            click_type = "scroll_up"
-            return
-        elif the_num == 5:
-            logg.debug(f"Scroll down")
-            click_type = "scroll_down"
-            return
-        else:
-            logg.warn(f"{fmt_cn('Unrecognized', 'alert')} event num {the_num}")
-            return
-
-        self.model.release_click_canvas(click_type, event.x, event.y)
-
     def moved_canvas_mouse(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.moved_canvas_mouse")
         # logg.setLevel("TRACE")
@@ -295,29 +262,98 @@ class Controller:
         recap += f" - event.x: {event.x} event.y: {event.y}"
         logg.log(5, recap)
 
-        # TODO Shift+LeftMove (273): fm_lines with forced horizontal base
         # TODO add entry to set degrees of vertical line
+        # TODO the state is a bunch of flag bits set, use that for more clarity
 
-        the_state = event.state
         # these were brutally harvested by reading the logs...
+        the_state = event.state
+
         if the_state == 16:
             logg.log(5, f"Regular movement!")
             move_type = "move_free"
+        elif the_state == 17:
+            logg.log(5, f"Movement with shift!")
+            move_type = "move_shift_free"
+            return
+
         elif the_state == 272:
             logg.log(5, f"Click left movement!")
             move_type = "move_left_clicked"
-        elif the_state == 1040:
-            logg.log(5, f"Click right movement!")
-            move_type = "move_right_clicked"
+        elif the_state == 273:
+            logg.log(5, f"Click left + shift movement!")
+            move_type = "move_left_clicked_shift"
+
         elif the_state == 528:
             logg.log(5, f"Click wheel movement!")
             move_type = "move_wheel_clicked"
             return
+        elif the_state == 529:
+            logg.log(5, f"Click wheel + shift movement!")
+            move_type = "move_wheel_clicked_shift"
+            return
+
+        elif the_state == 1040:
+            logg.log(5, f"Click right movement!")
+            move_type = "move_right_clicked"
+        elif the_state == 1041:
+            logg.log(5, f"Click right shift movement!")
+            move_type = "move_right_clicked_shift"
+            return
+
         else:
             logg.warn(f"{fmt_cn('Unrecognized', 'alert')} event state {the_state}")
             return
 
         self.model.move_canvas_mouse(move_type, event.x, event.y)
+
+    def released_canvas(self, event):
+        logg = logging.getLogger(f"c.{__class__.__name__}.released_canvas")
+        # logg.setLevel("TRACE")
+        recap = f"\n{fmt_cn('Released')} mouse on canvas"
+        recap += f" - event: {event} event.state: {event.state}"
+        recap += f" - event.x: {event.x} event.y: {event.y}"
+        logg.info(recap)
+
+        the_state = event.state
+
+        if the_state == 272:
+            logg.debug(f"Left click")
+            click_type = "left_click"
+        elif the_state == 273:
+            logg.log(5, f"Left click + shift")
+            click_type = "left_shift_click"
+
+        elif the_state == 528:
+            logg.debug(f"Wheel click")
+            click_type = "wheel_click"
+            return
+        elif the_state == 529:
+            logg.debug(f"Wheel click + shift")
+            click_type = "wheel_shift_click"
+            return
+
+        elif the_state == 1040:
+            logg.debug(f"Right click")
+            click_type = "right_click"
+        elif the_state == 1041:
+            logg.debug(f"Right click + shift")
+            click_type = "right_shift_click"
+            return
+
+        elif the_state == 2064:
+            logg.debug(f"Scroll up")
+            click_type = "scroll_up"
+            return
+        elif the_state == 4112:
+            logg.debug(f"Scroll down")
+            click_type = "scroll_down"
+            return
+
+        else:
+            logg.warn(f"{fmt_cn('Unrecognized', 'alert')} event state {the_state}")
+            return
+
+        self.model.release_click_canvas(click_type, event.x, event.y)
 
     def clicked_btn_set_fm(self, fm_set_type):
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_fm")

@@ -81,10 +81,7 @@ def load_letter_dict(thickness: int, data_dir: Path) -> Dict[str, Letter]:
         "i",
         left_type="low_up",
         right_type="low_up",
-        # pf_spline_low=data_dir / "i2_l_000.txt",
         pf_spline_low=data_dir / "i2_l_dot_000.txt",
-        # pf_spline_high=data_dir / "i1_h_006.txt",
-        # pf_spline_high=data_dir / "i2_h_000.txt",
         pf_spline_high=data_dir / "i2_h_dot_000.txt",
         thickness=thickness,
     )
@@ -92,7 +89,6 @@ def load_letter_dict(thickness: int, data_dir: Path) -> Dict[str, Letter]:
         "v",
         left_type="high_down",
         right_type="high_up",
-        # pf_spline_alone=data_dir / "v1_001.txt",
         pf_spline_alone=data_dir / "v2_002.txt",
         thickness=thickness,
     )
@@ -101,6 +97,28 @@ def load_letter_dict(thickness: int, data_dir: Path) -> Dict[str, Letter]:
         left_type="high_down",
         right_type="low_up",
         pf_spline_alone=data_dir / "m2_000.txt",
+        thickness=thickness,
+    )
+    letters_info["n"] = Letter(
+        "n",
+        left_type="high_down",
+        right_type="low_up",
+        pf_spline_alone=data_dir / "n2_000.txt",
+        thickness=thickness,
+    )
+    letters_info["u"] = Letter(
+        "u",
+        left_type="low_up",
+        right_type="low_up",
+        pf_spline_low=data_dir / "u2_l_000.txt",
+        pf_spline_high=data_dir / "u2_h_000.txt",
+        thickness=thickness,
+    )
+    letters_info["v"] = Letter(
+        "v",
+        left_type="high_down",
+        right_type="high_up",
+        pf_spline_alone=data_dir / "v2_002.txt",
         thickness=thickness,
     )
     return letters_info

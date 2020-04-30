@@ -429,25 +429,38 @@ class FrameInfo(ttk.Frame):
         logg = logging.getLogger(f"c.{__class__.__name__}.update_state")
         logg.info(f"Start {fmt_cn('update_state')} {state}")
 
-        set_state = "free"
         if state == "free":
             state_str = f"State: FREE"
+            set_state = "free"
+
         elif state == "free_clicked_left":
             state_str = f"State: FREE_CLICK_L"
+            set_state = "free"
+
         elif state == "free_clicked_right":
             state_str = f"State: FREE_CLICK_R"
+            set_state = "free"
+
         elif state == "setting_base_mean":
             state_str = f"State: SET_BM"
+            set_state = "selected"
+
         elif state == "setting_base_mean_clicked":
             state_str = f"State: SET_BM_CLICK"
+            set_state = "free"
+
         elif state == "adjusting_base":
             state_str = f"State: ADJUST_BASE"
             set_state = "selected"
+
         elif state == "adjusting_mean":
             state_str = f"State: ADJUST_MEAN"
             set_state = "selected"
+
         elif state == "moving_glyph":
             state_str = f"State: MOVING GLYPH"
+            set_state = "selected"
+
         else:
             logg.info(f"{fmt_cn('Unrecognized', 'alert')} system state {state}")
             return
