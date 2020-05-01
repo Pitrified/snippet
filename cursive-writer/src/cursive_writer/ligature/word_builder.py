@@ -423,22 +423,34 @@ def run_word_builder(args: argparse.Namespace) -> None:
     # the sampling precision when shifting
     x_stride: float = 1
 
-    input_str = args.input_str
+    new_input_str = args.input_str
 
-    while len(input_str) > 0:
+    while len(new_input_str) > 0:
 
         # pick random word
-        if input_str.startswith("."):
-            if input_str[1:] == "random":
+        if new_input_str.startswith("."):
+            if "random".startswith(new_input_str[1:]):
                 word_file = data_dir / "wordlist" / "3of6game_filt.txt"
                 input_str = generate_word(letters_info.keys(), word_file)
-            elif input_str[1:] == "casuale":
+            elif "casuale".startswith(new_input_str[1:]):
                 word_file = data_dir / "wordlist" / "italian_megamix.txt"
                 input_str = generate_word(letters_info.keys(), word_file)
             else:
                 input_str = "minimum"
 
-        logg.debug(f"input_str: {input_str}")
+        elif new_input_str.startswith("-t"):
+            # need to recompute the letter thick splines
+            # thickness = int(new_input_str[2:])
+            # logg.debug(f"Using thickness: {thickness}")
+            pass
+
+        else:
+            # filter the letter that are not known
+            input_str = "".join(
+                list(filter(lambda x: x in letters_info.keys(), new_input_str))
+            )
+
+        logg.debug(f"Writing word: {input_str}")
 
         # the information on how to link the letters
         ligature_info, thick_con_info = fill_ligature_info(
@@ -454,7 +466,7 @@ def run_word_builder(args: argparse.Namespace) -> None:
         plot_results(word_thick_spline, input_str)
         plt.show()
 
-        input_str = input("\nType the next word, leave empty to exit: ")
+        new_input_str = input("\nType the next word, leave empty to exit: ")
 
 
 if __name__ == "__main__":
