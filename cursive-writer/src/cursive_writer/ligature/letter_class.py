@@ -76,12 +76,9 @@ class Letter:
         logg = logging.getLogger(f"c.{__name__}.load_spline_info")
         # logg.debug(f"Start load_spline_info {which}")
 
-        # we assume all splines are in the same folder
-        self.data_dir = cast(Path, self.pf_spline[which]).parent
-
         # load the spline
         self.spline_seq[which] = load_spline(
-            cast(Path, self.pf_spline[which]), self.data_dir
+            cast(Path, self.pf_spline[which])
         )
 
         # count the number of points and glyphs
@@ -93,7 +90,7 @@ class Letter:
             logg.warn(f"Not enough glyphs in the spline '{which}'")
 
         self.hash_sha1[which] = compute_hash_spline(
-            cast(Path, self.pf_spline[which]), self.data_dir
+            cast(Path, self.pf_spline[which])
         )
 
     def get_pf(self, which: str) -> Path:

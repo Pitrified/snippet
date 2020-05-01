@@ -320,15 +320,15 @@ def exs_ligature_2segments():
     ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax)
 
 
-def ex_align_glyphs(pf_spline_left, pf_spline_right, data_dir):
+def ex_align_glyphs(pf_spline_left, pf_spline_right):
     """TODO: what is ex_align_glyphs doing?
     """
     logg = logging.getLogger(f"c.{__name__}.ex_align_glyphs")
     logg.debug(f"Start ex_align_glyphs")
 
-    spline_sequence_l = load_spline(pf_spline_left, data_dir)
+    spline_sequence_l = load_spline(pf_spline_left)
     gly_seq_l = spline_sequence_l[-1]
-    spline_sequence_r = load_spline(pf_spline_right, data_dir)
+    spline_sequence_r = load_spline(pf_spline_right)
     gly_seq_r = spline_sequence_r[0]
 
     # find a proper x_stride for this pair of files
@@ -381,7 +381,7 @@ def ex_align_glyphs(pf_spline_left, pf_spline_right, data_dir):
     plot_utils.add_vector(r_p_ext, ax, color="r", vec_len=vec_len)
 
 
-def ex_align_letters_1(pf_spline_left, pf_spline_right, data_dir, thickness):
+def ex_align_letters_1(pf_spline_left, pf_spline_right, thickness):
     """TODO: what is ex_align_letters_1 doing?
 
     Align letters
@@ -396,8 +396,8 @@ def ex_align_letters_1(pf_spline_left, pf_spline_right, data_dir, thickness):
     logg.debug(recap)
 
     # load the points in the splines
-    spline_sequence_l = load_spline(pf_spline_left, data_dir)
-    spline_sequence_r = load_spline(pf_spline_right, data_dir)
+    spline_sequence_l = load_spline(pf_spline_left)
+    spline_sequence_r = load_spline(pf_spline_right)
 
     # find a proper x_stride for this pair of files
     x_stride = find_align_stride((*spline_sequence_l, *spline_sequence_r))
@@ -454,14 +454,14 @@ def ex_align_letters_1(pf_spline_left, pf_spline_right, data_dir, thickness):
                 ax.plot(*segment, **style)
 
 
-def ex_align_letters_2(pf_spline_left, pf_spline_right, data_dir, thickness):
+def ex_align_letters_2(pf_spline_left, pf_spline_right, thickness):
     """TODO: what is ex_align_letters_2 doing?
     """
     logg = logging.getLogger(f"c.{__name__}.ex_align_letters_2")
     logg.debug(f"\nStart ex_align_letters_2")
 
-    spline_sequence_l = load_spline(pf_spline_left, data_dir)
-    spline_sequence_r = load_spline(pf_spline_right, data_dir)
+    spline_sequence_l = load_spline(pf_spline_left)
+    spline_sequence_r = load_spline(pf_spline_right)
 
     # find a proper x_stride for this pair of files
     x_stride = find_align_stride((*spline_sequence_l, *spline_sequence_r))
@@ -528,41 +528,39 @@ def exs_align_letters(data_dir, thickness):
     logg.debug(f"Start exs_align_letters")
 
     # error! FIXME
-    # pf_i = data_dir / "i1_007.txt"
-    # pf_ol = data_dir / f"o2_l_000.txt"
-    # ex_align_letters_1(pf_i, pf_ol, data_dir, thickness)
+    # pf_i = data_dir / "i" / "i1_007.txt"
+    # pf_ol = data_dir / "o" / "o2_l_000.txt"
+    # ex_align_letters_1(pf_i, pf_ol, thickness)
 
-    # pf_m = data_dir / "m1_001.txt"
-    pf_m = data_dir / "m2_000.txt"
-    # pf_i = data_dir / "i1_006.txt"
-    # pf_i = data_dir / "i1_007.txt"
-    pf_i = data_dir / "i2_l_dot_000.txt"
-    pf_ih = data_dir / "i2_h_dot_000.txt"
-    pf_v = data_dir / "v2_002.txt"
-    # pf_o = data_dir / "o1_002.txt"
-    # pf_oh = data_dir / "o1_h_001.txt"
-    # pf_ol = data_dir / f"o1_l_004.txt"
-    pf_ol = data_dir / f"o2_l_001.txt"
+    # pf_m = data_dir / "m" / "m1_001.txt"
+    pf_m = data_dir / "m" / "m2_000.txt"
+    # pf_i = data_dir / "i" / "i1_006.txt"
+    # pf_i = data_dir / "i" / "i1_007.txt"
+    pf_i = data_dir / "i" / "i2_l_dot_000.txt"
+    pf_ih = data_dir / "i" / "i2_h_dot_000.txt"
+    pf_v = data_dir / "v" / "v2_002.txt"
+    # pf_o = data_dir / "o" / "o1_002.txt"
+    # pf_oh = data_dir / "o" / "o1_h_001.txt"
+    # pf_ol = data_dir / "o" / "o1_l_004.txt"
+    pf_ol = data_dir / "o" / "o2_l_001.txt"
 
-    # for i in range(1, 7):
-    #     pf_ol = data_dir / f"o1_l_00{i}.txt"
-    # ex_align_letters_1(pf_m, pf_ol, data_dir, thickness)
-    # ex_align_letters_1(pf_i, pf_ol, data_dir, thickness)
+    # ex_align_letters_1(pf_m, pf_ol, thickness)
+    # ex_align_letters_1(pf_i, pf_ol, thickness)
 
-    ex_align_letters_1(pf_i, pf_ol, data_dir, thickness)
-    ex_align_letters_1(pf_i, pf_i, data_dir, thickness)
-    ex_align_letters_1(pf_m, pf_ol, data_dir, thickness)
-    # ex_align_letters_1(pf_v, pf_oh, data_dir, thickness)
+    ex_align_letters_1(pf_i, pf_ol, thickness)
+    ex_align_letters_1(pf_i, pf_i, thickness)
+    ex_align_letters_1(pf_m, pf_ol, thickness)
+    # ex_align_letters_1(pf_v, pf_oh, thickness)
 
-    # ex_align_letters_1(pf_m, pf_i, data_dir, thickness)
-    # ex_align_letters_1(pf_o, pf_ih, data_dir, thickness)
-    # ex_align_letters_1(pf_o, pf_m, data_dir, thickness)
-    ex_align_letters_1(pf_v, pf_ih, data_dir, thickness)
-    # ex_align_letters_1(pf_v, pf_m, data_dir, thickness)
+    # ex_align_letters_1(pf_m, pf_i, thickness)
+    # ex_align_letters_1(pf_o, pf_ih, thickness)
+    # ex_align_letters_1(pf_o, pf_m, thickness)
+    ex_align_letters_1(pf_v, pf_ih, thickness)
+    # ex_align_letters_1(pf_v, pf_m, thickness)
 
-    ex_align_letters_2(pf_i, pf_v, data_dir, thickness)
-    ex_align_letters_2(pf_ih, pf_m, data_dir, thickness)
-    ex_align_letters_2(pf_m, pf_v, data_dir, thickness)
+    ex_align_letters_2(pf_i, pf_v, thickness)
+    ex_align_letters_2(pf_ih, pf_m, thickness)
+    ex_align_letters_2(pf_m, pf_v, thickness)
 
 
 def run_ligature_examples(args):
@@ -581,18 +579,21 @@ def run_ligature_examples(args):
     logg.debug(f"data_dir: {data_dir}")
 
     path_input_left = args.path_input_left
-    pf_spline_left = data_dir / path_input_left
+    first_char = path_input_left[0]
+    pf_spline_left = data_dir / first_char / path_input_left
     logg.debug(f"pf_spline_left: {pf_spline_left}")
+
     path_input_right = args.path_input_right
-    pf_spline_right = data_dir / path_input_right
+    first_char = path_input_right[0]
+    pf_spline_right = data_dir / first_char / path_input_right
     logg.debug(f"pf_spline_right: {pf_spline_right}")
 
-    # exs_parametric_tangent()
-    # exs_ligature_2segments()
+    exs_parametric_tangent()
+    exs_ligature_2segments()
 
-    # ex_align_glyphs(pf_spline_left, pf_spline_right, data_dir)
+    ex_align_glyphs(pf_spline_left, pf_spline_right)
     thickness = 10
-    # ex_align_letters_1(pf_spline_left, pf_spline_right, data_dir, thickness)
+    ex_align_letters_1(pf_spline_left, pf_spline_right, thickness)
     exs_align_letters(data_dir, thickness)
 
     plt.show()

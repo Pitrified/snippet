@@ -1,6 +1,8 @@
 import logging
 import math
 
+from string import ascii_lowercase
+
 from cursive_writer.gui_spline.image_cropper import ImageCropper
 from cursive_writer.gui_spline.observable import Observable
 from cursive_writer.utils.color_utils import fmt_cn
@@ -732,18 +734,26 @@ class Model:
             logg.warn(f"{fmt_cn('Set', 'alert')} the font measurements before saving")
             return
 
-        if not data_dir.exists():
-            data_dir.mkdir(parents=True)
+        first_char = glyph_root_name[0]
+        # if the root name is a letter, put it in the correct subfolder
+        if first_char in ascii_lowercase:
+            letter_dir = data_dir / first_char
+        else:
+            letter_dir = data_dir
+        logg.debug(f"letter_dir: {letter_dir}")
+
+        if not letter_dir.exists():
+            letter_dir.mkdir(parents=True)
 
         letter_name_fmt = f"{glyph_root_name}_{{:03d}}.txt"
         glyph_name_fmt = f"{glyph_root_name}_{{:03d}}_{{:03d}}.txt"
         logg.debug(f"letter_name_fmt {letter_name_fmt} glyph_name_fmt {glyph_name_fmt}")
 
         # get the first free file index glyph_root_name_NNN.txt
-        file_index = find_free_index(data_dir, letter_name_fmt)
+        file_index = find_free_index(letter_dir, letter_name_fmt)
 
         # full path to the letter recap file
-        letter_name = data_dir / letter_name_fmt.format(file_index)
+        letter_name = letter_dir / letter_name_fmt.format(file_index)
         logg.debug(f"letter_name: {letter_name}")
 
         path = self.path_SP.get()
@@ -759,7 +769,7 @@ class Model:
             # build the name of the glyph file
             glyph_name = glyph_name_fmt.format(file_index, glyph_index)
             # build the glyph full file name
-            full_glyph_name = data_dir / glyph_name
+            full_glyph_name = letter_dir / glyph_name
 
             # build the line for the main file
             path_line = f"{glyph_name}\t0\t0\n"
@@ -827,9 +837,7 @@ class Model:
             return
         base_point_abs = fm_lines_abs["base_point"]
 
-        data_dir = self.data_dir.get()
-
-        fm_ops = load_spline(path_input_spline, data_dir, dx=0, dy=0)
+        fm_ops = load_spline(path_input_spline, dx=0, dy=0)
         logg.log(5, f"fm_ops: {fm_ops}")
 
         # iterate each glyph seq of points

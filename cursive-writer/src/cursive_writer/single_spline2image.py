@@ -1,6 +1,6 @@
 import argparse
 import logging
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # type: ignore
 
 from pathlib import Path
 
@@ -67,13 +67,13 @@ def setup_env():
     return args
 
 
-def plot_letter(pf_input_spline, data_dir, thickness, color="k"):
+def plot_letter(pf_input_spline, thickness, color="k"):
     """
     """
     logg = logging.getLogger(f"c.{__name__}.plot_letter")
     logg.debug(f"Starting plot_letter")
 
-    spline_sequence = load_spline(pf_input_spline, data_dir)
+    spline_sequence = load_spline(pf_input_spline)
     # logg.debug(f"spline_sequence: {spline_sequence}")
 
     # inches to point
@@ -130,9 +130,10 @@ def plot_good_letters(data_dir, thickness, colors, prefixes=None):
     ]
 
     for letter_name in good_letters:
-        if prefixes is None or letter_name[0] in prefixes:
-            pf_input_spline = data_dir / letter_name
-            plot_letter(pf_input_spline, data_dir, thickness, colors)
+        first_char = letter_name[0]
+        if prefixes is None or first_char in prefixes:
+            pf_input_spline = data_dir / first_char / letter_name
+            plot_letter(pf_input_spline, thickness, colors)
 
 
 def run_single_spline2image(args):
@@ -151,16 +152,17 @@ def run_single_spline2image(args):
     data_dir = main_dir / "data"
     logg.debug(f"data_dir: {data_dir}")
 
-    path_input = args.path_input
-    pf_input_spline = data_dir / path_input
-    logg.debug(f"pf_input_spline: {pf_input_spline}")
-
     thickness = args.thickness
 
     logg.debug(f"args.which_plot: {args.which_plot}")
 
     if args.which_plot == "single":
-        plot_letter(pf_input_spline, data_dir, thickness, args.colors)
+        path_input = args.path_input
+        first_char = path_input[0]
+        pf_input_spline = data_dir / first_char / path_input
+        logg.debug(f"pf_input_spline: {pf_input_spline}")
+
+        plot_letter(pf_input_spline, thickness, args.colors)
     elif args.which_plot == "all":
         plot_good_letters(data_dir, thickness, args.colors)
     else:

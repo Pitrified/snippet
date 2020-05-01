@@ -70,10 +70,6 @@ def load_glyph(pf_input_glyph: Path, dx: float = 0, dy: float = 0) -> Optional[G
     with pf_input_glyph.open("r") as f:
         for line in f:
             logg.debug(f"line: {line.rstrip()}")
-            # x, y, ori_deg = line.rstrip().split("\t")
-            # x = float(x)
-            # y = float(y)
-            # ori_deg = float(ori_deg)
             pz = line.rstrip().split("\t")
             x, y, ori_deg = map(float, pz)
             fm_pt = OrientedPoint(x + dx, y + dy, ori_deg)
@@ -82,9 +78,7 @@ def load_glyph(pf_input_glyph: Path, dx: float = 0, dy: float = 0) -> Optional[G
     return glyph
 
 
-def load_spline(
-    pf_input_spline: Path, data_dir: Path, dx: float = 0, dy: float = 0
-) -> Spline:
+def load_spline(pf_input_spline: Path, dx: float = 0, dy: float = 0) -> Spline:
     """TODO: what is load_spline doing?
     """
     logg = logging.getLogger(f"c.{__name__}.load_spline")
@@ -93,6 +87,10 @@ def load_spline(
 
     # full path to the letter recap file
     logg.debug(f"pf_input_spline: {pf_input_spline}")
+
+    # the glyphs in the spline must be in the same folder
+    data_dir = pf_input_spline.parent
+    logg.debug(f"data_dir: {data_dir}")
 
     spline = []
 
@@ -119,11 +117,14 @@ def load_spline(
     return spline
 
 
-def compute_hash_spline(pf_spline: Path, data_dir: Path) -> str:
+def compute_hash_spline(pf_spline: Path) -> str:
     """TODO: what is compute_hash_spline doing?
     """
     # logg = logging.getLogger(f"c.{__name__}.compute_hash_spline")
     # logg.debug(f"Start compute_hash_spline")
+
+    # the glyphs in the spline must be in the same folder
+    data_dir = pf_spline.parent
 
     hash_sha1 = sha1()
     hash_sha1.update(pf_spline.read_bytes())

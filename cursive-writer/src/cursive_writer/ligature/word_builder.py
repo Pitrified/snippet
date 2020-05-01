@@ -78,74 +78,110 @@ def load_letter_dict(thickness: int, data_dir: Path) -> Dict[str, Letter]:
     logg.debug(f"Start load_letter_dict")
 
     letters_info: Dict[str, Letter] = {}
-    letters_info["a"] = Letter(
-        "a",
+    let = "a"
+    letters_info[let] = Letter(
+        let,
         left_type="low_up",
         right_type="low_up",
-        pf_spline_low=data_dir / "a0_l_000.txt",
-        pf_spline_high=data_dir / "a0_h_000.txt",
+        pf_spline_low=data_dir / let / "a0_l_002.txt",
+        pf_spline_high=data_dir / let / "a0_h_002.txt",
         thickness=thickness,
     )
-    letters_info["i"] = Letter(
-        "i",
+    let = "e"
+    letters_info[let] = Letter(
+        let,
         left_type="low_up",
         right_type="low_up",
-        pf_spline_low=data_dir / "i2_l_dot_000.txt",
-        pf_spline_high=data_dir / "i2_h_dot_000.txt",
+        pf_spline_low=data_dir / let / "e0_l_006.txt",
+        pf_spline_high=data_dir / let / "e0_h_005.txt",
         thickness=thickness,
     )
-    letters_info["m"] = Letter(
-        "m",
+    let = "i"
+    letters_info[let] = Letter(
+        let,
+        left_type="low_up",
+        right_type="low_up",
+        pf_spline_low=data_dir / let / "i2_l_dot_000.txt",
+        pf_spline_high=data_dir / let / "i2_h_dot_000.txt",
+        thickness=thickness,
+    )
+    let = "l"
+    letters_info[let] = Letter(
+        let,
+        left_type="low_up",
+        right_type="low_up",
+        pf_spline_low=data_dir / let / "l0_l_000.txt",
+        pf_spline_high=data_dir / let / "l0_h_000.txt",
+        thickness=thickness,
+    )
+    let = "m"
+    letters_info[let] = Letter(
+        let,
         left_type="high_down",
         right_type="low_up",
-        pf_spline_alone=data_dir / "m2_000.txt",
+        pf_spline_alone=data_dir / let / "m2_000.txt",
         thickness=thickness,
     )
-    letters_info["n"] = Letter(
-        "n",
+    let = "n"
+    letters_info[let] = Letter(
+        let,
         left_type="high_down",
         right_type="low_up",
-        pf_spline_alone=data_dir / "n2_000.txt",
+        pf_spline_alone=data_dir / let / "n2_000.txt",
         thickness=thickness,
     )
-    letters_info["o"] = Letter(
-        "o",
+    let = "o"
+    letters_info[let] = Letter(
+        let,
         left_type="low_up",
         right_type="high_up",
-        pf_spline_low=data_dir / "o3_l_001.txt",
-        pf_spline_high=data_dir / "o3_h_000.txt",
+        pf_spline_low=data_dir / let / "o3_l_001.txt",
+        pf_spline_high=data_dir / let / "o3_h_000.txt",
         thickness=thickness,
     )
-    letters_info["p"] = Letter(
-        "p",
+    let = "p"
+    letters_info[let] = Letter(
+        let,
         left_type="low_up",
         right_type="low_up",
-        pf_spline_low=data_dir / "p0_l_000.txt",
-        pf_spline_high=data_dir / "p0_h_000.txt",
+        pf_spline_low=data_dir / let / "p0_l_000.txt",
+        pf_spline_high=data_dir / let / "p0_h_000.txt",
         thickness=thickness,
     )
-    letters_info["u"] = Letter(
-        "u",
+    let = "q"
+    letters_info[let] = Letter(
+        let,
         left_type="low_up",
         right_type="low_up",
-        pf_spline_low=data_dir / "u2_l_000.txt",
-        pf_spline_high=data_dir / "u2_h_000.txt",
+        pf_spline_low=data_dir / let / "q0_l_000.txt",
+        pf_spline_high=data_dir / let / "q0_h_000.txt",
         thickness=thickness,
     )
-    letters_info["v"] = Letter(
-        "v",
+    let = "u"
+    letters_info[let] = Letter(
+        let,
+        left_type="low_up",
+        right_type="low_up",
+        pf_spline_low=data_dir / let / "u2_l_000.txt",
+        pf_spline_high=data_dir / let / "u2_h_000.txt",
+        thickness=thickness,
+    )
+    let = "v"
+    letters_info[let] = Letter(
+        let,
         left_type="high_down",
         right_type="high_up",
-        pf_spline_alone=data_dir / "v2_002.txt",
+        pf_spline_alone=data_dir / let / "v2_002.txt",
         thickness=thickness,
     )
-    letters_info["z"] = Letter(
-        "z",
+    let = "z"
+    letters_info[let] = Letter(
+        let,
         left_type="low_up",
         right_type="low_up",
-        pf_spline_alone=data_dir / "z0_a_000.txt",
-        pf_spline_low=data_dir / "z0_l_002.txt",
-        pf_spline_high=data_dir / "z0_h_002.txt",
+        pf_spline_alone=data_dir / let / "z0_a_000.txt",
+        pf_spline_low=data_dir / let / "z0_l_002.txt",
+        pf_spline_high=data_dir / let / "z0_h_002.txt",
         thickness=thickness,
     )
     return letters_info
@@ -453,6 +489,8 @@ def run_word_builder(args: argparse.Namespace) -> None:
             input_str = "".join(
                 list(filter(lambda x: x in letters_info.keys(), new_input_str))
             )
+            if len(input_str) == 0:
+                input_str = "minimum"
 
         logg.debug(f"Writing word: {input_str}")
 
