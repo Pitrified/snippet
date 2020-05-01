@@ -19,7 +19,7 @@ def parse_arguments():
         "-i",
         "--path_input",
         type=str,
-        default="h1_000.txt",
+        default="h1_002.txt",
         help="Path to input spline to use",
     )
 
@@ -114,19 +114,26 @@ def plot_good_letters(data_dir, thickness, colors, prefixes=None):
     logg.debug(f"Starting plot_good_letters")
 
     good_letters = [
+        "a0_h_002.txt",
+        "a0_l_002.txt",
         "f1_002.txt",
         "h1_002.txt",
-        "i1_006.txt",
-        "i1_h_006.txt",
-        "m1_001.txt",
-        "n1_000.txt",
-        "o1_002.txt",
-        "o1_h_001.txt",
-        "o1_l_004.txt",
+        "i2_h_dot_000.txt",
+        "i2_l_dot_000.txt",
+        "m2_000.txt",
+        "n2_000.txt",
+        "o3_h_000.txt",
+        "o3_l_001.txt",
+        "p0_h_000.txt",
+        "p0_l_000.txt",
         "s1_000.txt",
         "t1_007.txt",
-        "v1_001.txt",
-        "z1_000.txt",
+        "u2_h_000.txt",
+        "u2_l_000.txt",
+        "v2_002.txt",
+        "z0_a_000.txt",
+        "z0_h_002.txt",
+        "z0_l_002.txt",
     ]
 
     for letter_name in good_letters:
