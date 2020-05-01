@@ -33,14 +33,14 @@ def parse_arguments():
         "-il",
         "--path_input_left",
         type=str,
-        default="v1_001.txt",
+        default="v2_002.txt",
         help="Path to input spline to use on the left side",
     )
     parser.add_argument(
         "-ir",
         "--path_input_right",
         type=str,
-        default="i1_h_006.txt",
+        default="i2_h_dot_000.txt",
         help="Path to input spline to use on the right side",
     )
 
@@ -527,36 +527,20 @@ def exs_align_letters(data_dir, thickness):
     logg = logging.getLogger(f"c.{__name__}.exs_align_letters")
     logg.debug(f"Start exs_align_letters")
 
-    # error! FIXME
-    # pf_i = data_dir / "i" / "i1_007.txt"
-    # pf_ol = data_dir / "o" / "o2_l_000.txt"
-    # ex_align_letters_1(pf_i, pf_ol, thickness)
-
-    # pf_m = data_dir / "m" / "m1_001.txt"
-    pf_m = data_dir / "m" / "m2_000.txt"
-    # pf_i = data_dir / "i" / "i1_006.txt"
-    # pf_i = data_dir / "i" / "i1_007.txt"
     pf_i = data_dir / "i" / "i2_l_dot_000.txt"
     pf_ih = data_dir / "i" / "i2_h_dot_000.txt"
+    pf_m = data_dir / "m" / "m2_000.txt"
+    pf_ol = data_dir / "o" / "o3_l_001.txt"
     pf_v = data_dir / "v" / "v2_002.txt"
-    # pf_o = data_dir / "o" / "o1_002.txt"
-    # pf_oh = data_dir / "o" / "o1_h_001.txt"
-    # pf_ol = data_dir / "o" / "o1_l_004.txt"
-    pf_ol = data_dir / "o" / "o2_l_001.txt"
 
-    # ex_align_letters_1(pf_m, pf_ol, thickness)
-    # ex_align_letters_1(pf_i, pf_ol, thickness)
-
+    ex_align_letters_1(pf_m, pf_ol, thickness)
+    ex_align_letters_1(pf_i, pf_ol, thickness)
     ex_align_letters_1(pf_i, pf_ol, thickness)
     ex_align_letters_1(pf_i, pf_i, thickness)
     ex_align_letters_1(pf_m, pf_ol, thickness)
-    # ex_align_letters_1(pf_v, pf_oh, thickness)
-
-    # ex_align_letters_1(pf_m, pf_i, thickness)
-    # ex_align_letters_1(pf_o, pf_ih, thickness)
-    # ex_align_letters_1(pf_o, pf_m, thickness)
+    ex_align_letters_1(pf_m, pf_i, thickness)
     ex_align_letters_1(pf_v, pf_ih, thickness)
-    # ex_align_letters_1(pf_v, pf_m, thickness)
+    ex_align_letters_1(pf_v, pf_m, thickness)
 
     ex_align_letters_2(pf_i, pf_v, thickness)
     ex_align_letters_2(pf_ih, pf_m, thickness)
@@ -588,8 +572,8 @@ def run_ligature_examples(args):
     pf_spline_right = data_dir / first_char / path_input_right
     logg.debug(f"pf_spline_right: {pf_spline_right}")
 
-    exs_parametric_tangent()
-    exs_ligature_2segments()
+    # exs_parametric_tangent()
+    # exs_ligature_2segments()
 
     ex_align_glyphs(pf_spline_left, pf_spline_right)
     thickness = 10
