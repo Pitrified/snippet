@@ -9,13 +9,14 @@ from copy import deepcopy
 from typing import Dict, Tuple
 from cursive_writer.utils.type_utils import ThickSpline
 
-from cursive_writer.utils.geometric_utils import translate_spline_sequence
 from cursive_writer.ligature.letter_class import Letter
 from cursive_writer.ligature.ligature import align_letter_1
 from cursive_writer.ligature.ligature import align_letter_2
 from cursive_writer.ligature.ligature_info import LigatureInfo
+from cursive_writer.ligature.word_generator import generate_word
 from cursive_writer.spliner.spliner import compute_long_thick_spline
 from cursive_writer.utils.geometric_utils import find_thick_spline_bbox
+from cursive_writer.utils.geometric_utils import translate_spline_sequence
 from cursive_writer.utils.geometric_utils import translate_thick_spline
 from cursive_writer.utils.oriented_point import OrientedPoint
 from cursive_writer.utils.setup import setup_logger
@@ -85,13 +86,6 @@ def load_letter_dict(thickness: int, data_dir: Path) -> Dict[str, Letter]:
         pf_spline_high=data_dir / "i2_h_dot_000.txt",
         thickness=thickness,
     )
-    letters_info["v"] = Letter(
-        "v",
-        left_type="high_down",
-        right_type="high_up",
-        pf_spline_alone=data_dir / "v2_002.txt",
-        thickness=thickness,
-    )
     letters_info["m"] = Letter(
         "m",
         left_type="high_down",
@@ -104,6 +98,14 @@ def load_letter_dict(thickness: int, data_dir: Path) -> Dict[str, Letter]:
         left_type="high_down",
         right_type="low_up",
         pf_spline_alone=data_dir / "n2_000.txt",
+        thickness=thickness,
+    )
+    letters_info["p"] = Letter(
+        "p",
+        left_type="low_up",
+        right_type="low_up",
+        pf_spline_low=data_dir / "p0_l_000.txt",
+        pf_spline_high=data_dir / "p0_h_000.txt",
         thickness=thickness,
     )
     letters_info["u"] = Letter(
@@ -297,7 +299,7 @@ def build_word(
     """TODO: what is build_word doing?
     """
     logg = logging.getLogger(f"c.{__name__}.build_word")
-    logg.debug(f"Start build_word")
+    logg.debug(f"Start build_word {input_str}")
 
     # the final thick spline for the word
     word_thick_spline: ThickSpline = []
@@ -306,14 +308,14 @@ def build_word(
     acc_shift: float = 0
 
     # the first letter of the word
-    first_letter = args.input_str[0]
+    first_letter = input_str[0]
 
     # save the first thick letter
     word_thick_spline.extend(letters_info[first_letter].get_thick_samples("alone"))
 
-    for i in range(len(args.input_str) - 1):
+    for i in range(len(input_str) - 1):
         # get the current pair
-        pair = args.input_str[i : i + 2]
+        pair = input_str[i : i + 2]
         logg.debug(f"Doing pair: {pair}")
 
         # extract the second letter info
@@ -342,7 +344,7 @@ def build_word(
     return word_thick_spline
 
 
-def plot_results(thick_spline: ThickSpline) -> None:
+def plot_results(thick_spline: ThickSpline, input_str: str = "") -> None:
     # find dimension of the plot
     xlim, ylim = find_thick_spline_bbox(thick_spline)
     # inches to point
@@ -353,7 +355,7 @@ def plot_results(thick_spline: ThickSpline) -> None:
     # create plot
     fig = plt.figure(figsize=fig_dims, frameon=False)
     ax = fig.add_axes((0, 0, 1, 1))
-    fig.canvas.set_window_title(f"Writing {args.input_str}")
+    fig.canvas.set_window_title(f"Writing {input_str}")
     ax.set_axis_off()
 
     # style = {"color": "k", "marker": ".", "ls": ""}
@@ -385,6 +387,7 @@ def run_word_builder(args: argparse.Namespace) -> None:
     logg.debug(f"ligature_dir {ligature_dir}")
     if not ligature_dir.exists():
         ligature_dir.mkdir(parents=True)
+    word_file = data_dir / "wordlist" / "3of6game_filt.txt"
 
     thickness = args.thickness if args.thickness > 0 else 1
 
@@ -396,17 +399,27 @@ def run_word_builder(args: argparse.Namespace) -> None:
     # the sampling precision when shifting
     x_stride: float = 1
 
+    if args.input_str.startswith("."):
+        if args.input_str[1:] == "random":
+            input_str = generate_word(letters_info.keys(), word_file)
+        else:
+            input_str = "minimum"
+    else:
+        input_str = args.input_str
+
+    logg.debug(f"input_str: {input_str}")
+
     # the information on how to link the letters
     ligature_info, thick_con_info = fill_ligature_info(
-        args.input_str, letters_info, x_stride, data_dir, ligature_dir, thickness
+        input_str, letters_info, x_stride, data_dir, ligature_dir, thickness
     )
 
     word_thick_spline = build_word(
-        args.input_str, letters_info, ligature_info, thick_con_info
+        input_str, letters_info, ligature_info, thick_con_info
     )
 
     # plot results
-    plot_results(word_thick_spline)
+    plot_results(word_thick_spline, input_str)
     plt.show()
 
 

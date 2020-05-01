@@ -1,8 +1,8 @@
 import logging
 import math
 
-from PIL import Image
-from PIL import ImageTk
+from PIL import Image  # type: ignore
+from PIL import ImageTk  # type: ignore
 
 from cursive_writer.utils.color_utils import fmt_cn
 

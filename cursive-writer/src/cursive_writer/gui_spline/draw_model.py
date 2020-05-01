@@ -56,8 +56,8 @@ class Model:
         self.fm_lines_abs = Observable()
 
         # proportion between the line
-        self.prop_mean_ascent = 0.7
-        self.prop_desc_base = 0.6
+        self.prop_mean_ascent = 0.8
+        self.prop_desc_base = 0.8
         # we want that to be the normalized height
         self.normalized_dist_base_mean = 1000
 
@@ -140,6 +140,20 @@ class Model:
         # create the new image cropper
         self._image_cropper = ImageCropper(self.pf_input_image.get())
         # NOTE if a new image is loaded, noone redraws it but a configure event
+
+        # sadly can't be done before the first configure event
+        # # if it is a blank image, add FM lines
+        # if not pf_input_image.exists():
+        #     # the x is the same for bot, vertical FM
+        #     image_wid = self._image_cropper._image_wid
+        #     fm_x = image_wid * 0.2
+
+        #     fm_pad = 0.3
+        #     image_hei = self._image_cropper._image_hei
+        #     fm_y_bot = image_hei - (image_hei * (fm_pad + self.prop_desc_base))
+        #     fm_y_top = image_hei - (image_hei * (fm_pad + self.prop_desc_base + 1))
+
+        #     self.build_fm_lines_abs('base_mean', fm_x, fm_y_bot, fm_x, fm_y_top)
 
     def do_canvas_resize(self, widget_wid, widget_hei):
         logg = logging.getLogger(f"c.{__class__.__name__}.do_canvas_resize")

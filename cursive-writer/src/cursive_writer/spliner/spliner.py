@@ -117,7 +117,7 @@ def fit_cubic(p0: OrientedPoint, p1: OrientedPoint):
     logg.log(5, f"Starting fit_cubic")
 
     if math.isclose(p0.x, p1.x) and math.isclose(p0.y, p1.y):
-        logg.warn(f"Coincident points {p0} {p1}")
+        logg.log(5, f"Coincident points {p0} {p1}")
         # return a line
         return [0, 0, 1, 0]
 
