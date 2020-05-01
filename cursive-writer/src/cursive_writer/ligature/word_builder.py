@@ -123,6 +123,15 @@ def load_letter_dict(thickness: int, data_dir: Path) -> Dict[str, Letter]:
         pf_spline_alone=data_dir / "v2_002.txt",
         thickness=thickness,
     )
+    letters_info["z"] = Letter(
+        "z",
+        left_type="low_up",
+        right_type="low_up",
+        pf_spline_alone=data_dir / "z0_a_000.txt",
+        pf_spline_low=data_dir / "z0_l_002.txt",
+        pf_spline_high=data_dir / "z0_h_002.txt",
+        thickness=thickness,
+    )
     return letters_info
 
 
