@@ -78,6 +78,14 @@ def load_letter_dict(thickness: int, data_dir: Path) -> Dict[str, Letter]:
     logg.debug(f"Start load_letter_dict")
 
     letters_info: Dict[str, Letter] = {}
+    letters_info["a"] = Letter(
+        "a",
+        left_type="low_up",
+        right_type="low_up",
+        pf_spline_low=data_dir / "a0_l_000.txt",
+        pf_spline_high=data_dir / "a0_h_000.txt",
+        thickness=thickness,
+    )
     letters_info["i"] = Letter(
         "i",
         left_type="low_up",
@@ -98,6 +106,14 @@ def load_letter_dict(thickness: int, data_dir: Path) -> Dict[str, Letter]:
         left_type="high_down",
         right_type="low_up",
         pf_spline_alone=data_dir / "n2_000.txt",
+        thickness=thickness,
+    )
+    letters_info["o"] = Letter(
+        "o",
+        left_type="low_up",
+        right_type="high_up",
+        pf_spline_low=data_dir / "o3_l_001.txt",
+        pf_spline_high=data_dir / "o3_h_000.txt",
         thickness=thickness,
     )
     letters_info["p"] = Letter(

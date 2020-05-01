@@ -57,8 +57,8 @@ def generate_word(let_available: Iterable[str], word_file: Path) -> str:
     the_word = valid_words[rand_index]
     # logg.debug(f"the_word: {the_word}")
 
-    for w_i in seen_index:
-        logg.debug(f"valid_words[{w_i}]: {valid_words[w_i]}")
+    # for w_i in seen_index:
+    #     logg.debug(f"valid_words[{w_i}]: {valid_words[w_i]}")
 
     return the_word
 
