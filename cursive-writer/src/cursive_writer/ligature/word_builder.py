@@ -387,7 +387,6 @@ def run_word_builder(args: argparse.Namespace) -> None:
     logg.debug(f"ligature_dir {ligature_dir}")
     if not ligature_dir.exists():
         ligature_dir.mkdir(parents=True)
-    word_file = data_dir / "wordlist" / "3of6game_filt.txt"
 
     thickness = args.thickness if args.thickness > 0 else 1
 
@@ -401,6 +400,10 @@ def run_word_builder(args: argparse.Namespace) -> None:
 
     if args.input_str.startswith("."):
         if args.input_str[1:] == "random":
+            word_file = data_dir / "wordlist" / "3of6game_filt.txt"
+            input_str = generate_word(letters_info.keys(), word_file)
+        elif args.input_str[1:] == "casuale":
+            word_file = data_dir / "wordlist" / "italian_megamix.txt"
             input_str = generate_word(letters_info.keys(), word_file)
         else:
             input_str = "minimum"
