@@ -57,6 +57,7 @@ class Letter:
 
         self.spline_seq: Dict[str, Spline] = {}
         self.spline_thick_samples: Dict[str, ThickSpline] = {}
+        self.spline_loaded_thickness: Dict[str, int] = {}
         self.gly_num: Dict[str, int] = {}
         self.point_num: Dict[str, int] = {}
         self.hash_sha1: Dict[str, str] = {}
@@ -111,19 +112,33 @@ class Letter:
         valid_which = self.get_valid_type(which)
         return self.spline_seq[valid_which]
 
-    def get_thick_samples(self, which: str) -> ThickSpline:
+    def get_thick_samples(self, which: str, thickness: int = -1) -> ThickSpline:
         """TODO: what is get_thick_samples doing?
         """
         logg = logging.getLogger(f"c.{__name__}.get_thick_samples")
         # logg.debug(f"Start get_thick_samples")
         valid_which = self.get_valid_type(which)
 
+        if thickness == -1:
+            thickness = self.thickness
+
         # compute the thick version when needed
         if valid_which not in self.spline_thick_samples:
-            logg.debug(f"Loading thick spline for: {valid_which}")
+            logg.debug(f"Loading thick spline: {valid_which}, thickness {thickness}")
             self.spline_thick_samples[valid_which] = compute_long_thick_spline(
-                self.spline_seq[valid_which], self.thickness
+                self.spline_seq[valid_which], thickness
             )
+            # save the thickness of the loaded letter
+            self.spline_loaded_thickness[valid_which] = thickness
+
+        # reload the info if the thickness changed
+        if self.spline_loaded_thickness[valid_which] != thickness:
+            logg.debug(f"Reloading thick spline: {valid_which}, thickness {thickness}")
+            self.spline_thick_samples[valid_which] = compute_long_thick_spline(
+                self.spline_seq[valid_which], thickness
+            )
+            # save the thickness of the loaded letter
+            self.spline_loaded_thickness[valid_which] = thickness
 
         return self.spline_thick_samples[valid_which]
 

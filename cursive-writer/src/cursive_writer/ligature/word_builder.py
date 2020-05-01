@@ -320,6 +320,7 @@ def build_word(
     letters_info: Dict[str, Letter],
     ligature_info: Dict[str, LigatureInfo],
     thick_con_info: Dict[str, ThickSpline],
+    thickness: int,
 ) -> ThickSpline:
     """TODO: what is build_word doing?
     """
@@ -336,7 +337,9 @@ def build_word(
     first_letter = input_str[0]
 
     # save the first thick letter
-    word_thick_spline.extend(letters_info[first_letter].get_thick_samples("alone"))
+    word_thick_spline.extend(
+        letters_info[first_letter].get_thick_samples("alone", thickness)
+    )
 
     for i in range(len(input_str) - 1):
         # get the current pair
@@ -360,7 +363,9 @@ def build_word(
 
         # add the second letter
         # extract the thick spline of the correct type of the second letter to use
-        s_thick_spline = s_let.get_thick_samples(ligature_info[pair].s_let_type)
+        s_thick_spline = s_let.get_thick_samples(
+            ligature_info[pair].s_let_type, thickness
+        )
         # translate it
         s_tra_thick_spline = translate_thick_spline(s_thick_spline, acc_shift, 0)
         # add it to the list of glyphs, without the first glyph
@@ -438,14 +443,13 @@ def run_word_builder(args: argparse.Namespace) -> None:
             else:
                 input_str = "minimum"
 
+        # change thickness to use
         elif new_input_str.startswith("-t"):
-            # need to recompute the letter thick splines
-            # thickness = int(new_input_str[2:])
-            # logg.debug(f"Using thickness: {thickness}")
-            pass
+            thickness = int(new_input_str[2:])
+            logg.debug(f"Using thickness: {thickness}")
 
+        # use the new input, filter the letter that are not known
         else:
-            # filter the letter that are not known
             input_str = "".join(
                 list(filter(lambda x: x in letters_info.keys(), new_input_str))
             )
@@ -459,7 +463,7 @@ def run_word_builder(args: argparse.Namespace) -> None:
 
         # build the word
         word_thick_spline = build_word(
-            input_str, letters_info, ligature_info, thick_con_info
+            input_str, letters_info, ligature_info, thick_con_info, thickness
         )
 
         # plot results
