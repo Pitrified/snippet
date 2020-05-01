@@ -423,32 +423,38 @@ def run_word_builder(args: argparse.Namespace) -> None:
     # the sampling precision when shifting
     x_stride: float = 1
 
-    if args.input_str.startswith("."):
-        if args.input_str[1:] == "random":
-            word_file = data_dir / "wordlist" / "3of6game_filt.txt"
-            input_str = generate_word(letters_info.keys(), word_file)
-        elif args.input_str[1:] == "casuale":
-            word_file = data_dir / "wordlist" / "italian_megamix.txt"
-            input_str = generate_word(letters_info.keys(), word_file)
-        else:
-            input_str = "minimum"
-    else:
-        input_str = args.input_str
+    input_str = args.input_str
 
-    logg.debug(f"input_str: {input_str}")
+    while len(input_str) > 0:
 
-    # the information on how to link the letters
-    ligature_info, thick_con_info = fill_ligature_info(
-        input_str, letters_info, x_stride, data_dir, ligature_dir, thickness
-    )
+        # pick random word
+        if input_str.startswith("."):
+            if input_str[1:] == "random":
+                word_file = data_dir / "wordlist" / "3of6game_filt.txt"
+                input_str = generate_word(letters_info.keys(), word_file)
+            elif input_str[1:] == "casuale":
+                word_file = data_dir / "wordlist" / "italian_megamix.txt"
+                input_str = generate_word(letters_info.keys(), word_file)
+            else:
+                input_str = "minimum"
 
-    word_thick_spline = build_word(
-        input_str, letters_info, ligature_info, thick_con_info
-    )
+        logg.debug(f"input_str: {input_str}")
 
-    # plot results
-    plot_results(word_thick_spline, input_str)
-    plt.show()
+        # the information on how to link the letters
+        ligature_info, thick_con_info = fill_ligature_info(
+            input_str, letters_info, x_stride, data_dir, ligature_dir, thickness
+        )
+
+        # build the word
+        word_thick_spline = build_word(
+            input_str, letters_info, ligature_info, thick_con_info
+        )
+
+        # plot results
+        plot_results(word_thick_spline, input_str)
+        plt.show()
+
+        input_str = input("\nType the next word, leave empty to exit: ")
 
 
 if __name__ == "__main__":

@@ -39,10 +39,11 @@ class Letter:
         low) and the letter extreme type (high_up, low_up...)
         """
         logg = logging.getLogger(f"c.{__name__}.__init__")
-        logg.debug(f"Start __init__ {letter}")
+        # logg.debug(f"Start __init__ {letter}")
 
         if pf_spline_alone is None and pf_spline_low is None and pf_spline_high is None:
             logg.error(f"No file specified")
+            return
 
         self.letter = letter
         self.right_type = right_type
@@ -82,11 +83,6 @@ class Letter:
             cast(Path, self.pf_spline[which]), self.data_dir
         )
 
-        # compute the thick version
-        self.spline_thick_samples[which] = compute_long_thick_spline(
-            self.spline_seq[which], self.thickness
-        )
-
         # count the number of points and glyphs
         self.gly_num[which] = len(self.spline_seq[which])
         self.point_num[which] = sum(map(len, self.spline_seq[which]))
@@ -118,9 +114,17 @@ class Letter:
     def get_thick_samples(self, which: str) -> ThickSpline:
         """TODO: what is get_thick_samples doing?
         """
-        # logg = logging.getLogger(f"c.{__name__}.get_thick_samples")
+        logg = logging.getLogger(f"c.{__name__}.get_thick_samples")
         # logg.debug(f"Start get_thick_samples")
         valid_which = self.get_valid_type(which)
+
+        # compute the thick version when needed
+        if valid_which not in self.spline_thick_samples:
+            logg.debug(f"Loading thick spline for: {valid_which}")
+            self.spline_thick_samples[valid_which] = compute_long_thick_spline(
+                self.spline_seq[valid_which], self.thickness
+            )
+
         return self.spline_thick_samples[valid_which]
 
     def get_hash(self, which: str) -> str:

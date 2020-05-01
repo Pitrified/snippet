@@ -122,8 +122,8 @@ def load_spline(
 def compute_hash_spline(pf_spline: Path, data_dir: Path) -> str:
     """TODO: what is compute_hash_spline doing?
     """
-    logg = logging.getLogger(f"c.{__name__}.compute_hash_spline")
-    logg.debug(f"Start compute_hash_spline")
+    # logg = logging.getLogger(f"c.{__name__}.compute_hash_spline")
+    # logg.debug(f"Start compute_hash_spline")
 
     hash_sha1 = sha1()
     hash_sha1.update(pf_spline.read_bytes())
