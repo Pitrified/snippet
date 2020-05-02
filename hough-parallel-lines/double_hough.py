@@ -76,7 +76,7 @@ class DoubleHough:
         # best_th_fp = math.radians(90)
         # best_r_fp = -0.28
         # logg.debug(f"best_th_fp: {best_th_fp} best_r_fp {best_r_fp}")
-        print(f"best_th_fp: {best_th_fp} best_r_fp {best_r_fp}")
+        # print(f"best_th_fp: {best_th_fp} best_r_fp {best_r_fp}")
 
         ######################
         # do the second pass #
@@ -111,7 +111,7 @@ class DoubleHough:
             self.smooth_bins_sp, r_min_sp, self.r_stride_sp, self.th_values_sp,
         )
 
-        print(f"best_th_sp: {best_th_sp} best_r_sp {best_r_sp}")
+        # print(f"best_th_sp: {best_th_sp} best_r_sp {best_r_sp}")
 
         return best_th_sp, best_r_sp
 

@@ -11,10 +11,11 @@ from pathlib import Path
 from analyze_laser_data import load_filer_data
 from hough_parallel import HoughParallel
 
-# from double_hough import DoubleHough
+from double_hough import DoubleHough
 from double_hough import VisualDoubleHough
 from utils import slope2deg
 from utils import slope2rad
+from create_laser_data import create_laser_data
 
 
 def parse_arguments():
@@ -183,7 +184,9 @@ def visual_test_bins(hp, ax=None):
     return im, cbar
 
 
-def fit_separate_lines(left_filt_x, left_filt_y, right_filt_x, right_filt_y, ax_points):
+def fit_separate_lines(
+    left_filt_x, left_filt_y, right_filt_x, right_filt_y, ax_points=None
+):
     left_coeff = np.polyfit(left_filt_x, left_filt_y, 1)
     right_coeff = np.polyfit(right_filt_x, right_filt_y, 1)
 
@@ -621,8 +624,147 @@ def load_laser_data(data_file_name, sector_wid):
     return data_x, data_y
 
 
+def run_compare_generated(args):
+    """TODO: what is run_compare_generated doing?
+    """
+    logg = logging.getLogger(f"c.{__name__}.run_compare_generated")
+    logg.debug(f"Start run_compare_generated")
+
+    # set sector_wid in degrees
+    sector_wid_deg = 30
+    # sector_wid_deg = 60
+    sector_wid = math.floor(sector_wid_deg / 180 * 200)
+    logg.debug(f"sector_wid: {sector_wid} degrees {sector_wid_deg}")
+
+    # r dimension of the bins (cm)
+    r_stride_fp = 0.025
+
+    # number of bins in the [0, 180) interval
+    # th_bin_num_fp = 60
+    th_bin_num_fp = 20
+
+    # r dimension of the bins in the second pass (cm)
+    # r_stride_sp = 0.0025
+    r_stride_sp = 0.005
+
+    # how many distance bin to consider
+    r_num_sp = 20
+
+    # number of bins in the precise interval in the second pass
+    th_bin_num_sp = 81
+    # th_bin_num_sp = 41
+
+    # the corridor width
+    corridor_width = 0.56
+
+    dh = DoubleHough(
+        0,
+        0,
+        th_bin_num_fp,
+        r_stride_fp,
+        th_bin_num_sp,
+        r_stride_sp,
+        r_num_sp,
+        corridor_width,
+    )
+
+    # for data generation
+    th_center_deg = 90
+    # th_delta_deg = 45
+    th_delta_deg = sector_wid_deg
+    th_num = 301
+    laser_std_dev = 0.01
+    corridor_width = 0.56
+
+    # results
+    separate_delta = []
+    separate_values = []
+    separate_errors = []
+    all_t_analyze = []
+    all_t_fit = []
+    parallel_values = []
+    parallel_errors = []
+
+    for th_rot_deg in np.linspace(-30, 30, 1000):
+        # th_rot_deg = 30
+        left_filt_x, left_filt_y = create_laser_data(
+            th_center_deg,
+            th_delta_deg,
+            th_num,
+            laser_std_dev,
+            th_rot_deg,
+            corridor_width,
+        )
+        th_center_deg += 180
+        right_filt_x, right_filt_y = create_laser_data(
+            th_center_deg,
+            th_delta_deg,
+            th_num,
+            laser_std_dev,
+            th_rot_deg,
+            corridor_width,
+        )
+        data_x = np.hstack((left_filt_x, right_filt_x))
+        data_y = np.hstack((left_filt_y, right_filt_y))
+        true_yaw = math.radians(th_rot_deg)
+
+        # separate lines
+        t_fit_start = timer()
+        left_coeff = np.polyfit(left_filt_x, left_filt_y, 1)
+        right_coeff = np.polyfit(right_filt_x, right_filt_y, 1)
+        t_fit_end = timer()
+        all_t_fit.append(t_fit_end - t_fit_start)
+
+        # save results
+        left_rad = slope2rad(left_coeff[0])
+        right_rad = slope2rad(right_coeff[0])
+        separate_delta.append(left_rad - right_rad)
+        separate_yaw = (left_rad + right_rad) / 2
+        separate_values.append(separate_yaw)
+        separate_errors.append(true_yaw + separate_yaw)
+
+        # parallel lines
+
+        # set new data
+        dh.data_x = data_x
+        dh.data_y = data_y
+
+        # analyze it
+        t_analyze_start = timer()
+        best_th, best_r = dh.find_parallel_lines()
+        t_analyze_end = timer()
+        all_t_analyze.append(t_analyze_end - t_analyze_start)
+        left_line_coeff = rth2ab(best_r, best_th)
+        left_line_rad = slope2rad(left_line_coeff[0])
+
+        # save results
+        parallel_values.append(left_line_rad)
+        parallel_errors.append(true_yaw + left_line_rad)
+
+        # recap = f"true_yaw: {true_yaw:.4f}"
+        # recap += f" separate_yaw: {separate_yaw:.4f}"
+        # recap += f" parallel_yaw: {left_line_rad:.4f}"
+        # logg.debug(recap)
+
+    mean_separate_value = np.mean(separate_values)
+    mean_separate_errors = np.mean(np.abs(separate_errors))
+    mean_separate_delta = np.mean(np.abs(separate_delta))
+    mean_parallel_value = np.mean(parallel_values)
+    mean_parallel_errors = np.mean(np.abs(parallel_errors))
+    mean_all_t_analyze = np.mean(all_t_analyze)
+    mean_all_t_fit = np.mean(all_t_fit)
+    logg.debug(f"mean_separate_delta:  {mean_separate_delta:9.6f}")
+    logg.debug(f"mean_separate_value:  {mean_separate_value:9.6f}")
+    logg.debug(f"mean_parallel_value:  {mean_parallel_value:9.6f}")
+    logg.debug(f"mean_separate_errors: {mean_separate_errors:9.6f}")
+    logg.debug(f"mean_parallel_errors: {mean_parallel_errors:9.6f}")
+    logg.debug(f"mean_all_t_analyze:   {mean_all_t_analyze:9.6f}")
+    logg.debug(f"mean_all_t_fit:       {mean_all_t_fit:9.6f}")
+
+
 if __name__ == "__main__":
     args = setup_env()
     # run_analyze_parallel_lines(args)
     # run_compare(args)
-    run_double_hough(args)
+    # run_double_hough(args)
+    run_compare_generated(args)
