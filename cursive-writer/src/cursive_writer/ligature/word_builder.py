@@ -428,20 +428,25 @@ def build_word(
 
 
 def plot_results(
-    thick_spline: ThickSpline, input_str: str = "", colors: str = "k"
+    thick_spline: ThickSpline, input_str: str = "", colors: str = "k", fig=None, ax=None
 ) -> None:
-    # find dimension of the plot
-    xlim, ylim = find_thick_spline_bbox(thick_spline)
+
     # inches to point
     ratio = 3 / 1000
+    # find dimension of the plot
+    xlim, ylim = find_thick_spline_bbox(thick_spline)
     wid = xlim[1] - xlim[0]
     hei = ylim[1] - ylim[0]
     fig_dims = (wid * ratio, hei * ratio)
+
     # create plot
-    fig = plt.figure(figsize=fig_dims, frameon=False)
-    ax = fig.add_axes((0, 0, 1, 1))
-    fig.canvas.set_window_title(f"Writing {input_str}")
+    if fig is None or ax is None:
+        fig = plt.figure(frameon=False)
+        ax = fig.add_axes((0, 0, 1, 1))
+
     ax.set_axis_off()
+    fig.set_size_inches(*fig_dims)
+    fig.canvas.set_window_title(f"Writing {input_str}")
 
     # style = {"color": "k", "marker": ".", "ls": ""}
     if colors == "cycle":
@@ -486,9 +491,17 @@ def run_word_builder(args: argparse.Namespace) -> None:
     # the sampling precision when shifting
     x_stride: float = 1
 
-    new_input_str = args.input_str
+    if ".cicla".startswith(args.input_str):
+        new_input_str = ".casuale"
+        loop = True
+    else:
+        new_input_str = args.input_str
+        loop = False
 
     colors = args.colors
+
+    fig = plt.figure(frameon=False)
+    ax = fig.add_axes((0, 0, 1, 1))
 
     while len(new_input_str) > 0:
 
@@ -529,10 +542,14 @@ def run_word_builder(args: argparse.Namespace) -> None:
         )
 
         # plot results
-        plot_results(word_thick_spline, input_str, colors)
-        plt.show()
+        ax.clear()
+        plot_results(word_thick_spline, input_str, colors, fig, ax)
+        plt.pause(0.1)
 
-        new_input_str = input("\nType the next word, leave empty to exit: ")
+        if loop:
+            new_input_str = ".c"
+        else:
+            new_input_str = input("\nType the next word, leave empty to exit: ")
 
 
 if __name__ == "__main__":
