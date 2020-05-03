@@ -91,8 +91,8 @@ def load_letter_dict(thickness: int, data_dir: Path) -> Dict[str, Letter]:
         let,
         left_type="low_up",
         right_type="low_up",
-        pf_spline_low=data_dir / let / "a0_l_002.txt",
-        pf_spline_high=data_dir / let / "a0_h_002.txt",
+        pf_spline_low=data_dir / let / "a1_l_003.txt",
+        pf_spline_high=data_dir / let / "a1_h_000.txt",
         thickness=thickness,
     )
     let = "e"
@@ -152,8 +152,8 @@ def load_letter_dict(thickness: int, data_dir: Path) -> Dict[str, Letter]:
         let,
         left_type="low_up",
         right_type="low_up",
-        pf_spline_low=data_dir / let / "p0_l_000.txt",
-        pf_spline_high=data_dir / let / "p0_h_000.txt",
+        pf_spline_low=data_dir / let / "p1_l_000.txt",
+        pf_spline_high=data_dir / let / "p1_h_000.txt",
         thickness=thickness,
     )
     let = "q"
@@ -513,6 +513,8 @@ def run_word_builder(args: argparse.Namespace) -> None:
             elif "casuale".startswith(new_input_str[1:]):
                 word_file = data_dir / "wordlist" / "italian_megamix.txt"
                 input_str = generate_word(letters_info.keys(), word_file)
+            elif "ex" == new_input_str[1:3]:
+                input_str = '{0}v{0}i{0}'.format(new_input_str[3])
             else:
                 input_str = "minimum"
 
@@ -521,7 +523,7 @@ def run_word_builder(args: argparse.Namespace) -> None:
             thickness = int(new_input_str[2:])
             logg.debug(f"Using thickness: {thickness}")
 
-        # use the new input, filter the letter that are not known
+        # use the new input, filter the letter that are not known yet
         else:
             input_str = "".join(
                 list(filter(lambda x: x in letters_info.keys(), new_input_str))
