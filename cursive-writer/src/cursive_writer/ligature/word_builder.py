@@ -170,8 +170,8 @@ def load_letter_dict(thickness: int, data_dir: Path) -> Dict[str, Letter]:
         let,
         left_type="low_up",
         right_type="low_up",
-        pf_spline_low=data_dir / let / "q0_l_000.txt",
-        pf_spline_high=data_dir / let / "q0_h_000.txt",
+        pf_spline_low=data_dir / let / "q1_l_000.txt",
+        pf_spline_high=data_dir / let / "q1_h_000.txt",
         thickness=thickness,
     )
     let = "u"
@@ -500,32 +500,45 @@ def run_word_builder(args: argparse.Namespace) -> None:
     # the sampling precision when shifting
     x_stride: float = 1
 
-    if ".cicla".startswith(args.input_str):
+    # setup looping
+    if args.input_str == ".cycle":
+        new_input_str = ".random"
+        loop = "english"
+    elif args.input_str == ".cicla":
         new_input_str = ".casuale"
-        loop = True
+        loop = "italian"
     else:
         new_input_str = args.input_str
-        loop = False
+        loop = "wait"
 
     colors = args.colors
 
     fig = plt.figure(frameon=False)
     ax = fig.add_axes((0, 0, 1, 1))
 
-    while len(new_input_str) > 0:
+    while not ".quit".startswith(new_input_str):
+        logg.debug(f"new_input_str: {new_input_str}")
 
         # pick random word
-        if new_input_str.startswith("."):
-            if "random".startswith(new_input_str[1:]):
-                word_file = data_dir / "wordlist" / "3of6game_filt.txt"
-                input_str = generate_word(letters_info.keys(), word_file)
-            elif "casuale".startswith(new_input_str[1:]):
-                word_file = data_dir / "wordlist" / "italian_megamix.txt"
-                input_str = generate_word(letters_info.keys(), word_file)
-            elif "ex" == new_input_str[1:3]:
-                input_str = '{0}v{0}{0}i{0}'.format(new_input_str[3])
-            else:
-                input_str = "minimum"
+        if ".casuale".startswith(new_input_str):
+            word_file = data_dir / "wordlist" / "italian_megamix.txt"
+            input_str = generate_word(letters_info.keys(), word_file)
+        elif ".random".startswith(new_input_str):
+            word_file = data_dir / "wordlist" / "3of6game_filt.txt"
+            input_str = generate_word(letters_info.keys(), word_file)
+
+        # show all ligature type
+        elif len(new_input_str) >= 4 and ".ex" == new_input_str[0:3]:
+            input_str = "{0}v{0}{0}i{0}".format(new_input_str[3])
+
+        elif ".alfabeto".startswith(new_input_str):
+            input_str = "".join(letters_info.keys())
+        elif ".alphabet".startswith(new_input_str):
+            input_str = "".join(letters_info.keys())
+
+        # starts with . but not recognized
+        elif new_input_str.startswith("."):
+            input_str = "minimum"
 
         # change thickness to use
         elif new_input_str.startswith("-t"):
@@ -557,10 +570,19 @@ def run_word_builder(args: argparse.Namespace) -> None:
         plot_results(word_thick_spline, input_str, colors, fig, ax)
         plt.pause(0.1)
 
-        if loop:
-            new_input_str = ".c"
+        if loop == "italian":
+            new_input_str = ".casuale"
+        elif loop == "english":
+            new_input_str = ".random"
         else:
-            new_input_str = input("\nType the next word, leave empty to exit: ")
+            recap = "\nType the next word or enter a prefix of"
+            recap += "\n\t'.exL' to show all ligatures for L"
+            recap += "\n\t'.alphabet' or '.alfabeto' to show all available letters"
+            recap += "\n\t'.random' to write a random word"
+            recap += "\n\t'.casuale' to write an italian random word"
+            recap += "\n\t'.quit' to exit"
+            recap += "\n: "
+            new_input_str = input(recap)
 
 
 if __name__ == "__main__":
