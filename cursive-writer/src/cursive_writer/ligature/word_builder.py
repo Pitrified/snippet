@@ -41,6 +41,14 @@ def parse_arguments() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "-col",
+        "--colors",
+        type=str,
+        default="k",
+        help="Color to use, set 'cycle' to use a different one in each glyph",
+    )
+
+    parser.add_argument(
         "-llt",
         "--log_level_type",
         type=str,
@@ -172,6 +180,15 @@ def load_letter_dict(thickness: int, data_dir: Path) -> Dict[str, Letter]:
         left_type="high_down",
         right_type="high_up",
         pf_spline_alone=data_dir / let / "v2_002.txt",
+        thickness=thickness,
+    )
+    let = "y"
+    letters_info[let] = Letter(
+        let,
+        left_type="low_up",
+        right_type="low_up",
+        pf_spline_low=data_dir / let / "y0_l_004.txt",
+        pf_spline_high=data_dir / let / "y0_h_009.txt",
         thickness=thickness,
     )
     let = "z"
@@ -410,7 +427,9 @@ def build_word(
     return word_thick_spline
 
 
-def plot_results(thick_spline: ThickSpline, input_str: str = "") -> None:
+def plot_results(
+    thick_spline: ThickSpline, input_str: str = "", colors: str = "k"
+) -> None:
     # find dimension of the plot
     xlim, ylim = find_thick_spline_bbox(thick_spline)
     # inches to point
@@ -425,8 +444,11 @@ def plot_results(thick_spline: ThickSpline, input_str: str = "") -> None:
     ax.set_axis_off()
 
     # style = {"color": "k", "marker": ".", "ls": ""}
-    # col_list = ["g", "r", "y", "c", "m", "k", "b"]
-    col_list = ["k"]
+    if colors == "cycle":
+        col_list = ["g", "r", "y", "c", "m", "k", "b"]
+    else:
+        col_list = ["k"]
+
     # i_s = 0
     for i_g, glyph in enumerate(thick_spline):
         # logg.debug(f"Plotting glyph: {glyph}")
@@ -465,6 +487,8 @@ def run_word_builder(args: argparse.Namespace) -> None:
     x_stride: float = 1
 
     new_input_str = args.input_str
+
+    colors = args.colors
 
     while len(new_input_str) > 0:
 
@@ -505,7 +529,7 @@ def run_word_builder(args: argparse.Namespace) -> None:
         )
 
         # plot results
-        plot_results(word_thick_spline, input_str)
+        plot_results(word_thick_spline, input_str, colors)
         plt.show()
 
         new_input_str = input("\nType the next word, leave empty to exit: ")
