@@ -104,6 +104,15 @@ def load_letter_dict(thickness: int, data_dir: Path) -> Dict[str, Letter]:
         pf_spline_high=data_dir / let / "e0_h_005.txt",
         thickness=thickness,
     )
+    let = "g"
+    letters_info[let] = Letter(
+        let,
+        left_type="low_up",
+        right_type="low_up",
+        pf_spline_low=data_dir / let / "g0_l_000.txt",
+        pf_spline_high=data_dir / let / "g0_h_000.txt",
+        thickness=thickness,
+    )
     let = "i"
     letters_info[let] = Letter(
         let,
@@ -188,7 +197,7 @@ def load_letter_dict(thickness: int, data_dir: Path) -> Dict[str, Letter]:
         left_type="low_up",
         right_type="low_up",
         pf_spline_low=data_dir / let / "y0_l_004.txt",
-        pf_spline_high=data_dir / let / "y0_h_009.txt",
+        pf_spline_high=data_dir / let / "y0_h_010.txt",
         thickness=thickness,
     )
     let = "z"
@@ -514,7 +523,7 @@ def run_word_builder(args: argparse.Namespace) -> None:
                 word_file = data_dir / "wordlist" / "italian_megamix.txt"
                 input_str = generate_word(letters_info.keys(), word_file)
             elif "ex" == new_input_str[1:3]:
-                input_str = '{0}v{0}i{0}'.format(new_input_str[3])
+                input_str = '{0}v{0}{0}i{0}'.format(new_input_str[3])
             else:
                 input_str = "minimum"
 
