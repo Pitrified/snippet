@@ -5,7 +5,7 @@
 # PID=$(pgrep gnome-session)
 # export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/$PID/environ|cut -d= -f2-)
 
-BASE_PYR="/home/pietro/Pictures/Wallpapers/pyramids/pyr_"
+BASE_PYR="$HOME/Pictures/Wallpapers/pyramids/pyr_"
 HOUR=$(date +"%H")
 EXT=".png"
 echo $HOUR
