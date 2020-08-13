@@ -72,7 +72,7 @@ def setup_env():
     return args
 
 
-def get_font_size(text, max_hei, font_name="DejaVuSans.ttf"):
+def get_font_size(text, max_wid, font_name="DejaVuSans.ttf"):
     """Finds the font size so that the text is as big as requested
 
     https://stackoverflow.com/a/4902713
@@ -83,7 +83,7 @@ def get_font_size(text, max_hei, font_name="DejaVuSans.ttf"):
     fontsize = 30
     font = ImageFont.truetype(font_name, fontsize)
 
-    while font.getsize(text)[1] < max_hei:
+    while font.getsize(text)[0] < max_wid:
         fontsize += 1
         font = ImageFont.truetype(font_name, fontsize)
         # logg.debug(f"fontsize: {fontsize}")
@@ -94,36 +94,54 @@ def get_font_size(text, max_hei, font_name="DejaVuSans.ttf"):
     return font
 
 
-def draw_image(img_path, rgb_sky, rgb_sunny, rgb_shade, rgb_background, img_size):
-    """TODO: what is draw_image doing?
+def hsv_to_rgb255(hsv):
+    """Convert hsv (1, 1, 1) to rgb (255, 255, 255)
+    """
+    # logg = logging.getLogger(f"c.{__name__}.hsv_to_rgb255")
+    # logg.debug("Start hsv_to_rgb255")
+
+    rgb = hsv_to_rgb(*hsv)
+    rgb = tuple(int(c * 255) for c in rgb)
+    return rgb
+
+
+def hsv360_to_rgb255(hsv360):
+    """Convert hsv (360, 100, 100) to rgb (255, 255, 255)
+    """
+    # logg = logging.getLogger(f"c.{__name__}.hsv360_to_rgb255")
+    # logg.debug("Start hsv360_to_rgb255")
+
+    hsv = (hsv360[0] / 360, hsv360[1] / 100, hsv360[2] / 100)
+    rgb = hsv_to_rgb(*hsv)
+    rgb = tuple(int(c * 255) for c in rgb)
+    return rgb
+
+
+def draw_image(img_path, rgb, img_size, font):
+    """Create the image and save it
     """
     # logg = logging.getLogger(f"c.{__name__}.draw_image")
     # logg.debug("Start draw_image")
 
     # create the empty image
-    im = Image.new("RGB", img_size, rgb_background)
+    im = Image.new("RGB", img_size, rgb["background"])
 
     # create the draw object for the image
     draw = ImageDraw.Draw(im)
 
-    # box for the pie
+    # box for the pie (left, top, right, bottom)
     pie_x = img_size[0] * 0.1
     pie_y = img_size[1] * 0.2
     pie_l = img_size[0] * 0.35
-    # left = 200
-    # top = 200
-    # right = 600
-    # bottom = 600
-    # pie_box = (left, top, right, bottom)
     pie_box = (pie_x, pie_y, pie_x + pie_l, pie_y + pie_l)
 
     # draw the pie
     slice_1 = 130
     slice_2 = 43
     slice_3 = 58
-    draw.pieslice(pie_box, start=slice_1, end=slice_2, fill=rgb_sky)
-    draw.pieslice(pie_box, start=slice_2, end=slice_3, fill=rgb_shade)
-    draw.pieslice(pie_box, start=slice_3, end=slice_1, fill=rgb_sunny)
+    draw.pieslice(pie_box, start=slice_1, end=slice_2, fill=rgb["sky"])
+    draw.pieslice(pie_box, start=slice_2, end=slice_3, fill=rgb["shade"])
+    draw.pieslice(pie_box, start=slice_3, end=slice_1, fill=rgb["sunny"])
 
     # square dimensions
     sq_x = img_size[0] * 0.6  # x of the left side of the squares
@@ -133,19 +151,16 @@ def draw_image(img_path, rgb_sky, rgb_sunny, rgb_shade, rgb_background, img_size
 
     # squares
     sq_1 = (sq_x, sq_y, sq_x + sq_l, sq_y + sq_l)
-    draw.rectangle(sq_1, fill=rgb_sky)
+    draw.rectangle(sq_1, fill=rgb["sky"])
     sq_2 = (sq_x, sq_y + sq_l + sq_space, sq_x + sq_l, sq_y + sq_l * 2 + sq_space)
-    draw.rectangle(sq_2, fill=rgb_sunny)
+    draw.rectangle(sq_2, fill=rgb["sunny"])
     sq_3 = (
         sq_x,
         sq_y + sq_l * 2 + sq_space * 2,
         sq_x + sq_l,
         sq_y + sq_l * 3 + sq_space * 2,
     )
-    draw.rectangle(sq_3, fill=rgb_shade)
-
-    # font
-    font = get_font_size("Sky", sq_space)
+    draw.rectangle(sq_3, fill=rgb["shade"])
 
     # text shift
     te_s = sq_space
@@ -161,39 +176,26 @@ def draw_image(img_path, rgb_sky, rgb_sunny, rgb_shade, rgb_background, img_size
     # image number
     img_num = img_path.name[-6:-4]
     num_pos = (sq_1[0], sq_1[1] + sq_space * 10)
-    draw.text(num_pos, img_num, fill="white", font=font)
+    draw.text(num_pos, img_num, fill=(180, 180, 180), font=font)
 
     # TODO: stars at night!
+    # TODO: aliens!
+    # TODO: clouds!
+    # TODO: colors/weather linked to the actual one via internet
 
     # save the image
     im.save(img_path, quality=95)
 
 
-def hsv_to_rgb255(hsv):
-    """TODO: what is hsv_to_rgb255 doing?
-    """
-    # logg = logging.getLogger(f"c.{__name__}.hsv_to_rgb255")
-    # logg.debug("Start hsv_to_rgb255")
-
-    rgb = hsv_to_rgb(*hsv)
-    rgb = tuple(int(c * 255) for c in rgb)
-    return rgb
-
-
-def hsv360_to_rgb255(hsv360):
-    """TODO: what is hsv360_to_rgb255 doing?
-    """
-    # logg = logging.getLogger(f"c.{__name__}.hsv360_to_rgb255")
-    # logg.debug("Start hsv360_to_rgb255")
-
-    hsv = (hsv360[0] / 360, hsv360[1] / 100, hsv360[2] / 100)
-    rgb = hsv_to_rgb(*hsv)
-    rgb = tuple(int(c * 255) for c in rgb)
-    return rgb
-
-
 def get_colors():
-    """TODO: what is get_colors doing?
+    """Returns a dict with the hsv colors
+
+    Labels:
+        * sky
+        * sunny side
+        * shady side
+
+    The hsv scale is (360, 100, 100)
 
     0/6 000 red
     1/6 060 yellow
@@ -205,7 +207,9 @@ def get_colors():
     # logg = logging.getLogger(f"c.{__name__}.get_colors")
     # logg.debug("Start get_colors")
 
-    hsv_all_sky = {
+    hsv_all = {}
+
+    hsv_all["sky"] = {
         0: (0, 100, 100),
         1: (30, 100, 100),
         2: (60, 100, 100),
@@ -232,7 +236,7 @@ def get_colors():
         23: (0, 0, 0),
     }
 
-    hsv_all_sky = {
+    hsv_all["sky"] = {
         0: (220, 30, 10),
         1: (240, 40, 20),
         2: (240, 40, 25),
@@ -265,7 +269,7 @@ def get_colors():
         23: (220, 30, 10),
     }
 
-    hsv_all_sunny = {
+    hsv_all["sunny"] = {
         0: (0, 50, 100),
         1: (30, 50, 100),
         2: (60, 50, 100),
@@ -292,7 +296,7 @@ def get_colors():
         23: (0, 0, 0),
     }
 
-    hsv_all_sunny = {
+    hsv_all["sunny"] = {
         0: (40, 90, 25),
         1: (40, 90, 25),
         2: (40, 90, 30),
@@ -319,15 +323,15 @@ def get_colors():
         23: (40, 90, 25),
     }
 
-    hsv_all_shade = {
-        k: (v[0], v[1], max(v[2] - 30, 0)) for k, v in hsv_all_sunny.items()
+    hsv_all["shade"] = {
+        k: (v[0], v[1], max(v[2] - 30, 10)) for k, v in hsv_all["sunny"].items()
     }
 
-    return hsv_all_sky, hsv_all_sunny, hsv_all_shade
+    return hsv_all
 
 
 def run_pyramids_creator(args):
-    """TODO: What is pyramids_creator doing?
+    """Setup and create the 24 images
 
     Photos
     https://www.jetsoncreative.com/mac-dynamic-desktop-store/catalina-mix-mac
@@ -340,24 +344,31 @@ def run_pyramids_creator(args):
 
     # img_size = (1600, 900)
     img_size = (1920 * 2, 1080 * 2)
-    rgb_background = (12, 12, 12)
 
+    # colors
+    rgb = {}
+    rgb["background"] = (12, 12, 12)
+    hsv_all = get_colors()
+
+    # font
+    text_width = img_size[0] * 0.25
+    font = get_font_size("Shady side of pyramid", text_width)
+
+    # save path
     img_folder = Path("./out_pyramids")
     logg.debug(f"img_folder: {img_folder}")
     if not img_folder.exists():
         img_folder.mkdir(parents=True)
 
-    hsv_all_sky, hsv_all_sunny, hsv_all_shade = get_colors()
-
     for i in range(24):
         img_name = f"pyr_{i:02d}.jpg"
         img_path = img_folder / img_name
 
-        rgb_sky = hsv360_to_rgb255(hsv_all_sky[i])
-        rgb_sunny = hsv360_to_rgb255(hsv_all_sunny[i])
-        rgb_shade = hsv360_to_rgb255(hsv_all_shade[i])
+        rgb["sky"] = hsv360_to_rgb255(hsv_all["sky"][i])
+        rgb["sunny"] = hsv360_to_rgb255(hsv_all["sunny"][i])
+        rgb["shade"] = hsv360_to_rgb255(hsv_all["shade"][i])
 
-        draw_image(img_path, rgb_sky, rgb_sunny, rgb_shade, rgb_background, img_size)
+        draw_image(img_path, rgb, img_size, font)
 
 
 if __name__ == "__main__":
