@@ -6,6 +6,8 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 from colorsys import hsv_to_rgb
+from colorsys import rgb_to_hsv
+from random import random
 
 
 def parse_arguments():
@@ -101,8 +103,8 @@ def hsv_to_rgb255(hsv):
     # logg.debug("Start hsv_to_rgb255")
 
     rgb = hsv_to_rgb(*hsv)
-    rgb = tuple(int(c * 255) for c in rgb)
-    return rgb
+    rgb255 = tuple(int(c * 255) for c in rgb)
+    return rgb255
 
 
 def hsv360_to_rgb255(hsv360):
@@ -113,64 +115,127 @@ def hsv360_to_rgb255(hsv360):
 
     hsv = (hsv360[0] / 360, hsv360[1] / 100, hsv360[2] / 100)
     rgb = hsv_to_rgb(*hsv)
-    rgb = tuple(int(c * 255) for c in rgb)
-    return rgb
+    rgb255 = tuple(int(c * 255) for c in rgb)
+    return rgb255
 
 
-def draw_image(img_path, rgb, img_size, font):
+def rgb255_edit_as_hsv360(rgb255, dh360=0, ds100=0, dv100=0):
+    """TODO: what is rgb255_edit_as_hsv360 doing?
+    """
+    # logg = logging.getLogger(f"c.{__name__}.rgb255_edit_as_hsv360")
+    # logg.debug("Start rgb255_edit_as_hsv360")
+
+    rgb = tuple(c / 255 for c in rgb255)
+    hsv = rgb_to_hsv(*rgb)
+    hsv360 = (hsv[0] * 360, hsv[1] * 100, hsv[2] * 100)
+    hsv360 = (hsv360[0] + dh360, hsv360[1] + ds100, hsv360[2] + dv100)
+    hsv360 = validate_hsv360(hsv360)
+    return hsv360_to_rgb255(hsv360)
+
+
+def validate_hsv360(hsv360):
+    """TODO: what is validate_hsv360 doing?
+    """
+    # logg = logging.getLogger(f"c.{__name__}.validate_hsv360")
+    # logg.debug("Start validate_hsv360")
+
+    hsv360 = (max(hsv360[0], 0), max(hsv360[1], 0), max(hsv360[2], 0))
+    hsv360 = (min(hsv360[0], 360), min(hsv360[1], 100), min(hsv360[2], 100))
+    return hsv360
+
+
+def draw_circle(draw, c_color, center_x, center_y, radius):
+    """TODO: what is draw_circle doing?
+    """
+    # logg = logging.getLogger(f"c.{__name__}.draw_circle")
+    # logg.debug("Start draw_circle")
+
+    c_box = (center_x - radius, center_y - radius, center_x + radius, center_y + radius)
+    draw.ellipse(c_box, fill=c_color)
+
+
+def draw_cloud(draw, c_left, c_top, c_size, c_color):
+    """TODO: what is draw_cloud doing?
+    """
+    # logg = logging.getLogger(f"c.{__name__}.draw_cloud")
+    # logg.debug("Start draw_cloud")
+
+    # the bottom right circle
+    draw_circle(draw, c_color, c_left + c_size / 2, c_top + c_size / 3, c_size / 5)
+    # the bottom left circle
+    draw_circle(draw, c_color, c_left - c_size / 2, c_top + c_size / 3, c_size / 5)
+    # bottom line
+    draw.rectangle(
+        (
+            c_left - c_size / 2,
+            c_top + c_size / 3,
+            c_left + c_size / 2,
+            c_top + c_size / 3 + c_size / 5,
+        ),
+        fill=c_color,
+    )
+    draw_circle(draw, c_color, c_left - c_size / 3, c_top + c_size / 4, c_size / 4)
+    draw_circle(draw, c_color, c_left - c_size / 8, c_top + c_size / 6, c_size / 3)
+    draw_circle(draw, c_color, c_left + c_size / 6, c_top + c_size / 5, c_size / 4)
+
+
+def draw_image(img_path, rgb255, img_size, font):
     """Create the image and save it
     """
     # logg = logging.getLogger(f"c.{__name__}.draw_image")
     # logg.debug("Start draw_image")
 
     # create the empty image
-    im = Image.new("RGB", img_size, rgb["background"])
+    im = Image.new("RGB", img_size, rgb255["background"])
 
     # create the draw object for the image
     draw = ImageDraw.Draw(im)
 
     # box for the pie (left, top, right, bottom)
-    pie_x = img_size[0] * 0.1
-    pie_y = img_size[1] * 0.2
-    pie_l = img_size[0] * 0.35
-    pie_box = (pie_x, pie_y, pie_x + pie_l, pie_y + pie_l)
+    pie_left = img_size[0] * 0.1  # x of the left of the pie
+    pie_top = img_size[1] * 0.2  # y of the top of the pie
+    pie_size = img_size[0] * 0.35  # size of the pie
+    pie_box = (pie_left, pie_top, pie_left + pie_size, pie_top + pie_size)
 
     # draw the pie
     slice_1 = 130
     slice_2 = 43
     slice_3 = 58
-    draw.pieslice(pie_box, start=slice_1, end=slice_2, fill=rgb["sky"])
-    draw.pieslice(pie_box, start=slice_2, end=slice_3, fill=rgb["shade"])
-    draw.pieslice(pie_box, start=slice_3, end=slice_1, fill=rgb["sunny"])
+    draw.pieslice(pie_box, start=slice_1, end=slice_2, fill=rgb255["sky"])
 
     # square dimensions
-    sq_x = img_size[0] * 0.6  # x of the left side of the squares
-    sq_y = img_size[1] * 0.25  # y of the top square
-    sq_l = img_size[0] * 0.05  # size of the squares
-    sq_space = sq_l / 2  # space between the squares
+    sq_left = img_size[0] * 0.6  # x of the left side of the squares
+    sq_top = img_size[1] * 0.25  # y of the top square
+    sq_size = img_size[0] * 0.05  # size of the squares
+    sq_space = sq_size / 2  # space between the squares
 
     # squares
-    sq_1 = (sq_x, sq_y, sq_x + sq_l, sq_y + sq_l)
-    draw.rectangle(sq_1, fill=rgb["sky"])
-    sq_2 = (sq_x, sq_y + sq_l + sq_space, sq_x + sq_l, sq_y + sq_l * 2 + sq_space)
-    draw.rectangle(sq_2, fill=rgb["sunny"])
-    sq_3 = (
-        sq_x,
-        sq_y + sq_l * 2 + sq_space * 2,
-        sq_x + sq_l,
-        sq_y + sq_l * 3 + sq_space * 2,
+    sq_1 = (sq_left, sq_top, sq_left + sq_size, sq_top + sq_size)
+    draw.rectangle(sq_1, fill=rgb255["sky"])
+    sq_2 = (
+        sq_left,
+        sq_top + sq_size + sq_space,
+        sq_left + sq_size,
+        sq_top + sq_size * 2 + sq_space,
     )
-    draw.rectangle(sq_3, fill=rgb["shade"])
+    draw.rectangle(sq_2, fill=rgb255["sunny"])
+    sq_3 = (
+        sq_left,
+        sq_top + sq_size * 2 + sq_space * 2,
+        sq_left + sq_size,
+        sq_top + sq_size * 3 + sq_space * 2,
+    )
+    draw.rectangle(sq_3, fill=rgb255["shade"])
 
     # text shift
     te_s = sq_space
 
     # text
-    te_1 = (sq_1[0] + te_s + sq_l, sq_1[1] + sq_space / 2)
+    te_1 = (sq_1[0] + te_s + sq_size, sq_1[1] + sq_space / 2)
     draw.text(te_1, "Sky", fill="white", font=font)
-    te_2 = (sq_2[0] + te_s + sq_l, sq_2[1] + sq_space / 2)
+    te_2 = (sq_2[0] + te_s + sq_size, sq_2[1] + sq_space / 2)
     draw.text(te_2, "Sunny side of pyramid", fill="white", font=font)
-    te_3 = (sq_3[0] + te_s + sq_l, sq_3[1] + sq_space / 2)
+    te_3 = (sq_3[0] + te_s + sq_size, sq_3[1] + sq_space / 2)
     draw.text(te_3, "Shady side of pyramid", fill="white", font=font)
 
     # image number
@@ -180,8 +245,30 @@ def draw_image(img_path, rgb, img_size, font):
 
     # TODO: stars at night!
     # TODO: aliens!
-    # TODO: clouds!
     # TODO: colors/weather linked to the actual one via internet
+
+    # clouds
+    clo_color = rgb255_edit_as_hsv360(rgb255["sky"], ds100=-50, dv100=10)
+    clo_left = pie_left + pie_size * 0.3 + pie_size * 0.1 * random()
+    clo_top = pie_top + pie_size * 0.3 + pie_size * 0.1 * random()
+    clo_size = img_size[0] * 0.05 + img_size[0] * 0.02 * random()
+    draw_cloud(draw, clo_left, clo_top, clo_size, clo_color)
+
+    clo_color = rgb255_edit_as_hsv360(rgb255["sky"], ds100=-40, dv100=10)
+    clo_left = pie_left + pie_size * 0.6 + pie_size * 0.1 * random()
+    clo_top = pie_top + pie_size * 0.54 + pie_size * 0.1 * random()
+    clo_size = img_size[0] * 0.03 + img_size[0] * 0.02 * random()
+    draw_cloud(draw, clo_left, clo_top, clo_size, clo_color)
+
+    clo_color = rgb255_edit_as_hsv360(rgb255["sky"], ds100=-40, dv100=10)
+    clo_left = pie_left + pie_size * 0.7 + pie_size * 0.1 * random()
+    clo_top = pie_top + pie_size * 0.3 + pie_size * 0.1 * random()
+    clo_size = img_size[0] * 0.08 + img_size[0] * 0.02 * random()
+    draw_cloud(draw, clo_left, clo_top, clo_size, clo_color)
+
+    # draw the pyramid late so that is in front of the clouds
+    draw.pieslice(pie_box, start=slice_2, end=slice_3, fill=rgb255["shade"])
+    draw.pieslice(pie_box, start=slice_3, end=slice_1, fill=rgb255["sunny"])
 
     # save the image
     im.save(img_path, quality=95)
@@ -346,8 +433,8 @@ def run_pyramids_creator(args):
     img_size = (1920 * 2, 1080 * 2)
 
     # colors
-    rgb = {}
-    rgb["background"] = (12, 12, 12)
+    rgb255 = {}
+    rgb255["background"] = (12, 12, 12)
     hsv_all = get_colors()
 
     # font
@@ -364,11 +451,11 @@ def run_pyramids_creator(args):
         img_name = f"pyr_{i:02d}.jpg"
         img_path = img_folder / img_name
 
-        rgb["sky"] = hsv360_to_rgb255(hsv_all["sky"][i])
-        rgb["sunny"] = hsv360_to_rgb255(hsv_all["sunny"][i])
-        rgb["shade"] = hsv360_to_rgb255(hsv_all["shade"][i])
+        rgb255["sky"] = hsv360_to_rgb255(hsv_all["sky"][i])
+        rgb255["sunny"] = hsv360_to_rgb255(hsv_all["sunny"][i])
+        rgb255["shade"] = hsv360_to_rgb255(hsv_all["shade"][i])
 
-        draw_image(img_path, rgb, img_size, font)
+        draw_image(img_path, rgb255, img_size, font)
 
 
 if __name__ == "__main__":
