@@ -338,7 +338,8 @@ def run_pyramids_creator(args):
     logg = logging.getLogger(f"c.{__name__}.run_pyramids_creator")
     logg.debug("Starting run_pyramids_creator")
 
-    img_size = (1600, 900)
+    # img_size = (1600, 900)
+    img_size = (1920 * 2, 1080 * 2)
     rgb_background = (12, 12, 12)
 
     img_folder = Path("./out_pyramids")
