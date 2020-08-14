@@ -21,3 +21,4 @@ EXT=".jpg"
 IMG=$BASE_PYR$HOUR$EXT
 echo $IMG
 gsettings set org.gnome.desktop.background picture-uri "file://$IMG"
+gsettings set org.gnome.desktop.screensaver picture-uri "file://$IMG"

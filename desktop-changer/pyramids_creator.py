@@ -2,7 +2,7 @@ import argparse
 import logging
 
 from pathlib import Path
-from PIL import Image
+from PIL import Image  # type: ignore
 from PIL import ImageDraw
 from PIL import ImageFont
 from colorsys import hsv_to_rgb
@@ -203,6 +203,36 @@ def draw_image(img_path, rgb255, img_size, font):
     slice_3 = 58
     draw.pieslice(pie_box, start=slice_1, end=slice_2, fill=rgb255["sky"])
 
+    # add the clouds
+    clo_color = rgb255_edit_as_hsv360(rgb255["sky"], ds100=-50, dv100=10)
+    clo_left = pie_left + pie_size * 0.3 + pie_size * 0.1 * random()
+    clo_top = pie_top + pie_size * 0.3 + pie_size * 0.1 * random()
+    clo_size = img_size[0] * 0.05 + img_size[0] * 0.02 * random()
+    draw_cloud(draw, clo_left, clo_top, clo_size, clo_color)
+
+    clo_color = rgb255_edit_as_hsv360(rgb255["sky"], ds100=-40, dv100=10)
+    clo_left = pie_left + pie_size * 0.6 + pie_size * 0.1 * random()
+    clo_top = pie_top + pie_size * 0.54 + pie_size * 0.1 * random()
+    clo_size = img_size[0] * 0.03 + img_size[0] * 0.02 * random()
+    draw_cloud(draw, clo_left, clo_top, clo_size, clo_color)
+
+    clo_color = rgb255_edit_as_hsv360(rgb255["sky"], ds100=-30, dv100=10)
+    clo_left = pie_left + pie_size * 0.7 + pie_size * 0.1 * random()
+    clo_top = pie_top + pie_size * 0.1 + pie_size * 0.1 * random()
+    clo_size = img_size[0] * 0.08 + img_size[0] * 0.02 * random()
+    draw_cloud(draw, clo_left, clo_top, clo_size, clo_color)
+
+    # draw the pyramid late so that is in front of the clouds
+    draw.pieslice(pie_box, start=slice_2, end=slice_3, fill=rgb255["shade"])
+    draw.pieslice(pie_box, start=slice_3, end=slice_1, fill=rgb255["sunny"])
+
+    # draw a masked background to cut the circle precisely
+    empty = Image.new("RGB", img_size, rgb255["background"])
+    mask = Image.new("L", img_size, "white")
+    circle = ImageDraw.Draw(mask)
+    circle.ellipse(pie_box, fill="black")
+    im.paste(empty, mask=mask)
+
     # square dimensions
     sq_left = img_size[0] * 0.6  # x of the left side of the squares
     sq_top = img_size[1] * 0.25  # y of the top square
@@ -246,29 +276,6 @@ def draw_image(img_path, rgb255, img_size, font):
     # TODO: stars at night!
     # TODO: aliens!
     # TODO: colors/weather linked to the actual one via internet
-
-    # clouds
-    clo_color = rgb255_edit_as_hsv360(rgb255["sky"], ds100=-50, dv100=10)
-    clo_left = pie_left + pie_size * 0.3 + pie_size * 0.1 * random()
-    clo_top = pie_top + pie_size * 0.3 + pie_size * 0.1 * random()
-    clo_size = img_size[0] * 0.05 + img_size[0] * 0.02 * random()
-    draw_cloud(draw, clo_left, clo_top, clo_size, clo_color)
-
-    clo_color = rgb255_edit_as_hsv360(rgb255["sky"], ds100=-40, dv100=10)
-    clo_left = pie_left + pie_size * 0.6 + pie_size * 0.1 * random()
-    clo_top = pie_top + pie_size * 0.54 + pie_size * 0.1 * random()
-    clo_size = img_size[0] * 0.03 + img_size[0] * 0.02 * random()
-    draw_cloud(draw, clo_left, clo_top, clo_size, clo_color)
-
-    clo_color = rgb255_edit_as_hsv360(rgb255["sky"], ds100=-40, dv100=10)
-    clo_left = pie_left + pie_size * 0.7 + pie_size * 0.1 * random()
-    clo_top = pie_top + pie_size * 0.3 + pie_size * 0.1 * random()
-    clo_size = img_size[0] * 0.08 + img_size[0] * 0.02 * random()
-    draw_cloud(draw, clo_left, clo_top, clo_size, clo_color)
-
-    # draw the pyramid late so that is in front of the clouds
-    draw.pieslice(pie_box, start=slice_2, end=slice_3, fill=rgb255["shade"])
-    draw.pieslice(pie_box, start=slice_3, end=slice_1, fill=rgb255["sunny"])
 
     # save the image
     im.save(img_path, quality=95)
