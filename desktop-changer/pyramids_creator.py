@@ -179,10 +179,79 @@ def draw_cloud(draw, c_left, c_top, c_size, c_color):
     draw_circle(draw, c_color, c_left + c_size / 6, c_top + c_size / 5, c_size / 4)
 
 
-def draw_image(img_path, rgb255, img_size, font):
+def draw_saturn(draw, s_left, s_top, s_size):
+    """TODO: what is draw_saturn doing?
+    """
+    # logg = logging.getLogger(f"c.{__name__}.draw_saturn")
+    # logg.debug("Start draw_saturn")
+
+    s_height = s_size * 0.3 / 2
+    s_width = s_size / 2
+    s_x_center = s_left + s_width
+    s_y_center = s_top + s_height
+
+    for i in range(2, 8):
+        ratio = 1 - (i * 0.1)
+        ring_box = (
+            s_x_center - s_width * ratio,
+            s_y_center - s_height * ratio,
+            s_x_center + s_width * ratio,
+            s_y_center + s_height * ratio,
+        )
+        s_col = "white" if i % 2 == 0 else "black"
+        draw.ellipse(ring_box, fill=s_col)
+
+    ratio = 0.6
+    sat_box = (
+        s_x_center - s_height * ratio,
+        s_y_center - s_height * ratio - s_height * 0.0,
+        s_x_center + s_height * ratio,
+        s_y_center + s_height * ratio - s_height * 0.0,
+    )
+    draw.ellipse(sat_box, fill="white")
+
+
+def draw_star(draw, s_x_center, s_y_center, s_size):
+    """TODO: what is draw_star doing?
+    """
+    # logg = logging.getLogger(f"c.{__name__}.draw_star")
+    # logg.debug(f"Start draw_star")
+
+    draw.polygon(
+        (
+            (s_x_center + s_size, s_y_center),
+            (s_x_center + s_size / 6, s_y_center + s_size / 6),
+            (s_x_center, s_y_center + s_size),
+            (s_x_center - s_size / 6, s_y_center + s_size / 6),
+            (s_x_center - s_size, s_y_center),
+            (s_x_center - s_size / 6, s_y_center - s_size / 6),
+            (s_x_center, s_y_center - s_size),
+            (s_x_center + s_size / 6, s_y_center - s_size / 6),
+        ),
+        fill="white",
+    )
+    draw.line(
+        (
+            (s_x_center - s_size / 2, s_y_center + s_size / 2),
+            (s_x_center + s_size / 2, s_y_center - s_size / 2),
+        ),
+        fill="white",
+        width=1,
+    )
+    draw.line(
+        (
+            (s_x_center - s_size / 2, s_y_center - s_size / 2),
+            (s_x_center + s_size / 2, s_y_center + s_size / 2),
+        ),
+        fill="white",
+        width=1,
+    )
+
+
+def draw_image(img_path, rgb255, img_size, font, img_num):
     """Create the image and save it
     """
-    # logg = logging.getLogger(f"c.{__name__}.draw_image")
+    logg = logging.getLogger(f"c.{__name__}.draw_image")
     # logg.debug("Start draw_image")
 
     # create the empty image
@@ -190,6 +259,10 @@ def draw_image(img_path, rgb255, img_size, font):
 
     # create the draw object for the image
     draw = ImageDraw.Draw(im)
+
+    ###############
+    ### PYRAMID ###
+    ###############
 
     # box for the pie (left, top, right, bottom)
     pie_left = img_size[0] * 0.1  # x of the left of the pie
@@ -202,6 +275,77 @@ def draw_image(img_path, rgb255, img_size, font):
     slice_2 = 43
     slice_3 = 58
     draw.pieslice(pie_box, start=slice_1, end=slice_2, fill=rgb255["sky"])
+
+    # dist from midnight
+    h_dist = 24 - img_num + 1 if img_num > 12 else img_num
+    logg.debug(f"h_dist: {h_dist}")
+
+    # add the stars
+    if h_dist <= 6:
+        star_x_center = pie_left + pie_size * 0.4
+        star_y_center = pie_top + pie_size * 0.2
+        star_size = img_size[0] * 0.01
+        draw_star(draw, star_x_center, star_y_center, star_size)
+        star_x_center = pie_left + pie_size * 0.6
+        star_y_center = pie_top + pie_size * 0.4
+        star_size = img_size[0] * 0.008
+        draw_star(draw, star_x_center, star_y_center, star_size)
+        star_x_center = pie_left + pie_size * 0.25
+        star_y_center = pie_top + pie_size * 0.55
+        star_size = img_size[0] * 0.007
+        draw_star(draw, star_x_center, star_y_center, star_size)
+
+    if h_dist <= 5:
+        star_x_center = pie_left + pie_size * 0.3
+        star_y_center = pie_top + pie_size * 0.3
+        star_size = img_size[0] * 0.005
+        draw_star(draw, star_x_center, star_y_center, star_size)
+        star_x_center = pie_left + pie_size * 0.1
+        star_y_center = pie_top + pie_size * 0.6
+        star_size = img_size[0] * 0.004
+        draw_star(draw, star_x_center, star_y_center, star_size)
+        star_x_center = pie_left + pie_size * 0.7
+        star_y_center = pie_top + pie_size * 0.6
+        star_size = img_size[0] * 0.005
+        draw_star(draw, star_x_center, star_y_center, star_size)
+        star_x_center = pie_left + pie_size * 0.73
+        star_y_center = pie_top + pie_size * 0.33
+        star_size = img_size[0] * 0.004
+        draw_star(draw, star_x_center, star_y_center, star_size)
+
+    if h_dist <= 4:
+        star_x_center = pie_left + pie_size * 0.5
+        star_y_center = pie_top + pie_size * 0.35
+        star_size = img_size[0] * 0.003
+        draw_star(draw, star_x_center, star_y_center, star_size)
+        star_x_center = pie_left + pie_size * 0.45
+        star_y_center = pie_top + pie_size * 0.45
+        star_size = img_size[0] * 0.002
+        draw_star(draw, star_x_center, star_y_center, star_size)
+        star_x_center = pie_left + pie_size * 0.12
+        star_y_center = pie_top + pie_size * 0.42
+        star_size = img_size[0] * 0.002
+        draw_star(draw, star_x_center, star_y_center, star_size)
+        star_x_center = pie_left + pie_size * 0.51
+        star_y_center = pie_top + pie_size * 0.2
+        star_size = img_size[0] * 0.002
+        draw_star(draw, star_x_center, star_y_center, star_size)
+        star_x_center = pie_left + pie_size * 0.26
+        star_y_center = pie_top + pie_size * 0.61
+        star_size = img_size[0] * 0.003
+        draw_star(draw, star_x_center, star_y_center, star_size)
+        star_x_center = pie_left + pie_size * 0.8
+        star_y_center = pie_top + pie_size * 0.41
+        star_size = img_size[0] * 0.002
+        draw_star(draw, star_x_center, star_y_center, star_size)
+        star_x_center = pie_left + pie_size * 0.85
+        star_y_center = pie_top + pie_size * 0.59
+        star_size = img_size[0] * 0.003
+        draw_star(draw, star_x_center, star_y_center, star_size)
+        star_x_center = pie_left + pie_size * 0.57
+        star_y_center = pie_top + pie_size * 0.1
+        star_size = img_size[0] * 0.002
+        draw_star(draw, star_x_center, star_y_center, star_size)
 
     # add the clouds
     clo_color = rgb255_edit_as_hsv360(rgb255["sky"], ds100=-50, dv100=10)
@@ -226,12 +370,22 @@ def draw_image(img_path, rgb255, img_size, font):
     draw.pieslice(pie_box, start=slice_2, end=slice_3, fill=rgb255["shade"])
     draw.pieslice(pie_box, start=slice_3, end=slice_1, fill=rgb255["sunny"])
 
+    # add saturn
+    # sat_left = pie_left + pie_size * 0.2
+    # sat_top = pie_top + pie_size * 0.2
+    # sat_size = img_size[0] * 0.02
+    # draw_saturn(draw, sat_left, sat_top, sat_size)
+
     # draw a masked background to cut the circle precisely
     empty = Image.new("RGB", img_size, rgb255["background"])
     mask = Image.new("L", img_size, "white")
     circle = ImageDraw.Draw(mask)
     circle.ellipse(pie_box, fill="black")
     im.paste(empty, mask=mask)
+
+    ##############
+    ### LEGEND ###
+    ##############
 
     # square dimensions
     sq_left = img_size[0] * 0.6  # x of the left side of the squares
@@ -269,11 +423,11 @@ def draw_image(img_path, rgb255, img_size, font):
     draw.text(te_3, "Shady side of pyramid", fill="white", font=font)
 
     # image number
-    img_num = img_path.name[-6:-4]
     num_pos = (sq_1[0], sq_1[1] + sq_space * 10)
-    draw.text(num_pos, img_num, fill=(180, 180, 180), font=font)
+    draw.text(num_pos, str(img_num), fill=(180, 180, 180), font=font)
 
     # TODO: stars at night!
+    # TODO: saturn!
     # TODO: aliens!
     # TODO: colors/weather linked to the actual one via internet
 
@@ -462,7 +616,7 @@ def run_pyramids_creator(args):
         rgb255["sunny"] = hsv360_to_rgb255(hsv_all["sunny"][i])
         rgb255["shade"] = hsv360_to_rgb255(hsv_all["shade"][i])
 
-        draw_image(img_path, rgb255, img_size, font)
+        draw_image(img_path, rgb255, img_size, font, i)
 
 
 if __name__ == "__main__":
