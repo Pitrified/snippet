@@ -383,8 +383,8 @@ def draw_image(img_path, rgb255, img_size, font, img_num):
     draw.text(te_3, "Shady side of pyramid", fill="white", font=font)
 
     # image number
-    num_pos = (sq_1[0], sq_1[1] + sq_space * 10)
-    draw.text(num_pos, str(img_num), fill=(180, 180, 180), font=font)
+    # num_pos = (sq_1[0], sq_1[1] + sq_space * 10)
+    # draw.text(num_pos, str(img_num), fill=(180, 180, 180), font=font)
 
     # TODO: stars at night!
     # TODO: saturn!
