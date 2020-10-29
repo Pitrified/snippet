@@ -29,7 +29,7 @@ crontab -e
 Now add:
 
 ```
-*/5 * * * * /path/to/script.sh
+0 * * * * /path/to/desktop_changer.sh
 ```
 
 
