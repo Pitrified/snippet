@@ -13,5 +13,7 @@ DIR="~/Pictures/sfondi/randfolder"
 PIC=$(ls $DIR/* | shuf -n1)
 gsettings set org.gnome.desktop.background picture-uri "file://$PIC"
 
-# cron line
+# add cron line
+# open with: crontab -e
+# */3 * * * * /bin/bash ~/snippet/desktop-changer/rand_changer.sh
 # */3 * * * * /bin/bash ~/Pictures/sfondi/rand_changer.sh
