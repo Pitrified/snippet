@@ -31,6 +31,13 @@ def parse_arguments() -> argparse.Namespace:
         choices=["anlm", "nlm", "lm", "nm", "m"],
     )
 
+    parser.add_argument(
+        "--trace_name",
+        type=str,
+        default="tracet.txt",
+        help="Input trace report to parse.",
+    )
+
     # last line to parse the args
     args = parser.parse_args()
     return args
@@ -89,34 +96,52 @@ def run_parse_trace(args: argparse.Namespace) -> None:
     To see which function calls which
     """
     logg = logging.getLogger(f"c.{__name__}.run_parse_trace")
-    logg.setLevel("DEBUG")
+    # logg.setLevel("DEBUG")
     logg.debug("Starting run_parse_trace")
 
-    this_file_folder = Path(__file__).absolute().parent
-    trace_path = this_file_folder / "tracet.txt"
+    trace_name = args.trace_name
 
-    re_funccall = re.compile(" --- modulename: (.*?),")
+    this_file_folder = Path(__file__).absolute().parent
+    # trace_path = this_file_folder / "tracet.txt"
+    trace_path = this_file_folder / trace_name
+
+    re_funccall = re.compile(" --- modulename: (.*?), funcname: (.*?)$")
 
     ignoremods = [
         "__init__",
         "_bootstrap",
         "_collections_abc",
+        "_weakrefset",
         "abc",
-        # "class_b",
+        "argparse",
         "enum",
         "functools",
-        # "misc_a",
+        "genericpath",
+        "gettext",
+        "locale",
         "os",
         "parse",
         "pathlib",
+        "posixpath",
         "re",
+        "shutil",
         "sre_compile",
         "sre_parse",
+        "string",
+        "threading",
         "trace",
-        # "tracing",
+        "traceback",
+        "types",
+        "weakref",
+    ]
+
+    ignorefuncs = [
+        "time_closure",
+        "timefunc",
     ]
 
     all_modules = set()
+    all_func = set()
 
     with open(trace_path) as ftp:
         for line in ftp:
@@ -125,21 +150,29 @@ def run_parse_trace(args: argparse.Namespace) -> None:
             line = line.rstrip()
 
             match = re_funccall.search(line)
-            if match is not None:
-                # logg.debug(f"match[1]: {match[1]}")
-                all_modules.add(match[1])
-                if match[1] in ignoremods:
-                    continue
-            else:
-                logg.debug(
-                    f"line: {line} starts with --- modulename but does not match."
-                )
+            if match is None:
+                logg.warning(f"{line} starts with --- modulename but does not match.")
+                continue
 
-            logg.debug(f"{line}")
+            all_modules.add(match[1])
+            if match[1] in ignoremods:
+                continue
+            logg.debug(f"match[1]: {match[1]}")
 
-    logg.debug("All modules seen")
-    for mod in all_modules:
+            all_func.add(match[2])
+            if match[2] in ignorefuncs:
+                continue
+            logg.debug(f"match[2]: {match[2]}")
+
+            logg.info(f"{line}")
+
+    logg.debug("\nAll modules seen")
+    for mod in sorted(all_modules):
         logg.debug(f"'{mod}',")
+
+    logg.debug("\nAll functions seen")
+    for func in sorted(all_func):
+        logg.debug(f"'{func}',")
 
 
 if __name__ == "__main__":
