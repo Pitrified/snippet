@@ -15,21 +15,18 @@ def timefunc(func):
     @functools.wraps(func)
     def time_closure(*args, **kwargs):
         """time_wrapper's doc string"""
-        log_file.debug(f"Start Function: {func.__name__}")
-        log_console.debug(f"Start Function: {func.__name__}")
+        log_file.debug(f"S: {func.__name__}")
+        log_console.debug(f"Start: {func.__name__}")
         start = time.perf_counter()
         result = func(*args, **kwargs)
         time_elapsed = time.perf_counter() - start
-        log_file.debug(f"  End Function: {func.__name__}, Time: {time_elapsed:.9f} s")
-        log_console.debug(
-            f"  End Function: {func.__name__}, Time: {time_elapsed:.9f} s"
-        )
+        log_file.debug(f"E: {func.__name__}, T: {time_elapsed:.9f} s")
+        log_console.debug(f"  End: {func.__name__}, Time: {time_elapsed:.9f} s")
         return result
 
     return time_closure
 
 
-@timefunc
 def parse_arguments() -> argparse.Namespace:
     r"""Setup CLI interface"""
     parser = argparse.ArgumentParser(description="")
@@ -59,7 +56,6 @@ def parse_arguments() -> argparse.Namespace:
     return args
 
 
-@timefunc
 def setup_logger(logLevel: str = "WARN", msg_type: str = "m") -> None:
     r"""Setup logger that outputs to console for the module"""
 
@@ -93,7 +89,6 @@ def setup_logger(logLevel: str = "WARN", msg_type: str = "m") -> None:
     logfile.addHandler(file_handler)
 
 
-@timefunc
 def setup_env() -> argparse.Namespace:
     r"""Setup the logger and parse the args"""
     args = parse_arguments()
@@ -117,7 +112,14 @@ def fnoreturn():
 
 
 @timefunc
+def fd(d):
+    return d + 12
+
+
+@timefunc
 def fc(c):
+    for _ in range(3):
+        c += fd(c)
     return c + 12
 
 
@@ -129,7 +131,9 @@ def fb(b):
 @timefunc
 def fa(a, b):
     fnoreturn()
-    return fc(a) + fb(b)
+    a = fd(a)
+    temp = fc(a) + fb(b)
+    return temp
 
 
 @timefunc
@@ -139,7 +143,10 @@ def run_decorate_trace(args: argparse.Namespace) -> None:
     # logg.setLevel("DEBUG")
     logg.debug("Starting run_decorate_trace")
 
-    fa(2, 4)
+    a = fa(2, 4)
+    fnoreturn()
+    fd(a)
+    fb(a)
 
 
 if __name__ == "__main__":

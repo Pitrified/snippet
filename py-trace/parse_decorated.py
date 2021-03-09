@@ -99,19 +99,23 @@ def run_parse_decorated(args: argparse.Namespace) -> None:
     this_file_folder = Path(__file__).absolute().parent
     trace_path = this_file_folder / trace_name
 
-    re_start = re.compile("Start Function: (.*?)$")
-    re_end = re.compile("  End Function: (.*?), Time: (.*?) s$")
+    re_start = re.compile("S: (.*?)$")
+    re_end = re.compile("E: (.*?), T: (.*?) s$")
 
     active_func = []
 
     indent_str = "    "
     indent_level = 0
 
+    logg.info("\nCall list:")
+
     with open(trace_path) as ftp:
         for line in ftp:
             line = line.rstrip()
 
-            if line.startswith("Start"):
+            # the regex could be used to find the match, and would accept different log
+            # styles, but I think this is faster
+            if line.startswith("S"):
                 match = re_start.search(line)
 
                 if match is None:
@@ -126,13 +130,14 @@ def run_parse_decorated(args: argparse.Namespace) -> None:
 
                 indent_level += 1
                 this_indent = indent_str * indent_level
-                logg.info(f"{this_indent}S: {funcname}")
+                # logg.info(f"{this_indent}S: {funcname}")
+                logg.info(f"{this_indent}{funcname}")
 
-            elif line.startswith("  End"):
+            elif line.startswith("E"):
                 match = re_end.search(line)
 
                 if match is None:
-                    logg.warning(f"{line} starts with Start but does not match.")
+                    logg.warning(f"{line} starts with End but does not match.")
                     continue
 
                 funcname = match[1]
@@ -148,6 +153,15 @@ def run_parse_decorated(args: argparse.Namespace) -> None:
                 logg.debug(f"{this_indent}E: {funcname}")
 
                 indent_level -= 1
+
+    # print the function still on stack if the run was interrupted
+    if len(active_func) > 0:
+        logg.info("\nStack list:")
+        for funcname in reversed(active_func):
+            this_indent = indent_str * indent_level
+            logg.info(f"{this_indent}{funcname}")
+            indent_level -= 1
+            # logg.info(f"{funcname}")
 
 
 if __name__ == "__main__":
