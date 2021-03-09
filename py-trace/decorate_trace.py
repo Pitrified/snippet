@@ -9,15 +9,21 @@ def timefunc(func):
 
     https://towardsdatascience.com/a-simple-way-to-time-code-in-python-a9a175eb0172
     """
+    log_file = logging.getLogger(f"f.{__name__}.timefunc")
+    log_console = logging.getLogger(f"c.{__name__}.timefunc")
 
     @functools.wraps(func)
     def time_closure(*args, **kwargs):
         """time_wrapper's doc string"""
-        print(f"Start Function: {func.__name__}")
+        log_file.debug(f"Start Function: {func.__name__}")
+        log_console.debug(f"Start Function: {func.__name__}")
         start = time.perf_counter()
         result = func(*args, **kwargs)
         time_elapsed = time.perf_counter() - start
-        print(f"  End Function: {func.__name__}, Time: {time_elapsed:.9f} s")
+        log_file.debug(f"  End Function: {func.__name__}, Time: {time_elapsed:.9f} s")
+        log_console.debug(
+            f"  End Function: {func.__name__}, Time: {time_elapsed:.9f} s"
+        )
         return result
 
     return time_closure
@@ -56,27 +62,35 @@ def parse_arguments() -> argparse.Namespace:
 @timefunc
 def setup_logger(logLevel: str = "WARN", msg_type: str = "m") -> None:
     r"""Setup logger that outputs to console for the module"""
-    logroot = logging.getLogger("c")
-    logroot.propagate = False
-    logroot.setLevel(logLevel)
 
-    module_console_handler = logging.StreamHandler()
+    # setup the format string
+    format_types = {}
+    format_types["anlm"] = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    format_types["nlm"] = "%(name)s - %(levelname)s: %(message)s"
+    format_types["lm"] = "%(levelname)s: %(message)s"
+    format_types["nm"] = "%(name)s: %(message)s"
+    format_types["m"] = "%(message)s"
+    formatter = logging.Formatter(format_types[msg_type])
 
-    if msg_type == "anlm":
-        log_format_module = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    elif msg_type == "nlm":
-        log_format_module = "%(name)s - %(levelname)s: %(message)s"
-    elif msg_type == "lm":
-        log_format_module = "%(levelname)s: %(message)s"
-    elif msg_type == "nm":
-        log_format_module = "%(name)s: %(message)s"
-    else:
-        log_format_module = "%(message)s"
+    # setup the console handler with the formatter
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
 
-    formatter = logging.Formatter(log_format_module)
-    module_console_handler.setFormatter(formatter)
+    # setup the console logger with the console handler
+    logconsole = logging.getLogger("c")
+    logconsole.propagate = False
+    logconsole.setLevel(logLevel)
+    logconsole.addHandler(console_handler)
 
-    logroot.addHandler(module_console_handler)
+    # setup the file handler
+    file_handler = logging.FileHandler("decorate_trace.log", mode="w")
+    file_handler.setFormatter(formatter)
+
+    # setup the file logger with the file handler
+    logfile = logging.getLogger("f")
+    logfile.propagate = False
+    logfile.setLevel("DEBUG")
+    logfile.addHandler(file_handler)
 
 
 @timefunc
@@ -122,7 +136,7 @@ def fa(a, b):
 def run_decorate_trace(args: argparse.Namespace) -> None:
     r"""MAKEDOC: What is decorate_trace doing?"""
     logg = logging.getLogger(f"c.{__name__}.run_decorate_trace")
-    logg.setLevel("DEBUG")
+    # logg.setLevel("DEBUG")
     logg.debug("Starting run_decorate_trace")
 
     fa(2, 4)
