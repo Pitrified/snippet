@@ -1,30 +1,8 @@
 import argparse
 import logging
-import time
-import functools
 
-
-def timefunc(func):
-    """A decorator to time a func.
-
-    https://towardsdatascience.com/a-simple-way-to-time-code-in-python-a9a175eb0172
-    """
-    log_file = logging.getLogger(f"f.{__name__}.timefunc")
-    log_console = logging.getLogger(f"c.{__name__}.timefunc")
-
-    @functools.wraps(func)
-    def time_closure(*args, **kwargs):
-        """time_wrapper's doc string"""
-        log_file.debug(f"S: {func.__name__}")
-        log_console.debug(f"Start: {func.__name__}")
-        start = time.perf_counter()
-        result = func(*args, **kwargs)
-        time_elapsed = time.perf_counter() - start
-        log_file.debug(f"E: {func.__name__}, T: {time_elapsed:.9f} s")
-        log_console.debug(f"  End: {func.__name__}, Time: {time_elapsed:.9f} s")
-        return result
-
-    return time_closure
+from example_class import ExampleClass
+from timefunc import timefunc_modulename
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -106,37 +84,39 @@ def setup_env() -> argparse.Namespace:
     return args
 
 
-@timefunc
+@timefunc_modulename(__name__)
 def fnoreturn():
     pass
 
 
-@timefunc
+@timefunc_modulename(__name__)
 def fd(d):
     return d + 12
 
 
-@timefunc
+@timefunc_modulename(__name__)
 def fc(c):
     for _ in range(3):
         c += fd(c)
     return c + 12
 
 
-@timefunc
+@timefunc_modulename(__name__)
 def fb(b):
     return fc(b) * 3
 
 
-@timefunc
+@timefunc_modulename(__name__)
 def fa(a, b):
     fnoreturn()
     a = fd(a)
     temp = fc(a) + fb(b)
+    ec = ExampleClass()
+    ec.classfunc()
     return temp
 
 
-@timefunc
+@timefunc_modulename(__name__)
 def run_decorate_trace(args: argparse.Namespace) -> None:
     r"""MAKEDOC: What is decorate_trace doing?"""
     logg = logging.getLogger(f"c.{__name__}.run_decorate_trace")
