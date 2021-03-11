@@ -37,18 +37,18 @@ def parse_arguments() -> argparse.Namespace:
 def setup_logger(logLevel: str = "WARN", msg_type: str = "m") -> None:
     r"""Setup logger that outputs to console for the module"""
 
-    # setup the format string
+    # setup the format strings
     format_types = {}
     format_types["anlm"] = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     format_types["nlm"] = "%(name)s - %(levelname)s: %(message)s"
     format_types["lm"] = "%(levelname)s: %(message)s"
     format_types["nm"] = "%(name)s: %(message)s"
     format_types["m"] = "%(message)s"
-    formatter = logging.Formatter(format_types[msg_type])
 
     # setup the console handler with the formatter
     console_handler = logging.StreamHandler()
-    console_handler.setFormatter(formatter)
+    console_formatter = logging.Formatter(format_types[msg_type])
+    console_handler.setFormatter(console_formatter)
 
     # setup the console logger with the console handler
     logconsole = logging.getLogger("c")
@@ -56,9 +56,10 @@ def setup_logger(logLevel: str = "WARN", msg_type: str = "m") -> None:
     logconsole.setLevel(logLevel)
     logconsole.addHandler(console_handler)
 
-    # setup the file handler
+    # setup the file handler with the formatter
     file_handler = logging.FileHandler("decorate_trace.log", mode="w")
-    file_handler.setFormatter(formatter)
+    file_formatter = logging.Formatter(format_types["m"])
+    file_handler.setFormatter(file_formatter)
 
     # setup the file logger with the file handler
     logfile = logging.getLogger("f")
