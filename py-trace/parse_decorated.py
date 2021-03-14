@@ -2,9 +2,25 @@ import argparse
 import logging
 from pathlib import Path
 import re
+import typing as ty
+from dataclasses import dataclass
 
 # from timeit import default_timer as timer
 # import numpy as np  # type: ignore
+
+
+@dataclass
+class FunctionInfo:
+    """Class to keep track of function calls."""
+
+    name: str
+    indent: int
+    repeat: int
+
+    def get_indent_str(self):
+        this_indent = "    " * self.indent
+        repeat_str = f" x{self.repeat}" if self.repeat > 1 else ""
+        return f"{this_indent}{self.name}{repeat_str}"
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -109,6 +125,12 @@ def run_parse_decorated(args: argparse.Namespace) -> None:
 
     logg.info("\nCall list:")
 
+    call_list: ty.List[FunctionInfo] = [FunctionInfo("start", 0, 0)]
+
+    start_prefix = ""
+    # start_prefix = "S: "
+    end_prefix = "E: "
+
     with open(trace_path) as ftp:
         for line in ftp:
             line = line.rstrip()
@@ -122,16 +144,24 @@ def run_parse_decorated(args: argparse.Namespace) -> None:
                     logg.warning(f"{line} starts with Start but does not match.")
                     continue
 
+                # the name of the function just called
                 funcname = match[1]
-                logg.debug(f"Append: {funcname}")
 
+                # print info
+                this_indent = indent_str * indent_level
+                logg.info(f"{this_indent}{start_prefix}{funcname}")
+
+                # save in the active_func stack
                 active_func.append(funcname)
-                # logg.debug(f"active_func: {active_func}")
+
+                # save in the call_list
+                last_func = call_list[-1]
+                if last_func.name == funcname:
+                    last_func.repeat += 1
+                else:
+                    call_list.append(FunctionInfo(funcname, indent_level, 1))
 
                 indent_level += 1
-                this_indent = indent_str * indent_level
-                # logg.info(f"{this_indent}S: {funcname}")
-                logg.info(f"{this_indent}{funcname}")
 
             elif line.startswith("E"):
                 match = re_end.search(line)
@@ -141,8 +171,9 @@ def run_parse_decorated(args: argparse.Namespace) -> None:
                     continue
 
                 funcname = match[1]
-                functime = match[2]
-                logg.debug(f"Pop   : {funcname} - time {functime}")
+                # functime = match[2]
+
+                # check that the last active_func corresponds to the exiting one
                 lastfunc = active_func[-1]
                 logg.debug(f"lastfunc: {lastfunc}")
                 assert lastfunc == funcname
@@ -150,7 +181,7 @@ def run_parse_decorated(args: argparse.Namespace) -> None:
                 active_func.pop()
 
                 this_indent = indent_str * indent_level
-                logg.debug(f"{this_indent}E: {funcname}")
+                logg.debug(f"{this_indent}{end_prefix}{funcname}")
 
                 indent_level -= 1
 
@@ -158,10 +189,12 @@ def run_parse_decorated(args: argparse.Namespace) -> None:
     if len(active_func) > 0:
         logg.info("\nStack list:")
         for funcname in reversed(active_func):
+            indent_level -= 1
             this_indent = indent_str * indent_level
             logg.info(f"{this_indent}{funcname}")
-            indent_level -= 1
-            # logg.info(f"{funcname}")
+
+    for fi in call_list:
+        logg.info(f"{fi.get_indent_str()}")
 
 
 if __name__ == "__main__":
