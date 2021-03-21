@@ -1,0 +1,44 @@
+S: __main__.run_decorate_trace
+S: __main__.fa
+S: __main__.fnoreturn
+E: __main__.fnoreturn, T: 0.000001560 s
+S: __main__.fd
+E: __main__.fd, T: 0.000000312 s
+S: __main__.fc
+S: __main__.fd
+E: __main__.fd, T: 0.000000250 s
+S: __main__.fd
+E: __main__.fd, T: 0.000000270 s
+S: __main__.fd
+E: __main__.fd, T: 0.000000242 s
+E: __main__.fc, T: 0.000137407 s
+S: __main__.fb
+S: __main__.fc
+S: __main__.fd
+E: __main__.fd, T: 0.000000214 s
+S: __main__.fd
+E: __main__.fd, T: 0.000000231 s
+S: __main__.fd
+E: __main__.fd, T: 0.000000236 s
+E: __main__.fc, T: 0.000141620 s
+E: __main__.fb, T: 0.000187955 s
+S: example_class.__init__
+E: example_class.__init__, T: 0.000000270 s
+S: example_class.classfunc
+E: example_class.classfunc, T: 0.000000251 s
+E: __main__.fa, T: 0.000606966 s
+S: __main__.fnoreturn
+E: __main__.fnoreturn, T: 0.000000258 s
+S: __main__.fd
+E: __main__.fd, T: 0.000000258 s
+S: __main__.fb
+S: __main__.fc
+S: __main__.fd
+E: __main__.fd, T: 0.000000238 s
+S: __main__.fd
+E: __main__.fd, T: 0.000000217 s
+S: __main__.fd
+E: __main__.fd, T: 0.000000187 s
+E: __main__.fc, T: 0.000137401 s
+E: __main__.fb, T: 0.000183238 s
+E: __main__.run_decorate_trace, T: 0.000999048 s

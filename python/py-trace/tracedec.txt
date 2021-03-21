@@ -1,0 +1,18 @@
+Start Function: setup_env
+Start Function: parse_arguments
+  End Function: parse_arguments, Time: 0.001634732 s
+Start Function: setup_logger
+  End Function: setup_logger, Time: 0.000017657 s
+  End Function: setup_env, Time: 0.001670138 s
+Start Function: run_decorate_trace
+Start Function: fa
+Start Function: fnoreturn
+  End Function: fnoreturn, Time: 0.000001432 s
+Start Function: fc
+  End Function: fc, Time: 0.000000236 s
+Start Function: fb
+Start Function: fc
+  End Function: fc, Time: 0.000000121 s
+  End Function: fb, Time: 0.000001286 s
+  End Function: fa, Time: 0.000007478 s
+  End Function: run_decorate_trace, Time: 0.000049826 s

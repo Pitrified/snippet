@@ -1,0 +1,33 @@
+S: run_decorate_trace
+S: fa
+S: fnoreturn
+E: fnoreturn, T: 0.000001636 s
+S: fd
+E: fd, T: 0.000000820 s
+S: fc
+S: fd
+E: fd, T: 0.000000289 s
+S: fd
+E: fd, T: 0.000000292 s
+S: fd
+E: fd, T: 0.000000261 s
+E: fc, T: 0.000182842 s
+S: fb
+S: fc
+S: fd
+E: fd, T: 0.000000229 s
+S: fd
+E: fd, T: 0.000000236 s
+S: fd
+E: fd, T: 0.000000256 s
+E: fc, T: 0.000180533 s
+E: fb, T: 0.000240505 s
+E: fa, T: 0.000679952 s
+S: fnoreturn
+E: fnoreturn, T: 0.000000274 s
+S: fd
+E: fd, T: 0.000000305 s
+S: fb
+S: fc
+S: fd
+E: fd, T: 0.000000252 s
