@@ -37,10 +37,10 @@ var (
 	z      complex128 = cmplx.Sqrt(-5 + 12i)
 )
 
-// a tour_basic of go
-// BASICS https://tour_basic.golang.org/basics/1
-func tour_basic() {
-	fmt.Println("Start tour_basic.")
+// a tourBasic of go
+// BASICS https://tourBasic.golang.org/basics/1
+func tourBasic() {
+	fmt.Println("Start tourBasic.")
 
 	rand.Seed(123)
 	fmt.Println("My favorite number is", rand.Intn(10), add(1, 2))
@@ -98,7 +98,7 @@ func pow(x, n, lim float64) float64 {
 
 // https://tour.golang.org/flowcontrol/8
 // Newton method z -= (z*z - x) / (2*z)
-func artisanal_sqrt(x float64) float64 {
+func artisanalSqrt(x float64) float64 {
 	// first guess for z
 	z := 1.0
 	for {
@@ -112,7 +112,7 @@ func artisanal_sqrt(x float64) float64 {
 }
 
 // https://tour.golang.org/flowcontrol/13
-func sample_defer() {
+func sampleDefer() {
 	// deferred calls are executed in last-in-first-out order
 	fmt.Println("counting")
 	for i := 0; i < 3; i++ {
@@ -122,8 +122,8 @@ func sample_defer() {
 }
 
 // https://tour.golang.org/flowcontrol/1
-func tour_flow() {
-	fmt.Println("Start tour_flow.")
+func tourFlow() {
+	fmt.Println("Start tourFlow.")
 
 	// for
 	sum := 0
@@ -142,9 +142,9 @@ func tour_flow() {
 	fmt.Println(sqrt(2), sqrt(-4))
 	fmt.Println(pow(3, 2, 10), pow(3, 3, 20))
 
-	orig_sqrt := math.Sqrt(2)
-	art_sqrt := artisanal_sqrt(2)
-	fmt.Printf("art_sqrt = %f, error %f\n", art_sqrt, art_sqrt-orig_sqrt)
+	origSqrt := math.Sqrt(2)
+	artSqrt := artisanalSqrt(2)
+	fmt.Printf("artSqrt = %f, error %f\n", artSqrt, artSqrt-origSqrt)
 
 	// switch
 	fmt.Print("Go runs on ")
@@ -176,7 +176,7 @@ func tour_flow() {
 		fmt.Println("Too far away.")
 	}
 
-	sample_defer()
+	sampleDefer()
 }
 
 // -----------------------------------------------------------------------------
@@ -250,8 +250,8 @@ func fibonacci() func() int {
 }
 
 // https://tour.golang.org/moretypes/2
-func tour_types() {
-	fmt.Println("Start tour_types.")
+func tourTypes() {
+	fmt.Println("Start tourTypes.")
 
 	i, j := 42, 2701
 
@@ -448,7 +448,7 @@ func describe(o interface{}) {
 	fmt.Printf("D (%v, %T)\n", o, o)
 }
 
-func type_switch(i interface{}) {
+func typeSwitch(i interface{}) {
 	switch v := i.(type) {
 	case int:
 		fmt.Printf("Twice %v is %v\n", v, v*2)
@@ -569,8 +569,8 @@ func (i Image) At(x, y int) color.Color {
 }
 
 // https://tour.golang.org/methods/1
-func tour_methods() {
-	fmt.Println("Start tour_methods.")
+func tourMethods() {
+	fmt.Println("Start tourMethods.")
 
 	v := Vertex{3.123, 4.123}
 	fmt.Println(v.Abs2())
@@ -648,9 +648,9 @@ func tour_methods() {
 	fmt.Println("Is this interface a float64?", svok2)
 
 	// type switch
-	type_switch(21)
-	type_switch("hello")
-	type_switch(Vertex{1, 2})
+	typeSwitch(21)
+	typeSwitch("hello")
+	typeSwitch(Vertex{1, 2})
 
 	// method string for interface Stringer
 	fmt.Println("A Vertex", v)

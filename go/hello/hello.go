@@ -60,10 +60,15 @@ func main() {
 	count := countLines(msg)
 	fmt.Printf("count = %+v\n", count)
 
-	tour_basic()
-	tour_flow()
-	tour_types()
-	tour_methods()
+	tourBasic()
+	tourFlow()
+	tourTypes()
+	tourMethods()
+
+	effectiveConstant()
+	effectiveInit()
+	effectiveBlank()
+	effectiveChannels()
 }
 
 func TestBar(t *testing.T) {
