@@ -19,7 +19,7 @@ func createFireflies(
 ) {
 	fID := 1
 	pos := WorldPos{1, 1}
-	_ = Firefly{fID, pos, w.cells[0][0].chBlink}
+	_ = Firefly{fID, pos, w.chBlinks[0][0]}
 }
 
 // -----------------------------------------------------------------------------
@@ -33,12 +33,19 @@ func NewWorld(
 ) *World {
 
 	cells := make([][]*Cell, worldWidthCell)
+	chBlinks := make([][]chan *Firefly, worldWidthCell)
+
 	for i := 0; i < worldWidthCell; i++ {
 		cells[i] = make([]*Cell, worldHeightCell)
+		chBlinks[i] = make([]chan *Firefly, worldHeightCell)
+
 		for j := 0; j < worldHeightCell; j++ {
-			lefttop := WorldPos{cellSize * float64(i), cellSize * float64(j)}
+			// create channel for this cell (and the fireflies that will be in it)
+			chBlinks[i][j] = make(chan *Firefly)
+
 			// create each cell
-			cells[i][j] = NewCell(lefttop, cellSize)
+			lefttop := WorldPos{cellSize * float64(i), cellSize * float64(j)}
+			cells[i][j] = NewCell(lefttop, cellSize, chBlinks[i][j])
 		}
 	}
 
@@ -47,6 +54,7 @@ func NewWorld(
 		worldHeightCell,
 		cellSize,
 		cells,
+		chBlinks,
 	}
 }
 
@@ -55,7 +63,8 @@ type World struct {
 	worldHeightCell int
 	cellSize        float64
 
-	cells [][]*Cell
+	cells    [][]*Cell
+	chBlinks [][]chan *Firefly
 }
 
 type WorldPos struct {
@@ -67,8 +76,11 @@ type WorldPos struct {
 //    CELL
 // -----------------------------------------------------------------------------
 
-// https://golang.org/doc/effective_go#composite_literals
-func NewCell(lefttop WorldPos, cellSize float64) *Cell {
+func NewCell(
+	lefttop WorldPos,
+	cellSize float64,
+	chBlink <-chan *Firefly,
+) *Cell {
 
 	// cell boundaries
 	left := lefttop.x
@@ -78,9 +90,6 @@ func NewCell(lefttop WorldPos, cellSize float64) *Cell {
 
 	// fireflies in this cell
 	fireflies := make(map[int]*Firefly)
-
-	// all fireflies in this cell will send here
-	chBlink := make(chan *Firefly)
 
 	return &Cell{
 		lefttop,
@@ -105,8 +114,7 @@ type Cell struct {
 
 	fireflies map[int]*Firefly
 
-	// chBlink <-chan *Firefly
-	chBlink chan *Firefly
+	chBlink <-chan *Firefly
 }
 
 // -----------------------------------------------------------------------------
