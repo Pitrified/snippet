@@ -109,13 +109,17 @@ func blinkTicker2() {
 // false: nothing
 // each struct is created and then golaunched
 
+// have to setup a nudgeable flag to avoid hyperrepetition in swarm flash
+// also nifty speedup when synced
+
 type Firefly struct {
 	ticker    *time.Ticker
 	nextBlink time.Time
 	period    time.Duration
 
-	nudgeCh chan bool
-	blinkCh chan<- *Firefly
+	blinkCh   chan<- *Firefly
+	nudgeCh   chan int
+	nudgeable bool
 
 	fID int
 }
@@ -125,13 +129,17 @@ func (f *Firefly) blinker() {
 		select {
 
 		// move nextBlink in the past proportionally to the distance to that instant
-		// if it is now in the past, blink and reset the ticker
-		case <-f.nudgeCh:
-			fmt.Printf("Nudged %d.\n", f.fID)
+		// IF it is now in the past
+		// or MAYBE blink and reset the ticker
+		// or MAYBE do not blink here, but set a ticker for 1us
+		// or MAYBE call a blink func eh?
+		case fIDblink := <-f.nudgeCh:
+			fmt.Printf("Nudged %d by %d.\n", f.fID, fIDblink)
 
 		// blink
 		case t := <-f.ticker.C:
-			fmt.Printf("Ticked %d at: %v\n", f.fID, t)
+			fmt.Printf("Ticked %d at: %v.%v\n", f.fID, t.Second(), t.Nanosecond())
+			// this call to blink is done in doBlink
 			f.blinkCh <- f
 		}
 	}
@@ -140,14 +148,25 @@ func (f *Firefly) blinker() {
 func nudger(fireflies map[int]*Firefly, blinkCh <-chan *Firefly) {
 	for {
 		// this Firefly just blinked
-		f := <-blinkCh
-		for fID, firefly := range fireflies {
+		fBlink := <-blinkCh
+		for fID, fOther := range fireflies {
 			// skip the current firefly
-			if f.fID == fID {
+			if fBlink.fID == fID {
 				continue
 			}
-			// nudge the others
-			firefly.nudgeCh <- true
+			// if the other was nudged recently, skip it
+			// or when the swarm flashes they'd get nudged a zillion times
+			if !fOther.nudgeable {
+				continue
+			}
+			// nudge the other
+			// fmt.Printf("Nudging %d by %d.\n", fOther.fID, fBlink.fID)
+			select {
+			case fOther.nudgeCh <- fBlink.fID:
+				fmt.Printf("\tFree %d by %d.\n", fOther.fID, fBlink.fID)
+			default:
+				fmt.Printf("\t\tFull %d by %d.\n", fOther.fID, fBlink.fID)
+			}
 		}
 	}
 
@@ -157,6 +176,7 @@ func hatch() {
 	// the swarm
 	fireflies := make(map[int]*Firefly)
 	nF := 10
+	// nF := 5000
 	// the channel where each firefly sends a bool when blinking
 	blinkCh := make(chan *Firefly)
 	for i := 0; i < nF; i++ {
@@ -165,13 +185,15 @@ func hatch() {
 		ticker := time.NewTicker(period)
 		nextBlink := time.Now().Add(period)
 		// each firefly can be nudged independently
-		nudgeCh := make(chan bool)
+		nudgeCh := make(chan int)
+		nudgeable := true
 		fireflies[i] = &Firefly{
 			ticker,
 			nextBlink,
 			period,
-			nudgeCh,
 			blinkCh,
+			nudgeCh,
+			nudgeable,
 			i,
 		}
 		go fireflies[i].blinker()
@@ -179,8 +201,9 @@ func hatch() {
 
 	go nudger(fireflies, blinkCh)
 
-	// should probably wait somewhere
+	// wait a while
 	time.Sleep(5 * time.Second)
+	fmt.Println("Quit.")
 }
 
 func main() {
@@ -188,8 +211,8 @@ func main() {
 
 	// which := "single"
 	// which := "ticker1"
-	which := "ticker2"
-	// which := "hatch"
+	// which := "ticker2"
+	which := "hatch"
 	fmt.Printf("Which = %+v\n", which)
 
 	switch which {
