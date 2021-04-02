@@ -60,8 +60,15 @@ func blinkTicker1() {
 func blinkTicker2() {
 	rand.Seed(time.Now().UnixNano())
 
+	// begin := 0.8
+	// length := 0.4
+
+	// very close to 1s, to force the flush
+	begin := 0.999
+	length := 0.002
+
 	ticker := time.NewTicker(time.Second)
-	timer := time.NewTimer(randDuration(0.8, 0.4))
+	timer := time.NewTimer(randDuration(begin, length))
 
 	// to quit the loop someday
 	done := make(chan bool)
@@ -79,19 +86,18 @@ func blinkTicker2() {
 			fmt.Println("Ticker: ", t)
 
 			// reset the timer
-
-			// if !timer.Stop() {
-			// 	fmt.Println("Stopping timer.")
-			// 	<-timer.C
-			// }
-			// timer.Reset(randDuration(0.8, 0.4))
-
-			timer = time.NewTimer(randDuration(0.8, 0.4))
+			if !timer.Stop() {
+				fmt.Println("Flushing timer channel.")
+				<-timer.C
+			}
+			timer.Reset(randDuration(begin, length))
 
 		case t := <-timer.C:
 			fmt.Println("Timer : ", t)
 			// reset the ticker
 			ticker.Reset(time.Second)
+			// reset the timer as well to restart it
+			timer = time.NewTimer(randDuration(begin, length))
 		}
 	}
 }
@@ -182,8 +188,8 @@ func main() {
 
 	// which := "single"
 	// which := "ticker1"
-	// which := "ticker2"
-	which := "hatch"
+	which := "ticker2"
+	// which := "hatch"
 	fmt.Printf("Which = %+v\n", which)
 
 	switch which {
