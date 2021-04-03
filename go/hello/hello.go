@@ -69,6 +69,9 @@ func main() {
 	effectiveInit()
 	effectiveBlank()
 	effectiveChannels()
+
+	csvWriteString()
+	csvReadString()
 }
 
 func TestBar(t *testing.T) {
