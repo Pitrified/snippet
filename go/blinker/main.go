@@ -15,6 +15,8 @@ func randDuration(begin float64, length float64) time.Duration {
 	return time.Duration((begin + rand.Float64()*length) * 1e9)
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 // sample use of a timeout
 func blinkTimeoutSingle() {
 	rand.Seed(time.Now().UnixNano())
@@ -30,6 +32,8 @@ func blinkTimeoutSingle() {
 		fmt.Println("Timeout.")
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 // sample use of a ticker
 func blinkTicker1() {
@@ -54,6 +58,9 @@ func blinkTicker1() {
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+// ticker and timer together
 // generate blinks every 0.8-1.2 sec
 // after 1 sec blink anyway
 // if the blink is forced, stop the other timer
@@ -97,20 +104,112 @@ func blinkTicker2() {
 			// reset the ticker
 			ticker.Reset(time.Second)
 			// reset the timer as well to restart it
-			timer = time.NewTimer(randDuration(begin, length))
+			timer.Reset(randDuration(begin, length))
 		}
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+// test with manipulating time
+func timeDiff() {
+	rand.Seed(time.Now().UnixNano())
+
+	// setup some deadline
+	now := time.Now()
+	fmt.Printf("now         : %v %T\n", now, now)
+	period := randDuration(0.9, 0.2)
+	fmt.Printf("period      : %v %T\n", period, period)
+	nextBlink := time.Now().Add(period)
+	fmt.Printf("nextBlink   : %v %T\n", nextBlink, nextBlink)
+
+	// sleep for a while
+	sleep := randDuration(0.1, 0.1)
+	fmt.Printf("sleep       : %v %T\n", sleep, sleep)
+	time.Sleep(sleep)
+
+	// Duration until next blink
+	toNext := time.Until(nextBlink)
+	fmt.Printf("toNext      : %v %T\n", toNext, toNext)
+	fmt.Printf("toNext.Milliseconds() : %v %T\n", toNext.Milliseconds(), toNext.Milliseconds())
+	fmt.Printf("toNext.Nanoseconds()  : %v %T\n", toNext.Nanoseconds(), toNext.Nanoseconds())
+	fmt.Printf("toNext.Seconds()      : %v %T\n", toNext.Seconds(), toNext.Seconds())
+
+	// scale the interval until the next blink
+	toNextFlo := toNext.Seconds() * 0.8
+	// Optionally remove a fixed amount (3ms) so that if it is really close to
+	// firing, it will fire now (or just check if it is smaller than 3ms).
+	// Also useful to avoid super short timer
+	fmt.Printf("toNextFlo   : %v %T\n", toNextFlo, toNextFlo)
+	// convert it to duration, accepts nanoseconds as int
+	toNextDur := time.Duration(toNextFlo * 1e9)
+	fmt.Printf("toNextDur   : %v %T\n", toNextDur, toNextDur)
+
+	// this is the time to wait until the next blink so a ticker is actually useless
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// SafeTimer
+type SafeTimer struct {
+	*time.Timer
+}
+
+func (st *SafeTimer) SafeReset(d time.Duration) {
+	fmt.Println("SafeResetting")
+	if !st.Stop() {
+		fmt.Println("Draining")
+		<-st.C
+	}
+	fmt.Println("Reset")
+	st.Reset(d)
+}
+
+func blinkSafeTimer() {
+	rand.Seed(time.Now().UnixNano())
+
+	begin := 0.8
+	length := 0.4
+	st := &SafeTimer{time.NewTimer(randDuration(begin, length))}
+
+	nudgeCh := make(chan int)
+	// nudge every random
+	// TODO
+
+	// to quit the loop someday
+	done := make(chan bool)
+	go func() {
+		time.Sleep(10 * time.Second)
+		done <- true
+	}()
+
+	for {
+		select {
+		case <-done:
+			fmt.Println("Done all!")
+			return
+		case t := <-st.C:
+			fmt.Println("Timer : ", t)
+			st.Reset(randDuration(begin, length))
+		case <-nudgeCh:
+			fmt.Println("Nudged")
+			// TODO compute the shortened remaining time and SafeReset
+			// *here* SafeReset is needed, because st.C was not used and must be drained
+		}
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Firefly:
 // struct that holds the end
 // when nudged, compute the new end
 // check if newEnd.before(Now)
-// true: blink, reset ticker
-// false: nothing
+//    true: blink, reset ticker
+//    false: nothing
 // each struct is created and then golaunched
-
 // have to setup a nudgeable flag to avoid hyperrepetition in swarm flash
-// also nifty speedup when synced
+//    also nifty speedup when synced
 
 type Firefly struct {
 	ticker    *time.Ticker
@@ -212,7 +311,9 @@ func main() {
 	// which := "single"
 	// which := "ticker1"
 	// which := "ticker2"
-	which := "hatch"
+	// which := "hatch"
+	// which := "timediff"
+	which := "safetimer"
 	fmt.Printf("Which = %+v\n", which)
 
 	switch which {
@@ -224,6 +325,10 @@ func main() {
 		blinkTicker2()
 	case "hatch":
 		hatch()
+	case "timediff":
+		timeDiff()
+	case "safetimer":
+		blinkSafeTimer()
 	}
 }
 
