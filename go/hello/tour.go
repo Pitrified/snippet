@@ -524,9 +524,8 @@ func (rr rot13Reader) Read(b []byte) (int, error) {
 	// fmt.Printf("Read from reader n = %v err = %v b = %v\n", n, err, b)
 	if err == io.EOF {
 		return 0, io.EOF
-	}
-	if err != nil {
-		panic(err) // other errors are unexpected
+	} else if err != nil {
+		return 0, err // propagate the error
 	}
 	for i := range b {
 		// oldb := b[i]
