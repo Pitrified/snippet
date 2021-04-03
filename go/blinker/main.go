@@ -15,6 +15,13 @@ func randDuration(begin float64, length float64) time.Duration {
 	return time.Duration((begin + rand.Float64()*length) * 1e9)
 }
 
+func Abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // sample use of a timeout
@@ -150,34 +157,40 @@ func timeDiff() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// SafeTimer
-type SafeTimer struct {
+// BlinkTimer
+type BlinkTimer struct {
 	*time.Timer
 
 	nextBlink time.Time
 }
 
-func NewSafeTimer(d time.Duration) *SafeTimer {
+func NewBlinkTimer(d time.Duration) *BlinkTimer {
 	nextBlink := time.Now().Add(d)
-	return &SafeTimer{time.NewTimer(d), nextBlink}
+	return &BlinkTimer{time.NewTimer(d), nextBlink}
 }
 
-func (st *SafeTimer) SafeReset(d time.Duration) {
+// bt.Stop is false if the timer has has already expired or been stopped
+// in that case you need to drain the channel
+// (when it expired the timer put a value there)
+// but remember that if another goroutine extracted that value
+// this will lock on <-bt.C
+// MAYBE using a select with a default could be safer
+func (bt *BlinkTimer) SafeReset(d time.Duration) {
 	// fmt.Println("SafeResetting")
-	if !st.Stop() {
+	if !bt.Stop() {
 		// fmt.Println("Draining")
-		<-st.C
+		<-bt.C
 	}
 	// fmt.Println("Reset")
-	st.BlinkReset(d)
+	bt.BlinkReset(d)
 }
 
-func (st *SafeTimer) BlinkReset(d time.Duration) {
-	st.Reset(d)
-	st.nextBlink = time.Now().Add(d)
+func (bt *BlinkTimer) BlinkReset(d time.Duration) {
+	bt.Reset(d)
+	bt.nextBlink = time.Now().Add(d)
 }
 
-func blinkSafeTimer() {
+func blinkBlinkTimer() {
 	rand.Seed(time.Now().UnixNano())
 
 	nudgePeriod := time.Duration(0.9 * 1e9)
@@ -210,7 +223,8 @@ func blinkSafeTimer() {
 	// sleep a random amount to desync the two
 	time.Sleep(time.Duration(rand.Float64() * 1e9))
 
-	st := NewSafeTimer(blinkPeriod)
+	// create the BlinkTimer
+	bt := NewBlinkTimer(blinkPeriod)
 
 	for {
 		select {
@@ -219,16 +233,16 @@ func blinkSafeTimer() {
 			fmt.Println("Done all!")
 			return
 
-		case t := <-st.C:
+		case t := <-bt.C:
 			fmt.Println("Timer : ", t)
-			st.BlinkReset(blinkPeriod)
+			bt.BlinkReset(blinkPeriod)
 
 		case ni := <-nudgeCh:
-			// *here* SafeReset is needed, because st.C was not used and must be drained
+			// *here* SafeReset is needed, because bt.C was not used and must be drained
 			fmt.Printf("    Got nudge %+v\n", ni)
 
 			// Duration until next blink
-			toNext := time.Until(st.nextBlink)
+			toNext := time.Until(bt.nextBlink)
 			fmt.Printf("toNext.Seconds() : %v %T\n", toNext.Seconds(), toNext.Seconds())
 
 			// scale the interval until the next blink
@@ -240,12 +254,12 @@ func blinkSafeTimer() {
 				// the nudge would bring it very close to zero
 				// so reset it to a full timer
 				fmt.Printf("Resetting blinkPeriod = %+v\n", blinkPeriod)
-				st.SafeReset(blinkPeriod)
+				bt.SafeReset(blinkPeriod)
 			} else {
 				// convert it to duration, accepts nanoseconds as int
 				toNextDur := time.Duration(toNextFlo * 1e9)
 				fmt.Printf("toNextDur        : %v %T\n", toNextDur, toNextDur)
-				st.SafeReset(toNextDur)
+				bt.SafeReset(toNextDur)
 			}
 
 		}
@@ -255,19 +269,19 @@ func blinkSafeTimer() {
 ////////////////////////////////////////////////////////////////////////////////
 
 // Firefly:
-// struct that holds the end
+// struct that holds the end in a BlinkTimer
 // when nudged, compute the new end
 // check if newEnd.before(Now)
-//    true: blink, reset ticker
-//    false: nothing
+//    true: blink, reset timer with original period
+//    false: reset the timer with the new duration of time left
 // each struct is created and then golaunched
 // have to setup a nudgeable flag to avoid hyperrepetition in swarm flash
 //    also nifty speedup when synced
 
 type Firefly struct {
-	ticker    *time.Ticker
-	nextBlink time.Time
-	period    time.Duration
+	blinkTimer    *BlinkTimer
+	period        time.Duration
+	postBlinkWait time.Duration
 
 	blinkCh   chan<- *Firefly
 	nudgeCh   chan int
@@ -285,16 +299,58 @@ func (f *Firefly) blinker() {
 		// or MAYBE blink and reset the ticker
 		// or MAYBE do not blink here, but set a ticker for 1us
 		// or MAYBE call a blink func eh?
-		case fIDblink := <-f.nudgeCh:
-			fmt.Printf("Nudged %d by %d.\n", f.fID, fIDblink)
+		// case fIDblink := <-f.nudgeCh:
+		case <-f.nudgeCh:
+			// fmt.Printf("    Nudged %d by %d.\n", f.fID, fIDblink)
+			f.doNudge()
 
 		// blink
-		case t := <-f.ticker.C:
-			fmt.Printf("Ticked %d at: %v.%v\n", f.fID, t.Second(), t.Nanosecond())
-			// this call to blink is done in doBlink
-			f.blinkCh <- f
+		// case t := <-f.blinkTimer.C:
+		case <-f.blinkTimer.C:
+			// fmt.Printf("Timer fired %d at: %v.%v\n", f.fID, t.Second(), t.Nanosecond())
+			f.doBlink("timer")
 		}
 	}
+}
+
+func (f *Firefly) doNudge() {
+	// Duration until next blink
+	toNext := time.Until(f.blinkTimer.nextBlink)
+	// scale the interval until the next blink
+	// toNextFlo := toNext.Seconds()*0.8 - 0.05
+	toNextFlo := toNext.Seconds() - 0.05
+
+	if toNextFlo < 0.05 {
+		// the nudge would bring it very close to zero
+		// so reset it to a full timer
+		// fmt.Printf("Resetting blinkPeriod %d = %+v\n", f.fID, f.period)
+		// f.blinkTimer.SafeReset(f.period)
+		f.doBlink("nudge")
+	} else {
+		// convert it to duration, accepts nanoseconds as int
+		toNextDur := time.Duration(toNextFlo * 1e9)
+		// fmt.Printf("Time left %d: %v %T\n", f.fID, toNextDur, toNextDur)
+		f.blinkTimer.SafeReset(toNextDur)
+	}
+}
+
+func (f *Firefly) doBlink(which string) {
+	// t := time.Now()
+	// fmt.Printf("Blinking %d at %v.%v\n", f.fID, t.Second(), t.Nanosecond())
+	fmt.Printf(".")
+
+	// this Firefly is blinking now
+	f.blinkCh <- f
+	// restart the timer
+	switch which {
+	case "nudge":
+		f.blinkTimer.SafeReset(f.period)
+	case "timer":
+		f.blinkTimer.BlinkReset(f.period)
+	}
+	f.nudgeable = false
+	time.Sleep(f.postBlinkWait)
+	f.nudgeable = true
 }
 
 func nudger(fireflies map[int]*Firefly, blinkCh <-chan *Firefly) {
@@ -311,13 +367,16 @@ func nudger(fireflies map[int]*Firefly, blinkCh <-chan *Firefly) {
 			if !fOther.nudgeable {
 				continue
 			}
+			if Abs(fBlink.fID-fOther.fID)%500 > 5 {
+				continue
+			}
 			// nudge the other
 			// fmt.Printf("Nudging %d by %d.\n", fOther.fID, fBlink.fID)
 			select {
 			case fOther.nudgeCh <- fBlink.fID:
-				fmt.Printf("\tFree %d by %d.\n", fOther.fID, fBlink.fID)
+				// fmt.Printf("        Free %d by %d.\n", fOther.fID, fBlink.fID)
 			default:
-				fmt.Printf("\t\tFull %d by %d.\n", fOther.fID, fBlink.fID)
+				// fmt.Printf("            Full %d by %d.\n", fOther.fID, fBlink.fID)
 			}
 		}
 	}
@@ -325,24 +384,34 @@ func nudger(fireflies map[int]*Firefly, blinkCh <-chan *Firefly) {
 }
 
 func hatch() {
+
 	// the swarm
 	fireflies := make(map[int]*Firefly)
-	nF := 10
+	// nF := 10
+	// nF := 50
+	nF := 500
 	// nF := 5000
+
+	// time to wait after blinking
+	postBlinkWait := time.Millisecond * 200
+
 	// the channel where each firefly sends a bool when blinking
 	blinkCh := make(chan *Firefly)
+
+	// create the fireflies
 	for i := 0; i < nF; i++ {
 		// blinking period
 		period := randDuration(0.9, 0.2)
-		ticker := time.NewTicker(period)
-		nextBlink := time.Now().Add(period)
+		// time left before this Firefly blinks
+		blinkTimer := NewBlinkTimer(randDuration(0.1, 1))
 		// each firefly can be nudged independently
 		nudgeCh := make(chan int)
+		// can be nudged for now
 		nudgeable := true
 		fireflies[i] = &Firefly{
-			ticker,
-			nextBlink,
+			blinkTimer,
 			period,
+			postBlinkWait,
 			blinkCh,
 			nudgeCh,
 			nudgeable,
@@ -354,7 +423,7 @@ func hatch() {
 	go nudger(fireflies, blinkCh)
 
 	// wait a while
-	time.Sleep(5 * time.Second)
+	time.Sleep(500 * time.Second)
 	fmt.Println("Quit.")
 }
 
@@ -364,9 +433,9 @@ func main() {
 	// which := "single"
 	// which := "ticker1"
 	// which := "ticker2"
-	// which := "hatch"
+	which := "hatch"
 	// which := "timediff"
-	which := "safetimer"
+	// which := "safetimer"
 	fmt.Printf("Which = %+v\n", which)
 
 	switch which {
@@ -381,7 +450,7 @@ func main() {
 	case "timediff":
 		timeDiff()
 	case "safetimer":
-		blinkSafeTimer()
+		blinkBlinkTimer()
 	}
 }
 
