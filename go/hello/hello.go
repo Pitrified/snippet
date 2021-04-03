@@ -74,6 +74,8 @@ func main() {
 	csvReadString()
 	csvWriteStruct()
 	csvReadStruct()
+
+	sampleCentralWrite()
 }
 
 func TestBar(t *testing.T) {
