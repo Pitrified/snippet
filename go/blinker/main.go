@@ -180,29 +180,37 @@ func (st *SafeTimer) BlinkReset(d time.Duration) {
 func blinkSafeTimer() {
 	rand.Seed(time.Now().UnixNano())
 
-	// nudge every random interval
+	nudgePeriod := time.Duration(0.9 * 1e9)
+	blinkPeriodSec := 1.0
+	blinkPeriod := time.Duration(blinkPeriodSec * 1e9)
+
+	// nudge every shorter period
 	nudgeCh := make(chan int)
 	go func() {
 		for i := 0; ; i++ {
-			time.Sleep(randDuration(0.6, 0.2))
-			fmt.Printf("Sending nudge %+v\n", i)
+			time.Sleep(nudgePeriod)
+			// fmt.Printf("Sending nudge %+v\n", i)
 			nudgeCh <- i
-			fmt.Printf("   Sent nudge %+v\n", i)
+			// add more nudgers (more neighbours)
+			// this is the expected behaviour
+			// but the post-blink inhibitor is needed
+			nudgeCh <- i
+			nudgeCh <- i
+			// fmt.Printf("   Sent nudge %+v\n", i)
 		}
 	}()
 
 	// to quit the loop someday
 	done := make(chan bool)
 	go func() {
-		time.Sleep(5 * time.Second)
+		time.Sleep(50 * time.Second)
 		done <- true
 	}()
 
-	begin := 0.8
-	length := 0.4
-	// generate a deadline
-	untilNext := randDuration(begin, length)
-	st := NewSafeTimer(untilNext)
+	// sleep a random amount to desync the two
+	time.Sleep(time.Duration(rand.Float64() * 1e9))
+
+	st := NewSafeTimer(blinkPeriod)
 
 	for {
 		select {
@@ -213,7 +221,7 @@ func blinkSafeTimer() {
 
 		case t := <-st.C:
 			fmt.Println("Timer : ", t)
-			st.BlinkReset(randDuration(begin, length))
+			st.BlinkReset(blinkPeriod)
 
 		case ni := <-nudgeCh:
 			// *here* SafeReset is needed, because st.C was not used and must be drained
@@ -221,22 +229,22 @@ func blinkSafeTimer() {
 
 			// Duration until next blink
 			toNext := time.Until(st.nextBlink)
-			fmt.Printf("toNext.Seconds()      : %v %T\n", toNext.Seconds(), toNext.Seconds())
+			fmt.Printf("toNext.Seconds() : %v %T\n", toNext.Seconds(), toNext.Seconds())
 
 			// scale the interval until the next blink
-			toNextFlo := toNext.Seconds() * 0.8
-			fmt.Printf("toNextFlo   : %v %T\n", toNextFlo, toNextFlo)
+			// toNextFlo := toNext.Seconds()*0.8 - 0.05
+			toNextFlo := toNext.Seconds() - 0.05
+			fmt.Printf("toNextFlo        : %v %T\n", toNextFlo, toNextFlo)
 
-			if toNextFlo < 0.005 {
+			if toNextFlo < 0.05 {
 				// the nudge would bring it very close to zero
 				// so reset it to a full timer
-				untilNext := randDuration(begin, length)
-				fmt.Printf("untilNext   : %v %T\n", untilNext, untilNext)
-				st.SafeReset(untilNext)
+				fmt.Printf("Resetting blinkPeriod = %+v\n", blinkPeriod)
+				st.SafeReset(blinkPeriod)
 			} else {
 				// convert it to duration, accepts nanoseconds as int
 				toNextDur := time.Duration(toNextFlo * 1e9)
-				fmt.Printf("toNextDur   : %v %T\n", toNextDur, toNextDur)
+				fmt.Printf("toNextDur        : %v %T\n", toNextDur, toNextDur)
 				st.SafeReset(toNextDur)
 			}
 
