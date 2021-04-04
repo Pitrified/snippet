@@ -49,6 +49,8 @@ func yieldBlinkIDs(c chan<- *BlinkID, fileName string) {
 	defer f.Close()
 
 	r := csv.NewReader(f)
+	// manually check the number of fields
+	r.FieldsPerRecord = -1
 
 	minute := 0
 	new_minute := false
@@ -114,8 +116,28 @@ func getFireCoord(fID, nF, circleRadius int, circleCenter Coord) Coord {
 }
 
 // draw a Firefly on the image
-// func drawFirefly(image, fireCoord Coord, brightness float) {
-// }
+func drawFirefly(img *image.RGBA, fireCoord Coord, brightness float64) {
+	ix, iy := int(fireCoord.x), int(fireCoord.y)
+
+	brightMax := uint8(255 * brightness)
+	yellow := color.RGBA{brightMax, brightMax, 0, 255}
+	img.Set(ix, iy, yellow)
+
+	// return
+	brightMid := uint8(255 * brightness * 0.8)
+	yellow = color.RGBA{brightMid, brightMid, 0, 255}
+	img.Set(ix+1, iy, yellow)
+	img.Set(ix-1, iy, yellow)
+	img.Set(ix, iy+1, yellow)
+	img.Set(ix, iy-1, yellow)
+
+	brightMin := uint8(255 * brightness * 0.5)
+	yellow = color.RGBA{brightMin, brightMin, 0, 255}
+	img.Set(ix+1, iy+1, yellow)
+	img.Set(ix-1, iy+1, yellow)
+	img.Set(ix+1, iy-1, yellow)
+	img.Set(ix-1, iy-1, yellow)
+}
 
 // generate an image with the current state of the swarm
 func generateImage(
@@ -144,18 +166,13 @@ func generateImage(
 	for fID, fireCoord := range fireCoords {
 		since := now - lastBlink[fID]
 		bright := brightness(float64(since), decay)
-		y := uint8(255 * bright)
-		// if bright > 0.5 {
-		// 	fmt.Printf("fID %2d since %6d y %3d bright %f\n", fID, since, y, bright)
-		// }
-		yellow := color.RGBA{y, y, 0, 255}
-		img.Set(int(fireCoord.x), int(fireCoord.y), yellow)
+		drawFirefly(img, fireCoord, bright)
 	}
 
 	// Encode as PNG.
 	outImgName := fmt.Sprintf(outImgTempl, frameIndex)
 	outImgPath := filepath.Join(outImgDir, outImgName)
-	// fmt.Printf("outImgPath = %+v\n", outImgPath)
+	// fmt.Printf("    outImgPath = %+v\n", outImgPath)
 	f, _ := os.Create(outImgPath)
 	defer f.Close()
 	png.Encode(f, img)
@@ -177,8 +194,10 @@ func makeImages(nF, nComm int) {
 	// const imgHeight = 600
 	// const imgWidth = 3840
 	// const imgHeight = 2160
-	const imgWidth = 1920
-	const imgHeight = 1080
+	// const imgWidth = 1920
+	// const imgHeight = 1080
+	const imgWidth = 1200
+	const imgHeight = 1200
 
 	// circle size
 	// const circleRadius = 200
@@ -189,8 +208,7 @@ func makeImages(nF, nComm int) {
 	fmt.Printf("circleCenter %+v %T\n", circleCenter, circleCenter)
 
 	// brightness decay
-	// const decay = 1.0 / 60.0
-	const decay = 1.0 / 120.0
+	const decay = 1.0 / 180.0
 	fmt.Printf("decay %+v %T\n", decay, decay)
 
 	// imput file

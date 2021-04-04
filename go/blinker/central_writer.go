@@ -56,6 +56,8 @@ func centralWriter(input <-chan string, done chan bool, fileName string) {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
+	count := 0
+
 	for {
 		select {
 
@@ -63,10 +65,13 @@ func centralWriter(input <-chan string, done chan bool, fileName string) {
 		case val := <-input:
 			_, err := w.WriteString(val)
 			check(err)
+			count++
 
 		// flush every period
 		case <-ticker.C:
 			w.Flush()
+			fmt.Printf("count = %v\n", count)
+			count = 0
 
 		// flush the buffer when closing
 		case <-done:

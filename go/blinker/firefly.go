@@ -151,7 +151,7 @@ func hatch(nF, nComm int) {
 	go centralPrinter(printCh, printDoneCh)
 
 	// channel to save blinks to file
-	writeCh := make(chan string)
+	writeCh := make(chan string, 1000)
 	writeDoneCh := make(chan bool)
 	fileName := fmt.Sprintf("histBlinkID_%v_%v.txt", nF, nComm)
 	go centralWriter(writeCh, writeDoneCh, fileName)
@@ -160,7 +160,7 @@ func hatch(nF, nComm int) {
 	postBlinkWait := time.Millisecond * 200
 
 	// the channel where each firefly sends a bool when blinking
-	blinkCh := make(chan *Firefly)
+	blinkCh := make(chan *Firefly, 1000)
 
 	// create the fireflies
 	for i := 0; i < nF; i++ {
