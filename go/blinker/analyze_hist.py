@@ -186,9 +186,14 @@ def run_analyze_hist(args: argparse.Namespace) -> None:
     bin_edges = np.arange(blinks_np.min(), blinks_np.max() + bin_wid, bin_wid)
     logg.debug(f"bin_edges.shape: {bin_edges.shape}")
 
-    fig, ax = plt.subplots(1, 1)
+    fig, ax = plt.subplots(1, 1, figsize=(12, 8))
     ax.hist(values, bin_edges, weights=counts)
+    ax_title = f"Swarm {fireflies_num} comm {fireflies_comm}"
+    ax.set_title(ax_title)
     fig.tight_layout()
+
+    fig_name = f"blinks_{fireflies_num}_{fireflies_comm}.png"
+    fig.savefig(fig_name)
 
     plt.show()
 

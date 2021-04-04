@@ -12,7 +12,7 @@ func main() {
 	// usage:
 	// ./main sample -which=ticker1
 	// ./main hatch -num 500 -comm 5
-	// ./main image
+	// ./main images
 
 	hatchCmd := flag.NewFlagSet("hatch", flag.ExitOnError)
 	hatchNum := hatchCmd.Int("num", 500, "Number of fireflies.")
@@ -20,6 +20,10 @@ func main() {
 
 	sampleCmd := flag.NewFlagSet("sample", flag.ExitOnError)
 	sampleWhich := sampleCmd.String("which", "timediff", "Which sample to run.")
+
+	imagesCmd := flag.NewFlagSet("images", flag.ExitOnError)
+	imagesNum := imagesCmd.Int("num", 500, "Number of fireflies.")
+	imagesComm := imagesCmd.Int("comm", 5, "Comm max distance on the toro.")
 
 	if len(os.Args) < 2 {
 		fmt.Println("Expected 'hatch', 'image' or 'sample' subcommands.")
@@ -54,8 +58,16 @@ func main() {
 			blinkBlinkTimer()
 		}
 
+	case "images":
+		imagesCmd.Parse(os.Args[2:])
+		fmt.Println("Subcommand 'images'")
+		fmt.Println("  num:", *imagesNum)
+		fmt.Println("  comm:", *imagesComm)
+
+		makeImages(*imagesNum, *imagesComm)
+
 	default:
-		fmt.Println("Expected 'hatch', 'image' or 'sample' subcommands.")
+		fmt.Println("Expected 'hatch', 'images' or 'sample' subcommands.")
 		os.Exit(1)
 
 	}
