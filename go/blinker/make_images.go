@@ -11,8 +11,8 @@ import (
 	"log"
 	"math"
 	"os"
+	"path/filepath"
 	"strconv"
-	"time"
 )
 
 // brightness goes from 1 to 0, according to decay constant
@@ -61,6 +61,10 @@ func yieldBlinkIDs(c chan<- *BlinkID, fileName string) {
 			log.Fatal(err)
 		}
 		// fmt.Printf("fID: %s s: %s ms: %s\n", record[0], record[1], record[2])
+
+		if len(record) != 3 || len(record[2]) == 0 {
+			break
+		}
 
 		fID, err := strconv.Atoi(record[0])
 		check(err)
@@ -124,6 +128,8 @@ func generateImage(
 	circleRadius int,
 	circleCenter Coord,
 	decay float64,
+	outImgDir string,
+	outImgTempl string,
 ) {
 
 	img := image.NewRGBA(image.Rect(0, 0, imgWidth, imgHeight))
@@ -139,17 +145,20 @@ func generateImage(
 		since := now - lastBlink[fID]
 		bright := brightness(float64(since), decay)
 		y := uint8(255 * bright)
-		if bright > 0.5 {
-			fmt.Printf("fID %2d since %6d y %3d bright %f\n", fID, since, y, bright)
-		}
+		// if bright > 0.5 {
+		// 	fmt.Printf("fID %2d since %6d y %3d bright %f\n", fID, since, y, bright)
+		// }
 		yellow := color.RGBA{y, y, 0, 255}
 		img.Set(int(fireCoord.x), int(fireCoord.y), yellow)
 	}
 
 	// Encode as PNG.
-	f, _ := os.Create("image.png")
+	outImgName := fmt.Sprintf(outImgTempl, frameIndex)
+	outImgPath := filepath.Join(outImgDir, outImgName)
+	// fmt.Printf("outImgPath = %+v\n", outImgPath)
+	f, _ := os.Create(outImgPath)
+	defer f.Close()
 	png.Encode(f, img)
-	time.Sleep(1000 * time.Millisecond)
 }
 
 func makeImages(nF, nComm int) {
@@ -157,25 +166,46 @@ func makeImages(nF, nComm int) {
 	// parse the blinking txt file
 	// build the blinking images!
 
+	// framerate
 	const fps = 25
 	const frameDistance = 1000 / fps
 	fmt.Printf("fps %v, frameDistance %v\n", fps, frameDistance)
 	fmt.Printf("fps %T, frameDistance %T\n", fps, frameDistance)
 
-	const imgWidth = 900
-	const imgHeight = 600
-	const circleRadius = 200
-	fmt.Printf("img %vx%v, radius %v\n", imgWidth, imgHeight, circleRadius)
+	// image size
+	// const imgWidth = 900
+	// const imgHeight = 600
+	// const imgWidth = 3840
+	// const imgHeight = 2160
+	const imgWidth = 1920
+	const imgHeight = 1080
 
+	// circle size
+	// const circleRadius = 200
+	const circleRadius = 480
+	// const circleRadius = 1000
+	fmt.Printf("img %vx%v, radius %v\n", imgWidth, imgHeight, circleRadius)
 	circleCenter := *NewCoordInt(imgWidth/2, imgHeight/2)
 	fmt.Printf("circleCenter %+v %T\n", circleCenter, circleCenter)
 
+	// brightness decay
+	// const decay = 1.0 / 60.0
+	const decay = 1.0 / 120.0
+	fmt.Printf("decay %+v %T\n", decay, decay)
+
+	// imput file
 	fileName := fmt.Sprintf("histBlinkID_%v_%v.txt", nF, nComm)
 	fmt.Printf("fileName = %v\n", fileName)
 
-	const decay = 1.0 / 60.0
-	fmt.Printf("decay %+v %T\n", decay, decay)
-	_ = brightness(1, decay)
+	// output dir
+	outImgDir := fmt.Sprintf("images_%v_%v", nF, nComm)
+	err := os.RemoveAll(outImgDir)
+	check(err)
+	err = os.Mkdir(outImgDir, 0775)
+	check(err)
+
+	// output name template
+	outImgTempl := "frame_%04d.png"
 
 	// last blink for each Firefly, in milliseconds
 	// initialized at -1s, so when computing the first brightness they are off
@@ -194,7 +224,7 @@ func makeImages(nF, nComm int) {
 	blinkCh := make(chan *BlinkID)
 	go yieldBlinkIDs(blinkCh, fileName)
 	for blink := range blinkCh {
-		fmt.Printf("blink = %+v\n", blink)
+		// fmt.Printf("blink = %+v\n", blink)
 
 		// if it is the first blink, align the frameIndex
 		if !doneAlign {
@@ -216,18 +246,16 @@ func makeImages(nF, nComm int) {
 			generateImage(
 				lastBlink,
 				fireCoords,
-				frameIndex,
-				frameDistance,
-				imgWidth,
-				imgHeight,
-				circleRadius,
-				circleCenter,
+				frameIndex, frameDistance,
+				imgWidth, imgHeight,
+				circleRadius, circleCenter,
 				decay,
+				outImgDir, outImgTempl,
 			)
 
 			// update frameIndex
 			frameIndex++
-			fmt.Printf("New frameIndex %v at %v\n", frameIndex, frameDistance*frameIndex)
+			fmt.Printf("New frameIndex %4d at %6d\n", frameIndex, frameDistance*frameIndex)
 		}
 
 		lastBlink[blink.fID] = blink.ms

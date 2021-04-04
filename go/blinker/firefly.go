@@ -120,7 +120,11 @@ func nudgeCentral(fireflies map[int]*Firefly, blinkCh <-chan *Firefly, nF int, n
 				continue
 			}
 			// can only communicate between fireflies with similar fID
-			if intAbs(fBlink.fID-fOther.fID)%nF > nComm {
+			minDist := intAbs(fBlink.fID - fOther.fID)
+			if minDist > nF/2 {
+				minDist = nF - minDist
+			}
+			if minDist > nComm {
 				continue
 			}
 			// nudge the other
