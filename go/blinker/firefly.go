@@ -16,6 +16,8 @@ import (
 //    also nifty speedup when synced
 
 type Firefly struct {
+	fID int
+
 	blinkTimer    *BlinkTimer
 	period        time.Duration
 	postBlinkWait time.Duration
@@ -23,8 +25,7 @@ type Firefly struct {
 	blinkCh   chan<- *Firefly
 	nudgeCh   chan int
 	nudgeable bool
-
-	fID int
+	printCh   chan<- string
 }
 
 func (f *Firefly) blinker() {
@@ -74,7 +75,8 @@ func (f *Firefly) doNudge() {
 func (f *Firefly) doBlink(which string) {
 	// t := time.Now()
 	// fmt.Printf("Blinking %d at %v.%v\n", f.fID, t.Second(), t.Nanosecond())
-	fmt.Printf(".")
+	// fmt.Printf(".")
+	f.printCh <- "."
 
 	// this Firefly is blinking now
 	f.blinkCh <- f
@@ -124,6 +126,11 @@ func nudger(fireflies map[int]*Firefly, blinkCh <-chan *Firefly, nF int) {
 
 func hatch() {
 
+	// channel to print dots on
+	printCh := make(chan string)
+	done := make(chan bool)
+	go centralPrinter(printCh, done)
+
 	// the swarm
 	fireflies := make(map[int]*Firefly)
 	// nF := 10
@@ -139,22 +146,25 @@ func hatch() {
 
 	// create the fireflies
 	for i := 0; i < nF; i++ {
-		// blinking period
-		period := randDuration(0.9, 0.2)
 		// time left before this Firefly blinks
 		blinkTimer := NewBlinkTimer(randDuration(0.1, 1))
+		// blinking period
+		period := randDuration(0.9, 0.2)
 		// each firefly can be nudged independently
 		nudgeCh := make(chan int)
-		// can be nudged for now
+		// can be nudged right now
 		nudgeable := true
 		fireflies[i] = &Firefly{
+			i,
+
 			blinkTimer,
 			period,
 			postBlinkWait,
+
 			blinkCh,
 			nudgeCh,
 			nudgeable,
-			i,
+			printCh,
 		}
 		go fireflies[i].blinker()
 	}
