@@ -84,7 +84,8 @@ func (f *Firefly) doBlink(source string) {
 	f.printCh <- "."
 
 	// write to file (homegrown csv)
-	f.writeCh <- fmt.Sprintf("%v,%v\n", t.Second(), t.Nanosecond()/1e6)
+	// f.writeCh <- fmt.Sprintf("%v,%v\n", t.Second(), t.Nanosecond()/1e6)
+	f.writeCh <- fmt.Sprintf("%v,%v,%v\n", f.fID, t.Second(), t.Nanosecond()/1e6)
 
 	// send blink to nudgeCentral
 	f.blinkCh <- f
@@ -142,12 +143,12 @@ func hatch() {
 
 	// nF := 10
 	// nF := 50
-	// nF := 500
-	nF := 1000
+	nF := 500
+	// nF := 1000
 	// nF := 5000
 
-	// nComm := 5
-	nComm := 10
+	nComm := 5
+	// nComm := 10
 	// nComm := 30
 	// nComm := 100
 
@@ -159,7 +160,7 @@ func hatch() {
 	// channel to save blinks to file
 	writeCh := make(chan string)
 	writeDoneCh := make(chan bool)
-	fileName := fmt.Sprintf("histBlink_%v_%v.txt", nF, nComm)
+	fileName := fmt.Sprintf("histBlinkID_%v_%v.txt", nF, nComm)
 	go centralWriter(writeCh, writeDoneCh, fileName)
 
 	// time to wait after blinking

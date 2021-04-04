@@ -36,22 +36,22 @@ def parse_arguments() -> argparse.Namespace:
         choices=["lanm", "lnm", "lm", "nm", "m"],
     )
 
-    default = 500
+    def_int = 500
     parser.add_argument(
         "-n",
         "--fireflies_num",
         type=int,
         default=default,
-        help=f"Number of fireflies in the swarm, default {default}",
+        help=f"Number of fireflies in the swarm, default {def_int}",
     )
 
-    default = 10
+    def_int = 10
     parser.add_argument(
         "-c",
         "--fireflies_comm",
         type=int,
         default=default,
-        help=f"Number of fireflies to communicate with, default {default}",
+        help=f"Number of fireflies to communicate with, default {def_int}",
     )
 
     # last line to parse the args
@@ -133,7 +133,7 @@ def run_analyze_hist(args: argparse.Namespace) -> None:
     fireflies_num = args.fireflies_num
     fireflies_comm = args.fireflies_comm
 
-    hist_name = f"histBlink_{fireflies_num}_{fireflies_comm}.txt"
+    hist_name = f"histBlinkID_{fireflies_num}_{fireflies_comm}.txt"
     hist_path = Path(__file__).absolute().parent / hist_name
     logg.debug(f"hist_path: {hist_path}")
 
@@ -150,11 +150,11 @@ def run_analyze_hist(args: argparse.Namespace) -> None:
         for line in f:
             pieces = line.rstrip().split(",")
             # this was the last line cut off badly
-            if len(pieces) != 2 or len(pieces[1]) == 0:
+            if len(pieces) != 3 or len(pieces[2]) == 0:
                 break
             # get the data as ints
-            sec = int(pieces[0])
-            millisec = int(pieces[1])
+            sec = int(pieces[1])
+            millisec = int(pieces[2])
             recap = f"sec: {sec} millisec {millisec}"
 
             if new_minute and sec == 0:
