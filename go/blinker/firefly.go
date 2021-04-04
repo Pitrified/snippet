@@ -136,21 +136,10 @@ func nudgeCentral(fireflies map[int]*Firefly, blinkCh <-chan *Firefly, nF int, n
 
 }
 
-func hatch() {
+func hatch(nF, nComm int) {
 
 	// the swarm
 	fireflies := make(map[int]*Firefly)
-
-	// nF := 10
-	// nF := 50
-	nF := 500
-	// nF := 1000
-	// nF := 5000
-
-	nComm := 5
-	// nComm := 10
-	// nComm := 30
-	// nComm := 100
 
 	// channel to print dots on
 	printCh := make(chan string)
