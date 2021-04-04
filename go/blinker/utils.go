@@ -20,3 +20,9 @@ func intAbs(x int) int {
 	}
 	return x
 }
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
+}

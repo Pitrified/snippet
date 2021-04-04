@@ -25,7 +25,9 @@ type Firefly struct {
 	blinkCh   chan<- *Firefly
 	nudgeCh   chan int
 	nudgeable bool
-	printCh   chan<- string
+
+	printCh chan<- string
+	writeCh chan<- string
 }
 
 func (f *Firefly) blinker() {
@@ -72,28 +74,37 @@ func (f *Firefly) doNudge() {
 	}
 }
 
-func (f *Firefly) doBlink(which string) {
-	// t := time.Now()
+// this Firefly is blinking now
+func (f *Firefly) doBlink(source string) {
+	t := time.Now()
+
+	// print to screen
 	// fmt.Printf("Blinking %d at %v.%v\n", f.fID, t.Second(), t.Nanosecond())
 	// fmt.Printf(".")
 	f.printCh <- "."
 
-	// this Firefly is blinking now
+	// write to file (homegrown csv)
+	f.writeCh <- fmt.Sprintf("%v,%v\n", t.Second(), t.Nanosecond()/1e6)
+
+	// send blink to nudgeCentral
 	f.blinkCh <- f
-	// restart the timer
-	switch which {
+
+	// restart the timer, also drain the channel if nudging
+	switch source {
 	case "nudge":
 		f.blinkTimer.SafeReset(f.period)
 	case "timer":
 		f.blinkTimer.BlinkReset(f.period)
 	}
+
 	// for a while this Firefly cannot be nudged
 	f.nudgeable = false
 	time.Sleep(f.postBlinkWait)
 	f.nudgeable = true
 }
 
-func nudger(fireflies map[int]*Firefly, blinkCh <-chan *Firefly, nF int) {
+// when a Firefly blinks, this will send the nudge signal to all neighbours
+func nudgeCentral(fireflies map[int]*Firefly, blinkCh <-chan *Firefly, nF int) {
 	for {
 		// this Firefly just blinked
 		fBlink := <-blinkCh
@@ -128,8 +139,14 @@ func hatch() {
 
 	// channel to print dots on
 	printCh := make(chan string)
-	done := make(chan bool)
-	go centralPrinter(printCh, done)
+	printDoneCh := make(chan bool)
+	go centralPrinter(printCh, printDoneCh)
+
+	// channel to save blinks to file
+	writeCh := make(chan string)
+	writeDoneCh := make(chan bool)
+	fileName := "histBlink.txt"
+	go centralWriter(writeCh, writeDoneCh, fileName)
 
 	// the swarm
 	fireflies := make(map[int]*Firefly)
@@ -164,14 +181,20 @@ func hatch() {
 			blinkCh,
 			nudgeCh,
 			nudgeable,
+
 			printCh,
+			writeCh,
 		}
 		go fireflies[i].blinker()
 	}
 
-	go nudger(fireflies, blinkCh, nF)
+	go nudgeCentral(fireflies, blinkCh, nF)
 
 	// wait a while
 	time.Sleep(600 * time.Second)
 	fmt.Println("Quit.")
+
+	// close writer and wait for it to flush
+	writeDoneCh <- true
+	<-writeDoneCh
 }
