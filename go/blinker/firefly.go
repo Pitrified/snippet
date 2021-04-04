@@ -104,7 +104,7 @@ func (f *Firefly) doBlink(source string) {
 }
 
 // when a Firefly blinks, this will send the nudge signal to all neighbours
-func nudgeCentral(fireflies map[int]*Firefly, blinkCh <-chan *Firefly, nF int) {
+func nudgeCentral(fireflies map[int]*Firefly, blinkCh <-chan *Firefly, nF int, nComm int) {
 	for {
 		// this Firefly just blinked
 		fBlink := <-blinkCh
@@ -119,7 +119,7 @@ func nudgeCentral(fireflies map[int]*Firefly, blinkCh <-chan *Firefly, nF int) {
 				continue
 			}
 			// can only communicate between fireflies with similar fID
-			if intAbs(fBlink.fID-fOther.fID)%nF > 5 {
+			if intAbs(fBlink.fID-fOther.fID)%nF > nComm {
 				continue
 			}
 			// nudge the other
@@ -137,6 +137,20 @@ func nudgeCentral(fireflies map[int]*Firefly, blinkCh <-chan *Firefly, nF int) {
 
 func hatch() {
 
+	// the swarm
+	fireflies := make(map[int]*Firefly)
+
+	// nF := 10
+	// nF := 50
+	// nF := 500
+	nF := 1000
+	// nF := 5000
+
+	// nComm := 5
+	nComm := 10
+	// nComm := 30
+	// nComm := 100
+
 	// channel to print dots on
 	printCh := make(chan string)
 	printDoneCh := make(chan bool)
@@ -145,15 +159,8 @@ func hatch() {
 	// channel to save blinks to file
 	writeCh := make(chan string)
 	writeDoneCh := make(chan bool)
-	fileName := "histBlink.txt"
+	fileName := fmt.Sprintf("histBlink_%v_%v.txt", nF, nComm)
 	go centralWriter(writeCh, writeDoneCh, fileName)
-
-	// the swarm
-	fireflies := make(map[int]*Firefly)
-	// nF := 10
-	nF := 50
-	// nF := 500
-	// nF := 5000
 
 	// time to wait after blinking
 	postBlinkWait := time.Millisecond * 200
@@ -188,7 +195,7 @@ func hatch() {
 		go fireflies[i].blinker()
 	}
 
-	go nudgeCentral(fireflies, blinkCh, nF)
+	go nudgeCentral(fireflies, blinkCh, nF, nComm)
 
 	// wait a while
 	time.Sleep(600 * time.Second)

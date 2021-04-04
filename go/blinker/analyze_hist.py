@@ -36,6 +36,24 @@ def parse_arguments() -> argparse.Namespace:
         choices=["lanm", "lnm", "lm", "nm", "m"],
     )
 
+    default = 500
+    parser.add_argument(
+        "-n",
+        "--fireflies_num",
+        type=int,
+        default=default,
+        help=f"Number of fireflies in the swarm, default {default}",
+    )
+
+    default = 10
+    parser.add_argument(
+        "-c",
+        "--fireflies_comm",
+        type=int,
+        default=default,
+        help=f"Number of fireflies to communicate with, default {default}",
+    )
+
     # last line to parse the args
     args = parser.parse_args()
     return args
@@ -112,7 +130,10 @@ def run_analyze_hist(args: argparse.Namespace) -> None:
     logg.setLevel("DEBUG")
     logg.debug("Starting run_analyze_hist")
 
-    hist_name = "histBlink.txt"
+    fireflies_num = args.fireflies_num
+    fireflies_comm = args.fireflies_comm
+
+    hist_name = f"histBlink_{fireflies_num}_{fireflies_comm}.txt"
     hist_path = Path(__file__).absolute().parent / hist_name
     logg.debug(f"hist_path: {hist_path}")
 
@@ -128,6 +149,10 @@ def run_analyze_hist(args: argparse.Namespace) -> None:
     with hist_path.open() as f:
         for line in f:
             pieces = line.rstrip().split(",")
+            # this was the last line cut off badly
+            if len(pieces) != 2 or len(pieces[1]) == 0:
+                break
+            # get the data as ints
             sec = int(pieces[0])
             millisec = int(pieces[1])
             recap = f"sec: {sec} millisec {millisec}"
@@ -143,16 +168,28 @@ def run_analyze_hist(args: argparse.Namespace) -> None:
             blinks.append(blink_millisec)
 
             recap += f" blink_millisec {blink_millisec}"
-            logg.debug(recap)
+            # logg.debug(recap)
+
+    blinks_np = np.array(blinks)
 
     # compute the freq
-    values, counts = np.unique(blinks, return_counts=True)
+    values, counts = np.unique(blinks_np, return_counts=True)
     logg.debug(f"values: {values}")
     logg.debug(f"counts: {counts}")
 
     fig, ax = plt.subplots(1, 1)
-    # ax.bar(values, counts, width=20)
     ax.plot(values, counts, marker="x", linestyle="none")
+    fig.tight_layout()
+
+    # bin_wid = 20
+    bin_wid = 50
+    bin_edges = np.arange(blinks_np.min(), blinks_np.max() + bin_wid, bin_wid)
+    logg.debug(f"bin_edges.shape: {bin_edges.shape}")
+
+    fig, ax = plt.subplots(1, 1)
+    ax.hist(values, bin_edges, weights=counts)
+    fig.tight_layout()
+
     plt.show()
 
 

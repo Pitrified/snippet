@@ -14,6 +14,8 @@ func centralPrinter(input <-chan string, done chan bool) {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 
+	count := 0
+
 	for {
 		select {
 
@@ -21,7 +23,8 @@ func centralPrinter(input <-chan string, done chan bool) {
 			fmt.Print(val)
 
 		case <-ticker.C:
-			fmt.Println()
+			fmt.Println(count)
+			count++
 
 		case <-done:
 			return
