@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"image"
 	"image/color"
-	"image/draw"
 
 	"example.com/turtle"
 )
@@ -19,23 +17,19 @@ func sampleTurtle1() {
 	tp1 := turtle.TurtlePen{}
 	fmt.Printf("tp1 = %+v\n", tp1)
 
-	// need to create it manually
+	// need to create it like this
 	tp2 := *turtle.NewTurtlePen()
 	fmt.Printf("tp2 = %+v\n", tp2)
 
+	// create an empty world
 	imgWidth := 1920
 	imgHeight := 1080
-	img := image.NewRGBA(image.Rect(0, 0, imgWidth, imgHeight))
-	black := color.RGBA{10, 10, 10, 255}
-	draw.Draw(img, img.Bounds(), &image.Uniform{black}, image.Point{0, 0}, draw.Src)
-	fmt.Printf("img.Bounds().Max.Y = %+v\n", img.Bounds().Max.Y)
-
-	tw := *turtle.NewTurtleWorld(img)
+	tw := turtle.NewTurtleWorld(imgWidth, imgHeight)
 	fmt.Printf("tw = %+v\n", tw)
 
-	centerPos := turtle.NewPositionInt(imgWidth/2, imgHeight/2)
-	tw.SetPos(centerPos)
+	tw.SetPos(turtle.NewPositionInt(imgWidth/4, imgHeight/2))
 
+	// a square
 	tw.PenDown()
 	tw.Forward(100)
 	tw.Rigth(90)
@@ -50,9 +44,10 @@ func sampleTurtle1() {
 	tw.Rigth(90)
 
 	tw.PenUp()
-	tw.Forward(200)
+	tw.Forward(150)
 	tw.Left(360)
 
+	// a thing?
 	tw.PenDown()
 	tw.Rigth(30)
 	tw.SetColor(turtle.Cyan)
@@ -67,9 +62,24 @@ func sampleTurtle1() {
 	tw.SetColor(color.RGBA{123, 24, 76, 255})
 	tw.Forward(400)
 
-	// Encode as PNG. (MAYBE it's a method of TurtleWorld)
+	tw.PenUp()
+	tw.SetPos(turtle.Position{1200, 500})
+
+	// draw a circle with increasing brightness
+	tw.PenDown()
+	tw.SetHeading(turtle.North)
+	for i := 0; i < 360; i++ {
+		val := uint8(255.0 / 360.0 * float64(i))
+		tw.SetColor(color.RGBA{val, val / 2, 0, 255})
+		tw.Rigth(1)
+		tw.Forward(4)
+	}
+
+	// Encode as PNG.
 	outImgName := "sample_world.png"
 	tw.SaveImage(outImgName)
+
+	// current status
 	fmt.Printf("tw = %+v\n", tw)
 }
 

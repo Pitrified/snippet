@@ -3,6 +3,7 @@ package turtle
 import (
 	"image"
 	"image/color"
+	"image/draw"
 	"image/png"
 	"os"
 )
@@ -24,7 +25,13 @@ type TurtleWorld struct {
 	Tp TurtlePen
 }
 
-func NewTurtleWorld(m *image.RGBA) *TurtleWorld {
+func NewTurtleWorld(width, height int) *TurtleWorld {
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	draw.Draw(img, img.Bounds(), &image.Uniform{SoftBlack}, image.Point{0, 0}, draw.Src)
+	return NewTurtleWorldImage(img)
+}
+
+func NewTurtleWorldImage(m *image.RGBA) *TurtleWorld {
 	tp := *NewTurtlePen()
 	return &TurtleWorld{
 		Image:     m,
@@ -155,7 +162,22 @@ func (tw *TurtleWorld) drawLineBresenham(startPos, endPos Position) {
 
 // Draw in different reference frame
 func (tw *TurtleWorld) SetPixel(x, y int) {
-	tw.Image.Set(x, tw.ImgHeight-y, tw.Tp.Color)
+	yr := tw.ImgHeight - y
+	tw.Image.Set(x, yr, tw.Tp.Color)
+
+	// this color should be slightly less bright
+	cMid := tw.Tp.Color
+	tw.Image.Set(x+1, yr, cMid)
+	tw.Image.Set(x-1, yr, cMid)
+	tw.Image.Set(x, yr+1, cMid)
+	tw.Image.Set(x, yr-1, cMid)
+
+	// and this even dimmer
+	cMin := tw.Tp.Color
+	tw.Image.Set(x+1, yr+1, cMin)
+	tw.Image.Set(x-1, yr+1, cMin)
+	tw.Image.Set(x+1, yr-1, cMin)
+	tw.Image.Set(x-1, yr-1, cMin)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
