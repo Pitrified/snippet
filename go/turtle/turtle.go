@@ -48,8 +48,8 @@ func (t *Turtle) SetHeadingRad(rad float64) {
 ////////////////////////////////////////////////////////////////////////////////
 // Movements
 func (t *Turtle) Forward(dist float64) {
-	t.Pos.X += dist * math.Sin(t.Ori.Radians)
-	t.Pos.Y += dist * math.Cos(t.Ori.Radians)
+	t.Pos.X += dist * math.Cos(t.Ori.Radians)
+	t.Pos.Y += dist * math.Sin(t.Ori.Radians)
 }
 
 func (t *Turtle) Backward(dist float64) {
@@ -62,6 +62,7 @@ func (t *Turtle) Left(deg float64) {
 }
 
 // if you really need to change the angle in radians...
+// but I don't like this
 func (t *Turtle) LeftRad(rad float64) {
 	t.Left(rad2deg(rad))
 }
@@ -73,34 +74,4 @@ func (t *Turtle) Rigth(deg float64) {
 
 func (t *Turtle) RigthRad(rad float64) {
 	t.Rigth(rad2deg(rad))
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Position
-type Position struct {
-	X, Y float64
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Orientation
-type Orientation struct {
-	Degrees, Radians float64
-}
-
-func (o *Orientation) SetOriDeg(deg float64) {
-	o.Degrees = deg
-	o.Radians = deg2rad(deg)
-}
-
-func (o *Orientation) SetOriRad(rad float64) {
-	o.Degrees = rad2deg(rad)
-	o.Radians = rad
-}
-
-func deg2rad(deg float64) float64 {
-	return deg * math.Pi / 180
-}
-
-func rad2deg(rad float64) float64 {
-	return rad / math.Pi * 180
 }

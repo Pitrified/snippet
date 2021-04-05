@@ -3,39 +3,9 @@ package turtle
 import (
 	"image"
 	"image/color"
+	"image/png"
+	"os"
 )
-
-////////////////////////////////////////////////////////////////////////////////
-// A Turtle with a Pen attached
-type TurtlePen struct {
-	*Turtle
-	*Pen
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// A Pen with a color and a state
-type Pen struct {
-	Color color.Color
-	On    bool
-}
-
-func (p *Pen) PenUp() {
-	p.On = false
-}
-
-func (p *Pen) PenDown() {
-	p.On = true
-}
-
-func (p *Pen) SetColor(c color.Color) {
-	p.Color = c
-}
-
-func NewTurtlePen() *TurtlePen {
-	tp := &TurtlePen{}
-	tp.Color = color.White
-	return tp
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // A World with a TurtlePen
@@ -48,28 +18,79 @@ func NewTurtlePen() *TurtlePen {
 // NewTurtleWorldEmpty(w, h, background) to generate a brand new TurtlePen and Image
 // NewTurtleWorldWithPen(m, tp) to set tp as active
 type TurtleWorld struct {
-	Image *image.RGBA
-	Tp    TurtlePen
+	Image     *image.RGBA
+	ImgHeight int
+
+	Tp TurtlePen
 }
 
 func NewTurtleWorld(m *image.RGBA) *TurtleWorld {
 	tp := *NewTurtlePen()
 	return &TurtleWorld{
-		Image: m,
-		Tp:    tp,
+		Image:     m,
+		ImgHeight: m.Bounds().Max.Y,
+		Tp:        tp,
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Set - reset
+func (tw *TurtleWorld) SetPos(pos Position) {
+	startPos := tw.Tp.Pos
+	tw.Tp.SetPos(pos)
+	endPos := tw.Tp.Pos
+	if tw.Tp.On {
+		tw.drawLineBresenham(startPos, endPos)
+	}
+}
+
+func (tw *TurtleWorld) SetHeading(deg float64) {
+	tw.Tp.SetHeading(deg)
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Movements
 func (tw *TurtleWorld) Forward(dist float64) {
 	startPos := tw.Tp.Pos
 	tw.Tp.Forward(dist)
 	endPos := tw.Tp.Pos
-	drawLineBresenham(tw.Image, tw.Tp.Color, startPos, endPos)
+	if tw.Tp.On {
+		tw.drawLineBresenham(startPos, endPos)
+	}
 }
+
+func (tw *TurtleWorld) Backward(dist float64) {
+	tw.Forward(-dist)
+}
+
+func (tw *TurtleWorld) Left(deg float64) {
+	tw.Tp.Left(deg)
+}
+
+func (tw *TurtleWorld) Rigth(deg float64) {
+	tw.Left(-deg)
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Pen/colors
+func (tw *TurtleWorld) PenUp() {
+	tw.Tp.PenUp()
+}
+
+func (tw *TurtleWorld) PenDown() {
+	tw.Tp.PenDown()
+}
+
+func (tw *TurtleWorld) SetColor(c color.Color) {
+	tw.Tp.SetColor(c)
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Drawing
 
 // Bresenham
 // https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm#Algorithm_for_integer_arithmetic
-func drawLineBresenham(m *image.RGBA, c color.Color, startPos, endPos Position) {
+func (tw *TurtleWorld) drawLineBresenham(startPos, endPos Position) {
 
 	x0 := int(startPos.X)
 	y0 := int(startPos.Y)
@@ -82,7 +103,7 @@ func drawLineBresenham(m *image.RGBA, c color.Color, startPos, endPos Position) 
 			y1, y0 = y0, y1
 		}
 		for i := y0; i <= y1; i++ {
-			m.Set(x0, i, c)
+			tw.SetPixel(x0, i)
 		}
 		return
 	}
@@ -93,7 +114,7 @@ func drawLineBresenham(m *image.RGBA, c color.Color, startPos, endPos Position) 
 			x1, x0 = x0, x1
 		}
 		for i := x0; i <= x1; i++ {
-			m.Set(i, y0, c)
+			tw.SetPixel(i, y0)
 		}
 		return
 	}
@@ -116,7 +137,7 @@ func drawLineBresenham(m *image.RGBA, c color.Color, startPos, endPos Position) 
 
 	var e2 int
 	for {
-		m.Set(x0, y0, c)
+		tw.SetPixel(x0, y0)
 		if x0 == x1 && y0 == y1 {
 			return
 		}
@@ -130,4 +151,21 @@ func drawLineBresenham(m *image.RGBA, c color.Color, startPos, endPos Position) 
 			y0 += sy
 		}
 	}
+}
+
+// Draw in different reference frame
+func (tw *TurtleWorld) SetPixel(x, y int) {
+	tw.Image.Set(x, tw.ImgHeight-y, tw.Tp.Color)
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Save output
+func (tw *TurtleWorld) SaveImage(filePath string) error {
+	f, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	err = png.Encode(f, tw.Image)
+	return err
 }
