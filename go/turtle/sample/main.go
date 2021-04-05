@@ -13,6 +13,5 @@ func sampleTurtle() {
 
 func main() {
 	fmt.Println("Welcome to the Tungle.")
-
 	sampleTurtle()
 }
