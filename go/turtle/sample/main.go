@@ -85,5 +85,12 @@ func sampleTurtle1() {
 
 func main() {
 	fmt.Println("Welcome to the Tungle.")
-	sampleTurtle1()
+	// which := "sample1"
+	which := "hilbert"
+	switch which {
+	case "sample1":
+		sampleTurtle1()
+	case "hilbert":
+		sampleHilbert()
+	}
 }
