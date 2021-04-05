@@ -1,0 +1,18 @@
+package main
+
+import (
+	"fmt"
+
+	"example.com/turtle"
+)
+
+func sampleTurtle() {
+	t := turtle.Turtle{}
+	fmt.Printf("t = %+v\n", t)
+}
+
+func main() {
+	fmt.Println("Welcome to the Tungle.")
+
+	sampleTurtle()
+}
