@@ -15,12 +15,9 @@ func hilbertInstructions(
 	rules map[string]string,
 ) string {
 
-	// fmt.Printf("level = %v\n", level)
-
 	for len(remaining) > 0 {
 		curChar := remaining[0]
 		remaining = remaining[1:]
-		// fmt.Printf("curChar %c remaining %v\n", curChar, remaining)
 
 		switch curChar {
 
@@ -53,13 +50,8 @@ func hilbertInstructions(
 	close(instructions)
 	return ""
 }
-
-func sampleHilbert() {
-	// imgWidth := 1080
-	// imgHeight := 1080
-	imgWidth := 2080
-	imgHeight := 2080
-	tw := turtle.NewTurtleWorld(imgWidth, imgHeight)
+func sampleHilbert(imgRes, level int) {
+	tw := turtle.NewTurtleWorld(imgRes, imgRes)
 
 	tw.SetPos(turtle.Position{40, 40})
 	tw.PenDown()
@@ -71,11 +63,8 @@ func sampleHilbert() {
 		"B": "-AF+BFB+FA-",
 	}
 
-	// remaining commands to do
+	// initial remaining commands to do
 	remaining := rules["A"]
-
-	// recursion level
-	level := 7
 
 	// receive the instructions here
 	instructions := make(chan string)
@@ -84,14 +73,12 @@ func sampleHilbert() {
 	go hilbertInstructions(level, remaining, instructions, rules)
 
 	// how much to move Forward
-	// segmentLen := 10.0
-	segmentLen := float64(imgWidth-80) / (math.Exp2(float64(level-1))*4 - 1)
+	segmentLen := float64(imgRes-80) / (math.Exp2(float64(level-1))*4 - 1)
 	den := float64(2.0 ^ (level+1)*4)
 	fmt.Printf("den = %+v\n", den)
 	fmt.Printf("segmentLen = %+v\n", segmentLen)
 
 	for cmd := range instructions {
-		// fmt.Printf("cmd = %+v\n", cmd)
 		switch cmd {
 		case "F":
 			tw.Forward(segmentLen)
@@ -102,6 +89,6 @@ func sampleHilbert() {
 		}
 	}
 
-	outImgName := "sample_hilbert.png"
+	outImgName := fmt.Sprintf("sample_hilbert_%02d_%d.png", level, imgRes)
 	tw.SaveImage(outImgName)
 }

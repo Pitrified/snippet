@@ -1,8 +1,10 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"image/color"
+	"os"
 
 	"example.com/turtle"
 )
@@ -85,12 +87,31 @@ func sampleTurtle1() {
 
 func main() {
 	fmt.Println("Welcome to the Tungle.")
-	// which := "sample1"
-	which := "hilbert"
-	switch which {
-	case "sample1":
+
+	hilbertCmd := flag.NewFlagSet("hilbert", flag.ExitOnError)
+	hilbertLevel := hilbertCmd.Int("lev", 5, "Level of the recursive curve.")
+	hilbertRes := hilbertCmd.Int("res", 1080, "Size of the output image.")
+
+	if len(os.Args) < 2 {
+		fmt.Println("Expected 'hilbert' or 'sample' subcommands.")
+		os.Exit(1)
+	}
+
+	switch os.Args[1] {
+
+	case "sample":
 		sampleTurtle1()
+
 	case "hilbert":
-		sampleHilbert()
+		hilbertCmd.Parse(os.Args[2:])
+		fmt.Println("Subcommand 'hilbert'")
+		fmt.Println("  res   :", *hilbertRes)
+		fmt.Println("  level :", *hilbertLevel)
+		sampleHilbert(*hilbertRes, *hilbertLevel)
+
+	default:
+		fmt.Println("Expected 'hilbert' or 'sample' subcommands.")
+		os.Exit(1)
+
 	}
 }
