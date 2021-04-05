@@ -18,7 +18,7 @@ func (at *AnnotatedTime) String() string {
 }
 
 func centralWriter(input <-chan interface{}, done chan bool) {
-	f, err := os.Create("output_write_multi_500k_buffer100k_16.txt")
+	f, err := os.Create("output_write_multi_500_buffer0_16.txt")
 	check(err)
 	defer f.Close()
 
@@ -65,12 +65,12 @@ func worker(output chan<- interface{}, done chan bool, wID int) {
 
 func sampleCentralWrite() {
 	// setup channels
-	// c := make(chan interface{})
-	c := make(chan interface{}, 100000)
+	c := make(chan interface{})
+	// c := make(chan interface{}, 100000)
 	doneWorker := make(chan bool)
 	doneWriter := make(chan bool)
 
-	numWorkers := 500000
+	numWorkers := 500
 
 	// start workers
 	for i := 0; i < numWorkers; i++ {
@@ -80,14 +80,14 @@ func sampleCentralWrite() {
 	go centralWriter(c, doneWriter)
 
 	// wait a bit
-	time.Sleep(3 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	// stop all workers (will write recap on writerchannel)
 	for i := 0; i < numWorkers; i++ {
 		doneWorker <- true
 	}
 
-	// give time to write result lol so bad
+	// give time to write result lol so bad use a WaitGroup I guess?
 	time.Sleep(1 * time.Second)
 
 	// close the writer

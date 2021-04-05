@@ -75,9 +75,11 @@ func main() {
 	csvWriteStruct()
 	csvReadStruct()
 
-	sampleCentralWrite()
-
 	sampleTurtle()
+
+	sampleList()
+
+	sampleCentralWrite()
 }
 
 func TestBar(t *testing.T) {
