@@ -178,7 +178,7 @@ func generateImage(
 	png.Encode(f, img)
 }
 
-func makeImages(nF, nComm int) {
+func makeImages(nF, nComm int, imgSizeType string) {
 	// build circle of positions
 	// parse the blinking txt file
 	// build the blinking images!
@@ -187,22 +187,29 @@ func makeImages(nF, nComm int) {
 	const fps = 25
 	const frameDistance = 1000 / fps
 	fmt.Printf("fps %v, frameDistance %v\n", fps, frameDistance)
-	fmt.Printf("fps %T, frameDistance %T\n", fps, frameDistance)
 
-	// image size
-	// const imgWidth = 900
-	// const imgHeight = 600
-	// const imgWidth = 3840
-	// const imgHeight = 2160
-	// const imgWidth = 1920
-	// const imgHeight = 1080
-	const imgWidth = 1200
-	const imgHeight = 1200
+	// image size and circle size
+	var imgWidth, imgHeight int
+	var circleRadius int
+	switch imgSizeType {
+	case "1K":
+		imgWidth = 1920
+		imgHeight = 1080
+		circleRadius = 480
+	case "4K":
+		imgWidth = 3840
+		imgHeight = 2160
+		circleRadius = 480 * 2
+	case "1200":
+		imgWidth = 1200
+		imgHeight = 1200
+		circleRadius = 480
+	default:
+		imgWidth = 1200
+		imgHeight = 1200
+		circleRadius = 480
+	}
 
-	// circle size
-	// const circleRadius = 200
-	const circleRadius = 480
-	// const circleRadius = 1000
 	fmt.Printf("img %vx%v, radius %v\n", imgWidth, imgHeight, circleRadius)
 	circleCenter := *NewCoordInt(imgWidth/2, imgHeight/2)
 	fmt.Printf("circleCenter %+v %T\n", circleCenter, circleCenter)
@@ -211,13 +218,21 @@ func makeImages(nF, nComm int) {
 	const decay = 1.0 / 180.0
 	fmt.Printf("decay %+v %T\n", decay, decay)
 
-	// imput file
-	fileName := fmt.Sprintf("histBlinkID_%v_%v.txt", nF, nComm)
-	fmt.Printf("fileName = %v\n", fileName)
+	// input file
+	baseHistDir := "histBlink"
+	outHistFileName := fmt.Sprintf("histBlinkID_%v_%v.txt", nF, nComm)
+	fullHistFile := filepath.Join(baseHistDir, outHistFileName)
+	fmt.Printf("fullHistFile = %v\n", fullHistFile)
 
-	// output dir
-	outImgDir := fmt.Sprintf("images_%v_%v", nF, nComm)
-	err := os.RemoveAll(outImgDir)
+	// create the base image dir if it does not exist
+	baseImgDir := "images"
+	err := ensureDir(baseImgDir, 0775)
+	check(err)
+
+	// remove and re-create the output dir
+	outImgDirName := fmt.Sprintf("images_%v_%v", nF, nComm)
+	outImgDir := filepath.Join(baseImgDir, outImgDirName)
+	err = os.RemoveAll(outImgDir)
 	check(err)
 	err = os.Mkdir(outImgDir, 0775)
 	check(err)
@@ -240,7 +255,7 @@ func makeImages(nF, nComm int) {
 	frameIndex := 0
 
 	blinkCh := make(chan *BlinkID)
-	go yieldBlinkIDs(blinkCh, fileName)
+	go yieldBlinkIDs(blinkCh, fullHistFile)
 	for blink := range blinkCh {
 		// fmt.Printf("blink = %+v\n", blink)
 

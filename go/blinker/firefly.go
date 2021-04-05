@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
 	"time"
 )
 
@@ -146,15 +147,21 @@ func hatch(nF, nComm int) {
 	fireflies := make(map[int]*Firefly)
 
 	// channel to print dots on
-	printCh := make(chan string)
+	printCh := make(chan string, 1000)
 	printDoneCh := make(chan bool)
 	go centralPrinter(printCh, printDoneCh)
+
+	// create the base hist dir if it does not exist
+	baseHistDir := "histBlink"
+	err := ensureDir(baseHistDir, 0775)
+	check(err)
 
 	// channel to save blinks to file
 	writeCh := make(chan string, 1000)
 	writeDoneCh := make(chan bool)
-	fileName := fmt.Sprintf("histBlinkID_%v_%v.txt", nF, nComm)
-	go centralWriter(writeCh, writeDoneCh, fileName)
+	outHistFileName := fmt.Sprintf("histBlinkID_%v_%v.txt", nF, nComm)
+	fullHistFile := filepath.Join(baseHistDir, outHistFileName)
+	go centralWriter(writeCh, writeDoneCh, fullHistFile)
 
 	// time to wait after blinking
 	postBlinkWait := time.Millisecond * 200

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"io/fs"
 	"math/rand"
+	"os"
 	"time"
 )
 
@@ -19,6 +21,16 @@ func intAbs(x int) int {
 		return -x
 	}
 	return x
+}
+
+// https://stackoverflow.com/a/56600630/2237151
+func ensureDir(dirName string, mode fs.FileMode) error {
+	err := os.Mkdir(dirName, mode)
+	if err == nil || os.IsExist(err) {
+		return nil
+	} else {
+		return err
+	}
 }
 
 func check(e error) {
