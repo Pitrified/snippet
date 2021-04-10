@@ -68,4 +68,31 @@ Mostly inspired by
 
 The shiny pkg has some
 [sample](https://github.com/golang/exp/tree/master/shiny/example)
-app.
+apps:
+
+* [Basic](https://github.com/golang/exp/blob/master/shiny/example/basic/main.go),
+  nice event handling structure.
+
+## Publish
+
+For the x11 implementation of 
+[Publish](https://github.com/golang/exp/blob/master/shiny/driver/x11driver/window.go#L97)
+it says:
+`This sync isn't needed to flush the outgoing X11 requests`:
+
+```go
+func (w *windowImpl) Publish() screen.PublishResult {
+	// This sync isn't needed to flush the outgoing X11 requests. Instead, it
+	// acts as a form of flow control. Outgoing requests can be quite small on
+	// the wire, e.g. draw this texture ID (an integer) to this rectangle (four
+	// more integers), but much more expensive on the server (blending a
+	// million source and destination pixels). Without this sync, the Go X11
+	// client could easily end up sending work at a faster rate than the X11
+	// server can serve.
+	w.s.xc.Sync()
+
+	return screen.PublishResult{}
+}
+```
+
+so it might be why the window is updated on Ubuntu without calling `Publish`?
