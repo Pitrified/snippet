@@ -30,7 +30,8 @@ func main() {
 	app := app.New()
 	win := app.NewWindow("Image test")
 
-	img, format, err := getImageFromFilePath("small.png")
+	// img, format, err := getImageFromFilePath("small.png")
+	img, format, err := getImageFromFilePath("hilbert.png")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -52,20 +53,23 @@ func main() {
 
 	// imageWrap := container.NewGridWrap(fyne.NewSize(600, 600), cImg)
 
-	imageFix := container.NewWithoutLayout(cImg)
-	cImg.Resize(fyne.NewSize(600, 600))
-	cImg.Move(fyne.NewPos(100, 100))
+	// imageFix := container.NewWithoutLayout(cImg)
+	// cImg.Resize(fyne.NewSize(600, 600))
+	// cImg.Move(fyne.NewPos(100, 100))
 	// imageFix.Resize(fyne.NewSize(400, 400))
 	// imageFix.Move(fyne.NewPos(100, 100))
 
 	// imageWrap := container.NewGridWrap(fyne.NewSize(600, 600), imageFix)
+
+	imageCenter := container.NewCenter(cImg)
 
 	hcont := container.NewVBox(
 		widget.NewLabel("Over"),
 		// cImg,
 		// imageBorder,
 		// imageWrap,
-		imageFix,
+		// imageFix,
+		imageCenter,
 		widget.NewLabel("Under"),
 	)
 

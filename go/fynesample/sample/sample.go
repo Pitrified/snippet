@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"log"
 	"math/rand"
@@ -11,6 +12,7 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -237,6 +239,11 @@ func main() {
 	slide_5 := widget.NewSlider(0, 10)
 	lab_slide_5 := widget.NewLabel("Data")
 	con_slide_5 := container.New(&wideHeader{}, slide_5, lab_slide_5)
+
+	pe := fyne.PointEvent{}
+	fmt.Printf("pe = %+v\n", pe)
+	me := desktop.MouseEvent{}
+	fmt.Printf("me = %+v\n", me)
 
 	stack_all := container.New(layout.NewVBoxLayout(),
 		two_rows,
