@@ -190,14 +190,26 @@ func runApp(s screen.Screen) {
 	}
 }
 
+func doRun() {
+	// test if it can be called from another func
+	driver.Main(runAppBis)
+}
+
 func main() {
 	fmt.Println("vim-go")
 
 	// some weird things are happening with the update/publish
 	// https://stackoverflow.com/questions/66994242/publishing-changes-to-window-with-shiny-driver
 
-	driver.Main(runAppBis)
+	which := "sendImg"
+	fmt.Printf("which = %+v\n", which)
 
-	fmt.Println("vim-go-app")
-	driver.Main(runApp)
+	switch which {
+	case "runApp":
+		driver.Main(runApp)
+	case "do_run":
+		doRun()
+	case "sendImg":
+		sendImg()
+	}
 }
