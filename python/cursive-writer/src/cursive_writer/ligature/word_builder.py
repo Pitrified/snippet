@@ -68,7 +68,7 @@ def setup_env() -> argparse.Namespace:
 
     # build command string to repeat this run
     # FIXME if an option is a flag this does not work, sorry
-    recap = f"python3 word_builder.py"
+    recap = "python3 word_builder.py"
     for a, v in args._get_kwargs():
         recap += f" --{a} {v}"
 
@@ -81,7 +81,7 @@ def setup_env() -> argparse.Namespace:
 def load_letter_dict(thickness: int, data_dir: Path) -> Dict[str, Letter]:
     """TODO: what is load_letter_dict doing?"""
     logg = logging.getLogger(f"c.{__name__}.load_letter_dict")
-    logg.debug(f"Start load_letter_dict")
+    logg.debug("Start load_letter_dict")
 
     letters_info: Dict[str, Letter] = {}
     let = "a"
@@ -145,6 +145,15 @@ def load_letter_dict(thickness: int, data_dir: Path) -> Dict[str, Letter]:
         right_type="low_up",
         pf_spline_low=data_dir / let / "i2_l_dot_000.txt",
         pf_spline_high=data_dir / let / "i2_h_dot_000.txt",
+        thickness=thickness,
+    )
+    let = "j"
+    letters_info[let] = Letter(
+        let,
+        left_type="low_up",
+        right_type="low_up",
+        pf_spline_low=data_dir / let / "j0_l_dot_000.txt",
+        pf_spline_high=data_dir / let / "j0_h_dot_000.txt",
         thickness=thickness,
     )
     let = "k"
@@ -315,16 +324,16 @@ def compute_letter_alignement(
         # logg.debug(f"ci_load: {ci_load!r}")
         logg.debug(f"ci_load: {ci_load}")
         if f_pf_name != ci_load.f_pf_name or s_pf_name != ci_load.s_pf_name:
-            logg.debug(f"The names in the loaded info are different than the current")
+            logg.debug("The names in the loaded info are different than the current")
             equals = False
         elif f_let_type != ci_load.f_let_type or s_let_type != ci_load.s_let_type:
-            logg.debug(f"The letter types in the loaded info are different")
+            logg.debug("The letter types in the loaded info are different")
             equals = False
         elif f_hash_sha1 != ci_load.f_hash_sha1 or s_hash_sha1 != ci_load.s_hash_sha1:
-            logg.debug(f"The hash_sha1 in the loaded info are different")
+            logg.debug("The hash_sha1 in the loaded info are different")
             equals = False
         else:
-            logg.debug(f"The ligature is valid!")
+            logg.debug("The ligature is valid!")
             equals = True
 
         if equals:
@@ -383,7 +392,7 @@ def fill_ligature_info(
 ) -> Tuple[Dict[str, LigatureInfo], Dict[str, ThickSpline]]:
     """TODO: what is fill_ligature_info doing?"""
     logg = logging.getLogger(f"c.{__name__}.fill_ligature_info")
-    logg.debug(f"Start fill_ligature_info")
+    logg.debug("Start fill_ligature_info")
 
     # where to keep the connection info
     ligature_info: Dict[str, LigatureInfo] = {}
@@ -402,7 +411,7 @@ def fill_ligature_info(
                 f_let, s_let, x_stride, data_dir, ligature_dir
             )
         else:
-            logg.debug(f"Pair already computed")
+            logg.debug("Pair already computed")
 
         # link all the spline info
         full_spline_con = [ligature_info[pair].f_gly_chop]
@@ -520,7 +529,7 @@ def plot_results(
 def run_word_builder(args: argparse.Namespace) -> None:
     """TODO: What is word_builder doing?"""
     logg = logging.getLogger(f"c.{__name__}.run_word_builder")
-    logg.debug(f"Starting run_word_builder")
+    logg.debug("Starting run_word_builder")
 
     main_dir = Path(__file__).resolve().parent
     logg.debug(f"main_dir: {main_dir}")
@@ -534,7 +543,7 @@ def run_word_builder(args: argparse.Namespace) -> None:
     thickness = args.thickness if args.thickness > 0 else 1
 
     letters_info = load_letter_dict(thickness, data_dir)
-    logg.debug(f"letters_info:")
+    logg.debug("letters_info:")
     for letter in letters_info:
         logg.debug(f"{letters_info[letter]}")
 
