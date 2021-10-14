@@ -26,6 +26,14 @@ func imgCreate(c chan<- int) {
 	close(c)
 }
 
+func wFill(w screen.Window) {
+	time.Sleep(time.Second)
+
+	winSize := image.Point{900, 600}
+	w.Fill(image.Rectangle{image.Point{}, winSize},
+		color.RGBA{30, 30, 30, 255}, draw.Src)
+}
+
 func imgPaint(c <-chan int) {
 	// receive images and paint them on the window
 
@@ -47,20 +55,31 @@ func imgPaint(c <-chan int) {
 		defer w.Release()
 
 		// create a Buffer
-		// size0 := image.Point{30, 30}
-		b, err := s.NewBuffer(winSize)
+		size0 := image.Point{30, 30}
+		// b, err := s.NewBuffer(winSize)
+		b, err := s.NewBuffer(size0)
 		if err != nil {
 			log.Fatalf("s.NewBuffer: %+v", err)
 		}
 		defer b.Release()
 
-		w.Fill(b.Bounds(), color.White, draw.Src)
-		w.Publish()
+		// all this do not update the window
+
+		// w.Fill(b.Bounds(), color.White, draw.Src)
+		// w.Publish()
+
+		// w.Fill(image.Rectangle{image.Point{}, winSize},
+		// 	color.RGBA{30, 30, 30, 255}, draw.Src)
+		// w.Publish()
+
+		// time.Sleep(time.Second)
 
 		// MAYBE start here imgCreate so you can pass w as arg and that can
 		// call w.send(paint.Event{})
+		// send the new image on a channel that is read inside the paintEvent case
 
-		time.Sleep(time.Second)
+		// this DOES work
+		go wFill(w)
 
 		for {
 			e := w.NextEvent()
@@ -70,20 +89,31 @@ func imgPaint(c <-chan int) {
 
 			case key.Event:
 				switch e.Code {
-				case key.CodeEscape:
+				case key.CodeEscape, key.CodeQ:
 					return
 				case key.CodeR:
-					if e.Direction == key.DirPress {
-						log.Println("Sending paint event.")
-						w.Send(paint.Event{})
+					if e.Direction != key.DirPress {
+						continue
 					}
+					log.Println("Sending paint event.")
+					w.Send(paint.Event{})
 				case key.CodeC:
-					if e.Direction == key.DirPress {
-						v := uint8(rand.Intn(255))
-						log.Println("Filling with color.")
-						w.Fill(image.Rectangle{image.Point{}, winSize},
-							color.RGBA{v, v, v, 255}, draw.Src)
+					if e.Direction != key.DirPress {
+						continue
 					}
+					log.Println("Filling with color.")
+					v := uint8(rand.Intn(255))
+					w.Fill(image.Rectangle{image.Point{}, winSize},
+						color.RGBA{v, v, v, 255}, draw.Src)
+				case key.CodeB:
+					if e.Direction != key.DirPress {
+						continue
+					}
+					log.Println("Filling with color with buffer.")
+					white := color.RGBA{255, 255, 255, 255}
+					draw.Draw(b.RGBA(), b.RGBA().Bounds(),
+						&image.Uniform{white}, image.Point{0, 0}, draw.Src)
+					w.Upload(image.Point{30, 30}, b, b.Bounds())
 				}
 
 			case paint.Event:

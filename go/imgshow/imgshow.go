@@ -201,7 +201,8 @@ func main() {
 	// some weird things are happening with the update/publish
 	// https://stackoverflow.com/questions/66994242/publishing-changes-to-window-with-shiny-driver
 
-	which := "sendImg"
+	// which := "sendImg"
+	which := "wrapImg"
 	fmt.Printf("which = %+v\n", which)
 
 	switch which {
@@ -211,5 +212,7 @@ func main() {
 		doRun()
 	case "sendImg":
 		sendImg()
+	case "wrapImg":
+		wrapImg()
 	}
 }
