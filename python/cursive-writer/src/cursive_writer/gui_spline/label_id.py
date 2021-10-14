@@ -25,7 +25,7 @@ class LabelId(ttk.Label):
 
     def on_enter(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.on_enter")
-        #  logg.setLevel("TRACE")
+        # logg.setLevel("TRACE")
         logg.log(5, f"{fmt_cn('Enter')} LabelId {self.id_}")
         logg.log(5, f"Event {event} fired by {event.widget}")
         id_ = event.widget.id_
@@ -36,7 +36,7 @@ class LabelId(ttk.Label):
 
     def on_leave(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.on_leave")
-        #  logg.setLevel("TRACE")
+        # logg.setLevel("TRACE")
         logg.log(5, f"{fmt_cn('Leave')} LabelId {self.id_}")
 
         self.event_generate("<<sp_header_leave>>")
@@ -44,14 +44,14 @@ class LabelId(ttk.Label):
 
     def on_button1_press(self, event):
         logg = logging.getLogger(f"c.{__class__.__name__}.on_button1_press")
-        #  logg.setLevel("TRACE")
+        # logg.setLevel("TRACE")
         logg.debug(f"Clicked {fmt_cn('Button-1')} on LabelId {self.id_}")
         self.event_generate("<<sp_header_btn1_press>>")
 
     def set_state(self, the_state):
         """Sets the state of the label"""
         logg = logging.getLogger(f"c.{__class__.__name__}.set_state")
-        #  logg.setLevel("TRACE")
+        # logg.setLevel("TRACE")
         logg.log(5, f"Start {fmt_cn('set_state')} {the_state}")
 
         self.state([the_state])

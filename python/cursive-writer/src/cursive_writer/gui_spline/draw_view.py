@@ -44,7 +44,7 @@ class View:
     def setup_main_window(self):
         """Setup main window aesthetics"""
         self.root.geometry(f"{self.width}x{self.height}")
-        self.root.title(f"Spline builder GUI")
+        self.root.title("Spline builder GUI")
 
     def create_containers(self):
         """TODO: what is create_containers doing?"""
@@ -446,35 +446,35 @@ class FrameInfo(ttk.Frame):
         logg.info(f"Start {fmt_cn('update_state')} {state}")
 
         if state == "free":
-            state_str = f"State: FREE"
+            state_str = "State: FREE"
             set_state = "free"
 
         elif state == "free_clicked_left":
-            state_str = f"State: FREE_CLICK_L"
+            state_str = "State: FREE_CLICK_L"
             set_state = "free"
 
         elif state == "free_clicked_right":
-            state_str = f"State: FREE_CLICK_R"
+            state_str = "State: FREE_CLICK_R"
             set_state = "free"
 
         elif state == "setting_base_mean":
-            state_str = f"State: SET_BM"
+            state_str = "State: SET_BM"
             set_state = "selected"
 
         elif state == "setting_base_mean_clicked":
-            state_str = f"State: SET_BM_CLICK"
+            state_str = "State: SET_BM_CLICK"
             set_state = "free"
 
         elif state == "adjusting_base":
-            state_str = f"State: ADJUST_BASE"
+            state_str = "State: ADJUST_BASE"
             set_state = "selected"
 
         elif state == "adjusting_mean":
-            state_str = f"State: ADJUST_MEAN"
+            state_str = "State: ADJUST_MEAN"
             set_state = "selected"
 
         elif state == "moving_glyph":
-            state_str = f"State: MOVING GLYPH"
+            state_str = "State: MOVING GLYPH"
             set_state = "selected"
 
         else:
@@ -638,16 +638,18 @@ class FrameImage(ttk.Frame):
 
         for spid in data:
             view_op, arrow_type = data[spid]
+            width = 1
             if arrow_type == "selected":
                 color = "red"
             elif arrow_type == "active":
-                color = "green"
+                color = "yellow"
+                width = 3
             elif arrow_type == "standard":
                 color = "cyan2"
             else:
                 logg.warn(f"{fmt_cn('Unrecognized', 'alert')} arrow_type: {arrow_type}")
                 color = "cyan"
-            self.draw_point(view_op, "spline_point", color)
+            self.draw_point(view_op, "spline_point", color=color, width=width)
 
     def update_visible_segment_SP(self, data):
         """TODO: what are you changing when updating visible_segment_SP?"""
@@ -679,7 +681,7 @@ class FrameImage(ttk.Frame):
 
     ### HELPERS ###
 
-    def draw_point(self, view_op, tag, color="cyan", length=-1):
+    def draw_point(self, view_op, tag, color="cyan", length=-1, width=1):
         """Draw a point on the canvas"""
         if length == -1:
             min_dim = min(self.resized_wid, self.resized_hei)
@@ -690,7 +692,14 @@ class FrameImage(ttk.Frame):
         end_x = canv_x + length * cos(view_op.ori_rad)
         end_y = canv_y + length * sin(view_op.ori_rad)
         self.image_canvas.create_line(
-            canv_x, canv_y, end_x, end_y, tags=tag, arrow=tk.LAST, fill=color
+            canv_x,
+            canv_y,
+            end_x,
+            end_y,
+            tags=tag,
+            arrow=tk.LAST,
+            fill=color,
+            width=width,
         )
 
     def draw_line(self, image_point, tag, **kwargs):
@@ -713,7 +722,7 @@ class FrameImage(ttk.Frame):
         admissible_inter = collide_line_box(self.image_bbox, canv_point)
 
         if len(admissible_inter) == 0:
-            logg.log(5, f"No line found inside the image")
+            logg.log(5, "No line found inside the image")
             return
         elif len(admissible_inter) != 2:
             logg.warn(f"Weird amount of intersections found {len(admissible_inter)}")
