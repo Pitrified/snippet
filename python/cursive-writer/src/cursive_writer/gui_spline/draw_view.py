@@ -638,17 +638,19 @@ class FrameImage(ttk.Frame):
 
         for spid in data:
             view_op, arrow_type = data[spid]
-            width = 1
             if arrow_type == "selected":
                 color = "red"
+                width = 3
             elif arrow_type == "active":
                 color = "yellow"
                 width = 3
             elif arrow_type == "standard":
                 color = "cyan2"
+                width = 1
             else:
                 logg.warn(f"{fmt_cn('Unrecognized', 'alert')} arrow_type: {arrow_type}")
                 color = "cyan"
+                width = 1
             self.draw_point(view_op, "spline_point", color=color, width=width)
 
     def update_visible_segment_SP(self, data):
