@@ -17,8 +17,7 @@ from cursive_writer.utils.setup import setup_logger
 
 
 def parse_arguments():
-    """Setup CLI interface
-    """
+    """Setup CLI interface"""
     parser = argparse.ArgumentParser(description="")
 
     parser.add_argument(
@@ -68,8 +67,7 @@ def setup_env():
 
 
 def ex_fit_cubic_curve():
-    """
-    """
+    """"""
     # create the plot
     fig, ax = plt.subplots()
 
@@ -94,8 +92,7 @@ def ex_fit_cubic_curve():
 
 
 def ex_compute_cubic_segment():
-    """
-    """
+    """"""
     logg = logging.getLogger(f"c.{__name__}.ex_compute_cubic_segment")
     logg.setLevel("DEBUG")
     logg.debug(f"Starting ex_compute_cubic_segment")
@@ -128,8 +125,7 @@ def ex_compute_cubic_segment():
 
 
 def ex_thick_spline(p0, p1, thickness):
-    """
-    """
+    """"""
     logg = logging.getLogger(f"c.{__name__}.ex_thick_spline")
     # logg.stLevel("INFO")
     logg.debug(f"\nStarting ex_thick_spline")
@@ -151,8 +147,7 @@ def ex_thick_spline(p0, p1, thickness):
 
 
 def exs_thick_spline():
-    """
-    """
+    """"""
     scale = 10
 
     thickness = 10
@@ -257,8 +252,7 @@ def exs_thick_spline():
 
 
 def ex_long_spline(spline_sequence, thickness):
-    """
-    """
+    """"""
     fig, ax = plt.subplots()
 
     spline_samples = compute_long_thick_spline(spline_sequence, thickness)
@@ -272,8 +266,7 @@ def ex_long_spline(spline_sequence, thickness):
 
 
 def exs_long_spline():
-    """
-    """
+    """"""
     thickness = 2
     spline_sequence = [
         [
@@ -416,8 +409,7 @@ def exs_long_spline():
 
 
 def run_spliner_examples(args):
-    """
-    """
+    """"""
     logg = logging.getLogger(f"c.{__name__}.run_spliner_examples")
     logg.debug(f"Starting run_spliner_examples")
 

@@ -2,8 +2,7 @@ from cursive_writer.utils.oriented_point import OrientedPoint
 
 
 class SplinePoint(OrientedPoint):
-    """Spline Point: an OrientedPoint with additional info
-    """
+    """Spline Point: an OrientedPoint with additional info"""
 
     def __init__(self, x: float, y: float, ori_deg: float, spid: int) -> None:
         """Create a point with orientation

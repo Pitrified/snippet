@@ -37,8 +37,7 @@ def enumerate_double_list(
 
 
 def find_free_index(folder: Path, base_name_fmt: str) -> Optional[int]:
-    """Find the first free name
-    """
+    """Find the first free name"""
     logg = logging.getLogger(f"c.{__name__}.find_free_index")
     logg.setLevel("TRACE")
     logg.info(f"Start {fmt_cn('find_free_index', 'a2')}")
@@ -55,8 +54,7 @@ def find_free_index(folder: Path, base_name_fmt: str) -> Optional[int]:
 
 
 def load_glyph(pf_input_glyph: Path, dx: float = 0, dy: float = 0) -> Optional[Glyph]:
-    """TODO: what is load_glyph doing?
-    """
+    """TODO: what is load_glyph doing?"""
     logg = logging.getLogger(f"c.{__name__}.load_glyph")
     logg.setLevel("INFO")
     logg.debug(f"Start load_glyph")
@@ -79,8 +77,7 @@ def load_glyph(pf_input_glyph: Path, dx: float = 0, dy: float = 0) -> Optional[G
 
 
 def load_spline(pf_input_spline: Path, dx: float = 0, dy: float = 0) -> Spline:
-    """TODO: what is load_spline doing?
-    """
+    """TODO: what is load_spline doing?"""
     logg = logging.getLogger(f"c.{__name__}.load_spline")
     logg.setLevel("INFO")
     logg.debug(f"Start load_spline")
@@ -118,8 +115,7 @@ def load_spline(pf_input_spline: Path, dx: float = 0, dy: float = 0) -> Spline:
 
 
 def compute_hash_spline(pf_spline: Path) -> str:
-    """TODO: what is compute_hash_spline doing?
-    """
+    """TODO: what is compute_hash_spline doing?"""
     # logg = logging.getLogger(f"c.{__name__}.compute_hash_spline")
     # logg.debug(f"Start compute_hash_spline")
 
@@ -140,8 +136,7 @@ def compute_hash_spline(pf_spline: Path) -> str:
 
 
 def print_coeff(coeff: DArray) -> str:
-    """Prints coeff as equation
-    """
+    """Prints coeff as equation"""
     # logg = logging.getLogger(f"c.{__name__}.print_coeff")
     # logg.debug(f"Start print_coeff {coeff}")
 
@@ -153,12 +148,10 @@ def print_coeff(coeff: DArray) -> str:
 
 
 class OrientedPointEncoder(json.JSONEncoder):
-    """Encoder for an OrientedPoint
-    """
+    """Encoder for an OrientedPoint"""
 
     def default(self, obj):
-        """TODO: what is default doing?
-        """
+        """TODO: what is default doing?"""
         if isinstance(obj, OrientedPoint):
             return {
                 "_type": "OrientedPoint",
@@ -170,17 +163,14 @@ class OrientedPointEncoder(json.JSONEncoder):
 
 
 class OrientedPointDecoder(json.JSONDecoder):
-    """Decoder for OrientedPoint
-    """
+    """Decoder for OrientedPoint"""
 
     def __init__(self, *args, **kwargs):
-        """TODO: what is __init__ doing?
-        """
+        """TODO: what is __init__ doing?"""
         super().__init__(object_hook=self.object_hook, *args, **kwargs)
 
     def object_hook(self, obj):
-        """TODO: what is object_hook doing?
-        """
+        """TODO: what is object_hook doing?"""
         if "_type" not in obj:
             return obj
         if obj["_type"] == "OrientedPoint":
@@ -192,6 +182,5 @@ class OrientedPointDecoder(json.JSONDecoder):
 
 
 def serializer_oriented_point(obj: OrientedPoint, **kwargs):
-    """
-    """
+    """"""
     return {"x": obj.x, "y": obj.y, "ori_deg": obj.ori_deg}

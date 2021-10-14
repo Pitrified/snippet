@@ -215,7 +215,9 @@ def find_best_shift(l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_str
         r_x_as[r_id_e_x], r_y_as[r_id_e_x], slope2deg(r_yp_as[r_id_e_x])
     )
     _, ext_x_as, ext_y_as, _ = compute_aligned_cubic_segment(
-        l_p_ext, r_p_ext, x_stride,
+        l_p_ext,
+        r_p_ext,
+        x_stride,
     )
 
     # recap = f"l_id_e_x: {l_id_e_x}"
@@ -262,8 +264,7 @@ def find_best_shift(l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_str
 def align_letter_1(
     spline_sequence_l: Spline, spline_sequence_r: Spline, x_stride: float
 ) -> Tuple[Spline, Glyph, Glyph, float]:
-    """TODO: what is align_letter_1 doing?
-    """
+    """TODO: what is align_letter_1 doing?"""
     # logg = logging.getLogger(f"c.{__name__}.align_letter_1")
     # logg.debug(f"Start align_letter_1")
 
@@ -277,9 +278,17 @@ def align_letter_1(
     _, l_x_as, l_y_as, l_yp_as = compute_aligned_glyph(gly_seq_l, x_stride)
     _, r_x_orig_as, r_y_as, r_yp_as = compute_aligned_glyph(gly_seq_r, x_stride)
 
-    (best_shift, _, _, _, _, l_p_ext, r_p_ext, _, _,) = find_best_shift(
-        l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_stride
-    )
+    (
+        best_shift,
+        _,
+        _,
+        _,
+        _,
+        l_p_ext,
+        r_p_ext,
+        _,
+        _,
+    ) = find_best_shift(l_x_as, l_y_as, l_yp_as, r_x_orig_as, r_y_as, r_yp_as, x_stride)
     # logg.debug(f"best_shift: {best_shift}")
 
     # find where to chop the left glyph, at the last point left to l_p_ext
@@ -307,8 +316,7 @@ def align_letter_1(
 def align_letter_2(
     spline_sequence_l: Spline, spline_sequence_r: Spline, x_stride: float
 ) -> Tuple[Spline, float, Tuple[float, float]]:
-    """TODO: what is align_letter_2 doing?
-    """
+    """TODO: what is align_letter_2 doing?"""
     # logg = logging.getLogger(f"c.{__name__}.align_letter_2")
     # logg.debug(f"Start align_letter_2")
 

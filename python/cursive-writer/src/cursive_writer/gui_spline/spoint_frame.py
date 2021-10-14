@@ -42,8 +42,7 @@ class FrameSPoint(ttk.Frame):
         self.pos_lab.bind("<MouseWheel>", func)
 
     def register_on_content(self, kind, func):
-        """Bind event kind to func, on the label inside the frame
-        """
+        """Bind event kind to func, on the label inside the frame"""
         logg = logging.getLogger(f"c.{__class__.__name__}.register_on_content")
         #  logg.setLevel("TRACE")
         logg.debug(f"Start {fmt_cn('register_on_content')}")
@@ -92,8 +91,7 @@ class FrameSPoint(ttk.Frame):
         self.pos_lab.state([the_state])
 
     def update_label(self):
-        """Updates the text in the label based on the current spoint
-        """
+        """Updates the text in the label based on the current spoint"""
         logg = logging.getLogger(f"c.{__class__.__name__}.update_label")
         #  logg.setLevel("TRACE")
         logg.log(5, f"Start {fmt_cn('update_label')}")

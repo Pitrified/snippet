@@ -11,8 +11,7 @@ from cursive_writer.utils.utils import load_spline
 
 
 def parse_arguments():
-    """Setup CLI interface
-    """
+    """Setup CLI interface"""
     parser = argparse.ArgumentParser(description="")
 
     parser.add_argument(
@@ -68,8 +67,7 @@ def setup_env():
 
 
 def plot_letter(pf_input_spline, thickness, color="k"):
-    """
-    """
+    """"""
     logg = logging.getLogger(f"c.{__name__}.plot_letter")
     logg.debug(f"Starting plot_letter")
 
@@ -108,8 +106,7 @@ def plot_letter(pf_input_spline, thickness, color="k"):
 
 
 def plot_good_letters(data_dir, thickness, colors, prefixes=None):
-    """
-    """
+    """"""
     logg = logging.getLogger(f"c.{__name__}.plot_good_letters")
     logg.debug(f"Starting plot_good_letters")
 
@@ -144,8 +141,7 @@ def plot_good_letters(data_dir, thickness, colors, prefixes=None):
 
 
 def run_single_spline2image(args):
-    """
-    """
+    """"""
     logg = logging.getLogger(f"c.{__name__}.run_single_spline2image")
     logg.debug(f"Starting run_single_spline2image")
 

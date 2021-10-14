@@ -6,8 +6,7 @@ from cursive_writer.utils.color_utils import fmt_cn
 
 class LabelId(ttk.Label):
     def __init__(self, parent, id_, *args, **kwargs):
-        """Create a label with an id_ attached
-        """
+        """Create a label with an id_ attached"""
         logg = logging.getLogger(f"c.{__class__.__name__}.__init__")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('__init__')}")
@@ -50,8 +49,7 @@ class LabelId(ttk.Label):
         self.event_generate("<<sp_header_btn1_press>>")
 
     def set_state(self, the_state):
-        """Sets the state of the label
-        """
+        """Sets the state of the label"""
         logg = logging.getLogger(f"c.{__class__.__name__}.set_state")
         #  logg.setLevel("TRACE")
         logg.log(5, f"Start {fmt_cn('set_state')} {the_state}")

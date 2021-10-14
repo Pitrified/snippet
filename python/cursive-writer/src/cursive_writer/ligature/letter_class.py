@@ -71,15 +71,12 @@ class Letter:
             self.load_spline_info("low")
 
     def load_spline_info(self, which: str) -> None:
-        """TODO: what is load_spline_info doing?
-        """
+        """TODO: what is load_spline_info doing?"""
         logg = logging.getLogger(f"c.{__name__}.load_spline_info")
         # logg.debug(f"Start load_spline_info {which}")
 
         # load the spline
-        self.spline_seq[which] = load_spline(
-            cast(Path, self.pf_spline[which])
-        )
+        self.spline_seq[which] = load_spline(cast(Path, self.pf_spline[which]))
 
         # count the number of points and glyphs
         self.gly_num[which] = len(self.spline_seq[which])
@@ -89,29 +86,24 @@ class Letter:
         if self.gly_num[which] <= 2:
             logg.warn(f"Not enough glyphs in the spline '{which}'")
 
-        self.hash_sha1[which] = compute_hash_spline(
-            cast(Path, self.pf_spline[which])
-        )
+        self.hash_sha1[which] = compute_hash_spline(cast(Path, self.pf_spline[which]))
 
     def get_pf(self, which: str) -> Path:
-        """TODO: what is get_pf doing?
-        """
+        """TODO: what is get_pf doing?"""
         # logg = logging.getLogger(f"c.{__name__}.get_pf")
         # logg.debug(f"Start get_pf")
         valid_which = self.get_valid_type(which)
         return cast(Path, self.pf_spline[valid_which])
 
     def get_spline_seq(self, which: str) -> Spline:
-        """TODO: what is get_spline_seq doing?
-        """
+        """TODO: what is get_spline_seq doing?"""
         # logg = logging.getLogger(f"c.{__name__}.get_spline_seq")
         # logg.debug(f"Start get_spline_seq")
         valid_which = self.get_valid_type(which)
         return self.spline_seq[valid_which]
 
     def get_thick_samples(self, which: str, thickness: int = -1) -> ThickSpline:
-        """TODO: what is get_thick_samples doing?
-        """
+        """TODO: what is get_thick_samples doing?"""
         logg = logging.getLogger(f"c.{__name__}.get_thick_samples")
         # logg.debug(f"Start get_thick_samples")
         valid_which = self.get_valid_type(which)
@@ -140,16 +132,14 @@ class Letter:
         return self.spline_thick_samples[valid_which]
 
     def get_hash(self, which: str) -> str:
-        """TODO: what is get_hash doing?
-        """
+        """TODO: what is get_hash doing?"""
         # logg = logging.getLogger(f"c.{__name__}.get_hash")
         # logg.debug(f"Start get_hash")
         valid_which = self.get_valid_type(which)
         return self.hash_sha1[valid_which]
 
     def get_valid_type(self, which: str) -> str:
-        """TODO: what is get_valid_type doing?
-        """
+        """TODO: what is get_valid_type doing?"""
         logg = logging.getLogger(f"c.{__name__}.get_valid_type")
 
         # the requested type exists

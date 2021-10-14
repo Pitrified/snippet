@@ -12,8 +12,7 @@ from cursive_writer.utils.color_utils import fmt_cn
 
 
 def _from_rgb(r, g, b):
-    """Translates rgb values to a tkinter friendly color code (#F0F8FF)
-    """
+    """Translates rgb values to a tkinter friendly color code (#F0F8FF)"""
     return f"#{int(r):02x}{int(g):02x}{int(b):02x}"
 
 
@@ -167,7 +166,9 @@ def setup_style(colorscheme="terra"):
 
     ### general info labels
     s.configure(
-        "info.TLabel", background=o["bg_container"], padding=(0, 2, 0, 2),
+        "info.TLabel",
+        background=o["bg_container"],
+        padding=(0, 2, 0, 2),
     )
     s.map(
         "info.TLabel",
@@ -176,7 +177,9 @@ def setup_style(colorscheme="terra"):
 
     ### Spline info
     s.configure(
-        "sp_info.TLabel", background=o["bg_container"], anchor=tk.CENTER,
+        "sp_info.TLabel",
+        background=o["bg_container"],
+        anchor=tk.CENTER,
     )
     s.map(
         "sp_info.TLabel",
@@ -210,7 +213,10 @@ def setup_style(colorscheme="terra"):
     ###############
 
     s.configure(
-        "settings.TButton", background=o["bg_btn"], borderwidth=0, highlightthickness=0,
+        "settings.TButton",
+        background=o["bg_btn"],
+        borderwidth=0,
+        highlightthickness=0,
     )
     s.map(
         "settings.TButton",

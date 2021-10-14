@@ -35,7 +35,10 @@ class ScrollableFrame(ttk.Frame):
 
         # place the Frame on the Canvas
         self.scroll_canvas.create_window(
-            (0, 0), window=self.scroll_frame, anchor="nw", tags="self.scroll_frame",
+            (0, 0),
+            window=self.scroll_frame,
+            anchor="nw",
+            tags="self.scroll_frame",
         )
 
         # bind resizing of canvas scrollregion

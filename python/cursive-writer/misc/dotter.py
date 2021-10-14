@@ -8,8 +8,7 @@ from timeit import default_timer as timer
 
 
 def parse_arguments():
-    """Setup CLI interface
-    """
+    """Setup CLI interface"""
     parser = argparse.ArgumentParser(description="")
 
     parser.add_argument(
@@ -30,8 +29,7 @@ def parse_arguments():
 
 
 def setup_logger(logLevel="DEBUG"):
-    """Setup logger that outputs to console for the module
-    """
+    """Setup logger that outputs to console for the module"""
     logroot = logging.getLogger("c")
     logroot.propagate = False
     logroot.setLevel(logLevel)
@@ -84,8 +82,7 @@ def setup_env():
 
 
 def run_dotter(args):
-    """TODO: What is dotter doing?
-    """
+    """TODO: What is dotter doing?"""
     logg = logging.getLogger(f"c.{__name__}.run_dotter")
     logg.debug(f"Starting run_dotter")
 

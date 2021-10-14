@@ -104,8 +104,7 @@ class Model:
         self.thick_segment_points = Observable()
 
     def setup_adjust_dict(self):
-        """TODO: what is setup_adjust_dict doing?
-        """
+        """TODO: what is setup_adjust_dict doing?"""
         logg = logging.getLogger(f"c.{__class__.__name__}.setup_adjust_dict")
         logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('setup_adjust_dict')}")
@@ -170,8 +169,7 @@ class Model:
         self.redraw_canvas()
 
     def save_click_canvas(self, click_type, canvas_x, canvas_y):
-        """Save the pos clicked on the canvas
-        """
+        """Save the pos clicked on the canvas"""
         logg = logging.getLogger(f"c.{__class__.__name__}.save_click_canvas")
 
         # mouse pos relative to image corner
@@ -219,8 +217,7 @@ class Model:
             logg.warn(f"{fmt_cn('Unrecognized', 'alert')} click_type {click_type}")
 
     def move_canvas_mouse(self, move_type, canvas_x, canvas_y):
-        """React to mouse movement on Canvas
-        """
+        """React to mouse movement on Canvas"""
         logg = logging.getLogger(f"c.{__class__.__name__}.move_canvas_mouse")
         #  logg.setLevel("INFO")
         logg.log(5, f"Start {fmt_cn('move_canvas_mouse')}")
@@ -292,10 +289,10 @@ class Model:
 
     def release_click_canvas(self, click_type, canvas_x, canvas_y):
         """The mouse has been released: depending on self.state
-            - create new point
-            - set baseline
-            - adjust baseline
-            - move glyph
+        - create new point
+        - set baseline
+        - adjust baseline
+        - move glyph
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.release_click_canvas")
 
@@ -415,8 +412,7 @@ class Model:
         self.redraw_canvas()
 
     def move_image(self, new_move_view_x, new_move_view_y):
-        """
-        """
+        """"""
         logg = logging.getLogger(f"c.{__class__.__name__}.move_image")
         #  logg.setLevel("INFO")
         logg.log(5, f"Start {fmt_cn('move_image')}")
@@ -431,8 +427,7 @@ class Model:
         self.redraw_canvas()
 
     def update_image_obs(self):
-        """
-        """
+        """"""
         logg = logging.getLogger(f"c.{__class__.__name__}.update_image_obs")
         #  logg.setLevel("INFO")
         logg.log(5, f"Start {fmt_cn('update_image_obs')}")
@@ -447,8 +442,7 @@ class Model:
         self.crop_input_image.set(data)
 
     def clicked_btn_set_fm(self, fm_set_type):
-        """Clicked one of the button of font measurement set
-        """
+        """Clicked one of the button of font measurement set"""
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_fm")
         #  logg.setLevel("INFO")
         logg.info(f"Start {fmt_cn('click_btn_set_fm')} - {fm_set_type}")
@@ -468,8 +462,7 @@ class Model:
             logg.warn(f"{fmt_cn('Unrecognized', 'alert')} fm_set_type {fm_set_type}")
 
     def clicked_btn_adjust_fm(self, fm_adjust_type):
-        """Clicked one of the button of font measurement set
-        """
+        """Clicked one of the button of font measurement set"""
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_fm")
         #  logg.setLevel("INFO")
         logg.info(f"Start {fmt_cn('click_btn_set_fm')} - {fm_adjust_type}")
@@ -502,8 +495,7 @@ class Model:
             )
 
     def clicked_btn_set_base_ascent(self):
-        """TODO: change state to setting_base_ascent
-        """
+        """TODO: change state to setting_base_ascent"""
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_set_base_ascent")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('clicked_btn_set_base_ascent')}")
@@ -647,8 +639,7 @@ class Model:
         self.compute_visible_spline_points()
 
     def clicked_btn_adjust(self, adjust_type):
-        """Adjust the position/orientation of the selected point
-        """
+        """Adjust the position/orientation of the selected point"""
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_adjust")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('clicked_btn_adjust')}")
@@ -694,8 +685,7 @@ class Model:
         self.update_thick_segments()
 
     def clicked_btn_move_glyph(self):
-        """TODO: what is clicked_btn_move_glyph doing?
-        """
+        """TODO: what is clicked_btn_move_glyph doing?"""
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_move_glyph")
         logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('clicked_btn_move_glyph')}")
@@ -713,8 +703,7 @@ class Model:
             self.state.set("moving_glyph")
 
     def clicked_fs_btn_save_spline(self, glyph_root_name):
-        """Save the spline points to file
-        """
+        """Save the spline points to file"""
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fs_btn_save_spline")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('clicked_fs_btn_save_spline')}")
@@ -791,8 +780,7 @@ class Model:
         letter_name.write_text(all_glyphs)
 
     def clicked_fs_btn_set_save_path(self, data_dir):
-        """Set the output folder to save the spline into
-        """
+        """Set the output folder to save the spline into"""
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fs_btn_set_save_path")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('clicked_fs_btn_set_save_path')} {data_dir}")
@@ -800,8 +788,7 @@ class Model:
         self.data_dir.set(data_dir)
 
     def clicked_fl_btn_load_glyph(self, path_input_glyph):
-        """TODO: what is clicked_fl_btn_load_glyph doing?
-        """
+        """TODO: what is clicked_fl_btn_load_glyph doing?"""
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fl_btn_load_glyph")
         logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('clicked_fl_btn_load_glyph')}")
@@ -825,8 +812,7 @@ class Model:
             self.add_spline_abs_point(abs_op)
 
     def clicked_fl_btn_load_spline(self, path_input_spline):
-        """TODO: what is clicked_fl_btn_load_spline doing?
-        """
+        """TODO: what is clicked_fl_btn_load_spline doing?"""
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fl_btn_load_spline")
         logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('clicked_fl_btn_load_spline')}")
@@ -853,8 +839,7 @@ class Model:
                 self.add_spline_abs_point(abs_op)
 
     def redraw_canvas(self):
-        """
-        """
+        """"""
         self.update_image_obs()
         self.recompute_fm_lines_view()
         self.compute_visible_spline_points()
@@ -951,8 +936,7 @@ class Model:
         self.fm2abs, self.abs2fm = compute_affine_transform(base_pt_abs, basis_length)
 
     def adjust_fm_lines(self, source, adjust_type=None):
-        """TODO: what is adjust_fm_lines doing?
-        """
+        """TODO: what is adjust_fm_lines doing?"""
         logg = logging.getLogger(f"c.{__class__.__name__}.adjust_fm_lines")
         logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('adjust_fm_lines')} {source}")
@@ -1046,8 +1030,7 @@ class Model:
         self.update_thick_segments()
 
     def recompute_fm_lines_view(self):
-        """Updates the value in fm_lines_view to match the current abs/mov/zoom
-        """
+        """Updates the value in fm_lines_view to match the current abs/mov/zoom"""
         curr_abs_lines = self.fm_lines_abs.get()
         if curr_abs_lines is not None:
             new_view_lines = self.rescale_fm_lines_to_view(curr_abs_lines)
@@ -1069,8 +1052,7 @@ class Model:
         return abs_lines
 
     def rescale_fm_lines_to_view(self, fm_lines_abs):
-        """Rescale the fm points from ABSOLUTE img coord to VIEWING coord
-        """
+        """Rescale the fm points from ABSOLUTE img coord to VIEWING coord"""
         logg = logging.getLogger(f"c.{__class__.__name__}.rescale_fm_lines_to_view")
         #  logg.setLevel("INFO")
         logg.log(5, f"Start {fmt_cn('rescale_fm_lines_to_view')}")
@@ -1141,8 +1123,8 @@ class Model:
     def add_spline_point(self):
         """Add the new SplinePoint
 
-            - to the dict path_SP
-            - update the selected_spid
+        - to the dict path_SP
+        - update the selected_spid
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.add_spline_point")
         #  logg.setLevel("TRACE")
@@ -1172,8 +1154,7 @@ class Model:
         self.add_spline_abs_point(abs_op)
 
     def add_spline_abs_point(self, abs_op):
-        """
-        """
+        """"""
         logg = logging.getLogger(f"c.{__class__.__name__}.add_spline_abs_point")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('add_spline_abs_point')}")
@@ -1214,8 +1195,7 @@ class Model:
         self.compute_visible_spline_points()
 
     def compute_visible_spline_points(self):
-        """Transform the points in view coord and send the visible one
-        """
+        """Transform the points in view coord and send the visible one"""
         logg = logging.getLogger(
             f"c.{__class__.__name__}.compute_visible_spline_points"
         )
@@ -1249,16 +1229,14 @@ class Model:
         self.visible_SP.set(visible_SP)
 
     def find_spid_in_path_SP(self, spid):
-        """Find the indexes of the given spid in the path
-        """
+        """Find the indexes of the given spid in the path"""
         for i, j, sp in enumerate_double_list(self.path_SP.get()):
             if sp == spid:
                 return [i, j]
         return [0, -1]
 
     def compute_visible_segment_points(self):
-        """Transform the segment points in view coord and send the visible one
-        """
+        """Transform the segment points in view coord and send the visible one"""
         logg = logging.getLogger(
             f"c.{__class__.__name__}.compute_visible_segment_points"
         )
@@ -1320,8 +1298,7 @@ class Model:
         self.visible_segment_SP.set(visible_points)
 
     def update_thick_segments(self):
-        """TODO: what is update_thick_segments doing?
-        """
+        """TODO: what is update_thick_segments doing?"""
         logg = logging.getLogger(f"c.{__class__.__name__}.update_thick_segments")
         # logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('update_thick_segments')}")
@@ -1400,8 +1377,7 @@ class Model:
         self.compute_visible_spline_points()
 
     def sp_frame_btn1_pressed(self, spid):
-        """React to mouse button 1 pressed on the FrameSPoint with id spid
-        """
+        """React to mouse button 1 pressed on the FrameSPoint with id spid"""
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_frame_btn1_pressed")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('sp_frame_btn1_pressed')} {spid}")
@@ -1449,8 +1425,7 @@ class Model:
         self.compute_visible_spline_points()
 
     def sp_header_btn1_pressed(self, hid):
-        """React to mouse button 1 pressed on the header with id hid
-        """
+        """React to mouse button 1 pressed on the header with id hid"""
         logg = logging.getLogger(f"c.{__class__.__name__}.sp_header_btn1_pressed")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('sp_header_btn1_pressed')} {hid}")
@@ -1469,8 +1444,7 @@ class Model:
         self.compute_visible_spline_points()
 
     def translate_glyph(self, glyph_idx, dx, dy):
-        """Translate all the points in a glyph
-        """
+        """Translate all the points in a glyph"""
         logg = logging.getLogger(f"c.{__class__.__name__}.translate_glyph")
         logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('translate_glyph')}")
@@ -1482,8 +1456,7 @@ class Model:
         self.all_SP.set(all_SP)
 
     def move_glyph(self, source, clicked_spid=None):
-        """TODO: what is move_glyph doing?
-        """
+        """TODO: what is move_glyph doing?"""
         logg = logging.getLogger(f"c.{__class__.__name__}.move_glyph")
         logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('move_glyph')} {source}")

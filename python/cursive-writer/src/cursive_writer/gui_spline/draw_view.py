@@ -42,14 +42,12 @@ class View:
     ### HELPERS ###
 
     def setup_main_window(self):
-        """Setup main window aesthetics
-        """
+        """Setup main window aesthetics"""
         self.root.geometry(f"{self.width}x{self.height}")
         self.root.title(f"Spline builder GUI")
 
     def create_containers(self):
-        """TODO: what is create_containers doing?
-        """
+        """TODO: what is create_containers doing?"""
         logg = logging.getLogger(f"c.{__class__.__name__}.create_containers")
         # logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('create_containers')}")
@@ -89,8 +87,7 @@ class View:
         self.frame_spline.grid_propagate(False)
 
     def reset_focus(self):
-        """
-        """
+        """"""
         self.root.focus_set()
 
     def exit(self):
@@ -105,14 +102,12 @@ class View:
         self.root.title(title)
 
     def update_data_dir(self, data):
-        """TODO: what are you changing when updating data_dir?
-        """
+        """TODO: what are you changing when updating data_dir?"""
         logg = logging.getLogger(f"c.{__class__.__name__}.update_data_dir")
         logg.debug(f"Start {fmt_cn('update_data_dir')} {data}")
 
     def ask_file_name(self, **kwargs):
-        """TODO: what is ask_file_name doing?
-        """
+        """TODO: what is ask_file_name doing?"""
         logg = logging.getLogger(f"c.{__class__.__name__}.ask_file_name")
         logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('ask_file_name')}")
@@ -122,8 +117,7 @@ class View:
         return str_file_name
 
     def ask_folder(self, **kwargs):
-        """TODO: what is ask_folder doing?
-        """
+        """TODO: what is ask_folder doing?"""
         logg = logging.getLogger(f"c.{__class__.__name__}.ask_folder")
         logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('ask_folder')}")
@@ -174,22 +168,27 @@ class FrameInfo(ttk.Frame):
         self.mouse_info_frame.grid(row=5, column=0, sticky="ew", padx=10, pady=10)
 
     def build_font_measurement_frame(self):
-        """Build the elements inside font_measurement_frame and grid them
-        """
+        """Build the elements inside font_measurement_frame and grid them"""
         self.fm_title = ttk.Label(
             self.font_measurement_frame, text="Font measurement", style="title.TLabel"
         )
 
         self.fm_btn_set_base_mean = ttk.Button(
-            self.font_measurement_frame, text="B - M", style="settings.TButton",
+            self.font_measurement_frame,
+            text="B - M",
+            style="settings.TButton",
         )
 
         self.fm_btn_set_base_ascent = ttk.Button(
-            self.font_measurement_frame, text="B - A", style="settings.TButton",
+            self.font_measurement_frame,
+            text="B - A",
+            style="settings.TButton",
         )
 
         self.fm_btn_set_mean_descent = ttk.Button(
-            self.font_measurement_frame, text="M - D", style="settings.TButton",
+            self.font_measurement_frame,
+            text="M - D",
+            style="settings.TButton",
         )
 
         self.fm_lab_adjust = ttk.Label(
@@ -197,11 +196,15 @@ class FrameInfo(ttk.Frame):
         )
 
         self.fm_btn_adjust_base = ttk.Button(
-            self.font_measurement_frame, text="Base", style="settings.TButton",
+            self.font_measurement_frame,
+            text="Base",
+            style="settings.TButton",
         )
 
         self.fm_btn_adjust_mean = ttk.Button(
-            self.font_measurement_frame, text="Mean", style="settings.TButton",
+            self.font_measurement_frame,
+            text="Mean",
+            style="settings.TButton",
         )
 
         # setup grid for font_measurement_frame
@@ -219,8 +222,7 @@ class FrameInfo(ttk.Frame):
         self.fm_btn_adjust_mean.grid(row=2, column=2, pady=4)
 
     def build_spoint_adjust_frame(self):
-        """Build the monster with 12 buttons
-        """
+        """Build the monster with 12 buttons"""
         logg = logging.getLogger(f"c.{__class__.__name__}.build_spoint_adjust_frame")
         #  logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('build_spoint_adjust_frame')}")
@@ -270,8 +272,7 @@ class FrameInfo(ttk.Frame):
         self.sa_btn_vo.grid(row=3, column=3, padx=4, pady=4)
 
     def build_spline_adjust_frame(self):
-        """TODO: what is build_spline_adjust_frame doing?
-        """
+        """TODO: what is build_spline_adjust_frame doing?"""
         logg = logging.getLogger(f"c.{__class__.__name__}.build_spline_adjust_frame")
         logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('build_spline_adjust_frame')}")
@@ -281,7 +282,9 @@ class FrameInfo(ttk.Frame):
         )
 
         self.spla_btn_move_glyph = ttk.Button(
-            self.spline_adjust_frame, text="Move glyph", style="settings.TButton",
+            self.spline_adjust_frame,
+            text="Move glyph",
+            style="settings.TButton",
         )
 
         # setup grid for spline_adjust_frame
@@ -293,18 +296,21 @@ class FrameInfo(ttk.Frame):
         self.spla_btn_move_glyph.grid(row=1, column=0, pady=4, columnspan=2)
 
     def build_file_load_frame(self):
-        """
-        """
+        """"""
         self.fl_title = ttk.Label(
             self.file_load_frame, text="Load spline", style="title.TLabel"
         )
 
         self.fl_btn_load_spline = ttk.Button(
-            self.file_load_frame, text="Load spline", style="settings.TButton",
+            self.file_load_frame,
+            text="Load spline",
+            style="settings.TButton",
         )
 
         self.fl_btn_load_glyph = ttk.Button(
-            self.file_load_frame, text="Load glyph", style="settings.TButton",
+            self.file_load_frame,
+            text="Load glyph",
+            style="settings.TButton",
         )
 
         # setup grid for file_load_frame
@@ -317,18 +323,21 @@ class FrameInfo(ttk.Frame):
         self.fl_btn_load_glyph.grid(row=1, column=1, pady=4)
 
     def build_file_save_frame(self):
-        """
-        """
+        """"""
         self.fs_title = ttk.Label(
             self.file_save_frame, text="Save spline", style="title.TLabel"
         )
 
         self.fs_btn_save_spline = ttk.Button(
-            self.file_save_frame, text="Save", style="settings.TButton",
+            self.file_save_frame,
+            text="Save",
+            style="settings.TButton",
         )
 
         self.fs_btn_set_save_path = ttk.Button(
-            self.file_save_frame, text="Set folder", style="settings.TButton",
+            self.file_save_frame,
+            text="Set folder",
+            style="settings.TButton",
         )
 
         self.fs_lab_root = ttk.Label(
@@ -338,10 +347,16 @@ class FrameInfo(ttk.Frame):
         # small frame with entry and button
         self.fs_ent_set_frame = ttk.Frame(self.file_save_frame, style="group.TFrame")
         self.fs_ent_root = ttk.Entry(
-            self.fs_ent_set_frame, style="root.TEntry", exportselection=0, width=7,
+            self.fs_ent_set_frame,
+            style="root.TEntry",
+            exportselection=0,
+            width=7,
         )
         self.fs_btn_set_ent_root = ttk.Button(
-            self.fs_ent_set_frame, text="Set", style="settings.TButton", width=4,
+            self.fs_ent_set_frame,
+            text="Set",
+            style="settings.TButton",
+            width=4,
         )
         # setup grid for fs_ent_set_frame
         self.fs_ent_set_frame.grid_columnconfigure(0, weight=1)
@@ -364,8 +379,7 @@ class FrameInfo(ttk.Frame):
         self.fs_btn_save_spline.grid(row=2, column=1, pady=4)
 
     def build_mouse_info_frame(self):
-        """Build the elements inside mouse_info_frame and grid them
-        """
+        """Build the elements inside mouse_info_frame and grid them"""
         logg = logging.getLogger(f"c.{__class__.__name__}.build_mouse_info_frame")
         logg.info(f"Start {fmt_cn('build_mouse_info_frame')}")
 
@@ -390,7 +404,9 @@ class FrameInfo(ttk.Frame):
         # create state info label
         self.mi_var_state = tk.StringVar(self.mouse_info_frame)
         self.mi_label_state = ttk.Label(
-            self.mouse_info_frame, textvariable=self.mi_var_state, style="info.TLabel",
+            self.mouse_info_frame,
+            textvariable=self.mi_var_state,
+            style="info.TLabel",
         )
         self.mi_var_state.set("State: FREE")
 
@@ -496,8 +512,7 @@ class FrameImage(ttk.Frame):
         self.setup_layout_frame_image(layout_type)
 
     def setup_layout_frame_image(self, layout_type):
-        """TODO: what is setup_layout_frame_image doing?
-        """
+        """TODO: what is setup_layout_frame_image doing?"""
         logg = logging.getLogger(f"c.{__class__.__name__}.setup_layout_frame_image")
         # logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('setup_layout_frame_image')}")
@@ -565,8 +580,7 @@ class FrameImage(ttk.Frame):
         self.image_bbox = (left, top, right, bot)
 
     def update_free_line(self, line_point):
-        """
-        """
+        """"""
         logg = logging.getLogger(f"c.{__class__.__name__}.update_free_line")
         logg.log(5, f"Start {fmt_cn('update_free_line')} {line_point}")
 
@@ -577,8 +591,7 @@ class FrameImage(ttk.Frame):
         self.draw_line(line_point, tag="free_line", fill="red")
 
     def update_fm_lines(self, fm_lines):
-        """
-        """
+        """"""
         logg = logging.getLogger(f"c.{__class__.__name__}.update_fm_lines")
         logg.log(5, f"Start {fmt_cn('update_fm_lines')} {fm_lines}")
 
@@ -591,8 +604,7 @@ class FrameImage(ttk.Frame):
         self.draw_line(fm_lines["descent_point"], tag="descent_point", fill="red")
 
     def update_click_left_start_pos(self, start_pos):
-        """Show a point where the canvas was clicked when drawing a new SplinePoint
-        """
+        """Show a point where the canvas was clicked when drawing a new SplinePoint"""
         logg = logging.getLogger(f"c.{__class__.__name__}.update_click_left_start_pos")
         logg.debug(f"Start {fmt_cn('update_click_left_start_pos')} {start_pos}")
 
@@ -618,8 +630,7 @@ class FrameImage(ttk.Frame):
         )
 
     def update_visible_SP(self, data):
-        """Update the drawn arrows
-        """
+        """Update the drawn arrows"""
         logg = logging.getLogger(f"c.{__class__.__name__}.update_visible_SP")
         logg.log(5, f"Start {fmt_cn('update_visible_SP')}")
 
@@ -639,8 +650,7 @@ class FrameImage(ttk.Frame):
             self.draw_point(view_op, "spline_point", color)
 
     def update_visible_segment_SP(self, data):
-        """TODO: what are you changing when updating visible_segment_SP?
-        """
+        """TODO: what are you changing when updating visible_segment_SP?"""
         logg = logging.getLogger(f"c.{__class__.__name__}.update_visible_segment_SP")
         logg.log(5, f"Start {fmt_cn('update_visible_segment_SP')}")
 
@@ -658,8 +668,7 @@ class FrameImage(ttk.Frame):
                 self.image_canvas.create_line(*seq, tags=tag, fill="lime green")
 
     def update_thick_segment_points(self, data):
-        """TODO: what are you changing when updating thick_segment_points?
-        """
+        """TODO: what are you changing when updating thick_segment_points?"""
         logg = logging.getLogger(f"c.{__class__.__name__}.update_thick_segment_points")
         # logg.setLevel("TRACE")
         logg.debug(f"Start {fmt_cn('update_thick_segment_points')}")
@@ -671,8 +680,7 @@ class FrameImage(ttk.Frame):
     ### HELPERS ###
 
     def draw_point(self, view_op, tag, color="cyan", length=-1):
-        """Draw a point on the canvas
-        """
+        """Draw a point on the canvas"""
         if length == -1:
             min_dim = min(self.resized_wid, self.resized_hei)
             length = min_dim * 0.10
@@ -686,8 +694,7 @@ class FrameImage(ttk.Frame):
         )
 
     def draw_line(self, image_point, tag, **kwargs):
-        """Add a line on the point
-        """
+        """Add a line on the point"""
         logg = logging.getLogger(f"c.{__class__.__name__}.draw_line")
         #  logg.setLevel("TRACE")
         logg.log(5, f"Start {fmt_cn('draw_line')}")
@@ -719,8 +726,7 @@ class FrameImage(ttk.Frame):
         self.image_canvas.create_line(x0, y0, x1, y1, tags=tag, **kwargs)
 
     def bind_canvas(self, kind, func):
-        """Bind event 'kind' to func *only* on image_canvas
-        """
+        """Bind event 'kind' to func *only* on image_canvas"""
         self.image_canvas.bind(kind, func)
 
 
@@ -757,8 +763,7 @@ class FrameSpline(ttk.Frame):
         self.build_spline_list_frame()
 
     def build_spline_header_frame(self):
-        """### setup frame for spline buttons and info ###
-        """
+        """### setup frame for spline buttons and info ###"""
         # setup grid for spline_header_frame
         self.spline_header_frame.grid_columnconfigure(0, weight=1)
         self.spline_header_frame.grid_columnconfigure(1, weight=1)
@@ -768,10 +773,14 @@ class FrameSpline(ttk.Frame):
             self.spline_header_frame, text="Spline options", style="title.TLabel"
         )
         self.sh_btn_new_spline = ttk.Button(
-            self.spline_header_frame, text="New glyph", style="settings.TButton",
+            self.spline_header_frame,
+            text="New glyph",
+            style="settings.TButton",
         )
         self.sh_btn_delete_SP = ttk.Button(
-            self.spline_header_frame, text="Delete point", style="settings.TButton",
+            self.spline_header_frame,
+            text="Delete point",
+            style="settings.TButton",
         )
 
         # grid the elements in spline_header_frame
@@ -780,8 +789,7 @@ class FrameSpline(ttk.Frame):
         self.sh_btn_delete_SP.grid(row=1, column=1, pady=4)
 
     def build_spline_list_frame(self):
-        """### SETUP frame for spline points ###
-        """
+        """### SETUP frame for spline points ###"""
         # setup grid for spline_list_frame
         self.spline_list_frame.grid_rowconfigure(1, weight=1)
         self.spline_list_frame.grid_columnconfigure(0, weight=1)
@@ -806,15 +814,16 @@ class FrameSpline(ttk.Frame):
         # should be (frame_spline - 2*padx)
         sp_frames_width = 230
         self.sl_mock = ttk.Frame(
-            self.sl_scrollable.scroll_frame, width=sp_frames_width, style="sf.TFrame",
+            self.sl_scrollable.scroll_frame,
+            width=sp_frames_width,
+            style="sf.TFrame",
         )
         self.sl_mock.grid(row=0, column=0)
 
     ### REACTIONS TO OBSERVABLES ###
 
     def update_all_SP(self, data):
-        """Create a frame for each SP received
-        """
+        """Create a frame for each SP received"""
         logg = logging.getLogger(f"c.{__class__.__name__}.update_all_SP")
         logg.info(f"Start {fmt_cn('update_all_SP')}")
 
@@ -826,7 +835,9 @@ class FrameSpline(ttk.Frame):
                 # MAYBE this should have style set? The frame is completely
                 # filled anyway by the element inside, so it doesn't show much
                 sp_frame = FrameSPoint(
-                    self.sl_scrollable.scroll_frame, name, data[spid],
+                    self.sl_scrollable.scroll_frame,
+                    name,
+                    data[spid],
                 )
 
                 # bind the mouse scroll on the FrameSPoint
@@ -898,8 +909,8 @@ class FrameSpline(ttk.Frame):
     def update_selected_spid_SP(self, data):
         """Change the state of the point frame with corresponding spid
 
-            - selected: the widget is selected
-            - active: the mouse is inside
+        - selected: the widget is selected
+        - active: the mouse is inside
         """
         logg = logging.getLogger(f"c.{__class__.__name__}.update_selected_spid_SP")
         logg.info(f"Start {fmt_cn('update_selected_spid_SP')} {data}")
@@ -918,8 +929,7 @@ class FrameSpline(ttk.Frame):
             self.all_SP_frames[data].set_state("selected")
 
     def update_selected_header_SP(self, data):
-        """Change the state of the header frame with given id
-        """
+        """Change the state of the header frame with given id"""
         logg = logging.getLogger(f"c.{__class__.__name__}.update_selected_header_SP")
         logg.info(f"Start {fmt_cn('update_selected_header_SP')} {data}")
 

@@ -16,8 +16,7 @@ def load_words(word_file: Path) -> List[str]:
 
 
 def generate_word(let_available: Iterable[str], word_file: Path) -> str:
-    """TODO: what is generate_word doing?
-    """
+    """TODO: what is generate_word doing?"""
     logg = logging.getLogger(f"c.{__name__}.generate_word")
     logg.debug(f"Start generate_word available {let_available}")
 
@@ -64,8 +63,7 @@ def generate_word(let_available: Iterable[str], word_file: Path) -> str:
 
 
 def test_generator():
-    """TODO: what is test_generator doing?
-    """
+    """TODO: what is test_generator doing?"""
     logg = logging.getLogger(f"c.{__name__}.test_generator")
     logg.debug(f"Start test_generator")
 

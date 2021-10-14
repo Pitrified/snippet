@@ -7,8 +7,7 @@ from cursive_writer.utils.setup import setup_logger
 
 
 def parse_arguments():
-    """Setup CLI interface
-    """
+    """Setup CLI interface"""
     parser = argparse.ArgumentParser(description="")
 
     parser.add_argument(
@@ -69,8 +68,7 @@ def setup_env():
 
 
 def run_gui_main(args):
-    """
-    """
+    """"""
     logg = logging.getLogger(f"c.{__name__}.run_gui_main")
     logg.debug(f"Starting run_gui_main")
 

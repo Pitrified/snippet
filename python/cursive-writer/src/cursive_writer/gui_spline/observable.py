@@ -4,8 +4,7 @@ from cursive_writer.utils.color_utils import fmt_cn
 
 
 class Observable:
-    """A wrapper around data, to link callbacks to it
-    """
+    """A wrapper around data, to link callbacks to it"""
 
     def __init__(self, initialValue=None):
         logg = logging.getLogger(f"c.{__class__.__name__}.init")

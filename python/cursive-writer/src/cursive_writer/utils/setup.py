@@ -2,8 +2,7 @@ import logging
 
 
 def setup_logger(logLevel: str = "DEBUG", msg_type: str = "m") -> None:
-    """Setup logger that outputs to console for the module
-    """
+    """Setup logger that outputs to console for the module"""
     logroot = logging.getLogger("c")
     logroot.propagate = False
     logroot.setLevel(logLevel)

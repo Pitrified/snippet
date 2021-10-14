@@ -149,8 +149,7 @@ def fit_cubic(p0: OrientedPoint, p1: OrientedPoint):
 def linspace_segment_points(
     x_start: float, x_end: float, coeff, num_samples: int = 50
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """Uniformly sample a poly_model in the [x_start, x_end] range
-    """
+    """Uniformly sample a poly_model in the [x_start, x_end] range"""
     if x_start > x_end:
         x_start, x_end = x_end, x_start
 
@@ -162,8 +161,7 @@ def linspace_segment_points(
 def sample_nat_segment_points(
     x_start: float, x_end: float, coeff: DArray
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """Sample a poly_model in the [x_start, x_end] range on natural numbers
-    """
+    """Sample a poly_model in the [x_start, x_end] range on natural numbers"""
     logg = logging.getLogger(f"c.{__name__}.sample_nat_segment_points")
     # logg.setLevel("TRACE")
     logg.log(5, f"Starting sample_nat_segment_points")
@@ -212,7 +210,11 @@ def compute_cubic_segment(
 
     # rototranslate points to the original position
     rototran_x, rototran_y = rototranslate_points(
-        x_sample, y_segment, -dir_01, p0.x, p0.y,
+        x_sample,
+        y_segment,
+        -dir_01,
+        p0.x,
+        p0.y,
     )
 
     # plot elements for debug purposes
@@ -498,7 +500,11 @@ def compute_thick_spline(
 
     # rototranslate points to the original position
     rototran_x, rototran_y = rototranslate_points(
-        on_points_x, on_points_y, -dir_01, p0.x, p0.y,
+        on_points_x,
+        on_points_y,
+        -dir_01,
+        p0.x,
+        p0.y,
     )
     logg.log(5, f"rototran_x.shape: {rototran_x.shape}")
     logg.log(5, f"rototran_y.shape: {rototran_y.shape}")
@@ -647,8 +653,7 @@ def compute_aligned_cubic_segment(
 def compute_aligned_glyph(
     gly_seq: Glyph, x_stride: float
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """TODO: what is compute_aligned_glyph doing?
-    """
+    """TODO: what is compute_aligned_glyph doing?"""
     logg = logging.getLogger(f"c.{__name__}.compute_aligned_glyph")
     logg.setLevel("INFO")
     logg.debug(f"Start compute_aligned_glyph")

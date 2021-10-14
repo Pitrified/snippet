@@ -35,8 +35,7 @@ def line_curve_ab_coeff(x0: float, y0: float, x1: float, y1: float) -> List[floa
 
 
 def line_curve_point(x0: float, y0: float, x1: float, y1: float) -> OrientedPoint:
-    """Find a point on the line with appropriate orientation
-    """
+    """Find a point on the line with appropriate orientation"""
     ori_deg = math.degrees(math.atan2(y1 - y0, x1 - x0))
     return OrientedPoint(x0, y0, ori_deg)
 
@@ -143,8 +142,7 @@ def translate_line(line_coeff: DArray, shift_x: float, shift_y: float) -> List[f
 def translate_point_dxy(
     orig_point: OrientedPoint, shift_x: float, shift_y: float
 ) -> OrientedPoint:
-    """Translate the orig_point of dx, dy and return a new one
-    """
+    """Translate the orig_point of dx, dy and return a new one"""
     return OrientedPoint(
         orig_point.x + shift_x, orig_point.y + shift_y, orig_point.ori_deg
     )
@@ -153,8 +151,7 @@ def translate_point_dxy(
 def translate_point_dir(
     orig_point: OrientedPoint, dir_deg: float, shift: float
 ) -> OrientedPoint:
-    """Translate the point along a direction of a certain amount and return a new one
-    """
+    """Translate the point along a direction of a certain amount and return a new one"""
     new_x = orig_point.x + shift * math.cos(math.radians(dir_deg))
     new_y = orig_point.y + shift * math.sin(math.radians(dir_deg))
     return OrientedPoint(new_x, new_y, orig_point.ori_deg)
@@ -178,8 +175,7 @@ def translate_spline_sequence(spline_sequence: Spline, dx: float, dy: float) -> 
 def translate_thick_spline(
     thick_spline: ThickSpline, dx: float, dy: float
 ) -> ThickSpline:
-    """TODO: what is translate_thick_spline doing?
-    """
+    """TODO: what is translate_thick_spline doing?"""
     # logg = logging.getLogger(f"c.{__name__}.translate_thick_spline")
     # logg.debug(f"Start translate_thick_spline")
 
@@ -194,8 +190,7 @@ def translate_thick_spline(
 
 
 def dist2D(p0: OrientedPoint, p1: OrientedPoint) -> float:
-    """Distance between two points
-    """
+    """Distance between two points"""
     return math.sqrt((p0.x - p1.x) ** 2 + (p0.y - p1.y) ** 2)
 
 
@@ -236,20 +231,17 @@ def poly_model(x: np.ndarray, coeff: DArray, flip_coeff: bool = False) -> np.nda
 
 
 def slope2deg(slope: float, direction: float = 1) -> float:
-    """Convert the slope of a line to an angle in degrees
-    """
+    """Convert the slope of a line to an angle in degrees"""
     return math.degrees(np.arctan2(slope, direction))
 
 
 def slope2rad(slope: float, direction: int = 1) -> float:
-    """Convert the slope of a line to an angle in radians
-    """
+    """Convert the slope of a line to an angle in radians"""
     return np.arctan2(slope, direction)
 
 
 def compute_rot_matrix(theta_deg: float) -> np.ndarray:
-    """Compute the 2x2 rotation matrix for angle theta_deg in degrees
-    """
+    """Compute the 2x2 rotation matrix for angle theta_deg in degrees"""
     logg = logging.getLogger(f"c.{__name__}.compute_rot_matrix")
     logg.setLevel("INFO")
 
@@ -632,8 +624,7 @@ def sample_parametric_aligned(
 
 
 def find_align_stride(glyphs: Iterable[Glyph]) -> float:
-    """Given an iterable of glyphs, finds the stride to sample them
-    """
+    """Given an iterable of glyphs, finds the stride to sample them"""
     # logg = logging.getLogger(f"c.{__name__}.find_align_stride")
     # logg.debug(f"Start find_align_stride")
 
@@ -659,8 +650,7 @@ def find_spline_sequence_bbox(
     old_xlim: Optional[Tuple[float, float]] = None,
     old_ylim: Optional[Tuple[float, float]] = None,
 ) -> Tuple[Tuple[float, float], Tuple[float, float]]:
-    """TODO: what is find_spline_sequence_bbox doing?
-    """
+    """TODO: what is find_spline_sequence_bbox doing?"""
     # logg = logging.getLogger(f"c.{__name__}.find_spline_sequence_bbox")
     # logg.debug(f"Start find_spline_sequence_bbox")
 
@@ -696,8 +686,7 @@ def find_thick_spline_bbox(
     old_xlim: Optional[Tuple[float, float]] = None,
     old_ylim: Optional[Tuple[float, float]] = None,
 ) -> Tuple[Tuple[float, float], Tuple[float, float]]:
-    """TODO: what is find_thick_spline_bbox doing?
-    """
+    """TODO: what is find_thick_spline_bbox doing?"""
     logg = logging.getLogger(f"c.{__name__}.find_thick_spline_bbox")
     logg.debug(f"Start find_thick_spline_bbox")
 

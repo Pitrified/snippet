@@ -25,8 +25,7 @@ from cursive_writer.utils.setup import setup_logger
 
 
 def parse_arguments():
-    """Setup CLI interface
-    """
+    """Setup CLI interface"""
     parser = argparse.ArgumentParser(description="")
 
     parser.add_argument(
@@ -67,8 +66,7 @@ def setup_env():
 
 
 def ex_parametric_tangent(p0, p1, x_stride, ax):
-    """
-    """
+    """"""
     logg = logging.getLogger(f"c.{__name__}.ex_parametric_tangent")
     logg.debug(f"\nStarting ex_parametric_tangent")
 
@@ -93,8 +91,7 @@ def ex_parametric_tangent(p0, p1, x_stride, ax):
 
 
 def exs_parametric_tangent():
-    """TODO: what is exs_parametric_tangent doing?
-    """
+    """TODO: what is exs_parametric_tangent doing?"""
     logg = logging.getLogger(f"c.{__name__}.exs_parametric_tangent")
     logg.debug(f"Start exs_parametric_tangent")
 
@@ -165,8 +162,7 @@ def exs_parametric_tangent():
 
 
 def ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax):
-    """TODO: what is ex_ligature_2segments doing?
-    """
+    """TODO: what is ex_ligature_2segments doing?"""
     logg = logging.getLogger(f"c.{__name__}.ex_ligature_2segments")
     logg.debug(f"\nStarting ex_ligature_2segments")
     logg.debug(f"l_p0.x: {l_p0.x} l_p1.x: {l_p1.x} r_p0.x: {r_p0.x} r_p1.x: {r_p1.x}")
@@ -179,7 +175,9 @@ def ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax):
     segment_start = timer()
     _, l_x_as, l_y_as, l_yp_as = compute_aligned_cubic_segment(l_p0, l_p1, x_stride)
     _, r_x_orig_as, r_y_as, r_yp_as = compute_aligned_cubic_segment(
-        r_p0, r_p1, x_stride,
+        r_p0,
+        r_p1,
+        x_stride,
     )
     segment_end = timer()
     logg.debug(f"Time to compute aligned segments: {segment_end - segment_start:.6f}")
@@ -219,8 +217,7 @@ def ex_ligature_2segments(l_p0, l_p1, r_p0, r_p1, ax):
 
 
 def exs_ligature_2segments():
-    """
-    """
+    """"""
     logg = logging.getLogger(f"c.{__name__}.exs_build_ligature")
     logg.debug(f"Starting exs_build_ligature")
 
@@ -321,8 +318,7 @@ def exs_ligature_2segments():
 
 
 def ex_align_glyphs(pf_spline_left, pf_spline_right):
-    """TODO: what is ex_align_glyphs doing?
-    """
+    """TODO: what is ex_align_glyphs doing?"""
     logg = logging.getLogger(f"c.{__name__}.ex_align_glyphs")
     logg.debug(f"Start ex_align_glyphs")
 
@@ -455,8 +451,7 @@ def ex_align_letters_1(pf_spline_left, pf_spline_right, thickness):
 
 
 def ex_align_letters_2(pf_spline_left, pf_spline_right, thickness):
-    """TODO: what is ex_align_letters_2 doing?
-    """
+    """TODO: what is ex_align_letters_2 doing?"""
     logg = logging.getLogger(f"c.{__name__}.ex_align_letters_2")
     logg.debug(f"\nStart ex_align_letters_2")
 
@@ -522,8 +517,7 @@ def ex_align_letters_2(pf_spline_left, pf_spline_right, thickness):
 
 
 def exs_align_letters(data_dir, thickness):
-    """TODO: what is exs_align_letters doing?
-    """
+    """TODO: what is exs_align_letters doing?"""
     logg = logging.getLogger(f"c.{__name__}.exs_align_letters")
     logg.debug(f"Start exs_align_letters")
 
@@ -548,8 +542,7 @@ def exs_align_letters(data_dir, thickness):
 
 
 def run_ligature_examples(args):
-    """
-    """
+    """"""
     logg = logging.getLogger(f"c.{__name__}.run_ligature_examples")
     logg.debug(f"Starting run_ligature_examples")
 

@@ -168,8 +168,7 @@ class Controller:
         self.model.selected_header_SP.set(0)
 
     def run(self):
-        """Start the app and run the mainloop
-        """
+        """Start the app and run the mainloop"""
         logg = logging.getLogger(f"c.{__class__.__name__}.run")
         logg.info(f"{fmt_cn('Running')} controller\n")
 
@@ -178,8 +177,7 @@ class Controller:
     ###### INPUT ACTIONS ######
 
     def key_released(self, event):
-        """Bind Key to functions
-        """
+        """Bind Key to functions"""
         keysym = event.keysym
 
         # misc
@@ -385,8 +383,7 @@ class Controller:
         self.view.reset_focus()
 
     def clicked_btn_move_glyph(self):
-        """TODO: what is clicked_btn_move_glyph doing?
-        """
+        """TODO: what is clicked_btn_move_glyph doing?"""
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_move_glyph")
         logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('clicked_btn_move_glyph')}")
@@ -442,8 +439,7 @@ class Controller:
         self.model.clicked_fl_btn_load_glyph(path_file_name)
 
     def clicked_fl_btn_load_spline(self):
-        """TODO: what is clicked_fl_btn_load_spline doing?
-        """
+        """TODO: what is clicked_fl_btn_load_spline doing?"""
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_fl_btn_load_spline")
         logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('clicked_fl_btn_load_spline')}")
@@ -466,8 +462,7 @@ class Controller:
         self.model.clicked_fl_btn_load_spline(path_file_name)
 
     def clicked_btn_adjust(self, adjust_type):
-        """Callback for buttons to adjust spline points
-        """
+        """Callback for buttons to adjust spline points"""
         logg = logging.getLogger(f"c.{__class__.__name__}.clicked_btn_adjust")
         # logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('clicked_btn_adjust')} {adjust_type}")
@@ -524,8 +519,7 @@ class Controller:
         self.model.sp_header_btn1_pressed(hid)
 
     def focus_change_ent_root(self, change):
-        """TODO: what is focus_change_ent_root doing?
-        """
+        """TODO: what is focus_change_ent_root doing?"""
         logg = logging.getLogger(f"c.{__class__.__name__}.focus_change_ent_root")
         logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('focus_change_ent_root')} {change}")
@@ -568,8 +562,7 @@ class Controller:
         self.view.frame_image.update_free_line(data)
 
     def updated_curr_mouse_pos_info(self, data):
-        """
-        """
+        """"""
         logg = logging.getLogger(f"c.{__class__.__name__}.updated_curr_mouse_pos_info")
         # logg.setLevel("INFO")
         logg.log(5, f"Start {fmt_cn('updated_curr_mouse_pos_info')}")

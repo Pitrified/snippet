@@ -16,14 +16,12 @@ class OrientedPoint(object):
         self.set_ori_deg(ori_deg)
 
     def translate(self, dx: float, dy: float) -> None:
-        """
-        """
+        """"""
         self.x += dx
         self.y += dy
 
     def rotate(self, dt: float) -> None:
-        """Rotate this point of dt degrees and validate the orientation
-        """
+        """Rotate this point of dt degrees and validate the orientation"""
         ori_deg = self.ori_deg + dt
         self.set_ori_deg(ori_deg)
 
@@ -45,15 +43,13 @@ class OrientedPoint(object):
         self.ori_slo: float = tan(self.ori_rad)
 
     def to_ab_line(self) -> List[float]:
-        """Return the ax+b coeff of the line passing through this point
-        """
+        """Return the ax+b coeff of the line passing through this point"""
         a = self.ori_slo
         b = self.y - a * self.x
         return [a, b]
 
     def __add__(self, other):
-        """Add two points, sum orientations as well
-        """
+        """Add two points, sum orientations as well"""
         r_x = self.x + other.x
         r_y = self.y + other.y
         r_ori = self.ori_deg + other.ori_deg
@@ -61,8 +57,7 @@ class OrientedPoint(object):
         return result
 
     def __sub__(self, other):
-        """Subtract two points, sub orientations as well
-        """
+        """Subtract two points, sub orientations as well"""
         r_x = self.x - other.x
         r_y = self.y - other.y
         r_ori = self.ori_deg - other.ori_deg
@@ -70,8 +65,7 @@ class OrientedPoint(object):
         return result
 
     def __eq__(self, other):
-        """Compare two OrientedPoint
-        """
+        """Compare two OrientedPoint"""
         if not isclose(self.x, other.x):
             return False
         if not isclose(self.y, other.y):

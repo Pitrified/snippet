@@ -53,8 +53,7 @@ class ImageCropper:
         self._mov_y = 0
 
     def create_blank_image(self):
-        """TODO: what is create_blank_image doing?
-        """
+        """TODO: what is create_blank_image doing?"""
         logg = logging.getLogger(f"c.{__class__.__name__}.create_blank_image")
         logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('create_blank_image', 'a2')}")
@@ -206,8 +205,7 @@ class ImageCropper:
         self.image_res = image_res
 
     def zoom_image(self, direction, rel_x=-1, rel_y=-1):
-        """Change zoom level, keep (rel_x, rel_y) still
-        """
+        """Change zoom level, keep (rel_x, rel_y) still"""
         logg = logging.getLogger(f"c.{__class__.__name__}.zoom_image")
         #  logg.setLevel("TRACE")
         logg.info(f"{fmt_cn('Zooming')} image {direction}")
@@ -294,16 +292,14 @@ class ImageCropper:
         self.update_crop()
 
     def move_image(self, delta_x, delta_y):
-        """Move image of specified delta
-        """
+        """Move image of specified delta"""
         self._mov_x += delta_x
         self._mov_y += delta_y
         self._validate_mov()
         self.update_crop()
 
     def _validate_mov(self):
-        """Check that mov is reasonable for the current widget/image/zoom
-        """
+        """Check that mov is reasonable for the current widget/image/zoom"""
         zoom = self._zoom_base ** self._zoom_level
         zoom_wid = self._image_wid * zoom
         zoom_hei = self._image_hei * zoom
@@ -336,8 +332,7 @@ class ImageCropper:
                 self._mov_y = zoom_hei - self.widget_hei
 
     def _validate_region(self, region):
-        """region (left, top, right, bottom) must fit inside the image
-        """
+        """region (left, top, right, bottom) must fit inside the image"""
         logg = logging.getLogger(f"c.{__class__.__name__}._validate_region")
         #  logg.setLevel("TRACE")
         logg.log(5, f"Start {fmt_cn('_validate_region')}")

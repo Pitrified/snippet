@@ -28,8 +28,7 @@ class SplineSegmentHolder:
         self.thickness = thickness
 
     def update_data(self, new_all_SP, new_path_SP):
-        """TODO: what is update_data doing?
-        """
+        """TODO: what is update_data doing?"""
         logg = logging.getLogger(f"c.{self.cn}.update_data")
         # logg.setLevel("TRACE")
         logg.info(f"Start {fmt_cn('update_data')}")
@@ -86,7 +85,8 @@ class SplineSegmentHolder:
 
             # use the right point from the new data arriving
             self.segments[pair] = self.compute_segment_points(
-                self.cached_pos[spid0], new_all_SP[spid1],
+                self.cached_pos[spid0],
+                new_all_SP[spid1],
             )
 
             # get ready for next iteration

@@ -1,6 +1,5 @@
 def fmt_cn(string, name="start"):
-    """Assign a color to a name, to keep it consistent
-    """
+    """Assign a color to a name, to keep it consistent"""
     if name == "start":
         color = "aqua"
     elif name == "error":
@@ -19,8 +18,7 @@ def fmt_cn(string, name="start"):
 
 
 def fmt_c(string, color):
-    """Format the string with the specified color
-    """
+    """Format the string with the specified color"""
     cs = "\x1b[38;2;{};{};{}m{}\x1b[0m"
 
     # my colors

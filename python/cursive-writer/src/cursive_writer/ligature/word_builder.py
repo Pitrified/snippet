@@ -24,8 +24,7 @@ from cursive_writer.utils.utils import serializer_oriented_point
 
 
 def parse_arguments() -> argparse.Namespace:
-    """Setup CLI interface
-    """
+    """Setup CLI interface"""
     parser = argparse.ArgumentParser(description="")
 
     parser.add_argument(
@@ -80,8 +79,7 @@ def setup_env() -> argparse.Namespace:
 
 
 def load_letter_dict(thickness: int, data_dir: Path) -> Dict[str, Letter]:
-    """TODO: what is load_letter_dict doing?
-    """
+    """TODO: what is load_letter_dict doing?"""
     logg = logging.getLogger(f"c.{__name__}.load_letter_dict")
     logg.debug(f"Start load_letter_dict")
 
@@ -260,8 +258,7 @@ def load_letter_dict(thickness: int, data_dir: Path) -> Dict[str, Letter]:
 def compute_letter_alignement(
     f_let: Letter, s_let: Letter, x_stride: float, data_dir: Path, ligature_dir: Path
 ) -> LigatureInfo:
-    """TODO: what is compute_letter_alignement doing?
-    """
+    """TODO: what is compute_letter_alignement doing?"""
     logg = logging.getLogger(f"c.{__name__}.compute_letter_alignement")
     logg.debug(f"Start compute_letter_alignement {f_let.letter} {s_let.letter}")
 
@@ -343,9 +340,12 @@ def compute_letter_alignement(
 
     else:
         # load and compute
-        spline_seq_con, f_gly_chop, s_gly_chop, shift, = align_letter_1(
-            f_spline_seq, s_spline_seq, x_stride
-        )
+        (
+            spline_seq_con,
+            f_gly_chop,
+            s_gly_chop,
+            shift,
+        ) = align_letter_1(f_spline_seq, s_spline_seq, x_stride)
 
     con_info = LigatureInfo(
         f_pf_name=f_pf_name,
@@ -381,8 +381,7 @@ def fill_ligature_info(
     ligature_dir: Path,
     thickness: int,
 ) -> Tuple[Dict[str, LigatureInfo], Dict[str, ThickSpline]]:
-    """TODO: what is fill_ligature_info doing?
-    """
+    """TODO: what is fill_ligature_info doing?"""
     logg = logging.getLogger(f"c.{__name__}.fill_ligature_info")
     logg.debug(f"Start fill_ligature_info")
 
@@ -428,8 +427,7 @@ def build_word(
     thick_con_info: Dict[str, ThickSpline],
     thickness: int,
 ) -> ThickSpline:
-    """TODO: what is build_word doing?
-    """
+    """TODO: what is build_word doing?"""
     logg = logging.getLogger(f"c.{__name__}.build_word")
     logg.debug(f"Start build_word {input_str}")
 
@@ -520,8 +518,7 @@ def plot_results(
 
 
 def run_word_builder(args: argparse.Namespace) -> None:
-    """TODO: What is word_builder doing?
-    """
+    """TODO: What is word_builder doing?"""
     logg = logging.getLogger(f"c.{__name__}.run_word_builder")
     logg.debug(f"Starting run_word_builder")
 

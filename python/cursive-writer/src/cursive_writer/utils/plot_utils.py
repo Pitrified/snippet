@@ -3,8 +3,7 @@ import math
 
 
 def plot_build(fig, ax):
-    """
-    """
+    """"""
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.grid()
@@ -13,8 +12,7 @@ def plot_build(fig, ax):
 
 
 def add_vector(sp, ax, color="b", vec_len=0.3):
-    """Add a point with direction to the plot
-    """
+    """Add a point with direction to the plot"""
     logg = logging.getLogger(f"c.{__name__}.add_vector")
     logg.setLevel("INFO")
     #  logg.debug(f"Starting add_vector")
