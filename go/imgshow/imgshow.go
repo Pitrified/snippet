@@ -202,7 +202,8 @@ func main() {
 	// https://stackoverflow.com/questions/66994242/publishing-changes-to-window-with-shiny-driver
 
 	// which := "sendImg"
-	which := "wrapImg"
+	// which := "wrapImg"
+	which := "embedImg"
 	fmt.Printf("which = %+v\n", which)
 
 	switch which {
@@ -214,5 +215,7 @@ func main() {
 		sendImg()
 	case "wrapImg":
 		wrapImg()
+	case "embedImg":
+		embedImg()
 	}
 }
