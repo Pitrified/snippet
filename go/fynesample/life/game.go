@@ -30,52 +30,56 @@ type gameRenderer struct {
 	game *game
 }
 
-func (g *gameRenderer) MinSize() fyne.Size {
-	pixDensity := g.game.pixelDensity()
+func (gr *gameRenderer) MinSize() fyne.Size {
+	pixDensity := gr.game.pixelDensity()
 	return fyne.NewSize(float32(minXCount*cellSize)/pixDensity, float32(minYCount*cellSize)/pixDensity)
 }
 
-func (g *gameRenderer) Layout(size fyne.Size) {
-	g.render.Resize(size)
+func (gr *gameRenderer) Layout(size fyne.Size) {
+	fmt.Printf("Layout = %+v\n", size)
+	gr.render.Resize(size)
 }
 
-func (g *gameRenderer) ApplyTheme() {
-	g.aliveColor = theme.ForegroundColor()
-	g.deadColor = theme.BackgroundColor()
+func (gr *gameRenderer) ApplyTheme() {
+	gr.aliveColor = theme.ForegroundColor()
+	gr.deadColor = theme.BackgroundColor()
 }
 
-func (g *gameRenderer) BackgroundColor() color.Color {
+func (gr *gameRenderer) BackgroundColor() color.Color {
 	return theme.BackgroundColor()
 }
 
-func (g *gameRenderer) Refresh() {
-	canvas.Refresh(g.render)
+func (gr *gameRenderer) Refresh() {
+	fmt.Println("Refresh start")
+	canvas.Refresh(gr.render)
+	fmt.Println("Refresh end")
 }
 
-func (g *gameRenderer) Objects() []fyne.CanvasObject {
-	return g.objects
+func (gr *gameRenderer) Objects() []fyne.CanvasObject {
+	return gr.objects
 }
 
-func (g *gameRenderer) Destroy() {
+func (gr *gameRenderer) Destroy() {
 }
 
-func (g *gameRenderer) draw(w, h int) image.Image {
-	pixDensity := g.game.pixelDensity()
-	pixW, pixH := g.game.cellForCoord(w, h, pixDensity)
+func (gr *gameRenderer) draw(w, h int) image.Image {
+	fmt.Printf("draw : w, h = %+v %+v\n", w, h)
+	pixDensity := gr.game.pixelDensity()
+	pixW, pixH := gr.game.cellForCoord(w, h, pixDensity)
 
-	img := g.imgCache
+	img := gr.imgCache
 	if img == nil || img.Bounds().Size().X != pixW || img.Bounds().Size().Y != pixH {
 		img = image.NewRGBA(image.Rect(0, 0, pixW, pixH))
-		g.imgCache = img
+		gr.imgCache = img
 	}
-	g.game.board.ensureGridSize(pixW, pixH)
+	gr.game.board.ensureGridSize(pixW, pixH)
 
 	for y := 0; y < pixH; y++ {
 		for x := 0; x < pixW; x++ {
-			if x < g.game.board.width && y < g.game.board.height && g.game.board.cells[y][x] {
-				img.Set(x, y, g.aliveColor)
+			if x < gr.game.board.width && y < gr.game.board.height && gr.game.board.cells[y][x] {
+				img.Set(x, y, gr.aliveColor)
 			} else {
-				img.Set(x, y, g.deadColor)
+				img.Set(x, y, gr.deadColor)
 			}
 		}
 	}
@@ -166,6 +170,7 @@ func (g *game) Tapped(ev *fyne.PointEvent) {
 }
 
 func (g *game) TappedSecondary(ev *fyne.PointEvent) {
+	fmt.Printf("TappedSecondary ev = %+v\n", ev)
 }
 
 // https://developer.fyne.io/api/v2.0/driver/desktop/mouseable.html

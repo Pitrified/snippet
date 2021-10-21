@@ -41,7 +41,7 @@ func main() {
 	text1 := canvas.NewText("Hello", color.White)
 
 	// content := container.New(layout.NewHBoxLayout(), image, text1)
-	content := container.New(layout.NewHBoxLayout(), img_2, text1)
+	// content := container.New(layout.NewHBoxLayout(), img_2, text1)
 
 	// img_1 := canvas.NewImageFromResource(theme.FyneLogo())
 	// img_1.FillMode = canvas.ImageFillOriginal
@@ -65,16 +65,16 @@ func main() {
 	// images,
 	// )
 
-	// borderL := container.New(
-	// 	layout.NewBorderLayout(nil, nil, nil, text1),
-	// 	text1,
-	// 	img_2,
-	// )
+	borderL := container.New(
+		layout.NewBorderLayout(nil, nil, nil, text1),
+		text1,
+		img_2,
+	)
 
-	finalContent := content
+	// finalContent := content
 	// finalContent := stack_all
 	// finalContent := images
-	// finalContent := borderL
+	finalContent := borderL
 	win.SetContent(finalContent)
 
 	// win.Resize(fyne.NewSize(1200, 1200))
