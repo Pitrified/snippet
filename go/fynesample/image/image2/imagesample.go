@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -34,6 +35,7 @@ func (sir *scrollImgRenderer) MinSize() fyne.Size {
 }
 
 func (sir *scrollImgRenderer) Layout(size fyne.Size) {
+	fmt.Printf("Layout = %+v\n", size)
 	sir.img.Resize(size)
 }
 
@@ -63,9 +65,33 @@ func (si *scrollImg) CreateRenderer() fyne.WidgetRenderer {
 	log.Println("Decoded format", format)
 
 	sir.img.Image = img
+	sir.img.SetMinSize(fyne.Size{Width: 1200 / 2, Height: 1200 / 2})
 
 	sir.objects = []fyne.CanvasObject{sir.img}
+
 	return sir
+}
+
+// https://developer.fyne.io/api/v2.0/driver/desktop/mouseable.html
+func (si *scrollImg) MouseDown(ev *desktop.MouseEvent) {
+	fmt.Printf("MouseDown ev = %+v\n", ev)
+}
+
+func (si *scrollImg) MouseUp(ev *desktop.MouseEvent) {
+	fmt.Printf("MouseUp ev = %+v\n", ev)
+}
+
+// https://developer.fyne.io/api/v2.0/driver/desktop/hoverable.html
+func (si *scrollImg) MouseIn(ev *desktop.MouseEvent) {
+	fmt.Printf("MouseIn ev = %+v\n", ev)
+}
+
+func (si *scrollImg) MouseMoved(ev *desktop.MouseEvent) {
+	fmt.Printf("MouseMoved ev = %+v\n", ev)
+}
+
+func (si *scrollImg) MouseOut() {
+	fmt.Print("MouseOut\n")
 }
 
 func newScrollImg() *scrollImg {
