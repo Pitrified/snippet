@@ -9,6 +9,8 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -17,6 +19,8 @@ import (
 type myRasterRenderer struct {
 	render  *canvas.Raster
 	objects []fyne.CanvasObject
+
+	myRaster *myRaster
 }
 
 // compliant with WidgetRenderer interface
@@ -42,12 +46,19 @@ func (mrr *myRasterRenderer) Refresh() {
 	canvas.Refresh(mrr.render)
 }
 
-func (mr *myRasterRenderer) rasterUpdate(w, h int) image.Image {
+func (mrr *myRasterRenderer) rasterUpdate(w, h int) image.Image {
 	fmt.Printf("rasterUpdate : w, h = %+v %+v\n", w, h)
 	pixW := w
 	pixH := h
 	img := image.NewRGBA(image.Rect(0, 0, pixW, pixH))
-	draw.Draw(img, img.Bounds(), &image.Uniform{color.RGBA{10, 10, 10, 255}}, image.Point{0, 0}, draw.Src)
+	bc := mrr.myRaster.backColor
+	draw.Draw(
+		img,
+		img.Bounds(),
+		&image.Uniform{color.RGBA{bc, bc, bc, 255}},
+		image.Point{0, 0},
+		draw.Src,
+	)
 	return img
 }
 
@@ -55,6 +66,8 @@ func (mr *myRasterRenderer) rasterUpdate(w, h int) image.Image {
 
 type myRaster struct {
 	widget.BaseWidget
+
+	backColor uint8
 }
 
 // compliant with Widget interface
@@ -62,7 +75,7 @@ type myRaster struct {
 var _ fyne.Widget = &myRaster{}
 
 func (mr *myRaster) CreateRenderer() fyne.WidgetRenderer {
-	renderer := &myRasterRenderer{}
+	renderer := &myRasterRenderer{myRaster: mr}
 
 	render := canvas.NewRaster(renderer.rasterUpdate)
 	render.ScaleMode = canvas.ImageScalePixels
@@ -73,8 +86,8 @@ func (mr *myRaster) CreateRenderer() fyne.WidgetRenderer {
 	return renderer
 }
 
-func newMyRaster() *myRaster {
-	mr := &myRaster{}
+func newMyRaster(bc uint8) *myRaster {
+	mr := &myRaster{backColor: bc}
 	mr.ExtendBaseWidget(mr)
 	return mr
 }
@@ -96,28 +109,32 @@ func main() {
 	// start the animation
 	// game.animate()
 
-	// raster := canvas.NewRaster(rasterUpdate)
-	// raster.SetMinSize(fyne.NewSize(600, 600))
+	aRaster := newMyRaster(140)
+	bRaster := newMyRaster(40)
 
-	// text1 := canvas.NewText("Hello", color.White)
-	// text2 := canvas.NewText("There", color.RGBA{150, 75, 0, 255})
-	// text3 := canvas.NewText("(right)", color.White)
-	// contentTop := container.New(layout.NewHBoxLayout(), text1, text2, layout.NewSpacer(), text3)
+	// w.SetContent(aRaster)
 
-	// input := widget.NewEntry()
-	// input.SetPlaceHolder("Enter text...")
-	// inp_content := container.NewVBox(input, widget.NewButton("Save", func() {
-	// 	log.Println("Content was:", input.Text)
-	// }))
+	text1 := canvas.NewText("Hello", color.White)
+	text2 := canvas.NewText("There", color.RGBA{150, 75, 0, 255})
+	text3 := canvas.NewText("(right)", color.White)
+	contentTitle := container.New(layout.NewHBoxLayout(), text1, text2, layout.NewSpacer(), text3)
 
-	// borderCont := container.New(layout.NewBorderLayout(contentTop, inp_content, nil, nil),
-	// 	contentTop, inp_content, raster)
+	input := widget.NewEntry()
+	input.SetPlaceHolder("Enter text...")
+	contentInput := container.NewVBox(input, widget.NewButton("Save", func() {
+		fmt.Println("Content was:", input.Text)
+	}))
 
-	// w.SetContent(borderCont)
+	doubleRaster := container.New(layout.NewGridLayout(2), aRaster, bRaster)
 
-	aRaster := newMyRaster()
+	borderCont := container.New(layout.NewBorderLayout(contentTitle, contentInput, nil, nil),
+		contentTitle, contentInput, doubleRaster)
+	w.SetContent(borderCont)
 
-	w.SetContent(aRaster)
+	// contentStack := container.New(layout.NewVBoxLayout(),
+	// 	contentTitle, aRaster, contentInput,
+	// )
+	// w.SetContent(contentStack)
 
 	w.Resize(fyne.NewSize(1200, 1200))
 
