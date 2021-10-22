@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -78,7 +79,7 @@ func (mr *myRaster) MouseUp(ev *desktop.MouseEvent) {
 
 // update the raster
 func (mr *myRaster) rasterUpdate(w, h int) image.Image {
-	fmt.Printf("[%-5s] rasterUpdate : w, h = %+v %+v\n", mr.name, w, h)
+	// fmt.Printf("[%-5s] rasterUpdate : w, h = %+v %+v\n", mr.name, w, h)
 	pixW := w
 	pixH := h
 	img := image.NewRGBA(image.Rect(0, 0, pixW, pixH))
@@ -109,33 +110,97 @@ func newMyRaster(bc uint8, name string) *myRaster {
 
 // --------------------------------------------------------------------------------
 
-func main() {
-	fmt.Println("vim-go")
+type myApp struct {
+	fyneApp fyne.App
+	mainWin fyne.Window
 
-	myApp := app.New()
-	w := myApp.NewWindow("Image test")
+	aRaster *myRaster
+	bRaster *myRaster
 
-	aRaster := newMyRaster(140, "Left")
-	bRaster := newMyRaster(40, "Right")
-	doubleRaster := container.New(layout.NewGridLayout(2), aRaster, bRaster)
+	text1 *canvas.Text
+	text2 *canvas.Text
+	text3 *canvas.Text
 
-	text1 := canvas.NewText("Hello", color.White)
-	text2 := canvas.NewText("There", color.RGBA{150, 75, 0, 255})
-	text3 := canvas.NewText("(right aligned)", color.White)
-	contentTitle := container.New(layout.NewHBoxLayout(), text1, text2, layout.NewSpacer(), text3)
+	input *widget.Entry
+}
 
-	input := widget.NewEntry()
-	input.SetPlaceHolder("Enter text...")
-	contentInput := container.NewVBox(input, widget.NewButton("Save", func() {
-		fmt.Println("Content was:", input.Text)
+func (a *myApp) buildUI() fyne.CanvasObject {
+
+	a.aRaster = newMyRaster(140, "Left")
+	a.bRaster = newMyRaster(40, "Right")
+	doubleRaster := container.New(layout.NewGridLayout(2), a.aRaster, a.bRaster)
+
+	a.text1 = canvas.NewText("Hello", color.White)
+	a.text2 = canvas.NewText("There", color.RGBA{150, 75, 0, 255})
+	a.text3 = canvas.NewText("(right aligned)", color.White)
+	contentTitle := container.New(layout.NewHBoxLayout(), a.text1, a.text2, layout.NewSpacer(), a.text3)
+
+	a.input = widget.NewEntry()
+	a.input.SetPlaceHolder("Enter text...")
+	contentInput := container.NewVBox(a.input, widget.NewButton("Save", func() {
+		fmt.Println("Content was:", a.input.Text)
 	}))
 
 	borderCont := container.New(layout.NewBorderLayout(contentTitle, contentInput, nil, nil),
 		contentTitle, contentInput, doubleRaster)
-	w.SetContent(borderCont)
+
+	return borderCont
+}
+
+// animate controls the drawing of the current state
+func (a *myApp) animate() {
+	go func() {
+		tick := time.NewTicker(time.Second / 25)
+
+		for range tick.C {
+			a.aRaster.Refresh()
+			a.bRaster.Refresh()
+		}
+	}()
+}
+
+// simulate updates the current state
+func (a *myApp) simulate() {
+	go func() {
+		tick := time.NewTicker(time.Second / 50)
+
+		for range tick.C {
+			a.aRaster.backColor += 1
+			if a.aRaster.backColor > 200 {
+				a.aRaster.backColor = 40
+			}
+			a.bRaster.backColor += 1
+			if a.bRaster.backColor > 200 {
+				a.bRaster.backColor = 40
+			}
+		}
+	}()
+}
+
+// --------------------------------------------------------------------------------
+
+func main() {
+	fmt.Println("vim-go")
+
+	// create the app
+	fyneApp := app.New()
+	w := fyneApp.NewWindow("Image test")
+	theApp := &myApp{fyneApp: fyneApp, mainWin: w}
+	// game := newGame(board)
+
+	// build the UI
+	w.SetContent(theApp.buildUI())
+
+	// add the link for typed runes
+	// window.Canvas().SetOnTypedRune(game.typedRune)
+
+	// start the animation
+	theApp.animate()
+	// start the simulation
+	theApp.simulate()
 
 	w.Resize(fyne.NewSize(1200, 1200))
 
 	w.Show()
-	myApp.Run()
+	fyneApp.Run()
 }
