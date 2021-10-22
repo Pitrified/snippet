@@ -48,10 +48,10 @@ func sampleSliderOnChange(f float64) {
 
 // Create a custom layout to place the things exactly where you want.
 // https://developer.fyne.io/tutorial/custom-layout
-type wideHeader struct {
+type wideSliderWithLabel struct {
 }
 
-func (ws *wideHeader) MinSize(objects []fyne.CanvasObject) fyne.Size {
+func (ws *wideSliderWithLabel) MinSize(objects []fyne.CanvasObject) fyne.Size {
 	w, h := float32(0), float32(0)
 	for _, o := range objects {
 		childSize := o.MinSize()
@@ -63,13 +63,15 @@ func (ws *wideHeader) MinSize(objects []fyne.CanvasObject) fyne.Size {
 	return fyne.NewSize(w, h)
 }
 
-func (ws *wideHeader) Layout(objects []fyne.CanvasObject, containerSize fyne.Size) {
-	leftMinSize := objects[0].MinSize()
+func (ws *wideSliderWithLabel) Layout(objects []fyne.CanvasObject, containerSize fyne.Size) {
+	// compute the size for the slider
 	rightMinSize := objects[1].MinSize()
-	leftSize := fyne.NewSize(containerSize.Width-rightMinSize.Width, leftMinSize.Height)
+	leftSize := fyne.NewSize(containerSize.Width-rightMinSize.Width, rightMinSize.Height*0.9)
+	// place the slider
 	pos := fyne.NewPos(0, 0)
 	objects[0].Resize(leftSize)
 	objects[0].Move(pos)
+	// place the label
 	pos = pos.Add(fyne.NewPos(leftSize.Width, 0))
 	objects[1].Resize(rightMinSize)
 	objects[1].Move(pos)
@@ -238,7 +240,16 @@ func main() {
 
 	slide_5 := widget.NewSlider(0, 10)
 	lab_slide_5 := widget.NewLabel("Data")
-	con_slide_5 := container.New(&wideHeader{}, slide_5, lab_slide_5)
+	con_slide_5 := container.New(&wideSliderWithLabel{}, slide_5, lab_slide_5)
+
+	slide_6 := widget.NewSlider(0, 10)
+	lab_slide_6 := widget.NewLabel("Data long label")
+	con_slide_6 := container.New(&wideSliderWithLabel{}, slide_6, lab_slide_6)
+
+	slide_7 := widget.NewSlider(0, 10)
+	lab_slide_7 := widget.NewLabel("Data long label")
+	slide_border_7 := container.New(layout.NewBorderLayout(nil, nil, nil, lab_slide_7),
+		lab_slide_7, slide_7)
 
 	pe := fyne.PointEvent{}
 	fmt.Printf("pe = %+v\n", pe)
@@ -264,6 +275,8 @@ func main() {
 		sample_slider_1,
 		widget.NewSeparator(),
 		con_slide_5,
+		con_slide_6,
+		slide_border_7,
 	)
 
 	win.SetContent(stack_all)

@@ -121,7 +121,12 @@ type myApp struct {
 	text2 *canvas.Text
 	text3 *canvas.Text
 
-	input *widget.Entry
+	input   *widget.Entry
+	saveBtn *widget.Button
+}
+
+func (a *myApp) btnPressSave() {
+	fmt.Println("Content was:", a.input.Text)
 }
 
 func (a *myApp) buildUI() fyne.CanvasObject {
@@ -137,9 +142,9 @@ func (a *myApp) buildUI() fyne.CanvasObject {
 
 	a.input = widget.NewEntry()
 	a.input.SetPlaceHolder("Enter text...")
-	contentInput := container.NewVBox(a.input, widget.NewButton("Save", func() {
-		fmt.Println("Content was:", a.input.Text)
-	}))
+	a.saveBtn = widget.NewButton("Save", a.btnPressSave)
+	contentInput := container.New(layout.NewBorderLayout(nil, nil, nil, a.saveBtn),
+		a.saveBtn, a.input)
 
 	borderCont := container.New(layout.NewBorderLayout(contentTitle, contentInput, nil, nil),
 		contentTitle, contentInput, doubleRaster)
