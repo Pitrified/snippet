@@ -177,6 +177,22 @@ func (a *myApp) simulate() {
 	}()
 }
 
+// func (a *myApp) typedRune(r rune) {
+// 	fmt.Printf("typedRune = %+v %T\n", r, r)
+// 	if r == 'q' {
+// 		a.fyneApp.Quit()
+// 	}
+// }
+
+func (a *myApp) typedKey(ev *fyne.KeyEvent) {
+	fmt.Printf("typedKey  = %+v %T\n", ev, ev)
+	switch ev.Name {
+	case "Escape", "Q":
+		a.fyneApp.Quit()
+	default:
+	}
+}
+
 // --------------------------------------------------------------------------------
 
 func main() {
@@ -186,13 +202,14 @@ func main() {
 	fyneApp := app.New()
 	w := fyneApp.NewWindow("Image test")
 	theApp := &myApp{fyneApp: fyneApp, mainWin: w}
-	// game := newGame(board)
 
 	// build the UI
 	w.SetContent(theApp.buildUI())
 
 	// add the link for typed runes
-	// window.Canvas().SetOnTypedRune(game.typedRune)
+	// MAYBE moved in a createNewApp() func?
+	// w.Canvas().SetOnTypedRune(theApp.typedRune)
+	w.Canvas().SetOnTypedKey(theApp.typedKey)
 
 	// start the animation
 	theApp.animate()
