@@ -10,6 +10,7 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 )
@@ -68,6 +69,7 @@ type myRaster struct {
 	widget.BaseWidget
 
 	backColor uint8
+	name      string
 }
 
 // compliant with Widget interface
@@ -86,8 +88,21 @@ func (mr *myRaster) CreateRenderer() fyne.WidgetRenderer {
 	return renderer
 }
 
-func newMyRaster(bc uint8) *myRaster {
-	mr := &myRaster{backColor: bc}
+// compliant with Mouseable interface
+// https://pkg.go.dev/fyne.io/fyne/v2#Widget
+var _ desktop.Mouseable = &myRaster{}
+
+func (mr *myRaster) MouseDown(ev *desktop.MouseEvent) {
+	fmt.Printf("[%-5s] MouseDown ev = %+v\n", mr.name, ev)
+}
+
+func (mr *myRaster) MouseUp(ev *desktop.MouseEvent) {
+	fmt.Printf("[%-5s] MouseUp   ev = %+v\n", mr.name, ev)
+}
+
+// create a new raster
+func newMyRaster(bc uint8, name string) *myRaster {
+	mr := &myRaster{backColor: bc, name: name}
 	mr.ExtendBaseWidget(mr)
 	return mr
 }
@@ -109,10 +124,9 @@ func main() {
 	// start the animation
 	// game.animate()
 
-	aRaster := newMyRaster(140)
-	bRaster := newMyRaster(40)
-
-	// w.SetContent(aRaster)
+	aRaster := newMyRaster(140, "Left")
+	bRaster := newMyRaster(40, "Right")
+	doubleRaster := container.New(layout.NewGridLayout(2), aRaster, bRaster)
 
 	text1 := canvas.NewText("Hello", color.White)
 	text2 := canvas.NewText("There", color.RGBA{150, 75, 0, 255})
@@ -125,16 +139,9 @@ func main() {
 		fmt.Println("Content was:", input.Text)
 	}))
 
-	doubleRaster := container.New(layout.NewGridLayout(2), aRaster, bRaster)
-
 	borderCont := container.New(layout.NewBorderLayout(contentTitle, contentInput, nil, nil),
 		contentTitle, contentInput, doubleRaster)
 	w.SetContent(borderCont)
-
-	// contentStack := container.New(layout.NewVBoxLayout(),
-	// 	contentTitle, aRaster, contentInput,
-	// )
-	// w.SetContent(contentStack)
 
 	w.Resize(fyne.NewSize(1200, 1200))
 
