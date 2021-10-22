@@ -251,6 +251,12 @@ func main() {
 	slide_border_7 := container.New(layout.NewBorderLayout(nil, nil, nil, lab_slide_7),
 		lab_slide_7, slide_7)
 
+	entry := &widget.Entry{
+		OnSubmitted: func(s string) {
+			fmt.Printf("s = %+v\n", s)
+		},
+	}
+
 	pe := fyne.PointEvent{}
 	fmt.Printf("pe = %+v\n", pe)
 	me := desktop.MouseEvent{}
@@ -277,6 +283,7 @@ func main() {
 		con_slide_5,
 		con_slide_6,
 		slide_border_7,
+		entry,
 	)
 
 	win.SetContent(stack_all)

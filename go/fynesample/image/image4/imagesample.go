@@ -129,6 +129,10 @@ func (a *myApp) btnPressSave() {
 	fmt.Println("Content was:", a.input.Text)
 }
 
+func (a *myApp) inputSubmitted(s string) {
+	fmt.Printf("Content was: %q received %q\n", a.input.Text, s)
+}
+
 func (a *myApp) buildUI() fyne.CanvasObject {
 
 	a.aRaster = newMyRaster(140, "Left")
@@ -142,6 +146,7 @@ func (a *myApp) buildUI() fyne.CanvasObject {
 
 	a.input = widget.NewEntry()
 	a.input.SetPlaceHolder("Enter text...")
+	a.input.OnSubmitted = a.inputSubmitted
 	a.saveBtn = widget.NewButton("Save", a.btnPressSave)
 	contentInput := container.New(layout.NewBorderLayout(nil, nil, nil, a.saveBtn),
 		a.saveBtn, a.input)
@@ -192,7 +197,7 @@ func (a *myApp) simulate() {
 func (a *myApp) typedKey(ev *fyne.KeyEvent) {
 	fmt.Printf("typedKey  = %+v %T\n", ev, ev)
 	switch ev.Name {
-	case "Escape", "Q":
+	case fyne.KeyEscape, fyne.KeyQ:
 		a.fyneApp.Quit()
 	default:
 	}
