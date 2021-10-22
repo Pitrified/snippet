@@ -30,6 +30,10 @@ type gameRenderer struct {
 	game *game
 }
 
+// compliant with WidgetRenderer interface
+// https://pkg.go.dev/fyne.io/fyne/v2#WidgetRenderer
+var _ fyne.WidgetRenderer = &gameRenderer{}
+
 func (gr *gameRenderer) MinSize() fyne.Size {
 	pixDensity := gr.game.pixelDensity()
 	return fyne.NewSize(float32(minXCount*cellSize)/pixDensity, float32(minYCount*cellSize)/pixDensity)
@@ -94,6 +98,10 @@ type game struct {
 	board   *board
 	paused  bool
 }
+
+// compliant with Widget interface
+// https://pkg.go.dev/fyne.io/fyne/v2#Widget
+var _ fyne.Widget = &game{}
 
 func (g *game) CreateRenderer() fyne.WidgetRenderer {
 	fmt.Println("Starting CreateRenderer")
