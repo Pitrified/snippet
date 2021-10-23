@@ -79,15 +79,26 @@ func (mr *myRaster) MouseUp(ev *desktop.MouseEvent) {
 
 // update the raster
 func (mr *myRaster) rasterUpdate(w, h int) image.Image {
-	// fmt.Printf("[%-5s] rasterUpdate : w, h = %+v %+v\n", mr.name, w, h)
-	pixW := w
-	pixH := h
+	fmt.Printf("[%-5s] rasterUpdate : w, h = %+v %+v\n", mr.name, w, h)
+	pixW, pixH := w, h
 	img := image.NewRGBA(image.Rect(0, 0, pixW, pixH))
 	bc := mr.backColor
 	draw.Draw(
 		img,
 		img.Bounds(),
 		&image.Uniform{color.RGBA{bc, bc, bc, 255}},
+		image.Point{0, 0},
+		draw.Src,
+	)
+	// this shows the problem with scaling (FYNE_SCALE=0.5 go run .)
+	// the raster is drawn pixel by pixel, disregarding the scale
+	// the position of the MouseEvent is scaled
+	// the scale can be extracted knowing (with FYNE_SCALE=0.5)
+	// Layout = {Width:400 Height:400} rasterUpdate : w, h = 200 200
+	draw.Draw(
+		img,
+		image.Rect(0, 0, 100, 100),
+		&image.Uniform{color.RGBA{10, 10, 10, 255}},
 		image.Point{0, 0},
 		draw.Src,
 	)
@@ -160,19 +171,23 @@ func (a *myApp) buildUI() fyne.CanvasObject {
 // animate controls the drawing of the current state
 func (a *myApp) animate() {
 	go func() {
-		tick := time.NewTicker(time.Second / 25)
+		tick := time.NewTicker(time.Second * 2)
 
 		for range tick.C {
 			a.aRaster.Refresh()
 			a.bRaster.Refresh()
+			// here the scale is set correctly
+			fmt.Printf("a.mainWin.Canvas().Scale() = %+v\n", a.mainWin.Canvas().Scale())
 		}
+
+		// TODO rather than a for use a select, if there is data on tick ch animate, default simulate
 	}()
 }
 
 // simulate updates the current state
 func (a *myApp) simulate() {
 	go func() {
-		tick := time.NewTicker(time.Second / 50)
+		tick := time.NewTicker(time.Second * 50)
 
 		for range tick.C {
 			a.aRaster.backColor += 1
@@ -212,6 +227,9 @@ func main() {
 	fyneApp := app.New()
 	w := fyneApp.NewWindow("Image test")
 	theApp := &myApp{fyneApp: fyneApp, mainWin: w}
+
+	// always 1 even when FYNE_SCALE is set to another value :(
+	fmt.Printf("w.Canvas().Scale() = %+v\n", w.Canvas().Scale())
 
 	// build the UI
 	w.SetContent(theApp.buildUI())
