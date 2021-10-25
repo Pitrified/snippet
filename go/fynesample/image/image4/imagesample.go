@@ -105,10 +105,12 @@ func (mr *myRaster) rasterUpdate(w, h int) image.Image {
 	// this shows the problem with scaling (FYNE_SCALE=0.5 go run .)
 	// the raster is drawn pixel by pixel, disregarding the scale
 	// the position of the MouseEvent is scaled
-	// fmt.Printf("a.mainWin.Canvas().Scale() = %+v\n", mr.a.mainWin.Canvas().Scale())
+	// we draw a larger square and when we click the corner we see 100,100
+	cs := mr.getCurrentScale()
+	squareSize := int(100 * cs)
 	draw.Draw(
 		img,
-		image.Rect(0, 0, 100, 100),
+		image.Rect(0, 0, squareSize, squareSize),
 		&image.Uniform{color.RGBA{10, 10, 10, 255}},
 		image.Point{0, 0},
 		draw.Src,
@@ -226,9 +228,17 @@ func (a *myApp) typedKey(ev *fyne.KeyEvent) {
 	}
 }
 
-func newApp(fyneApp fyne.App, mainWin fyne.Window) *myApp {
+func (a *myApp) runApp() {
+	a.mainWin.Resize(fyne.NewSize(1200, 1200))
+	a.mainWin.Show()
+	a.fyneApp.Run()
+}
+
+func newApp() *myApp {
 
 	// create the app
+	fyneApp := app.New()
+	mainWin := fyneApp.NewWindow("Image test")
 	theApp := &myApp{fyneApp: fyneApp, mainWin: mainWin}
 
 	// add the link for typed runes
@@ -243,13 +253,10 @@ func main() {
 	fmt.Println("vim-go")
 
 	// create the app
-	// MAYBE also moved in the newApp() func?
-	fyneApp := app.New()
-	w := fyneApp.NewWindow("Image test")
-	theApp := newApp(fyneApp, w)
+	theApp := newApp()
 
 	// still 1, need to start the mainloop before the value is set
-	fmt.Printf("w.Canvas().Scale() = %+v\n", w.Canvas().Scale())
+	fmt.Printf("theApp.mainWin.Canvas().Scale() = %+v\n", theApp.mainWin.Canvas().Scale())
 
 	// build the UI
 	theApp.buildUI()
@@ -258,8 +265,5 @@ func main() {
 	theApp.animate()
 
 	// show the app
-	// MAYBE also moved in a theApp.Run() func?
-	w.Resize(fyne.NewSize(1200, 1200))
-	w.Show()
-	fyneApp.Run()
+	theApp.runApp()
 }
