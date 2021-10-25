@@ -29,10 +29,16 @@ var _ fyne.WidgetRenderer = &myRasterRenderer{}
 func (mrr *myRasterRenderer) Destroy() {
 }
 
+// layout func places all the widget Objects()
+// in this case we just need to resize the whole raster
+// objects[0].Resize(size)
+// objects[0].Move(pos)
+// e.g. in ./fynesample/sample/sample.go wideSliderWithLabel
 func (mrr *myRasterRenderer) Layout(size fyne.Size) {
 	fmt.Printf("[%-5s] Layout = %+v\n", mrr.myRaster.name, size)
 	mrr.myRaster.raster.Resize(size)
 }
+
 func (mrr *myRasterRenderer) MinSize() fyne.Size {
 	return mrr.myRaster.minSize
 }
@@ -93,8 +99,7 @@ func (mr *myRaster) rasterUpdate(w, h int) image.Image {
 	// this shows the problem with scaling (FYNE_SCALE=0.5 go run .)
 	// the raster is drawn pixel by pixel, disregarding the scale
 	// the position of the MouseEvent is scaled
-	// the scale can be extracted knowing (with FYNE_SCALE=0.5)
-	// Layout = {Width:400 Height:400} rasterUpdate : w, h = 200 200
+	// fmt.Printf("a.mainWin.Canvas().Scale() = %+v\n", a.mainWin.Canvas().Scale())
 	draw.Draw(
 		img,
 		image.Rect(0, 0, 100, 100),
@@ -128,9 +133,8 @@ type myApp struct {
 	aRaster *myRaster
 	bRaster *myRaster
 
-	text1 *canvas.Text
-	text2 *canvas.Text
-	text3 *canvas.Text
+	label1 *widget.Label
+	label2 *widget.Label
 
 	input   *widget.Entry
 	saveBtn *widget.Button
@@ -150,10 +154,13 @@ func (a *myApp) buildUI() fyne.CanvasObject {
 	a.bRaster = newMyRaster(40, "Right")
 	doubleRaster := container.New(layout.NewGridLayout(2), a.aRaster, a.bRaster)
 
-	a.text1 = canvas.NewText("Hello", color.White)
-	a.text2 = canvas.NewText("There", color.RGBA{150, 75, 0, 255})
-	a.text3 = canvas.NewText("(right aligned)", color.White)
-	contentTitle := container.New(layout.NewHBoxLayout(), a.text1, a.text2, layout.NewSpacer(), a.text3)
+	// colors might be cool but should be set with the theme
+	// a.text1 = canvas.NewText("Hello", color.White)
+	// a.text2 = canvas.NewText("There", color.RGBA{150, 75, 0, 255})
+	// a.text3 = canvas.NewText("(right aligned)", color.White)
+	a.label1 = widget.NewLabel("Hello there")
+	a.label2 = widget.NewLabel("(right aligned)")
+	contentTitle := container.New(layout.NewHBoxLayout(), a.label1, layout.NewSpacer(), a.label2)
 
 	a.input = widget.NewEntry()
 	a.input.SetPlaceHolder("Enter text...")
@@ -171,43 +178,37 @@ func (a *myApp) buildUI() fyne.CanvasObject {
 // animate controls the drawing of the current state
 func (a *myApp) animate() {
 	go func() {
-		tick := time.NewTicker(time.Second * 2)
+		// Refresh rate limiter
+		tickRefresh := time.NewTicker(time.Second * 2)
 
-		for range tick.C {
-			a.aRaster.Refresh()
-			a.bRaster.Refresh()
-			// here the scale is set correctly
-			fmt.Printf("a.mainWin.Canvas().Scale() = %+v\n", a.mainWin.Canvas().Scale())
+		// Simulation rate limiter
+		tickSimulate := time.NewTicker(time.Second / 50)
+
+		for {
+
+			select {
+
+			case <-tickRefresh.C:
+				a.aRaster.Refresh()
+				a.bRaster.Refresh()
+				// here the scale is set correctly
+				fmt.Printf("a.mainWin.Canvas().Scale() = %+v\n", a.mainWin.Canvas().Scale())
+
+			case <-tickSimulate.C:
+				a.aRaster.backColor += 1
+				if a.aRaster.backColor > 200 {
+					a.aRaster.backColor = 40
+				}
+				a.bRaster.backColor += 1
+				if a.bRaster.backColor > 200 {
+					a.bRaster.backColor = 40
+				}
+
+			}
+
 		}
-
-		// TODO rather than a for use a select, if there is data on tick ch animate, default simulate
 	}()
 }
-
-// simulate updates the current state
-func (a *myApp) simulate() {
-	go func() {
-		tick := time.NewTicker(time.Second * 50)
-
-		for range tick.C {
-			a.aRaster.backColor += 1
-			if a.aRaster.backColor > 200 {
-				a.aRaster.backColor = 40
-			}
-			a.bRaster.backColor += 1
-			if a.bRaster.backColor > 200 {
-				a.bRaster.backColor = 40
-			}
-		}
-	}()
-}
-
-// func (a *myApp) typedRune(r rune) {
-// 	fmt.Printf("typedRune = %+v %T\n", r, r)
-// 	if r == 'q' {
-// 		a.fyneApp.Quit()
-// 	}
-// }
 
 func (a *myApp) typedKey(ev *fyne.KeyEvent) {
 	fmt.Printf("typedKey  = %+v %T\n", ev, ev)
@@ -228,24 +229,21 @@ func main() {
 	w := fyneApp.NewWindow("Image test")
 	theApp := &myApp{fyneApp: fyneApp, mainWin: w}
 
-	// always 1 even when FYNE_SCALE is set to another value :(
+	// always 1, need to start the mainloop before the value is set
 	fmt.Printf("w.Canvas().Scale() = %+v\n", w.Canvas().Scale())
 
 	// build the UI
 	w.SetContent(theApp.buildUI())
 
 	// add the link for typed runes
-	// MAYBE moved in a createNewApp() func?
-	// w.Canvas().SetOnTypedRune(theApp.typedRune)
+	// TODO move it a theApp := createNewApp() func?
 	w.Canvas().SetOnTypedKey(theApp.typedKey)
 
 	// start the animation
 	theApp.animate()
-	// start the simulation
-	theApp.simulate()
 
+	// show the app
 	w.Resize(fyne.NewSize(1200, 1200))
-
 	w.Show()
 	fyneApp.Run()
 }
