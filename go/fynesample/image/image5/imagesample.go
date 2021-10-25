@@ -74,20 +74,20 @@ func (izr *ImageZoomRenderer) Layout(size fyne.Size) {
 	// objects[0].Move(pos)
 	// e.g. in ./fynesample/sample/sample.go wideSliderWithLabel
 
-	cs := izr.iz.getCurrentScale()
-	fmt.Printf("[%-5s] Layout: size %+v\tscale %+v\n", izr.iz.name, size, cs)
+	// cs := izr.iz.getCurrentScale()
+	// fmt.Printf("[%-5s] Layout: size %+v\tscale %+v\n", izr.iz.name, size, cs)
 
 	// put the background everywhere in the widget
 	izr.iz.background.Resize(size)
 
 	wWid := int(size.Width)
 	hWid := int(size.Height)
-	fmt.Printf("widgetSize = %+vx%+v\n", wWid, hWid)
+	// fmt.Printf("widgetSize = %+vx%+v\n", wWid, hWid)
 
 	// fmt.Printf("iz.imgOrig.Rect = %+v\n", izr.iz.imgOrig.Rect)
 	imgOriSize := izr.iz.imgOrig.Rect.Size()
 	wOri, hOri := imgOriSize.X, imgOriSize.Y
-	fmt.Printf("imgOriSize = %+vx%+v\n", wOri, hOri)
+	// fmt.Printf("imgOriSize = %+vx%+v\n", wOri, hOri)
 
 	var imgSize fyne.Size
 	var pos fyne.Position
@@ -96,12 +96,36 @@ func (izr *ImageZoomRenderer) Layout(size fyne.Size) {
 	if wOri <= wWid && hOri <= hWid {
 		imgSize = newSizeInt(wOri, hOri)
 		pos = newPosInt((wWid-wOri)/2, (hWid-hOri)/2)
-	} else {
-		imgSize = fyne.NewSize(100, 100)
-		pos = fyne.NewPos(0, 0)
+	} else
+	// image wider than widget
+	// wOri : wWid = hOri : hSca
+	if wOri > wWid && hOri <= hWid {
+		hSca := hOri * wWid / wOri
+		imgSize = newSizeInt(wWid, hSca)
+		pos = newPosInt(0, (hWid-hSca)/2)
+	} else
+	// image taller than widget
+	if wOri <= wWid && hOri > hWid {
+		wSca := wOri * hWid / hOri
+		imgSize = newSizeInt(wSca, hWid)
+		pos = newPosInt((wWid-wSca)/2, 0)
+	} else
+	// image larger than widget
+	{
+		rw := wOri / wWid
+		rh := hOri / hWid
+		if rw > rh {
+			hSca := hOri * wWid / wOri
+			imgSize = newSizeInt(wWid, hSca)
+			pos = newPosInt(0, (hWid-hSca)/2)
+		} else {
+			wSca := wOri * hWid / hOri
+			imgSize = newSizeInt(wSca, hWid)
+			pos = newPosInt((wWid-wSca)/2, 0)
+		}
 	}
 
-	fmt.Printf("iz.imgCanvas = %+v\n", izr.iz.imgCanvas)
+	// fmt.Printf("iz.imgCanvas = %+v\n", izr.iz.imgCanvas)
 	izr.iz.imgCanvas.Resize(imgSize)
 	izr.iz.imgCanvas.Move(pos)
 }
@@ -204,10 +228,10 @@ func (iz *ImageZoom) bgPattern(x, y, _, _ int) color.Color {
 	return color.Gray{Y: 80}
 }
 
-func (iz *ImageZoom) getCurrentScale() float32 {
-	// get the current scale of the main window
-	return iz.a.mainWin.Canvas().Scale()
-}
+// func (iz *ImageZoom) getCurrentScale() float32 {
+// 	// get the current scale of the main window
+// 	return iz.a.mainWin.Canvas().Scale()
+// }
 
 // --------------------------------------------------------------------------------
 //  APPLICATION
