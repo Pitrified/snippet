@@ -145,26 +145,11 @@ func newImageZoom(a *myApp, name string) *ImageZoom {
 	iz.background = canvas.NewRasterWithPixels(iz.bgPattern)
 	iz.backCellSize = 50
 
-	// pixW := 200
-	// pixH := 200
-	// img := image.NewRGBA(image.Rect(0, 0, pixW, pixH))
-	// draw.Draw(
-	// 	img, img.Bounds(),
-	// 	&image.Uniform{color.RGBA{10, 10, 10, 255}},
-	// 	image.Point{0, 0},
-	// 	draw.Src)
-	// iz.imgOrig = img
-	// iz.imgCanvas = canvas.NewImageFromImage(iz.imgOrig)
-
-	iz.imgOrig, _, _ = getRGBAFromFilePath("../750x150.png")
+	iz.imgOrig, _, _ = getRGBAFromFilePath("../800800.png")
+	// iz.imgOrig, _, _ = getRGBAFromFilePath("../200800.png")
+	// iz.imgOrig, _, _ = getRGBAFromFilePath("../800200.png")
+	// iz.imgOrig, _, _ = getRGBAFromFilePath("../200200.png")
 	iz.imgCanvas = canvas.NewImageFromImage(iz.imgOrig)
-
-	// iz.imgCanvas = canvas.NewImageFromFile("../750x150.png")
-	// fmt.Printf("Loaded iz.imgCanvas = %+v\n", iz.imgCanvas)
-	// if img, ok := iz.imgCanvas.Image.(*image.RGBA); ok {
-	// 	iz.imgOrig = img
-	// 	fmt.Printf("Loaded iz.imgOrig = %+v\n", iz.imgOrig)
-	// }
 
 	iz.ExtendBaseWidget(iz)
 	return iz
