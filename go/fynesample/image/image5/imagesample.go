@@ -46,13 +46,13 @@ func getRGBAFromFilePath(filePath string) (*image.RGBA, string, error) {
 
 }
 
-func newSizeInt(w, h int) fyne.Size {
-	return fyne.NewSize(float32(w), float32(h))
-}
+// func newSizeInt(w, h int) fyne.Size {
+// 	return fyne.NewSize(float32(w), float32(h))
+// }
 
-func newPosInt(x, y int) fyne.Position {
-	return fyne.NewPos(float32(x), float32(y))
-}
+// func newPosInt(x, y int) fyne.Position {
+// 	return fyne.NewPos(float32(x), float32(y))
+// }
 
 // --------------------------------------------------------------------------------
 //  IMAGEZOOMRENDERER
@@ -80,13 +80,14 @@ func (izr *ImageZoomRenderer) Layout(size fyne.Size) {
 	// put the background everywhere in the widget
 	izr.iz.background.Resize(size)
 
-	wWid := int(size.Width)
-	hWid := int(size.Height)
+	wWid := size.Width
+	hWid := size.Height
 	// fmt.Printf("widgetSize = %+vx%+v\n", wWid, hWid)
 
 	// fmt.Printf("iz.imgOrig.Rect = %+v\n", izr.iz.imgOrig.Rect)
 	imgOriSize := izr.iz.imgOrig.Rect.Size()
-	wOri, hOri := imgOriSize.X, imgOriSize.Y
+	wOri := float32(imgOriSize.X)
+	hOri := float32(imgOriSize.Y)
 	// fmt.Printf("imgOriSize = %+vx%+v\n", wOri, hOri)
 
 	var imgSize fyne.Size
@@ -94,34 +95,36 @@ func (izr *ImageZoomRenderer) Layout(size fyne.Size) {
 
 	// image smaller than widget
 	if wOri <= wWid && hOri <= hWid {
-		imgSize = newSizeInt(wOri, hOri)
-		pos = newPosInt((wWid-wOri)/2, (hWid-hOri)/2)
+		imgSize = fyne.NewSize(wOri, hOri)
+		pos = fyne.NewPos((wWid-wOri)/2, (hWid-hOri)/2)
 	} else
 	// image wider than widget
 	// wOri : wWid = hOri : hSca
 	if wOri > wWid && hOri <= hWid {
 		hSca := hOri * wWid / wOri
-		imgSize = newSizeInt(wWid, hSca)
-		pos = newPosInt(0, (hWid-hSca)/2)
+		imgSize = fyne.NewSize(wWid, hSca)
+		pos = fyne.NewPos(0, (hWid-hSca)/2)
 	} else
 	// image taller than widget
 	if wOri <= wWid && hOri > hWid {
 		wSca := wOri * hWid / hOri
-		imgSize = newSizeInt(wSca, hWid)
-		pos = newPosInt((wWid-wSca)/2, 0)
+		imgSize = fyne.NewSize(wSca, hWid)
+		pos = fyne.NewPos((wWid-wSca)/2, 0)
 	} else
 	// image larger than widget
 	{
 		rw := wOri / wWid
 		rh := hOri / hWid
 		if rw > rh {
+			// touch the sides left to right
 			hSca := hOri * wWid / wOri
-			imgSize = newSizeInt(wWid, hSca)
-			pos = newPosInt(0, (hWid-hSca)/2)
+			imgSize = fyne.NewSize(wWid, hSca)
+			pos = fyne.NewPos(0, (hWid-hSca)/2)
 		} else {
+			// touch the sides top to bottom
 			wSca := wOri * hWid / hOri
-			imgSize = newSizeInt(wSca, hWid)
-			pos = newPosInt((wWid-wSca)/2, 0)
+			imgSize = fyne.NewSize(wSca, hWid)
+			pos = fyne.NewPos((wWid-wSca)/2, 0)
 		}
 	}
 
