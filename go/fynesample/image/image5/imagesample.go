@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"os"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -14,6 +15,44 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 )
+
+// https://stackoverflow.com/a/49595208/2237151
+func getImageFromFilePath(filePath string) (image.Image, string, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, "", err
+	}
+	defer f.Close()
+	m, format, err := image.Decode(f)
+	return m, format, err
+}
+
+func getRGBAFromFilePath(filePath string) (*image.RGBA, string, error) {
+	m, format, err := getImageFromFilePath(filePath)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// if it was a RGBA image this should be fast and work well
+	if img, ok := m.(*image.RGBA); ok {
+		return img, format, err
+	}
+
+	// https://stackoverflow.com/a/58259978/2237151
+	b := m.Bounds()
+	mRGBA := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+	draw.Draw(mRGBA, mRGBA.Bounds(), m, b.Min, draw.Src)
+	return mRGBA, format, err
+
+}
+
+func newSizeInt(w, h int) fyne.Size {
+	return fyne.NewSize(float32(w), float32(h))
+}
+
+func newPosInt(x, y int) fyne.Position {
+	return fyne.NewPos(float32(x), float32(y))
+}
 
 // --------------------------------------------------------------------------------
 //  IMAGEZOOMRENDERER
@@ -41,9 +80,29 @@ func (izr *ImageZoomRenderer) Layout(size fyne.Size) {
 	// put the background everywhere in the widget
 	izr.iz.background.Resize(size)
 
-	imgSize := fyne.NewSize(100, 100)
+	wWid := int(size.Width)
+	hWid := int(size.Height)
+	fmt.Printf("widgetSize = %+vx%+v\n", wWid, hWid)
+
+	// fmt.Printf("iz.imgOrig.Rect = %+v\n", izr.iz.imgOrig.Rect)
+	imgOriSize := izr.iz.imgOrig.Rect.Size()
+	wOri, hOri := imgOriSize.X, imgOriSize.Y
+	fmt.Printf("imgOriSize = %+vx%+v\n", wOri, hOri)
+
+	var imgSize fyne.Size
+	var pos fyne.Position
+
+	// image smaller than widget
+	if wOri <= wWid && hOri <= hWid {
+		imgSize = newSizeInt(wOri, hOri)
+		pos = newPosInt((wWid-wOri)/2, (hWid-hOri)/2)
+	} else {
+		imgSize = fyne.NewSize(100, 100)
+		pos = fyne.NewPos(0, 0)
+	}
+
+	fmt.Printf("iz.imgCanvas = %+v\n", izr.iz.imgCanvas)
 	izr.iz.imgCanvas.Resize(imgSize)
-	pos := fyne.NewPos(0, 0)
 	izr.iz.imgCanvas.Move(pos)
 }
 
@@ -86,21 +145,25 @@ func newImageZoom(a *myApp, name string) *ImageZoom {
 	iz.background = canvas.NewRasterWithPixels(iz.bgPattern)
 	iz.backCellSize = 50
 
-	pixW := 200
-	pixH := 200
-	img := image.NewRGBA(image.Rect(0, 0, pixW, pixH))
-	draw.Draw(
-		img, img.Bounds(),
-		&image.Uniform{color.RGBA{10, 10, 10, 255}},
-		image.Point{0, 0},
-		draw.Src)
-	iz.imgOrig = img
+	// pixW := 200
+	// pixH := 200
+	// img := image.NewRGBA(image.Rect(0, 0, pixW, pixH))
+	// draw.Draw(
+	// 	img, img.Bounds(),
+	// 	&image.Uniform{color.RGBA{10, 10, 10, 255}},
+	// 	image.Point{0, 0},
+	// 	draw.Src)
+	// iz.imgOrig = img
+	// iz.imgCanvas = canvas.NewImageFromImage(iz.imgOrig)
+
+	iz.imgOrig, _, _ = getRGBAFromFilePath("../750x150.png")
 	iz.imgCanvas = canvas.NewImageFromImage(iz.imgOrig)
 
-	// imgURI := storage.NewFileURI("https://via.placeholder.com/750x150.png")
-	// iz.imgCanvas = canvas.NewImageFromURI(imgURI)
+	// iz.imgCanvas = canvas.NewImageFromFile("../750x150.png")
+	// fmt.Printf("Loaded iz.imgCanvas = %+v\n", iz.imgCanvas)
 	// if img, ok := iz.imgCanvas.Image.(*image.RGBA); ok {
 	// 	iz.imgOrig = img
+	// 	fmt.Printf("Loaded iz.imgOrig = %+v\n", iz.imgOrig)
 	// }
 
 	iz.ExtendBaseWidget(iz)
