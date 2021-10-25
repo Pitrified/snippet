@@ -61,6 +61,8 @@ type myRaster struct {
 
 	backColor uint8
 	name      string
+
+	a *myApp
 }
 
 // compliant with Widget interface
@@ -84,8 +86,12 @@ func (mr *myRaster) MouseUp(ev *desktop.MouseEvent) {
 }
 
 // update the raster
+// remember that contexts exist
+// https://www.sohamkamani.com/golang/context-cancellation-and-values/
 func (mr *myRaster) rasterUpdate(w, h int) image.Image {
-	fmt.Printf("[%-5s] rasterUpdate : w, h = %+v %+v\n", mr.name, w, h)
+	fmt.Printf("[%-5s] rasterUpdate : w, h = %+v %+v\tScale: %+v\n",
+		mr.name, w, h, mr.getCurrentScale(),
+	)
 	pixW, pixH := w, h
 	img := image.NewRGBA(image.Rect(0, 0, pixW, pixH))
 	bc := mr.backColor
@@ -99,7 +105,7 @@ func (mr *myRaster) rasterUpdate(w, h int) image.Image {
 	// this shows the problem with scaling (FYNE_SCALE=0.5 go run .)
 	// the raster is drawn pixel by pixel, disregarding the scale
 	// the position of the MouseEvent is scaled
-	// fmt.Printf("a.mainWin.Canvas().Scale() = %+v\n", a.mainWin.Canvas().Scale())
+	// fmt.Printf("a.mainWin.Canvas().Scale() = %+v\n", mr.a.mainWin.Canvas().Scale())
 	draw.Draw(
 		img,
 		image.Rect(0, 0, 100, 100),
@@ -110,9 +116,14 @@ func (mr *myRaster) rasterUpdate(w, h int) image.Image {
 	return img
 }
 
+// get the current scale of the main window
+func (mr *myRaster) getCurrentScale() float32 {
+	return mr.a.mainWin.Canvas().Scale()
+}
+
 // create a new raster
-func newMyRaster(bc uint8, name string) *myRaster {
-	mr := &myRaster{backColor: bc, name: name}
+func newMyRaster(bc uint8, name string, a *myApp) *myRaster {
+	mr := &myRaster{backColor: bc, name: name, a: a}
 
 	raster := canvas.NewRaster(mr.rasterUpdate)
 	raster.ScaleMode = canvas.ImageScalePixels
@@ -148,16 +159,12 @@ func (a *myApp) inputSubmitted(s string) {
 	fmt.Printf("Content was: %q received %q\n", a.input.Text, s)
 }
 
-func (a *myApp) buildUI() fyne.CanvasObject {
+func (a *myApp) buildUI() {
 
-	a.aRaster = newMyRaster(140, "Left")
-	a.bRaster = newMyRaster(40, "Right")
+	a.aRaster = newMyRaster(140, "Left", a)
+	a.bRaster = newMyRaster(40, "Right", a)
 	doubleRaster := container.New(layout.NewGridLayout(2), a.aRaster, a.bRaster)
 
-	// colors might be cool but should be set with the theme
-	// a.text1 = canvas.NewText("Hello", color.White)
-	// a.text2 = canvas.NewText("There", color.RGBA{150, 75, 0, 255})
-	// a.text3 = canvas.NewText("(right aligned)", color.White)
 	a.label1 = widget.NewLabel("Hello there")
 	a.label2 = widget.NewLabel("(right aligned)")
 	contentTitle := container.New(layout.NewHBoxLayout(), a.label1, layout.NewSpacer(), a.label2)
@@ -172,10 +179,12 @@ func (a *myApp) buildUI() fyne.CanvasObject {
 	borderCont := container.New(layout.NewBorderLayout(contentTitle, contentInput, nil, nil),
 		contentTitle, contentInput, doubleRaster)
 
-	return borderCont
+	a.mainWin.SetContent(borderCont)
 }
 
-// animate controls the drawing of the current state
+// animate controls:
+// - drawing of the current state
+// - simulating the environment
 func (a *myApp) animate() {
 	go func() {
 		// Refresh rate limiter
@@ -191,8 +200,6 @@ func (a *myApp) animate() {
 			case <-tickRefresh.C:
 				a.aRaster.Refresh()
 				a.bRaster.Refresh()
-				// here the scale is set correctly
-				fmt.Printf("a.mainWin.Canvas().Scale() = %+v\n", a.mainWin.Canvas().Scale())
 
 			case <-tickSimulate.C:
 				a.aRaster.backColor += 1
@@ -219,30 +226,39 @@ func (a *myApp) typedKey(ev *fyne.KeyEvent) {
 	}
 }
 
+func newApp(fyneApp fyne.App, mainWin fyne.Window) *myApp {
+
+	// create the app
+	theApp := &myApp{fyneApp: fyneApp, mainWin: mainWin}
+
+	// add the link for typed runes
+	theApp.mainWin.Canvas().SetOnTypedKey(theApp.typedKey)
+
+	return theApp
+}
+
 // --------------------------------------------------------------------------------
 
 func main() {
 	fmt.Println("vim-go")
 
 	// create the app
+	// MAYBE also moved in the newApp() func?
 	fyneApp := app.New()
 	w := fyneApp.NewWindow("Image test")
-	theApp := &myApp{fyneApp: fyneApp, mainWin: w}
+	theApp := newApp(fyneApp, w)
 
-	// always 1, need to start the mainloop before the value is set
+	// still 1, need to start the mainloop before the value is set
 	fmt.Printf("w.Canvas().Scale() = %+v\n", w.Canvas().Scale())
 
 	// build the UI
-	w.SetContent(theApp.buildUI())
-
-	// add the link for typed runes
-	// TODO move it a theApp := createNewApp() func?
-	w.Canvas().SetOnTypedKey(theApp.typedKey)
+	theApp.buildUI()
 
 	// start the animation
 	theApp.animate()
 
 	// show the app
+	// MAYBE also moved in a theApp.Run() func?
 	w.Resize(fyne.NewSize(1200, 1200))
 	w.Show()
 	fyneApp.Run()
