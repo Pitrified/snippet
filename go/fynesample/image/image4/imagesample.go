@@ -74,7 +74,7 @@ func (mr *myRaster) CreateRenderer() fyne.WidgetRenderer {
 }
 
 // compliant with Mouseable interface
-// https://pkg.go.dev/fyne.io/fyne/v2#Widget
+// https://pkg.go.dev/fyne.io/fyne/v2/driver/desktop#Mouseable
 var _ desktop.Mouseable = &myRaster{}
 
 func (mr *myRaster) MouseDown(ev *desktop.MouseEvent) {
