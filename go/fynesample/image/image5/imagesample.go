@@ -219,6 +219,8 @@ func (izr *ImageZoomRenderer) redrawImageZoom() {
 	region := newRectangleFloat64(left, top, right, bottom)
 	fmt.Printf("[%-4s] resSize %+v region %+v\n", iz.name, resSize, region)
 
+	// MAYBE need to validate the region (SubImage already does)
+
 	// extract the subImage and set it in the canvas
 	subImage := iz.imgOrig.SubImage(region)
 	iz.imgCanvas.Image = subImage
@@ -402,6 +404,15 @@ var _ fyne.Scrollable = &ImageZoom{}
 
 func (iz *ImageZoom) Scrolled(ev *fyne.ScrollEvent) {
 	fmt.Printf("[%-4s] Scrolled   ev = %+v\n", iz.name, ev)
+	x := ev.Position.X
+	y := ev.Position.Y
+	var direction string
+	if ev.Scrolled.DY > 0 {
+		direction = "in"
+	} else {
+		direction = "out"
+	}
+	iz.changeZoom(direction, x, y)
 }
 
 // ----- MISC IZ -----
@@ -419,6 +430,10 @@ func (iz *ImageZoom) artisanalRefresh() {
 	// just to test that the thing moves
 	iz.imgCanvas.Move(fyne.NewPos(100, 0))
 	canvas.Refresh(iz)
+}
+
+func (iz *ImageZoom) changeZoom(direction string, x, y float32) {
+	fmt.Printf("[%-4s] changeZoom %s\n", iz.name, direction)
 }
 
 // --------------------------------------------------------------------------------
