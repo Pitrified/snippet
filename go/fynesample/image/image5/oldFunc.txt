@@ -1,0 +1,12 @@
+// func newSizeInt(w, h int) fyne.Size {
+// 	return fyne.NewSize(float32(w), float32(h))
+// }
+
+// func newPosInt(x, y int) fyne.Position {
+// 	return fyne.NewPos(float32(x), float32(y))
+// }
+
+// func (iz *ImageZoom) getCurrentScale() float32 {
+// 	// get the current scale of the main window
+// 	return iz.a.mainWin.Canvas().Scale()
+// }

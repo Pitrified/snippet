@@ -16,6 +16,8 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+// ----- MISC -----
+
 // https://stackoverflow.com/a/49595208/2237151
 func getImageFromFilePath(filePath string) (image.Image, string, error) {
 	f, err := os.Open(filePath)
@@ -46,13 +48,21 @@ func getRGBAFromFilePath(filePath string) (*image.RGBA, string, error) {
 
 }
 
-// func newSizeInt(w, h int) fyne.Size {
-// 	return fyne.NewSize(float32(w), float32(h))
-// }
+func absFloat32(f float32) float32 {
+	if f >= 0 {
+		return f
+	}
+	return -f
+}
 
-// func newPosInt(x, y int) fyne.Position {
-// 	return fyne.NewPos(float32(x), float32(y))
-// }
+func isSizeEqual(s1, s2 fyne.Size) bool {
+	delta := s1.Subtract(s2)
+	e := float32(1e-6)
+	if absFloat32(delta.Height) < e && absFloat32(delta.Width) < e {
+		return true
+	}
+	return false
+}
 
 // --------------------------------------------------------------------------------
 //  IMAGEZOOMRENDERER
@@ -69,26 +79,79 @@ func (izr *ImageZoomRenderer) Destroy() {
 }
 
 func (izr *ImageZoomRenderer) Layout(size fyne.Size) {
+	// Layout is a hook that is called if the widget needs to be laid out.
+	// This should never call Refresh.
 	// layout func places all the widget Objects()
-	// objects[0].Resize(size)
-	// objects[0].Move(pos)
+	// objects[0].Resize(size) objects[0].Move(pos)
 	// e.g. in ./fynesample/sample/sample.go wideSliderWithLabel
-
-	// cs := izr.iz.getCurrentScale()
-	// fmt.Printf("[%-5s] Layout: size %+v\tscale %+v\n", izr.iz.name, size, cs)
+	iz := izr.iz
 
 	// put the background everywhere in the widget
-	izr.iz.background.Resize(size)
+	// we only need to do this when the size of the widget changes
+	iz.background.Resize(size)
 
-	wWid := size.Width
-	hWid := size.Height
-	// fmt.Printf("widgetSize = %+vx%+v\n", wWid, hWid)
+	// update the current widget size
+	iz.currSize = size
 
-	// fmt.Printf("iz.imgOrig.Rect = %+v\n", izr.iz.imgOrig.Rect)
-	imgOriSize := izr.iz.imgOrig.Rect.Size()
+	// draw the new image
+	izr.drawImageZoom()
+
+	// the Refresh is automagically done, not explicitly
+}
+
+func (izr *ImageZoomRenderer) MinSize() fyne.Size {
+	return izr.iz.minSize
+}
+
+func (izr *ImageZoomRenderer) Objects() []fyne.CanvasObject {
+	return []fyne.CanvasObject{izr.iz.background, izr.iz.imgCanvas}
+}
+
+func (izr *ImageZoomRenderer) Refresh() {
+	// Refresh is a hook that is called if the widget has updated and needs to be redrawn.
+	// This might trigger a Layout.
+	iz := izr.iz
+	fmt.Printf("[%-4s] Refresh\n", iz.name)
+	// just to test that the thing moves
+	iz.imgCanvas.Move(fyne.NewPos(0, 0))
+	canvas.Refresh(iz)
+}
+
+// --------------------------------------------------------------------------------
+
+func (izr *ImageZoomRenderer) drawImageZoom() {
+	iz := izr.iz
+	fmt.Printf("[%-4s] drawImageZoom\n", iz.name)
+
+	// check if the size of the widget changed
+	// do we really need to check? if the draw is due to a zoom we need to
+	// redraw everything anyway (not with the move tho, just change the pic)
+	if !isSizeEqual(iz.currSize, iz.oldSize) {
+		iz.oldSize = iz.currSize
+		// compute the new zoomBase
+		// MAYBE set the zoom to the base?
+		// it's not the size change that triggers the redraw
+		// it's the zoom change
+	}
+
+	// if !floatEqual(zoom, zoomOld) {
+	// compute the size/pos for the new zoom level
+	// compute the region for the new zoom level, keeping the mouse point fixed
+	// }
+
+	// check if the image moved (no zoom change), and update the source region
+
+	// current size of the widget
+	wWid := iz.currSize.Width
+	hWid := iz.currSize.Height
+	fmt.Printf("[%-4s] widgetSize = %+vx%+v\n", iz.name, wWid, hWid)
+
+	// size of the original image
+	imgOriSize := iz.imgOrig.Rect.Size()
 	wOri := float32(imgOriSize.X)
 	hOri := float32(imgOriSize.Y)
-	// fmt.Printf("imgOriSize = %+vx%+v\n", wOri, hOri)
+
+	// iz.imgOrig.SubImage(region)
 
 	var imgSize fyne.Size
 	var pos fyne.Position
@@ -128,21 +191,11 @@ func (izr *ImageZoomRenderer) Layout(size fyne.Size) {
 		}
 	}
 
-	// fmt.Printf("iz.imgCanvas = %+v\n", izr.iz.imgCanvas)
-	izr.iz.imgCanvas.Resize(imgSize)
-	izr.iz.imgCanvas.Move(pos)
-}
+	// fmt.Printf("iz.imgCanvas = %+v\n", iz.imgCanvas)
+	iz.imgCanvas.Resize(imgSize)
+	iz.imgCanvas.Move(pos)
 
-func (izr *ImageZoomRenderer) MinSize() fyne.Size {
-	return izr.iz.minSize
-}
-
-func (izr *ImageZoomRenderer) Objects() []fyne.CanvasObject {
-	return []fyne.CanvasObject{izr.iz.background, izr.iz.imgCanvas}
-}
-
-func (izr *ImageZoomRenderer) Refresh() {
-	canvas.Refresh(izr.iz)
+	// canvas.Refresh(iz)
 }
 
 // --------------------------------------------------------------------------------
@@ -162,9 +215,12 @@ type ImageZoom struct {
 
 	imgOrig   *image.RGBA
 	imgCanvas *canvas.Image
+
+	currSize fyne.Size
+	oldSize  fyne.Size
 }
 
-func newImageZoom(a *myApp, name string) *ImageZoom {
+func newImageZoom(a *myApp, name string, filePath string) *ImageZoom {
 	iz := &ImageZoom{a: a, name: name}
 
 	iz.minSize = fyne.NewSize(400, 400)
@@ -172,11 +228,10 @@ func newImageZoom(a *myApp, name string) *ImageZoom {
 	iz.background = canvas.NewRasterWithPixels(iz.bgPattern)
 	iz.backCellSize = 50
 
-	iz.imgOrig, _, _ = getRGBAFromFilePath("../800800.png")
-	// iz.imgOrig, _, _ = getRGBAFromFilePath("../200800.png")
-	// iz.imgOrig, _, _ = getRGBAFromFilePath("../800200.png")
-	// iz.imgOrig, _, _ = getRGBAFromFilePath("../200200.png")
+	iz.imgOrig, _, _ = getRGBAFromFilePath(filePath)
 	iz.imgCanvas = canvas.NewImageFromImage(iz.imgOrig)
+	iz.imgCanvas.ScaleMode = canvas.ImageScalePixels
+	iz.imgCanvas.FillMode = canvas.ImageFillContain
 
 	iz.ExtendBaseWidget(iz)
 	return iz
@@ -193,36 +248,37 @@ func (iz *ImageZoom) CreateRenderer() fyne.WidgetRenderer {
 var _ desktop.Mouseable = &ImageZoom{}
 
 func (iz *ImageZoom) MouseDown(ev *desktop.MouseEvent) {
-	fmt.Printf("[%-5s] MouseDown ev = %+v\n", iz.name, ev)
+	fmt.Printf("[%-4s] MouseDown  ev = %+v\n", iz.name, ev)
+	iz.Refresh()
 }
 
 func (iz *ImageZoom) MouseUp(ev *desktop.MouseEvent) {
-	fmt.Printf("[%-5s] MouseUp   ev = %+v\n", iz.name, ev)
+	fmt.Printf("[%-4s] MouseUp    ev = %+v\n", iz.name, ev)
 }
 
 // compliant with Hoverable interface (https://pkg.go.dev/fyne.io/fyne/v2/driver/desktop#Hoverable)
 var _ desktop.Hoverable = &ImageZoom{}
 
 func (iz *ImageZoom) MouseIn(ev *desktop.MouseEvent) {
-	fmt.Printf("MouseIn ev = %+v\n", ev)
+	fmt.Printf("[%-4s] MouseIn    ev = %+v\n", iz.name, ev)
 }
 
 func (iz *ImageZoom) MouseMoved(ev *desktop.MouseEvent) {
-	// fmt.Printf("MouseMoved ev = %+v\n", ev)
+	// fmt.Printf("[%-4s] MouseMoved ev = %+v\n", iz.name, ev)
 }
 
 func (iz *ImageZoom) MouseOut() {
-	fmt.Print("MouseOut\n")
+	fmt.Printf("[%-4s] MouseOut\n", iz.name)
 }
 
 // compliant with Scrollable interface (https://pkg.go.dev/fyne.io/fyne/v2#Scrollable)
 var _ fyne.Scrollable = &ImageZoom{}
 
 func (iz *ImageZoom) Scrolled(ev *fyne.ScrollEvent) {
-	fmt.Printf("Scrolled ev = %+v\n", ev)
+	fmt.Printf("[%-4s] Scrolled   ev = %+v\n", iz.name, ev)
 }
 
-// ----- MISC -----
+// ----- MISC IZ -----
 
 func (iz *ImageZoom) bgPattern(x, y, _, _ int) color.Color {
 	if (x/iz.backCellSize)%2 == (y/iz.backCellSize)%2 {
@@ -230,11 +286,6 @@ func (iz *ImageZoom) bgPattern(x, y, _, _ int) color.Color {
 	}
 	return color.Gray{Y: 80}
 }
-
-// func (iz *ImageZoom) getCurrentScale() float32 {
-// 	// get the current scale of the main window
-// 	return iz.a.mainWin.Canvas().Scale()
-// }
 
 // --------------------------------------------------------------------------------
 //  APPLICATION
@@ -244,7 +295,8 @@ type myApp struct {
 	fyneApp fyne.App
 	mainWin fyne.Window
 
-	imageZoom *ImageZoom
+	imageZoomMain *ImageZoom
+	imageZoomEcho *ImageZoom
 
 	label1 *widget.Label
 	label2 *widget.Label
@@ -268,8 +320,17 @@ func newApp() *myApp {
 
 func (a *myApp) buildUI() {
 
-	a.imageZoom = newImageZoom(a, "img")
-	contentImg := a.imageZoom
+	aFilePath := "../800800.png"
+	// aFilePath := "../200800.png"
+	// aFilePath := "../800200.png"
+	// aFilePath := "../200200.png"
+	a.imageZoomMain = newImageZoom(a, "main", aFilePath)
+	bFilePath := "../800800.png"
+	// bFilePath := "../200800.png"
+	// bFilePath := "../800200.png"
+	// bFilePath := "../200200.png"
+	a.imageZoomEcho = newImageZoom(a, "echo", bFilePath)
+	contentImg := container.New(layout.NewGridLayout(2), a.imageZoomMain, a.imageZoomEcho)
 
 	a.label1 = widget.NewLabel("Hello there")
 	a.label2 = widget.NewLabel("(right aligned)")
