@@ -149,8 +149,8 @@ type ImageZoom struct {
 	zoomBaseI float64 // precomputed to save time: log_b(x)=log(x)/log(b)
 	zoomLevel float64 // current zoom level in log scale
 
-	movX float64 // position of the left corner to show
-	movY float64 // position of the top corner to show
+	xMov float64 // position of the left corner to show
+	yMov float64 // position of the top corner to show
 }
 
 func newImageZoom(a *myApp, name string, filePath string) *ImageZoom {
@@ -264,8 +264,8 @@ func (iz *ImageZoom) resetImageZoom() {
 	}
 	fmt.Printf("[%-4s] resetImageZoom %+v\n", iz.name, iz.zoomLevel)
 
-	iz.movX = 0
-	iz.movY = 0
+	iz.xMov = 0
+	iz.yMov = 0
 
 	iz.redrawImageZoom()
 }
@@ -289,7 +289,7 @@ func (iz *ImageZoom) redrawImageZoom() {
 	wOri, hOri := iz.wOri, iz.hOri
 
 	// position
-	movX, movY := iz.movX, iz.movY
+	xMov, yMov := iz.xMov, iz.yMov
 
 	// SubImage returns an image representing
 	// the portion of the image visible through the region
@@ -314,9 +314,9 @@ func (iz *ImageZoom) redrawImageZoom() {
 		// resized dimension as wide as the widget
 		wRes, hRes = wWid, hZum
 		// from top to bottom, only show a vertical stripe of the image
-		left = movX / zoom
+		left = xMov / zoom
 		top = 0
-		right = (movX + wWid) / zoom
+		right = (xMov + wWid) / zoom
 		bottom = hOri
 	} else
 	// the zoomed photo is taller than the widget
@@ -325,17 +325,17 @@ func (iz *ImageZoom) redrawImageZoom() {
 		wRes, hRes = wZum, hWid
 		// from left to right, only show an horizontal stripe of the image
 		left = 0
-		top = movY / zoom
+		top = yMov / zoom
 		right = wOri
-		bottom = (movY + hWid) / zoom
+		bottom = (yMov + hWid) / zoom
 	} else
 	// the zoomed photo is bigger than the widget
 	if wZum > wWid && hZum > hWid {
 		wRes, hRes = wWid, hWid
-		left = movX / zoom
-		top = movY / zoom
-		right = (movX + wWid) / zoom
-		bottom = (movY + hWid) / zoom
+		left = xMov / zoom
+		top = yMov / zoom
+		right = (xMov + wWid) / zoom
+		bottom = (yMov + hWid) / zoom
 	}
 
 	// pack the data in the appropriate types
