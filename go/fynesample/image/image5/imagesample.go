@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"math"
 	"os"
 
 	"fyne.io/fyne/v2"
@@ -16,7 +17,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-// ----- MISC -----
+// ----- UTILS -----
 
 // https://stackoverflow.com/a/49595208/2237151
 func getImageFromFilePath(filePath string) (image.Image, string, error) {
@@ -48,20 +49,15 @@ func getRGBAFromFilePath(filePath string) (*image.RGBA, string, error) {
 
 }
 
-func absFloat32(f float32) float32 {
-	if f >= 0 {
-		return f
-	}
-	return -f
+func newSizeFloat64(w, h float64) fyne.Size {
+	return fyne.NewSize(float32(w), float32(h))
 }
 
-func isSizeEqual(s1, s2 fyne.Size) bool {
-	delta := s1.Subtract(s2)
-	e := float32(1e-6)
-	if absFloat32(delta.Height) < e && absFloat32(delta.Width) < e {
-		return true
+func newRectangleFloat64(left, top, right, bottom float64) image.Rectangle {
+	return image.Rectangle{
+		Min: image.Point{int(left), int(top)},
+		Max: image.Point{int(right), int(bottom)},
 	}
-	return false
 }
 
 // --------------------------------------------------------------------------------
@@ -92,9 +88,11 @@ func (izr *ImageZoomRenderer) Layout(size fyne.Size) {
 
 	// update the current widget size
 	iz.currSize = size
+	iz.wWid = float64(iz.currSize.Width)
+	iz.hWid = float64(iz.currSize.Height)
 
-	// draw the new image
-	izr.drawImageZoom()
+	// reset the image and redraw everything
+	izr.resetImageZoom()
 
 	// the Refresh is automagically done, not explicitly
 }
@@ -113,26 +111,90 @@ func (izr *ImageZoomRenderer) Refresh() {
 	iz := izr.iz
 	fmt.Printf("[%-4s] Refresh\n", iz.name)
 	// just to test that the thing moves
-	iz.imgCanvas.Move(fyne.NewPos(0, 0))
+	// iz.imgCanvas.Move(fyne.NewPos(0, 0))
 	canvas.Refresh(iz)
 }
 
 // --------------------------------------------------------------------------------
 
-func (izr *ImageZoomRenderer) drawImageZoom() {
+// Set the zoomLevel so that the image fits exactly the currSize
+func (izr *ImageZoomRenderer) resetImageZoom() {
 	iz := izr.iz
-	fmt.Printf("[%-4s] drawImageZoom\n", iz.name)
 
-	// check if the size of the widget changed
-	// do we really need to check? if the draw is due to a zoom we need to
-	// redraw everything anyway (not with the move tho, just change the pic)
-	if !isSizeEqual(iz.currSize, iz.oldSize) {
-		iz.oldSize = iz.currSize
-		// compute the new zoomBase
-		// MAYBE set the zoom to the base?
-		// it's not the size change that triggers the redraw
-		// it's the zoom change
+	// MAYBE we need to check that the value is good
+
+	if iz.wOri < iz.wWid && iz.hOri < iz.hWid {
+		iz.zoomLevel = 0
+	} else {
+		ratio := math.Min(iz.wWid/iz.wOri, iz.hWid/iz.hOri)
+		iz.zoomLevel = math.Log(ratio) * iz.zoomBaseI
 	}
+	fmt.Printf("[%-4s] resetImageZoom %+v\n", iz.name, iz.zoomLevel)
+
+	iz.movX = 0
+	iz.movY = 0
+
+	izr.redrawImageZoom()
+}
+
+// Update the src region, resize and move the dst canvas
+func (izr *ImageZoomRenderer) redrawImageZoom() {
+	iz := izr.iz
+	fmt.Printf("[%-4s] redrawImageZoom\n", iz.name)
+
+	// current zoom in linear scale
+	zoom := math.Pow(iz.zoomBase, iz.zoomLevel)
+
+	// size of the virtual zoomed image
+	wZum := math.Ceil(float64(iz.wOri * zoom))
+	hZum := math.Ceil(float64(iz.hOri * zoom))
+	fmt.Printf("[%-4s] virtual img = %+vx%+v zoom %+v\n", iz.name, wZum, hZum, zoom)
+
+	// current widget size
+	wWid, hWid := iz.wWid, iz.hWid
+
+	// original image size
+	wOri, hOri := iz.wOri, iz.hOri
+
+	// SubImage returns an image representing
+	// the portion of the image p visible through r
+	// A Rectangle contains the points with Min.X <= X < Max.X, Min.Y <= Y < Max.Y.
+	// iz.imgOrig.SubImage(region)
+
+	var resSize fyne.Size
+	var region image.Rectangle
+	var left, top, right, bottom float64
+
+	if wZum <= wWid && hZum <= hWid {
+		resSize = newSizeFloat64(wZum, hZum)
+		left = 0
+		top = 0
+		right = wOri
+		bottom = hOri
+	}
+
+	region = newRectangleFloat64(left, top, right, bottom)
+	fmt.Printf("resSize %+v region %+v\n", resSize, region)
+
+	subImage := iz.imgOrig.SubImage(region)
+	iz.imgCanvas.Image = subImage
+
+	iz.imgCanvas.Resize(resSize)
+	pos := fyne.NewPos(0, 0)
+	iz.imgCanvas.Move(pos)
+
+	// ------------------------------------
+
+	// // check if the size of the widget changed
+	// // do we really need to check? if the draw is due to a zoom we need to
+	// // redraw everything anyway (not with the move tho, just change the pic)
+	// if !isSizeEqual(iz.currSize, iz.oldSize) {
+	// 	iz.oldSize = iz.currSize
+	// 	// compute the new zoomBase
+	// 	// MAYBE set the zoom to the base?
+	// 	// it's not the size change that triggers the redraw
+	// 	// it's the zoom change
+	// }
 
 	// if !floatEqual(zoom, zoomOld) {
 	// compute the size/pos for the new zoom level
@@ -142,58 +204,54 @@ func (izr *ImageZoomRenderer) drawImageZoom() {
 	// check if the image moved (no zoom change), and update the source region
 
 	// current size of the widget
-	wWid := iz.currSize.Width
-	hWid := iz.currSize.Height
-	fmt.Printf("[%-4s] widgetSize = %+vx%+v\n", iz.name, wWid, hWid)
+	// wWid := iz.currSize.Width
+	// hWid := iz.currSize.Height
+	// fmt.Printf("[%-4s] widgetSize = %+vx%+v\n", iz.name, wWid, hWid)
 
-	// size of the original image
-	imgOriSize := iz.imgOrig.Rect.Size()
-	wOri := float32(imgOriSize.X)
-	hOri := float32(imgOriSize.Y)
+	// // size of the original image
+	// imgOriSize := iz.imgOrig.Rect.Size()
+	// wOri := float32(imgOriSize.X)
+	// hOri := float32(imgOriSize.Y)
 
-	// iz.imgOrig.SubImage(region)
-
-	var imgSize fyne.Size
-	var pos fyne.Position
-
-	// image smaller than widget
-	if wOri <= wWid && hOri <= hWid {
-		imgSize = fyne.NewSize(wOri, hOri)
-		pos = fyne.NewPos((wWid-wOri)/2, (hWid-hOri)/2)
-	} else
-	// image wider than widget
-	// wOri : wWid = hOri : hSca
-	if wOri > wWid && hOri <= hWid {
-		hSca := hOri * wWid / wOri
-		imgSize = fyne.NewSize(wWid, hSca)
-		pos = fyne.NewPos(0, (hWid-hSca)/2)
-	} else
-	// image taller than widget
-	if wOri <= wWid && hOri > hWid {
-		wSca := wOri * hWid / hOri
-		imgSize = fyne.NewSize(wSca, hWid)
-		pos = fyne.NewPos((wWid-wSca)/2, 0)
-	} else
-	// image larger than widget
-	{
-		rw := wOri / wWid
-		rh := hOri / hWid
-		if rw > rh {
-			// touch the sides left to right
-			hSca := hOri * wWid / wOri
-			imgSize = fyne.NewSize(wWid, hSca)
-			pos = fyne.NewPos(0, (hWid-hSca)/2)
-		} else {
-			// touch the sides top to bottom
-			wSca := wOri * hWid / hOri
-			imgSize = fyne.NewSize(wSca, hWid)
-			pos = fyne.NewPos((wWid-wSca)/2, 0)
-		}
-	}
-
-	// fmt.Printf("iz.imgCanvas = %+v\n", iz.imgCanvas)
-	iz.imgCanvas.Resize(imgSize)
-	iz.imgCanvas.Move(pos)
+	// var imgSize fyne.Size
+	// var pos fyne.Position
+	// // image smaller than widget
+	// if wOri <= wWid && hOri <= hWid {
+	// 	imgSize = fyne.NewSize(wOri, hOri)
+	// 	pos = fyne.NewPos((wWid-wOri)/2, (hWid-hOri)/2)
+	// } else
+	// // image wider than widget
+	// // wOri : wWid = hOri : hSca
+	// if wOri > wWid && hOri <= hWid {
+	// 	hSca := hOri * wWid / wOri
+	// 	imgSize = fyne.NewSize(wWid, hSca)
+	// 	pos = fyne.NewPos(0, (hWid-hSca)/2)
+	// } else
+	// // image taller than widget
+	// if wOri <= wWid && hOri > hWid {
+	// 	wSca := wOri * hWid / hOri
+	// 	imgSize = fyne.NewSize(wSca, hWid)
+	// 	pos = fyne.NewPos((wWid-wSca)/2, 0)
+	// } else
+	// // image larger than widget
+	// {
+	// 	rw := wOri / wWid
+	// 	rh := hOri / hWid
+	// 	if rw > rh {
+	// 		// touch the sides left to right
+	// 		hSca := hOri * wWid / wOri
+	// 		imgSize = fyne.NewSize(wWid, hSca)
+	// 		pos = fyne.NewPos(0, (hWid-hSca)/2)
+	// 	} else {
+	// 		// touch the sides top to bottom
+	// 		wSca := wOri * hWid / hOri
+	// 		imgSize = fyne.NewSize(wSca, hWid)
+	// 		pos = fyne.NewPos((wWid-wSca)/2, 0)
+	// 	}
+	// }
+	// // fmt.Printf("iz.imgCanvas = %+v\n", iz.imgCanvas)
+	// iz.imgCanvas.Resize(imgSize)
+	// iz.imgCanvas.Move(pos)
 
 	// canvas.Refresh(iz)
 }
@@ -205,33 +263,50 @@ func (izr *ImageZoomRenderer) drawImageZoom() {
 type ImageZoom struct {
 	widget.BaseWidget
 
-	a    *myApp
-	name string
+	a    *myApp // the main app
+	name string // name of the widget
 
-	minSize fyne.Size
+	minSize fyne.Size // minimum size of the widget
 
-	background   *canvas.Raster
-	backCellSize int
+	background   *canvas.Raster // raster for the background
+	backCellSize int            // size of the background cells
 
-	imgOrig   *image.RGBA
-	imgCanvas *canvas.Image
+	imgOrig   *image.RGBA   // original image
+	wOri      float64       // original image width
+	hOri      float64       // original image height
+	imgCanvas *canvas.Image // canvas to draw the image on
 
-	currSize fyne.Size
-	oldSize  fyne.Size
+	currSize fyne.Size // current size of the widget
+	wWid     float64
+	hWid     float64
+
+	zoomBase  float64 // zoom saved in log scale, actual zoom: zoomBase**zoomLevel
+	zoomBaseI float64 // precomputed to save time: log_b(x)=log(x)/log(b)
+	zoomLevel float64 // current zoom level in log scale
+
+	movX float64 // position of the left corner to show
+	movY float64 // position of the top corner to show
 }
 
 func newImageZoom(a *myApp, name string, filePath string) *ImageZoom {
 	iz := &ImageZoom{a: a, name: name}
 
 	iz.minSize = fyne.NewSize(400, 400)
+	iz.zoomBase = math.Sqrt(2)
+	iz.zoomBaseI = 1 / math.Log(iz.zoomBase)
 
 	iz.background = canvas.NewRasterWithPixels(iz.bgPattern)
 	iz.backCellSize = 50
 
 	iz.imgOrig, _, _ = getRGBAFromFilePath(filePath)
+	imgOriSize := iz.imgOrig.Rect.Size()
+	iz.wOri = float64(imgOriSize.X)
+	iz.hOri = float64(imgOriSize.Y)
+
 	iz.imgCanvas = canvas.NewImageFromImage(iz.imgOrig)
 	iz.imgCanvas.ScaleMode = canvas.ImageScalePixels
 	iz.imgCanvas.FillMode = canvas.ImageFillContain
+	// TODO FIXME check this modes: they should keep the size unchanged
 
 	iz.ExtendBaseWidget(iz)
 	return iz
@@ -249,7 +324,12 @@ var _ desktop.Mouseable = &ImageZoom{}
 
 func (iz *ImageZoom) MouseDown(ev *desktop.MouseEvent) {
 	fmt.Printf("[%-4s] MouseDown  ev = %+v\n", iz.name, ev)
-	iz.Refresh()
+	switch ev.Button {
+	case 1:
+		iz.Refresh()
+	case 2:
+		iz.artisanalRefresh()
+	}
 }
 
 func (iz *ImageZoom) MouseUp(ev *desktop.MouseEvent) {
@@ -285,6 +365,14 @@ func (iz *ImageZoom) bgPattern(x, y, _, _ int) color.Color {
 		return color.Gray{Y: 50}
 	}
 	return color.Gray{Y: 80}
+}
+
+func (iz *ImageZoom) artisanalRefresh() {
+	// this also works, I don't know if it's useful
+	fmt.Printf("[%-4s] artisanalRefresh\n", iz.name)
+	// just to test that the thing moves
+	iz.imgCanvas.Move(fyne.NewPos(100, 0))
+	canvas.Refresh(iz)
 }
 
 // --------------------------------------------------------------------------------

@@ -10,3 +10,20 @@
 // 	// get the current scale of the main window
 // 	return iz.a.mainWin.Canvas().Scale()
 // }
+
+// func absFloat32(f float32) float32 {
+// 	if f >= 0 {
+// 		return f
+// 	}
+// 	return -f
+// }
+
+// func isSizeEqual(s1, s2 fyne.Size) bool {
+// 	delta := s1.Subtract(s2)
+// 	e := float32(1e-6)
+// 	if absFloat32(delta.Height) < e && absFloat32(delta.Width) < e {
+// 		return true
+// 	}
+// 	return false
+// }
+
