@@ -15,6 +15,7 @@ import (
 	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
+	xdraw "golang.org/x/image/draw"
 )
 
 // ##### UTILS #####
@@ -136,10 +137,13 @@ type ImageZoom struct {
 	background   *canvas.Raster // raster for the background
 	backCellSize int            // size of the background cells
 
-	imgOrig   *image.RGBA   // original image
-	wOri      float64       // original image width
-	hOri      float64       // original image height
+	imgOrig *image.RGBA // original image
+	wOri    float64     // original image width
+	hOri    float64     // original image height
+
 	imgCanvas *canvas.Image // canvas to draw the image on
+	xCan      float64       // x position of the canvas in the widget
+	yCan      float64       // y position of the canvas in the widget
 
 	currSize fyne.Size // current size of the widget
 	wWid     float64
@@ -156,7 +160,7 @@ type ImageZoom struct {
 func newImageZoom(a *myApp, name string, filePath string) *ImageZoom {
 	iz := &ImageZoom{a: a, name: name}
 
-	iz.minSize = fyne.NewSize(400, 400)
+	iz.minSize = fyne.NewSize(400, 600)
 	iz.zoomBase = math.Sqrt(2)
 	iz.zoomBaseI = 1 / math.Log(iz.zoomBase)
 
@@ -170,7 +174,8 @@ func newImageZoom(a *myApp, name string, filePath string) *ImageZoom {
 
 	iz.imgCanvas = canvas.NewImageFromImage(iz.imgOrig)
 	iz.imgCanvas.ScaleMode = canvas.ImageScalePixels
-	iz.imgCanvas.FillMode = canvas.ImageFillStretch
+	// iz.imgCanvas.FillMode = canvas.ImageFillStretch
+	iz.imgCanvas.FillMode = canvas.ImageFillContain
 
 	iz.ExtendBaseWidget(iz)
 	return iz
@@ -222,8 +227,8 @@ var _ fyne.Scrollable = &ImageZoom{}
 
 func (iz *ImageZoom) Scrolled(ev *fyne.ScrollEvent) {
 	fmt.Printf("[%-4s] Scrolled   ev = %+v\n", iz.name, ev)
-	x := ev.Position.X
-	y := ev.Position.Y
+	x := float64(ev.Position.X)
+	y := float64(ev.Position.Y)
 	var direction string
 	if ev.Scrolled.DY > 0 {
 		direction = "in"
@@ -280,16 +285,12 @@ func (iz *ImageZoom) redrawImageZoom() {
 	// size of the virtual zoomed image
 	wZum := math.Ceil(float64(iz.wOri * zoom))
 	hZum := math.Ceil(float64(iz.hOri * zoom))
-	fmt.Printf("[%-4s] virtual img = %+vx%+v zoom %+v\n", iz.name, wZum, hZum, zoom)
+	fmt.Printf("       virtual img = %+vx%+v zoom %+v\n",
+		wZum, hZum, zoom)
 
-	// current widget size
-	wWid, hWid := iz.wWid, iz.hWid
-
-	// original image size
-	wOri, hOri := iz.wOri, iz.hOri
-
-	// position
-	xMov, yMov := iz.xMov, iz.yMov
+	wWid, hWid := iz.wWid, iz.hWid // current widget size
+	wOri, hOri := iz.wOri, iz.hOri // original image size
+	xMov, yMov := iz.xMov, iz.yMov // position
 
 	// SubImage returns an image representing
 	// the portion of the image visible through the region
@@ -338,31 +339,179 @@ func (iz *ImageZoom) redrawImageZoom() {
 		bottom = (yMov + hWid) / zoom
 	}
 
+	// MAYBE need to validate the region (SubImage already does)
+	if left < 0 {
+		fmt.Printf("FIXED left = %+v\n", left)
+		left = 0
+	}
+	if top < 0 {
+		fmt.Printf("FIXED top = %+v\n", top)
+		top = 0
+	}
+	if right > wOri {
+		fmt.Printf("FIXED right = %.3f -> %.3f\n", top, wOri)
+		right = wOri
+	}
+	if bottom > hOri {
+		fmt.Printf("FIXED bottom = %.3f -> %.3f\n", bottom, hOri)
+		bottom = hOri
+	}
+
 	// pack the data in the appropriate types
-	fmt.Printf("[%-4s] resSize %.6fx%.6f region (%.6f,%.6f)-(%.6f,%.6f)\n",
-		iz.name, wRes, hRes, left, top, right, bottom)
+	wRegion := right - left
+	hRegion := bottom - top
+	fmt.Printf("       resSize %.3fx%.3f region (%.3f,%.3f)x(%.3f,%.3f):%.3fx%.3f ratio res %.3f reg %.3f\n",
+		wRes, hRes,
+		left, top, right, bottom,
+		wRegion, hRegion,
+		wRes/hRes, wRegion/hRegion,
+	)
 	resSize := newSizeFloat64(wRes, hRes)
 	region := newRectangleFloat64(left, top, right, bottom)
-	fmt.Printf("[%-4s] resSize %+v region %+v\n", iz.name, resSize, region)
-
-	// MAYBE need to validate the region (SubImage already does)
+	fmt.Printf("       resSize %+v region %+v %dx%d\n",
+		resSize, region,
+		region.Max.X-region.Min.X,
+		region.Max.Y-region.Min.Y,
+	)
 
 	// extract the subImage and set it in the canvas
-	subImage := iz.imgOrig.SubImage(region)
+	// subImage := iz.imgOrig.SubImage(region)
+	subImage := image.NewRGBA(newRectangleFloat64(0, 0, wRes, hRes))
+	// draw.Draw(subImage, subImage.Bounds(),
+	// 	&image.Uniform{color.RGBA{10, 10, 10, 255}},
+	// 	image.Point{0, 0}, draw.Src)
+	// draw.Draw(subImage, region, iz.imgOrig, image.Pt(int(iz.xMov), int(iz.yMov)), draw.Src)
+	xdraw.NearestNeighbor.Scale(subImage, subImage.Rect,
+		iz.imgOrig, region, draw.Over, nil)
 	iz.imgCanvas.Image = subImage
 
 	// resize and place the canvas
 	iz.imgCanvas.Resize(resSize)
-	xCan := (wWid - wRes) / 2
-	yCan := (hWid - hRes) / 2
-	pos := newPosFloat64(xCan, yCan)
+	iz.xCan = (wWid - wRes) / 2
+	iz.yCan = (hWid - hRes) / 2
+	pos := newPosFloat64(iz.xCan, iz.yCan)
 	iz.imgCanvas.Move(pos)
+
+	canvas.Refresh(iz.imgCanvas)
 
 }
 
 // Change zoom level, keeping (x, y) still
-func (iz *ImageZoom) changeZoom(direction string, x, y float32) {
+func (iz *ImageZoom) changeZoom(direction string, xPos, yPos float64) {
 	fmt.Printf("[%-4s] changeZoom %s\n", iz.name, direction)
+
+	// pos in in the widget
+	// we want rel from the corner of the canvas
+	xRel := xPos - iz.xCan
+	yRel := yPos - iz.yCan
+
+	wWid, hWid := iz.wWid, iz.hWid // current widget size
+	xMov, yMov := iz.xMov, iz.yMov // position
+
+	// old zoom in linear scale
+	zoomOld := math.Pow(iz.zoomBase, iz.zoomLevel)
+	wZumOld := math.Ceil(float64(iz.wOri * zoomOld))
+	hZumOld := math.Ceil(float64(iz.hOri * zoomOld))
+	fmt.Printf("       OLD virtual img = %+vx%+v zoom %.3f mov %.3fx%.3f rel %.3fx%.3f\n",
+		wZumOld, hZumOld,
+		zoomOld,
+		xMov, yMov,
+		xRel, yRel,
+	)
+
+	switch direction {
+	case "in":
+		iz.zoomLevel += 1
+	case "out":
+		iz.zoomLevel -= 1
+	case "reset":
+		iz.resetImageZoom()
+		return
+	}
+
+	// new zoom in linear scale
+	zoomNew := math.Pow(iz.zoomBase, iz.zoomLevel)
+	wZumNew := math.Ceil(float64(iz.wOri * zoomNew))
+	hZumNew := math.Ceil(float64(iz.hOri * zoomNew))
+
+	// if we can generate zoom events without a set (x, y) position
+	// we have to compute the center of the canvas
+
+	xMovNew := (xMov+xRel)*zoomNew/zoomOld - xRel
+	yMovNew := (yMov+yRel)*zoomNew/zoomOld - yRel
+
+	// validate the new mov computed
+	// check that it does not try to go outside the image
+
+	if xMovNew < 0 {
+		xMovNew = 0
+	}
+	if yMovNew < 0 {
+		yMovNew = 0
+	}
+
+	if wZumNew <= wWid && hZumNew <= hWid {
+		xMovNew = 0
+		yMovNew = 0
+	} else if wZumNew > wWid && hZumNew <= hWid {
+		if xMovNew+wWid > wZumNew {
+			xMovNew = wZumNew - wWid
+		}
+		yMovNew = 0
+	} else if wZumNew <= wWid && hZumNew > hWid {
+		xMovNew = 0
+		if yMovNew+hWid > hZumNew {
+			yMovNew = hZumNew - hWid
+		}
+	} else if wZumNew > wWid && hZumNew > hWid {
+		if xMovNew+wWid > wZumNew {
+			xMovNew = wZumNew - wWid
+		}
+		if yMovNew+hWid > hZumNew {
+			yMovNew = hZumNew - hWid
+		}
+	}
+
+	// // the new image is thinner than the widget
+	// if wZumNew <= wWid {
+	// 	fmt.Printf("FIXED xMovNew a = %.3f\n", xMovNew)
+	// 	xMovNew = 0
+	// } else
+	// // the new image is wider than the widget
+	// {
+	// 	// check if the region will try to go outside the image
+	// 	if xMovNew+wWid > wZumNew {
+	// 		fmt.Printf("FIXED xMovNew b %.3f %.3f\n", xMovNew, wZumNew-wWid)
+	// 		xMovNew = wZumNew - wWid
+	// 	}
+	// 	if xMovNew < 0 {
+	// 		fmt.Printf("FIXED xMovNew c %.3f 0\n", xMovNew)
+	// 		xMovNew = 0
+	// 	}
+	// }
+	// // the new image is shorter than the widget
+	// if hZumNew <= hWid {
+	// 	fmt.Printf("FIXED yMovNew a = %.3f\n", yMovNew)
+	// 	yMovNew = 0
+	// } else
+	// // the new image is taller than the widget
+	// {
+	// 	// check if the region will try to go outside the image
+	// 	if yMovNew+hWid > hZumNew {
+	// 		fmt.Printf("FIXED yMovNew b %.3f %.3f\n", yMovNew, hZumNew-hWid)
+	// 		yMovNew = hZumNew - hWid
+	// 	}
+	// 	if yMovNew < 0 {
+	// 		fmt.Printf("FIXED yMovNew c %.3f 0\n", yMovNew)
+	// 		yMovNew = 0
+	// 	}
+	// }
+
+	iz.xMov, iz.yMov = xMovNew, yMovNew
+	fmt.Printf("       NEW virtual img = %+vx%+v zoom %.3f mov %.3fx%.3f\n",
+		wZumNew, hZumNew, zoomNew, xMovNew, yMovNew)
+
+	iz.redrawImageZoom()
 }
 
 // --------------------------------------------------------------------------------
