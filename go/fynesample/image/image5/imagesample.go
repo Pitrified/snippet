@@ -53,10 +53,16 @@ func newSizeFloat64(w, h float64) fyne.Size {
 	return fyne.NewSize(float32(w), float32(h))
 }
 
+func newPosFloat64(x, y float64) fyne.Position {
+	return fyne.NewPos(float32(x), float32(y))
+}
+
 func newRectangleFloat64(left, top, right, bottom float64) image.Rectangle {
+	// we need the int closest to the float64
+	// 800.000000 sometimes was converted to 799
 	return image.Rectangle{
-		Min: image.Point{int(left), int(top)},
-		Max: image.Point{int(right), int(bottom)},
+		Min: image.Point{int(left + 0.5), int(top + 0.5)},
+		Max: image.Point{int(right + 0.5), int(bottom + 0.5)},
 	}
 }
 
@@ -156,31 +162,72 @@ func (izr *ImageZoomRenderer) redrawImageZoom() {
 	// original image size
 	wOri, hOri := iz.wOri, iz.hOri
 
+	// position
+	movX, movY := iz.movX, iz.movY
+
 	// SubImage returns an image representing
 	// the portion of the image p visible through r
 	// A Rectangle contains the points with Min.X <= X < Max.X, Min.Y <= Y < Max.Y.
 	// iz.imgOrig.SubImage(region)
 
-	var resSize fyne.Size
-	var region image.Rectangle
-	var left, top, right, bottom float64
+	var wRes, hRes float64               // the final dimension of the image to show
+	var left, top, right, bottom float64 // sides of the src region to show
 
+	// the zoomed photo fits inside the widget
 	if wZum <= wWid && hZum <= hWid {
-		resSize = newSizeFloat64(wZum, hZum)
+		// resize the pic, don't cut it
+		wRes, hRes = wZum, hZum
+		// take the entire image
 		left = 0
 		top = 0
 		right = wOri
 		bottom = hOri
+	} else
+	// the zoomed photo is wider than the widget
+	if wZum > wWid && hZum <= hWid {
+		// resized dimension as wide as the widget
+		wRes, hRes = wWid, hZum
+		// from top to bottom, only show a vertical stripe of the image
+		left = movX / zoom
+		top = 0
+		right = (movX + wWid) / zoom
+		bottom = hOri
+	} else
+	// the zoomed photo is taller than the widget
+	if wZum <= wWid && hZum > hWid {
+		// resized dimension as tall as the widget
+		wRes, hRes = wZum, hWid
+		// from left to right, only show an horizontal stripe of the image
+		left = 0
+		top = movY / zoom
+		right = wOri
+		bottom = (movY + hWid) / zoom
+	} else
+	// the zoomed photo is bigger than the widget
+	if wZum > wWid && hZum > hWid {
+		wRes, hRes = wWid, hWid
+		left = movX / zoom
+		top = movY / zoom
+		right = (movX + wWid) / zoom
+		bottom = (movY + hWid) / zoom
 	}
 
-	region = newRectangleFloat64(left, top, right, bottom)
-	fmt.Printf("resSize %+v region %+v\n", resSize, region)
+	// pack the data in the appropriate types
+	fmt.Printf("[%-4s] resSize %.6fx%.6f region (%.6f,%.6f)-(%.6f,%.6f)\n",
+		iz.name, wRes, hRes, left, top, right, bottom)
+	resSize := newSizeFloat64(wRes, hRes)
+	region := newRectangleFloat64(left, top, right, bottom)
+	fmt.Printf("[%-4s] resSize %+v region %+v\n", iz.name, resSize, region)
 
+	// extract the subImage and set it in the canvas
 	subImage := iz.imgOrig.SubImage(region)
 	iz.imgCanvas.Image = subImage
 
+	// resize and place the canvas
 	iz.imgCanvas.Resize(resSize)
-	pos := fyne.NewPos(0, 0)
+	xCan := (wWid - wRes) / 2
+	yCan := (hWid - hRes) / 2
+	pos := newPosFloat64(xCan, yCan)
 	iz.imgCanvas.Move(pos)
 
 	// ------------------------------------
@@ -305,8 +352,7 @@ func newImageZoom(a *myApp, name string, filePath string) *ImageZoom {
 
 	iz.imgCanvas = canvas.NewImageFromImage(iz.imgOrig)
 	iz.imgCanvas.ScaleMode = canvas.ImageScalePixels
-	iz.imgCanvas.FillMode = canvas.ImageFillContain
-	// TODO FIXME check this modes: they should keep the size unchanged
+	iz.imgCanvas.FillMode = canvas.ImageFillStretch
 
 	iz.ExtendBaseWidget(iz)
 	return iz
