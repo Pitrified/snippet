@@ -13,6 +13,18 @@ import (
 )
 
 // --------------------------------------------------------------------------------
+//  MINITURTLE
+// --------------------------------------------------------------------------------
+
+type miniTurtle struct {
+	x float64
+}
+
+func (t *miniTurtle) move(dx float64) {
+	t.x += dx
+}
+
+// --------------------------------------------------------------------------------
 //  SIDEBAR
 // --------------------------------------------------------------------------------
 
@@ -21,6 +33,10 @@ type mySidebar struct {
 
 	title *widget.Label
 
+	// rotate is an experiment with data binding: there are some weird problems
+	// https://github.com/fyne-io/fyne/issues/1849
+	// "it currently works that you interact with the widget directly, or via data binding"
+	// https://github.com/fyne-io/fyne/issues/2542#issuecomment-941028927
 	rotate        *widget.Card
 	rotBank       []*widget.Button
 	rotValEntry   *widget.Entry
@@ -29,11 +45,15 @@ type mySidebar struct {
 	rotValSet     *widget.Button
 	rotDeltaEntry *widget.Entry
 	rotDeltaSet   *widget.Button
+
+	move *widget.Card
 }
 
 func newSidebar(a *myApp) *mySidebar {
 	return &mySidebar{a: a}
 }
+
+// ----- ROTATE -----
 
 // Clicked one of the rotate bank buttons
 func (s *mySidebar) rotBankCallback(id float64) {
@@ -84,12 +104,7 @@ func (s *mySidebar) rotDeltaSubmitted(_ string) {
 	s.rotDeltaCallback()
 }
 
-func (s *mySidebar) buildSidebar() *fyne.Container {
-	s.title = widget.NewLabelWithStyle(
-		"The title",
-		fyne.TextAlignCenter,
-		fyne.TextStyle{Bold: true},
-	)
+func (s *mySidebar) buildRotate() {
 
 	// ----- Bank of buttons -----
 
@@ -129,10 +144,30 @@ func (s *mySidebar) buildSidebar() *fyne.Container {
 
 	contCard := container.NewVBox(contBank, contDelta, contVal)
 	s.rotate = widget.NewCard("Orientation", "", contCard)
+}
+
+// ----- MOVE -----
+
+func (s *mySidebar) buildMove() {
+	title := widget.NewLabel("Move here")
+	contCard := container.NewVBox(title)
+	s.move = widget.NewCard("Move", "", contCard)
+}
+
+func (s *mySidebar) buildSidebar() *fyne.Container {
+	s.title = widget.NewLabelWithStyle(
+		"The title",
+		fyne.TextAlignCenter,
+		fyne.TextStyle{Bold: true},
+	)
+
+	s.buildRotate()
+
+	s.buildMove()
 
 	// ----- All the sidebar content -----
 
-	vCont := container.NewVBox(s.title, s.rotate)
+	vCont := container.NewVBox(s.title, s.rotate, s.move)
 	return vCont
 }
 
@@ -145,6 +180,8 @@ type myApp struct {
 	mainWin fyne.Window
 
 	sidebar *mySidebar
+
+	mt *miniTurtle
 }
 
 func newApp() *myApp {
@@ -156,6 +193,11 @@ func newApp() *myApp {
 
 	// add the link for typed runes
 	theApp.mainWin.Canvas().SetOnTypedKey(theApp.typedKey)
+
+	// create the turtle to control
+	theApp.mt = &miniTurtle{}
+
+	theApp.mt.move(1) // FIXME remove this
 
 	return theApp
 }
