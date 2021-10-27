@@ -94,9 +94,9 @@ func (izr *ImageZoomRenderer) Layout(size fyne.Size) {
 	iz.background.Resize(size)
 
 	// update the current widget size
-	iz.currSize = size
-	iz.wWid = float64(iz.currSize.Width)
-	iz.hWid = float64(iz.currSize.Height)
+	iz.widSize = size
+	iz.wWid = float64(iz.widSize.Width)
+	iz.hWid = float64(iz.widSize.Height)
 
 	// reset the image and redraw everything
 	iz.resetImageZoom()
@@ -117,8 +117,6 @@ func (izr *ImageZoomRenderer) Refresh() {
 	// This might trigger a Layout.
 	iz := izr.iz
 	fmt.Printf("[%-4s] Refresh\n", iz.name)
-	// just to test that the thing moves
-	// iz.imgCanvas.Move(fyne.NewPos(0, 0))
 	canvas.Refresh(iz)
 }
 
@@ -145,9 +143,9 @@ type ImageZoom struct {
 	xCan      float64       // x position of the canvas in the widget
 	yCan      float64       // y position of the canvas in the widget
 
-	currSize fyne.Size // current size of the widget
-	wWid     float64
-	hWid     float64
+	widSize fyne.Size // current size of the widget
+	wWid    float64   // current width of the widget
+	hWid    float64   // current height of the widget
 
 	zoomBase  float64 // zoom saved in log scale, actual zoom: zoomBase**zoomLevel
 	zoomBaseI float64 // precomputed to save time: log_b(x)=log(x)/log(b)
@@ -200,27 +198,24 @@ func (iz *ImageZoom) MouseDown(ev *desktop.MouseEvent) {
 	fmt.Printf("[%-4s] MouseDown  ev = %+v\n", iz.name, ev)
 	switch ev.Button {
 	case desktop.MouseButtonPrimary:
-		// iz.Refresh()
 		iz.xMouse = float64(ev.PointEvent.Position.X)
 		iz.yMouse = float64(ev.PointEvent.Position.Y)
-	case desktop.MouseButtonSecondary:
-		// iz.artisanalRefresh()
 	}
 }
 
 func (iz *ImageZoom) MouseUp(ev *desktop.MouseEvent) {
-	fmt.Printf("[%-4s] MouseUp    ev = %+v\n", iz.name, ev)
+	// fmt.Printf("[%-4s] MouseUp    ev = %+v\n", iz.name, ev)
 }
 
 // compliant with Hoverable interface (https://pkg.go.dev/fyne.io/fyne/v2/driver/desktop#Hoverable)
 var _ desktop.Hoverable = &ImageZoom{}
 
 func (iz *ImageZoom) MouseIn(ev *desktop.MouseEvent) {
-	fmt.Printf("[%-4s] MouseIn    ev = %+v\n", iz.name, ev)
+	// fmt.Printf("[%-4s] MouseIn    ev = %+v\n", iz.name, ev)
 }
 
 func (iz *ImageZoom) MouseMoved(ev *desktop.MouseEvent) {
-	fmt.Printf("[%-4s] MouseMoved ev = %+v\n", iz.name, ev)
+	// fmt.Printf("[%-4s] MouseMoved ev = %+v\n", iz.name, ev)
 	switch ev.Button {
 	case desktop.MouseButtonPrimary:
 		xMouseOld, yMouseOld := iz.xMouse, iz.yMouse
@@ -231,7 +226,7 @@ func (iz *ImageZoom) MouseMoved(ev *desktop.MouseEvent) {
 }
 
 func (iz *ImageZoom) MouseOut() {
-	fmt.Printf("[%-4s] MouseOut\n", iz.name)
+	// fmt.Printf("[%-4s] MouseOut\n", iz.name)
 }
 
 // compliant with Scrollable interface (https://pkg.go.dev/fyne.io/fyne/v2#Scrollable)
@@ -261,18 +256,21 @@ func (iz *ImageZoom) bgPattern(x, y, _, _ int) color.Color {
 
 // ##### IMPLEMENTATION IZ #####
 
-// Set the zoomLevel so that the image fits exactly the currSize
+// Reset the zoomLevel so that the image fits well in the widget
 func (iz *ImageZoom) resetImageZoom() {
-	// MAYBE we need to check that the value is good
 
+	// the image fits inside: do not upscale it
 	if iz.wOri < iz.wWid && iz.hOri < iz.hWid {
 		iz.zoomLevel = 0
-	} else {
+	} else
+	// compute zoom level to make the image fit precisely the widSize
+	{
 		ratio := math.Min(iz.wWid/iz.wOri, iz.hWid/iz.hOri)
 		iz.zoomLevel = math.Log(ratio) * iz.zoomBaseI
 	}
-	fmt.Printf("[%-4s] resetImageZoom %+v\n", iz.name, iz.zoomLevel)
+	// fmt.Printf("[%-4s] resetImageZoom %+v\n", iz.name, iz.zoomLevel)
 
+	// reset the virtual pos
 	iz.xMov = 0
 	iz.yMov = 0
 
@@ -281,7 +279,7 @@ func (iz *ImageZoom) resetImageZoom() {
 
 // Update the src region, resize and move the dst canvas
 func (iz *ImageZoom) redrawImageZoom() {
-	fmt.Printf("[%-4s] redrawImageZoom\n", iz.name)
+	// fmt.Printf("[%-4s] redrawImageZoom\n", iz.name)
 
 	// current zoom in linear scale
 	zoom := math.Pow(iz.zoomBase, iz.zoomLevel)
@@ -289,8 +287,8 @@ func (iz *ImageZoom) redrawImageZoom() {
 	// size of the virtual zoomed image
 	wZum := math.Ceil(float64(iz.wOri * zoom))
 	hZum := math.Ceil(float64(iz.hOri * zoom))
-	fmt.Printf("       virtual img = %+vx%+v zoom %+v\n",
-		wZum, hZum, zoom)
+	// fmt.Printf("       virtual img = %+vx%+v zoom %+v\n",
+	// 	wZum, hZum, zoom)
 
 	wWid, hWid := iz.wWid, iz.hWid // current widget size
 	wOri, hOri := iz.wOri, iz.hOri // original image size
@@ -358,30 +356,24 @@ func (iz *ImageZoom) redrawImageZoom() {
 	}
 
 	// pack the data in the appropriate types
-	wRegion := right - left
-	hRegion := bottom - top
-	fmt.Printf("       resSize %.3fx%.3f region (%.3f,%.3f)x(%.3f,%.3f):%.3fx%.3f ratio res %.3f reg %.3f\n",
-		wRes, hRes,
-		left, top, right, bottom,
-		wRegion, hRegion,
-		wRes/hRes, wRegion/hRegion,
-	)
+	// wRegion := right - left
+	// hRegion := bottom - top
+	// fmt.Printf("       resSize %.3fx%.3f region (%.3f,%.3f)x(%.3f,%.3f):%.3fx%.3f ratio res %.3f reg %.3f\n",
+	// 	wRes, hRes,
+	// 	left, top, right, bottom,
+	// 	wRegion, hRegion,
+	// 	wRes/hRes, wRegion/hRegion,
+	// )
 	resSize := newSizeFloat64(wRes, hRes)
 	region := newRectangleFloat64(left, top, right, bottom)
-	fmt.Printf("       resSize %+v region %+v %dx%d\n",
-		resSize, region,
-		region.Max.X-region.Min.X,
-		region.Max.Y-region.Min.Y,
-	)
+	// fmt.Printf("       resSize %+v region %+v %dx%d\n",
+	// 	resSize, region,
+	// 	region.Max.X-region.Min.X,
+	// 	region.Max.Y-region.Min.Y,
+	// )
 
 	// extract the subImage and set it in the canvas
-	// subImage := iz.imgOrig.SubImage(region)
 	subImage := image.NewRGBA(newRectangleFloat64(0, 0, wRes, hRes))
-	// draw.Draw(subImage, subImage.Bounds(),
-	// 	&image.Uniform{color.RGBA{10, 10, 10, 255}},
-	// 	image.Point{0, 0}, draw.Src)
-	// draw.Draw(subImage, region, iz.imgOrig, image.Pt(int(iz.xMov), int(iz.yMov)), draw.Src)
-	// https://stackoverflow.com/a/67678654/2237151
 	xdraw.NearestNeighbor.Scale(subImage, subImage.Rect,
 		iz.imgOrig, region, draw.Over, nil)
 	iz.imgCanvas.Image = subImage
@@ -390,16 +382,15 @@ func (iz *ImageZoom) redrawImageZoom() {
 	iz.imgCanvas.Resize(resSize)
 	iz.xCan = (wWid - wRes) / 2
 	iz.yCan = (hWid - hRes) / 2
-	pos := newPosFloat64(iz.xCan, iz.yCan)
-	iz.imgCanvas.Move(pos)
+	iz.imgCanvas.Move(newPosFloat64(iz.xCan, iz.yCan))
 
+	// trigger a refresh to repaint the content
 	canvas.Refresh(iz.imgCanvas)
-
 }
 
 // Change zoom level, keeping (x, y) still
 func (iz *ImageZoom) changeZoom(direction string, xPos, yPos float64) {
-	fmt.Printf("[%-4s] changeZoom %s\n", iz.name, direction)
+	// fmt.Printf("[%-4s] changeZoom %s\n", iz.name, direction)
 
 	// pos in in the widget
 	// we want rel from the corner of the canvas
@@ -410,14 +401,14 @@ func (iz *ImageZoom) changeZoom(direction string, xPos, yPos float64) {
 
 	// old zoom in linear scale
 	zoomOld := math.Pow(iz.zoomBase, iz.zoomLevel)
-	wZumOld := math.Ceil(float64(iz.wOri * zoomOld))
-	hZumOld := math.Ceil(float64(iz.hOri * zoomOld))
-	fmt.Printf("       OLD virtual img = %+vx%+v zoom %.3f mov %.3fx%.3f rel %.3fx%.3f\n",
-		wZumOld, hZumOld,
-		zoomOld,
-		xMov, yMov,
-		xRel, yRel,
-	)
+	// wZumOld := math.Ceil(float64(iz.wOri * zoomOld))
+	// hZumOld := math.Ceil(float64(iz.hOri * zoomOld))
+	// fmt.Printf("       OLD virtual img = %+vx%+v zoom %.3f mov %.3fx%.3f rel %.3fx%.3f\n",
+	// 	wZumOld, hZumOld,
+	// 	zoomOld,
+	// 	xMov, yMov,
+	// 	xRel, yRel,
+	// )
 
 	switch direction {
 	case "in":
@@ -431,53 +422,25 @@ func (iz *ImageZoom) changeZoom(direction string, xPos, yPos float64) {
 
 	// new zoom in linear scale
 	zoomNew := math.Pow(iz.zoomBase, iz.zoomLevel)
-	wZumNew := math.Ceil(float64(iz.wOri * zoomNew))
-	hZumNew := math.Ceil(float64(iz.hOri * zoomNew))
+	// wZumNew := math.Ceil(float64(iz.wOri * zoomNew))
+	// hZumNew := math.Ceil(float64(iz.hOri * zoomNew))
 
 	// if we can generate zoom events without a set (x, y) position
-	// we have to compute the center of the canvas
+	// we have to compute the center of the canvas and keep that still
 
+	// source of hell was that the formula *is* right, but sometimes to keep
+	// a point fixed you need *negative* mov_x, implemented by moving the
+	// Label around; this will not happen, and mov can be set to 0.
+	// the same happens on the other side, the region wants to go out of the image
 	xMovNew := (xMov+xRel)*zoomNew/zoomOld - xRel
 	yMovNew := (yMov+yRel)*zoomNew/zoomOld - yRel
 
-	// validate the new mov computed
-	// check that it does not try to go outside the image
-
-	// if xMovNew < 0 {
-	// 	xMovNew = 0
-	// }
-	// if yMovNew < 0 {
-	// 	yMovNew = 0
-	// }
-	// if wZumNew <= wWid && hZumNew <= hWid {
-	// 	xMovNew = 0
-	// 	yMovNew = 0
-	// } else if wZumNew > wWid && hZumNew <= hWid {
-	// 	if xMovNew+wWid > wZumNew {
-	// 		xMovNew = wZumNew - wWid
-	// 	}
-	// 	yMovNew = 0
-	// } else if wZumNew <= wWid && hZumNew > hWid {
-	// 	xMovNew = 0
-	// 	if yMovNew+hWid > hZumNew {
-	// 		yMovNew = hZumNew - hWid
-	// 	}
-	// } else if wZumNew > wWid && hZumNew > hWid {
-	// 	if xMovNew+wWid > wZumNew {
-	// 		xMovNew = wZumNew - wWid
-	// 	}
-	// 	if yMovNew+hWid > hZumNew {
-	// 		yMovNew = hZumNew - hWid
-	// 	}
-	// }
-
 	// assign possibly bad values and validate them
 	iz.xMov, iz.yMov = xMovNew, yMovNew
-
 	iz.validateMov()
 
-	fmt.Printf("       NEW virtual img = %+vx%+v zoom %.3f mov %.3fx%.3f\n",
-		wZumNew, hZumNew, zoomNew, xMovNew, yMovNew)
+	// fmt.Printf("       NEW virtual img = %+vx%+v zoom %.3f mov %.3fx%.3f\n",
+	// 	wZumNew, hZumNew, zoomNew, xMovNew, yMovNew)
 
 	iz.redrawImageZoom()
 }
@@ -502,36 +465,30 @@ func (iz *ImageZoom) validateMov() {
 
 	// the new image is thinner than the widget
 	if wZum <= wWid {
-		fmt.Printf("FIXED iz.xMov a = %.3f\n", iz.xMov)
 		iz.xMov = 0
 	} else
 	// the new image is wider than the widget
 	{
 		// check if the region will try to go outside the image
 		if iz.xMov+wWid > wZum {
-			fmt.Printf("FIXED iz.xMov b %.3f %.3f\n", iz.xMov, wZum-wWid)
 			iz.xMov = wZum - wWid
 		}
 		if iz.xMov < 0 {
-			fmt.Printf("FIXED iz.xMov c %.3f 0\n", iz.xMov)
 			iz.xMov = 0
 		}
 	}
 
 	// the new image is shorter than the widget
 	if hZum <= hWid {
-		fmt.Printf("FIXED iz.yMov a = %.3f\n", iz.yMov)
 		iz.yMov = 0
 	} else
 	// the new image is taller than the widget
 	{
 		// check if the region will try to go outside the image
 		if iz.yMov+hWid > hZum {
-			fmt.Printf("FIXED iz.yMov b %.3f %.3f\n", iz.yMov, hZum-hWid)
 			iz.yMov = hZum - hWid
 		}
 		if iz.yMov < 0 {
-			fmt.Printf("FIXED iz.yMov c %.3f 0\n", iz.yMov)
 			iz.yMov = 0
 		}
 	}
@@ -570,12 +527,14 @@ func newApp() *myApp {
 
 func (a *myApp) buildUI() {
 
-	aFilePath := "../800800.png"
+	aFilePath := "../nothingtoseehere.jpg"
+	// aFilePath := "../800800.png"
 	// aFilePath := "../200800.png"
 	// aFilePath := "../800200.png"
 	// aFilePath := "../200200.png"
 	a.imageZoomMain = newImageZoom(a, "main", aFilePath)
-	bFilePath := "../800800.png"
+	bFilePath := "../hilbert.png"
+	// bFilePath := "../800800.png"
 	// bFilePath := "../200800.png"
 	// bFilePath := "../800200.png"
 	// bFilePath := "../200200.png"

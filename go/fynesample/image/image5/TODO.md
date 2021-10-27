@@ -7,6 +7,7 @@
     the event put them in a special queue,
     if the size of the queue is too large,
     drop some intermediate points
+* Use better filter to downscale the image, not `xdraw.NearestNeighbor`
 
 # IDEAs
 
