@@ -25,10 +25,13 @@ func getImageFromFilePath(filePath string) (image.Image, string, error) {
 }
 
 type scrollImgRenderer struct {
-	// img *image.RGBA
 	img     *canvas.Image
 	objects []fyne.CanvasObject
+
+	si *scrollImg
 }
+
+var _ fyne.WidgetRenderer = &scrollImgRenderer{}
 
 func (sir *scrollImgRenderer) MinSize() fyne.Size {
 	return sir.img.MinSize()
@@ -54,17 +57,23 @@ type scrollImg struct {
 	widget.BaseWidget
 }
 
+var _ fyne.Widget = &scrollImg{}
+
 func (si *scrollImg) CreateRenderer() fyne.WidgetRenderer {
 	sir := &scrollImgRenderer{}
-	sir.img = &canvas.Image{}
 
-	img, format, err := getImageFromFilePath("hilbert.png")
+	sir.si = si
+
+	img, format, err := getImageFromFilePath("../hilbert.png")
 	if err != nil {
 		log.Fatalln(err)
 	}
 	log.Println("Decoded format", format)
 
+	sir.img = &canvas.Image{}
 	sir.img.Image = img
+	sir.img.FillMode = canvas.ImageFillContain
+	sir.img.ScaleMode = canvas.ImageScaleFastest
 	sir.img.SetMinSize(fyne.Size{Width: 1200 / 2, Height: 1200 / 2})
 
 	sir.objects = []fyne.CanvasObject{sir.img}
@@ -73,6 +82,8 @@ func (si *scrollImg) CreateRenderer() fyne.WidgetRenderer {
 }
 
 // https://developer.fyne.io/api/v2.0/driver/desktop/mouseable.html
+var _ desktop.Mouseable = &scrollImg{}
+
 func (si *scrollImg) MouseDown(ev *desktop.MouseEvent) {
 	fmt.Printf("MouseDown ev = %+v\n", ev)
 }
@@ -82,6 +93,8 @@ func (si *scrollImg) MouseUp(ev *desktop.MouseEvent) {
 }
 
 // https://developer.fyne.io/api/v2.0/driver/desktop/hoverable.html
+var _ desktop.Hoverable = &scrollImg{}
+
 func (si *scrollImg) MouseIn(ev *desktop.MouseEvent) {
 	fmt.Printf("MouseIn ev = %+v\n", ev)
 }
@@ -92,6 +105,13 @@ func (si *scrollImg) MouseMoved(ev *desktop.MouseEvent) {
 
 func (si *scrollImg) MouseOut() {
 	fmt.Print("MouseOut\n")
+}
+
+// https://developer.fyne.io/api/v2.0/scrollable.html
+var _ fyne.Scrollable = &scrollImg{}
+
+func (si *scrollImg) Scrolled(ev *fyne.ScrollEvent) {
+	fmt.Printf("Scrolled ev = %+v\n", ev)
 }
 
 func newScrollImg() *scrollImg {
