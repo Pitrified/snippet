@@ -27,3 +27,11 @@
 // 	return false
 // }
 
+// func (iz *ImageZoom) artisanalRefresh() {
+// 	// this also works, I don't know if it's useful
+// 	fmt.Printf("[%-4s] artisanalRefresh\n", iz.name)
+// 	// just to test that the thing moves
+// 	iz.imgCanvas.Move(fyne.NewPos(100, 0))
+// 	canvas.Refresh(iz)
+// }
+

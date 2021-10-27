@@ -155,6 +155,9 @@ type ImageZoom struct {
 
 	xMov float64 // position of the left corner to show
 	yMov float64 // position of the top corner to show
+
+	xMouse float64 // x position of the mouse
+	yMouse float64 // y position of the mouse
 }
 
 func newImageZoom(a *myApp, name string, filePath string) *ImageZoom {
@@ -196,10 +199,12 @@ var _ desktop.Mouseable = &ImageZoom{}
 func (iz *ImageZoom) MouseDown(ev *desktop.MouseEvent) {
 	fmt.Printf("[%-4s] MouseDown  ev = %+v\n", iz.name, ev)
 	switch ev.Button {
-	case 1:
-		iz.Refresh()
-	case 2:
-		iz.artisanalRefresh()
+	case desktop.MouseButtonPrimary:
+		// iz.Refresh()
+		iz.xMouse = float64(ev.PointEvent.Position.X)
+		iz.yMouse = float64(ev.PointEvent.Position.Y)
+	case desktop.MouseButtonSecondary:
+		// iz.artisanalRefresh()
 	}
 }
 
@@ -215,7 +220,14 @@ func (iz *ImageZoom) MouseIn(ev *desktop.MouseEvent) {
 }
 
 func (iz *ImageZoom) MouseMoved(ev *desktop.MouseEvent) {
-	// fmt.Printf("[%-4s] MouseMoved ev = %+v\n", iz.name, ev)
+	fmt.Printf("[%-4s] MouseMoved ev = %+v\n", iz.name, ev)
+	switch ev.Button {
+	case desktop.MouseButtonPrimary:
+		xMouseOld, yMouseOld := iz.xMouse, iz.yMouse
+		iz.xMouse = float64(ev.PointEvent.Position.X)
+		iz.yMouse = float64(ev.PointEvent.Position.Y)
+		iz.moveImage(xMouseOld-iz.xMouse, yMouseOld-iz.yMouse)
+	}
 }
 
 func (iz *ImageZoom) MouseOut() {
@@ -245,14 +257,6 @@ func (iz *ImageZoom) bgPattern(x, y, _, _ int) color.Color {
 		return color.Gray{Y: 50}
 	}
 	return color.Gray{Y: 80}
-}
-
-func (iz *ImageZoom) artisanalRefresh() {
-	// this also works, I don't know if it's useful
-	fmt.Printf("[%-4s] artisanalRefresh\n", iz.name)
-	// just to test that the thing moves
-	iz.imgCanvas.Move(fyne.NewPos(100, 0))
-	canvas.Refresh(iz)
 }
 
 // ##### IMPLEMENTATION IZ #####
@@ -339,21 +343,17 @@ func (iz *ImageZoom) redrawImageZoom() {
 		bottom = (yMov + hWid) / zoom
 	}
 
-	// MAYBE need to validate the region (SubImage already does)
+	// validate the region: risk of a distorted image, better be safe
 	if left < 0 {
-		fmt.Printf("FIXED left = %+v\n", left)
 		left = 0
 	}
 	if top < 0 {
-		fmt.Printf("FIXED top = %+v\n", top)
 		top = 0
 	}
 	if right > wOri {
-		fmt.Printf("FIXED right = %.3f -> %.3f\n", top, wOri)
 		right = wOri
 	}
 	if bottom > hOri {
-		fmt.Printf("FIXED bottom = %.3f -> %.3f\n", bottom, hOri)
 		bottom = hOri
 	}
 
@@ -381,6 +381,7 @@ func (iz *ImageZoom) redrawImageZoom() {
 	// 	&image.Uniform{color.RGBA{10, 10, 10, 255}},
 	// 	image.Point{0, 0}, draw.Src)
 	// draw.Draw(subImage, region, iz.imgOrig, image.Pt(int(iz.xMov), int(iz.yMov)), draw.Src)
+	// https://stackoverflow.com/a/67678654/2237151
 	xdraw.NearestNeighbor.Scale(subImage, subImage.Rect,
 		iz.imgOrig, region, draw.Over, nil)
 	iz.imgCanvas.Image = subImage
@@ -405,7 +406,6 @@ func (iz *ImageZoom) changeZoom(direction string, xPos, yPos float64) {
 	xRel := xPos - iz.xCan
 	yRel := yPos - iz.yCan
 
-	wWid, hWid := iz.wWid, iz.hWid // current widget size
 	xMov, yMov := iz.xMov, iz.yMov // position
 
 	// old zoom in linear scale
@@ -443,75 +443,98 @@ func (iz *ImageZoom) changeZoom(direction string, xPos, yPos float64) {
 	// validate the new mov computed
 	// check that it does not try to go outside the image
 
-	if xMovNew < 0 {
-		xMovNew = 0
-	}
-	if yMovNew < 0 {
-		yMovNew = 0
-	}
-
-	if wZumNew <= wWid && hZumNew <= hWid {
-		xMovNew = 0
-		yMovNew = 0
-	} else if wZumNew > wWid && hZumNew <= hWid {
-		if xMovNew+wWid > wZumNew {
-			xMovNew = wZumNew - wWid
-		}
-		yMovNew = 0
-	} else if wZumNew <= wWid && hZumNew > hWid {
-		xMovNew = 0
-		if yMovNew+hWid > hZumNew {
-			yMovNew = hZumNew - hWid
-		}
-	} else if wZumNew > wWid && hZumNew > hWid {
-		if xMovNew+wWid > wZumNew {
-			xMovNew = wZumNew - wWid
-		}
-		if yMovNew+hWid > hZumNew {
-			yMovNew = hZumNew - hWid
-		}
-	}
-
-	// // the new image is thinner than the widget
-	// if wZumNew <= wWid {
-	// 	fmt.Printf("FIXED xMovNew a = %.3f\n", xMovNew)
+	// if xMovNew < 0 {
 	// 	xMovNew = 0
-	// } else
-	// // the new image is wider than the widget
-	// {
-	// 	// check if the region will try to go outside the image
+	// }
+	// if yMovNew < 0 {
+	// 	yMovNew = 0
+	// }
+	// if wZumNew <= wWid && hZumNew <= hWid {
+	// 	xMovNew = 0
+	// 	yMovNew = 0
+	// } else if wZumNew > wWid && hZumNew <= hWid {
 	// 	if xMovNew+wWid > wZumNew {
-	// 		fmt.Printf("FIXED xMovNew b %.3f %.3f\n", xMovNew, wZumNew-wWid)
 	// 		xMovNew = wZumNew - wWid
 	// 	}
-	// 	if xMovNew < 0 {
-	// 		fmt.Printf("FIXED xMovNew c %.3f 0\n", xMovNew)
-	// 		xMovNew = 0
-	// 	}
-	// }
-	// // the new image is shorter than the widget
-	// if hZumNew <= hWid {
-	// 	fmt.Printf("FIXED yMovNew a = %.3f\n", yMovNew)
 	// 	yMovNew = 0
-	// } else
-	// // the new image is taller than the widget
-	// {
-	// 	// check if the region will try to go outside the image
+	// } else if wZumNew <= wWid && hZumNew > hWid {
+	// 	xMovNew = 0
 	// 	if yMovNew+hWid > hZumNew {
-	// 		fmt.Printf("FIXED yMovNew b %.3f %.3f\n", yMovNew, hZumNew-hWid)
 	// 		yMovNew = hZumNew - hWid
 	// 	}
-	// 	if yMovNew < 0 {
-	// 		fmt.Printf("FIXED yMovNew c %.3f 0\n", yMovNew)
-	// 		yMovNew = 0
+	// } else if wZumNew > wWid && hZumNew > hWid {
+	// 	if xMovNew+wWid > wZumNew {
+	// 		xMovNew = wZumNew - wWid
+	// 	}
+	// 	if yMovNew+hWid > hZumNew {
+	// 		yMovNew = hZumNew - hWid
 	// 	}
 	// }
 
+	// assign possibly bad values and validate them
 	iz.xMov, iz.yMov = xMovNew, yMovNew
+
+	iz.validateMov()
+
 	fmt.Printf("       NEW virtual img = %+vx%+v zoom %.3f mov %.3fx%.3f\n",
 		wZumNew, hZumNew, zoomNew, xMovNew, yMovNew)
 
 	iz.redrawImageZoom()
+}
+
+// Move the position inside the virtual image
+func (iz *ImageZoom) moveImage(dx, dy float64) {
+	iz.xMov += dx
+	iz.yMov += dy
+	iz.validateMov()
+	iz.redrawImageZoom()
+}
+
+// Ensure that the virtual pos has reasonable values
+func (iz *ImageZoom) validateMov() {
+
+	wWid, hWid := iz.wWid, iz.hWid // current widget size
+
+	// new zoom in linear scale
+	zoom := math.Pow(iz.zoomBase, iz.zoomLevel)
+	wZum := math.Ceil(float64(iz.wOri * zoom))
+	hZum := math.Ceil(float64(iz.hOri * zoom))
+
+	// the new image is thinner than the widget
+	if wZum <= wWid {
+		fmt.Printf("FIXED iz.xMov a = %.3f\n", iz.xMov)
+		iz.xMov = 0
+	} else
+	// the new image is wider than the widget
+	{
+		// check if the region will try to go outside the image
+		if iz.xMov+wWid > wZum {
+			fmt.Printf("FIXED iz.xMov b %.3f %.3f\n", iz.xMov, wZum-wWid)
+			iz.xMov = wZum - wWid
+		}
+		if iz.xMov < 0 {
+			fmt.Printf("FIXED iz.xMov c %.3f 0\n", iz.xMov)
+			iz.xMov = 0
+		}
+	}
+
+	// the new image is shorter than the widget
+	if hZum <= hWid {
+		fmt.Printf("FIXED iz.yMov a = %.3f\n", iz.yMov)
+		iz.yMov = 0
+	} else
+	// the new image is taller than the widget
+	{
+		// check if the region will try to go outside the image
+		if iz.yMov+hWid > hZum {
+			fmt.Printf("FIXED iz.yMov b %.3f %.3f\n", iz.yMov, hZum-hWid)
+			iz.yMov = hZum - hWid
+		}
+		if iz.yMov < 0 {
+			fmt.Printf("FIXED iz.yMov c %.3f 0\n", iz.yMov)
+			iz.yMov = 0
+		}
+	}
 }
 
 // --------------------------------------------------------------------------------
