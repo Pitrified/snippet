@@ -1,4 +1,4 @@
-module example.com/turtlegui
+module example.com/app-fyne
 
 go 1.16
 
