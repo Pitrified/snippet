@@ -16,16 +16,20 @@ import (
 type mySidebar struct {
 	a *myApp
 
-	moveCard   *widget.Card
-	moveBank   []*widget.Button
-	moveSetBtn *widget.Button
-	moveSetX   *widget.Entry
-	moveSetY   *widget.Entry
+	moveCard    *widget.Card
+	moveBank    []*widget.Button
+	moveSetBtn  *widget.Button
+	moveSetX    *widget.Entry
+	moveSetY    *widget.Entry
+	moveCustBtn *widget.Button
+	moveCustEnt *widget.Entry
 
-	rotCard   *widget.Card
-	rotBank   []*widget.Button
-	rotSetBtn *widget.Button
-	rotSet    *widget.Entry
+	rotCard    *widget.Card
+	rotBank    []*widget.Button
+	rotSetBtn  *widget.Button
+	rotSet     *widget.Entry
+	rotCustBtn *widget.Button
+	rotCustEnt *widget.Entry
 
 	penCard     *widget.Card
 	penCheck    *widget.Check
@@ -53,15 +57,15 @@ func newSidebar(a *myApp) *mySidebar {
 // --------------------------------------------------------------------------------
 
 // Build the sidebar.
-func (s *mySidebar) buildSidebar() *fyne.Container {
-	return container.NewVBox(
+func (s *mySidebar) buildSidebar() *container.Scroll {
+	return container.NewVScroll(container.NewVBox(
 		s.buildMove(),
 		s.buildRotate(),
 		s.buildPen(),
 		s.buildReset(),
 		s.buildSpec(),
 		s.buildSave(),
-	)
+	))
 }
 
 // --------------------------------------------------------------------------------
@@ -72,8 +76,8 @@ func (s *mySidebar) buildSidebar() *fyne.Container {
 func (s *mySidebar) buildMove() *widget.Card {
 
 	// buttons to control the movement
-	moveVal := map[int]float64{0: -10, 1: -1, 2: -0.1, 3: 0.1, 4: 1, 5: 10}
-	s.moveBank = make([]*widget.Button, 6)
+	moveVal := map[int]float64{0: -50, 1: -10, 2: 10, 3: 50}
+	s.moveBank = make([]*widget.Button, 4)
 	for i := 0; i < len(s.moveBank); i++ {
 		c := moveVal[i]
 		s.moveBank[i] = widget.NewButton(
@@ -82,22 +86,35 @@ func (s *mySidebar) buildMove() *widget.Card {
 		)
 	}
 	contMoveBank := container.NewGridWithColumns(
-		6,
-		s.moveBank[0], s.moveBank[1], s.moveBank[2], s.moveBank[3], s.moveBank[4], s.moveBank[5],
+		4,
+		s.moveBank[0], s.moveBank[1], s.moveBank[2], s.moveBank[3],
 	)
+	labBank := widget.NewLabel("Move by:")
+	contBank := container.NewBorder(nil, nil, labBank, nil, contMoveBank)
+
+	// ##### entries + button to move by custom amount #####
+
+	s.moveCustBtn = widget.NewButton("Move", s.moveCustBtnCB)
+	s.moveCustEnt = widget.NewEntry()
+	s.moveCustEnt.Text = "20"
+	// s.moveCustEnt.Wrapping = fyne.TextWrapOff
+	s.moveCustEnt.OnSubmitted = s.moveCustSubmitted
+	labCust := widget.NewLabel("Move by:")
+	contCust := container.NewBorder(nil, nil, labCust, s.moveCustBtn, s.moveCustEnt)
 
 	// ##### entries + button to set position #####
 
 	s.moveSetBtn = widget.NewButton("Set", s.moveSetBtnCB)
 	// Entry x
 	s.moveSetX = widget.NewEntry()
+	// s.moveCustEnt = NewWideEntry(fyne.NewSize(200, 0))
 	s.moveSetX.Text = "0.000"
-	s.moveSetX.Wrapping = fyne.TextWrapOff
+	// s.moveSetX.Wrapping = fyne.TextWrapOff
 	s.moveSetX.OnSubmitted = s.moveSetSubmitted
 	// Entry y
 	s.moveSetY = widget.NewEntry()
 	s.moveSetY.Text = "0.000"
-	s.moveSetY.Wrapping = fyne.TextWrapOff
+	// s.moveSetY.Wrapping = fyne.TextWrapOff
 	s.moveSetY.OnSubmitted = s.moveSetSubmitted
 	// Labels
 	labMoveX := widget.NewLabel("X:")
@@ -108,11 +125,12 @@ func (s *mySidebar) buildMove() *widget.Card {
 	// Pair the EL
 	elMoveXY := container.NewGridWithColumns(2, elMoveX, elMoveY)
 	// Pair the ELpair and the button
-	contMoveSet := container.NewBorder(nil, nil, nil, s.moveSetBtn, elMoveXY)
+	labPos := widget.NewLabel("Pos:")
+	contMoveSet := container.NewBorder(nil, nil, labPos, s.moveSetBtn, elMoveXY)
 
 	// build the card
-	contCard := container.NewVBox(contMoveBank, contMoveSet)
-	s.moveCard = widget.NewCard("Move", "Position:", contCard)
+	contCard := container.NewVBox(contMoveSet, contBank, contCust)
+	s.moveCard = widget.NewCard("Move", "", contCard)
 	return s.moveCard
 }
 
@@ -120,7 +138,6 @@ func (s *mySidebar) buildMove() *widget.Card {
 
 // Clicked one of the move bank buttons
 func (s *mySidebar) moveBankCB(d float64) {
-	fmt.Printf("SIDE: moveBankCB d = %+v\n", d)
 	s.a.c.move(d)
 }
 
@@ -132,8 +149,6 @@ func (s *mySidebar) moveSetBtnCB() {
 	if errX != nil || errY != nil {
 		return
 	}
-	fmt.Printf("SIDE: moveSetBtnCB x, y = %+v, %+v\n", x, y)
-
 	// tell the controller that we want to teleport there
 	s.a.c.jump(x, y)
 }
@@ -143,16 +158,32 @@ func (s *mySidebar) moveSetSubmitted(_ string) {
 	s.moveSetBtnCB()
 }
 
+// Clicked button move custom amount.
+func (s *mySidebar) moveCustBtnCB() {
+	d, err := entry2F64(s.moveCustEnt)
+	if err != nil {
+		return
+	}
+	s.a.c.move(d)
+}
+
+// Press enter on move custom amount entry.
+func (s *mySidebar) moveCustSubmitted(_ string) {
+	s.moveCustBtnCB()
+}
+
 // ##### Update the widgets #####
 
 // The position changed.
 func (s *mySidebar) updatePos(x, y float64) {
-	fmt.Printf("SIDE: updatePos x, y = %+v, %+v\n", x, y)
 	// in the label, show short number if it grows large
-	s.moveCard.SetSubTitle(fmt.Sprintf("Position: (%.5g, %.5g)", x, y))
+	// s.moveCard.SetSubTitle(fmt.Sprintf("Position: (%.5g, %.5g)", x, y))
 	// in the entries, always show all digits
-	s.moveSetX.SetText(FormatFloat(x, 3))
-	s.moveSetY.SetText(FormatFloat(y, 3))
+	// s.moveSetX.SetText(FormatFloat(x, 3))
+	// s.moveSetY.SetText(FormatFloat(y, 3))
+	// yeah no, show only 5 characters, more than enough
+	s.moveSetX.SetText(fmt.Sprintf("%.5g", x))
+	s.moveSetY.SetText(fmt.Sprintf("%.5g", y))
 }
 
 // --------------------------------------------------------------------------------
@@ -162,8 +193,8 @@ func (s *mySidebar) updatePos(x, y float64) {
 func (s *mySidebar) buildRotate() *widget.Card {
 
 	// buttons to control the rotation
-	rotVal := map[int]float64{0: -10, 1: -1, 2: -0.1, 3: 0.1, 4: 1, 5: 10}
-	s.rotBank = make([]*widget.Button, 6)
+	rotVal := map[int]float64{0: -10, 1: -1, 2: 1, 3: 10}
+	s.rotBank = make([]*widget.Button, 4)
 	for i := 0; i < len(s.rotBank); i++ {
 		c := rotVal[i]
 		s.rotBank[i] = widget.NewButton(
@@ -172,22 +203,34 @@ func (s *mySidebar) buildRotate() *widget.Card {
 		)
 	}
 	contRotBank := container.NewGridWithColumns(
-		6,
-		s.rotBank[0], s.rotBank[1], s.rotBank[2], s.rotBank[3], s.rotBank[4], s.rotBank[5],
+		4,
+		s.rotBank[0], s.rotBank[1], s.rotBank[2], s.rotBank[3],
 	)
+	labBank := widget.NewLabel("Rotate by:")
+	contBank := container.NewBorder(nil, nil, labBank, nil, contRotBank)
+
+	// ##### entries + button to rotate by custom amount #####
+
+	s.rotCustBtn = widget.NewButton("Rotate", s.rotCustBtnCB)
+	s.rotCustEnt = widget.NewEntry()
+	s.rotCustEnt.Text = "20"
+	// s.rotCustEnt.Wrapping = fyne.TextWrapOff
+	s.rotCustEnt.OnSubmitted = s.rotCustSubmitted
+	labCust := widget.NewLabel("Rotate by:")
+	contCust := container.NewBorder(nil, nil, labCust, s.rotCustBtn, s.rotCustEnt)
 
 	// entries + button to set the rotation
 	s.rotSetBtn = widget.NewButton("Set", s.rotSetBtnCB)
 	s.rotSet = widget.NewEntry()
 	s.rotSet.Text = "0.000"
-	s.rotSet.Wrapping = fyne.TextWrapOff
+	// s.rotSet.Wrapping = fyne.TextWrapOff
 	s.rotSet.OnSubmitted = s.rotSetSubmitted
 	labRot := widget.NewLabel("Deg:")
 	contRotSet := container.NewBorder(nil, nil, labRot, s.rotSetBtn, s.rotSet)
 
 	// card content
-	contCard := container.NewVBox(contRotBank, contRotSet)
-	s.rotCard = widget.NewCard("Rotate", "Orientation:", contCard)
+	contCard := container.NewVBox(contRotSet, contBank, contCust)
+	s.rotCard = widget.NewCard("Rotate", "", contCard)
 	return s.rotCard
 }
 
@@ -195,19 +238,15 @@ func (s *mySidebar) buildRotate() *widget.Card {
 
 // Clicked one of the rotate bank buttons
 func (s *mySidebar) rotBankCB(d float64) {
-	fmt.Printf("SIDE: rotBankCB d = %+v\n", d)
 	s.a.c.rotate(d)
 }
 
 // Clicked button set orientation from entry.
 func (s *mySidebar) rotSetBtnCB() {
-	// try to parse the text
 	o, err := entry2F64(s.rotSet)
 	if err != nil {
 		return
 	}
-	fmt.Printf("SIDE: rotSetBtnCB o = %+v\n", o)
-
 	s.a.c.setOri(o)
 }
 
@@ -216,13 +255,26 @@ func (s *mySidebar) rotSetSubmitted(_ string) {
 	s.rotSetBtnCB()
 }
 
+// Clicked button rotate custom amount.
+func (s *mySidebar) rotCustBtnCB() {
+	d, err := entry2F64(s.rotCustEnt)
+	if err != nil {
+		return
+	}
+	s.a.c.rotate(d)
+}
+
+// Press enter on rotate custom amount entry.
+func (s *mySidebar) rotCustSubmitted(_ string) {
+	s.rotCustBtnCB()
+}
+
 // ##### Update the widgets #####
 
 // The orientation changed.
 func (s *mySidebar) updateOri(o float64) {
-	fmt.Printf("SIDE: updateOri o = %+v\n", o)
 	// in the label, show short number if it grows large
-	s.rotCard.SetSubTitle(fmt.Sprintf("Current orientation: %.5g", o))
+	// s.rotCard.SetSubTitle(fmt.Sprintf("Current orientation: %.5g°", o))
 	// in the entries, always show all digits
 	s.rotSet.SetText(FormatFloat(o, 3))
 }
@@ -269,7 +321,6 @@ func (s *mySidebar) buildPen() *widget.Card {
 // ##### Reactions to user input #####
 
 func (s *mySidebar) penPickerCB(c color.Color) {
-	fmt.Printf("SIDE: penPickerCB c = %+v\n", c)
 	s.a.c.setPenColor(c)
 }
 
@@ -278,12 +329,10 @@ func (s *mySidebar) penPickerShowCB() {
 }
 
 func (s *mySidebar) penCheckCB(b bool) {
-	fmt.Printf("SIDE: penCheckCB b = %+v\n", b)
 	s.a.c.setPenState(b)
 }
 
 func (s *mySidebar) penSizeSliCB(f float64) {
-	fmt.Printf("SIDE: penSizeSliCB f = %+v\n", f)
 	s.a.c.setPenSize(f)
 }
 
@@ -327,7 +376,7 @@ func (s *mySidebar) buildSave() *widget.Card {
 	s.saveSetBtn = widget.NewButton("Save", s.saveSetBtnCB)
 	s.saveSet = widget.NewEntry()
 	s.saveSet.Text = "out.png"
-	s.saveSet.Wrapping = fyne.TextWrapOff
+	// s.saveSet.Wrapping = fyne.TextWrapOff
 	s.saveSet.OnSubmitted = s.saveSetSubmitted
 	saveLab := widget.NewLabel("To:")
 
@@ -341,7 +390,6 @@ func (s *mySidebar) buildSave() *widget.Card {
 // Clicked button set orientation from entry.
 func (s *mySidebar) saveSetBtnCB() {
 	p := s.saveSet.Text
-	fmt.Printf("SIDE: s.saveSet.Text = %+v\n", p)
 	s.a.c.save(p)
 }
 

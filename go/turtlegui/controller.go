@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image/color"
 	"math"
 
@@ -52,7 +51,6 @@ func (c *myController) run() {
 
 // Teleport to the requested location.
 func (c *myController) jump(x, y float64) {
-	fmt.Printf("CONT: jump x, y = %+v, %+v\n", x, y)
 	c.t.SetPos(x, y)
 	c.updatedPos()
 	c.updatedImg()
@@ -60,7 +58,6 @@ func (c *myController) jump(x, y float64) {
 
 // Move by the requested amount.
 func (c *myController) move(d float64) {
-	fmt.Printf("CONT: move d = %+v\n", d)
 	c.t.Forward(d)
 	c.updatedPos()
 	c.updatedImg()
@@ -68,7 +65,6 @@ func (c *myController) move(d float64) {
 
 // Set the heading to the requested orientation.
 func (c *myController) setOri(d float64) {
-	fmt.Printf("CONT: rotate d = %+v\n", d)
 	c.t.SetHeading(d)
 	c.updatedOri()
 	c.updatedImg()
@@ -76,7 +72,6 @@ func (c *myController) setOri(d float64) {
 
 // Rotate by the requested amount.
 func (c *myController) rotate(d float64) {
-	fmt.Printf("CONT: rotate d = %+v\n", d)
 	c.t.Left(d)
 	c.updatedOri()
 	c.updatedImg()
@@ -84,13 +79,11 @@ func (c *myController) rotate(d float64) {
 
 // Save the current world to file.
 func (c *myController) save(s string) {
-	fmt.Printf("CONT: save s = %+v\n", s)
 	c.w.SaveImage(s)
 }
 
 // Change the pen color.
 func (c *myController) setPenColor(o color.Color) {
-	fmt.Printf("CONT: setPenColor o = %+v\n", o)
 	c.t.SetColor(o)
 	c.updatedPenColor()
 }
@@ -106,7 +99,6 @@ func (c *myController) setPenState(b bool) {
 
 // Change the pen size.
 func (c *myController) setPenSize(f float64) {
-	fmt.Printf("CONT: setPenSize f = %+v\n", f)
 	c.t.SetSize(int(math.Round(f)))
 	c.updatedPenSize()
 }

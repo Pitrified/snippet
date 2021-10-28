@@ -19,3 +19,11 @@ func FormatFloat(num float64, prc int) string {
 	str := fmt.Sprintf("%."+strconv.Itoa(prc)+"f", num)
 	return strings.TrimRight(strings.TrimRight(str, "0"), ".")
 }
+
+func MinFloat32(a, b float32) float32 {
+	if a < b {
+		return a
+	} else {
+		return b
+	}
+}

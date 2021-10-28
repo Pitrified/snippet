@@ -44,4 +44,8 @@ Image on the left, controls on a sidebar.
 
 * just a list of old commands, not interactive (only scrollable)
 
+##### Keyboard control:
+
+* a whole lot of keyboard shortcut (SetOnTypedKey)
+
 # TODOs

@@ -78,8 +78,22 @@ func (a *myApp) buildUI() {
 func (a *myApp) typedKey(ev *fyne.KeyEvent) {
 	fmt.Printf("typedKey  = %+v %T\n", ev, ev)
 	switch ev.Name {
-	case fyne.KeyEscape, fyne.KeyQ:
+	case fyne.KeyEscape:
 		a.fyneApp.Quit()
+	case fyne.KeyW:
+		a.c.move(10)
+	case fyne.KeyS:
+		a.c.move(-10)
+	case fyne.KeyD:
+		a.c.rotate(-10)
+	case fyne.KeyE:
+		a.c.move(10)
+		a.c.rotate(-10)
+	case fyne.KeyA:
+		a.c.rotate(10)
+	case fyne.KeyQ:
+		a.c.move(10)
+		a.c.rotate(10)
 	default:
 	}
 }
