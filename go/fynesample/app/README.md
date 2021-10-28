@@ -59,3 +59,48 @@ case <-tickSimulate.C:
 ```
 
 so there is no separation at all between the two.
+
+### MVC
+
+The view does not implement any logic.
+
+If the folder changes in the model,
+the view will update the relative label and that's it.
+It is the model that will read the content of the new folder
+and update the file list.
+The view will be notified of this second change, and will reflect it.
+
+We use the observable behavior, with data binding:
+the model does not need to use the `Observable` type,
+we link instead a binding to the regular field in the model.
+When the field changes,
+the binding will magically know that,
+and the proper callback will be fired.
+
+No magic (duh):
+a call to `data.Reload()` is needed
+to notify the data binding that the value has changed,
+so we still need to modify the model.
+
+Or at least we need a *very* smart controller,
+that knows all the side effect caused by a function.
+But this looks very brittle:
+if I call `move(0)`, the values of `x` and `y` will not change,
+and it is wasteful calling `xData.reload()` every time
+(e.g. instead of a simple label this could need a redraw of an entire image).
+
+With the binding, some widget might even be updated automatically
+(e.g. a simple label), without a callback that sets the new text in the label.
+
+I don't like the two-way data binding.
+
+> Complete data binding (two-way or bidirectional) ensures that as well as
+> keeping presented data up to date, it will also update the source data if the
+> user alters the presentation through some interactive widget.
+
+[Building Cross-Platform GUI Applications with Fyne](https://books.google.it/books?id=oV0XEAAAQBAJ&pg=PA164&lpg=PA164&dq=Complete+data+binding+(two-way+or+bidirectional)+ensures+that+as+well+as+keeping+presented+data+up+to+date,+it+will+also+update+the+source+data+if+the+user+alters+the+presentation+through+some+interactive+widget.&source=bl&ots=QKGmGc3J5C&sig=ACfU3U3rFDZGCxgufsFbTE0uialw04jEPw&hl=en&sa=X&ved=2ahUKEwjxxc-T1ezzAhUSt6QKHXscCekQ6AF6BAgCEAM#v=onepage&q=Complete%20data%20binding%20(two-way%20or%20bidirectional)%20ensures%20that%20as%20well%20as%20keeping%20presented%20data%20up%20to%20date%2C%20it%20will%20also%20update%20the%20source%20data%20if%20the%20user%20alters%20the%20presentation%20through%20some%20interactive%20widget.&f=false)
+
+This is what is strange for me:
+if a slider changes the zoom level,
+updating the label is not enough:
+you need to compute the new image and update that.
