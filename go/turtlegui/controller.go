@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"image/color"
+	"math"
 
 	"github.com/Pitrified/go-turtle"
 )
@@ -23,7 +25,10 @@ func newController() *myController {
 	c.w = turtle.NewWorld(900, 600)
 	// create the turtle to control
 	c.t = turtle.NewTurtleDraw(c.w)
+
+	// set the pen state
 	c.t.PenDown()
+	c.t.SetColor(color.RGBA{R: 80, G: 20, B: 20, A: 255})
 
 	return c
 }
@@ -42,10 +47,10 @@ func (c *myController) run() {
 }
 
 // --------------------------------------------------------------------------------
-//  Reacts to events from UI
+//  Reacts to events from UI: change the state of the model, then update the view.
 // --------------------------------------------------------------------------------
 
-// The user requested a jump.
+// Teleport to the requested location.
 func (c *myController) jump(x, y float64) {
 	fmt.Printf("CONT: jump x, y = %+v, %+v\n", x, y)
 	c.t.SetPos(x, y)
@@ -53,7 +58,7 @@ func (c *myController) jump(x, y float64) {
 	c.updatedImg()
 }
 
-// The user requested a movement.
+// Move by the requested amount.
 func (c *myController) move(d float64) {
 	fmt.Printf("CONT: move d = %+v\n", d)
 	c.t.Forward(d)
@@ -61,7 +66,7 @@ func (c *myController) move(d float64) {
 	c.updatedImg()
 }
 
-// The user requested a orientation set.
+// Set the heading to the requested orientation.
 func (c *myController) setOri(d float64) {
 	fmt.Printf("CONT: rotate d = %+v\n", d)
 	c.t.SetHeading(d)
@@ -69,7 +74,7 @@ func (c *myController) setOri(d float64) {
 	c.updatedImg()
 }
 
-// The user requested a rotation.
+// Rotate by the requested amount.
 func (c *myController) rotate(d float64) {
 	fmt.Printf("CONT: rotate d = %+v\n", d)
 	c.t.Left(d)
@@ -77,14 +82,37 @@ func (c *myController) rotate(d float64) {
 	c.updatedImg()
 }
 
-// The user requested saving the world to file.
+// Save the current world to file.
 func (c *myController) save(s string) {
 	fmt.Printf("CONT: save s = %+v\n", s)
 	c.w.SaveImage(s)
 }
 
+// Change the pen color.
+func (c *myController) setPenColor(o color.Color) {
+	fmt.Printf("CONT: setPenColor o = %+v\n", o)
+	c.t.SetColor(o)
+	c.updatedPenColor()
+}
+
+// Change the pen state.
+func (c *myController) setPenState(b bool) {
+	if b {
+		c.t.PenDown()
+	} else {
+		c.t.PenUp()
+	}
+}
+
+// Change the pen size.
+func (c *myController) setPenSize(f float64) {
+	fmt.Printf("CONT: setPenSize f = %+v\n", f)
+	c.t.SetSize(int(math.Round(f)))
+	c.updatedPenSize()
+}
+
 // --------------------------------------------------------------------------------
-//  Reacts to change of the state model
+//  Reacts to change of the state model: update the view accordingly.
 // --------------------------------------------------------------------------------
 
 // Update all the view elements.
@@ -92,14 +120,16 @@ func (c *myController) initAll() {
 	c.updatedPos()
 	c.updatedOri()
 	c.updatedImg()
+	c.updatedPenColor()
+	c.updatedPenSize()
 }
 
-// The position has been updated in the model: update the view accordingly.
+// The position has been updated.
 func (c *myController) updatedPos() {
 	c.a.s.updatePos(c.t.X, c.t.Y)
 }
 
-// The orientation has been updated in the model: update the view accordingly.
+// The orientation has been updated.
 func (c *myController) updatedOri() {
 	c.a.s.updateOri(c.t.Deg)
 }
@@ -107,4 +137,14 @@ func (c *myController) updatedOri() {
 // The world image has been updated.
 func (c *myController) updatedImg() {
 	c.a.updateImg(c.w.Image)
+}
+
+// The pen color has been updated.
+func (c *myController) updatedPenColor() {
+	c.a.s.updatePenColor(c.t.Color)
+}
+
+// The pen size has been updated.
+func (c *myController) updatedPenSize() {
+	c.a.s.updatePenSize(c.t.Size)
 }

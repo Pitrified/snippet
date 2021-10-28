@@ -38,6 +38,7 @@ Image on the left, controls on a sidebar.
 
 * file selector
 * something to show commands
+* a pop-up window with some info on the command language syntax
 
 ##### Command history:
 

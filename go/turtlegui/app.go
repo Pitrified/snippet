@@ -26,7 +26,7 @@ type myApp struct {
 func newApp(c *myController) *myApp {
 
 	// create the app
-	fyneApp := app.New()
+	fyneApp := app.NewWithID("com.pitrified.turtlegui")
 	mainWin := fyneApp.NewWindow("Image test")
 	theApp := &myApp{fyneApp: fyneApp, mainWin: mainWin, c: c}
 

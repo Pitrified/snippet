@@ -2,9 +2,14 @@ package main
 
 import (
 	"fmt"
+	"image/color"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -22,7 +27,15 @@ type mySidebar struct {
 	rotSetBtn *widget.Button
 	rotSet    *widget.Entry
 
-	penCard *widget.Card
+	penCard     *widget.Card
+	penCheck    *widget.Check
+	penPicker   *dialog.ColorPickerDialog
+	penPickShow *widget.Button
+	penCurrent  *canvas.Rectangle
+	penSizeLab  *widget.Label
+	penSizeSli  *widget.Slider
+
+	resCard *widget.Card
 
 	specCard *widget.Card
 
@@ -41,15 +54,14 @@ func newSidebar(a *myApp) *mySidebar {
 
 // Build the sidebar.
 func (s *mySidebar) buildSidebar() *fyne.Container {
-
-	s.buildMove()
-	s.buildRotate()
-	s.buildPen()
-	s.buildSpec()
-	s.buildSave()
-
-	vCont := container.NewVBox(s.moveCard, s.rotCard, s.penCard, s.specCard, s.saveCard)
-	return vCont
+	return container.NewVBox(
+		s.buildMove(),
+		s.buildRotate(),
+		s.buildPen(),
+		s.buildReset(),
+		s.buildSpec(),
+		s.buildSave(),
+	)
 }
 
 // --------------------------------------------------------------------------------
@@ -57,7 +69,7 @@ func (s *mySidebar) buildSidebar() *fyne.Container {
 // --------------------------------------------------------------------------------
 
 // Build the move card.
-func (s *mySidebar) buildMove() {
+func (s *mySidebar) buildMove() *widget.Card {
 
 	// buttons to control the movement
 	moveVal := map[int]float64{0: -10, 1: -1, 2: -0.1, 3: 0.1, 4: 1, 5: 10}
@@ -100,7 +112,8 @@ func (s *mySidebar) buildMove() {
 
 	// build the card
 	contCard := container.NewVBox(contMoveBank, contMoveSet)
-	s.moveCard = widget.NewCard("Move", "Current pos:", contCard)
+	s.moveCard = widget.NewCard("Move", "Position:", contCard)
+	return s.moveCard
 }
 
 // ##### Reactions to user input #####
@@ -136,7 +149,7 @@ func (s *mySidebar) moveSetSubmitted(_ string) {
 func (s *mySidebar) updatePos(x, y float64) {
 	fmt.Printf("SIDE: updatePos x, y = %+v, %+v\n", x, y)
 	// in the label, show short number if it grows large
-	s.moveCard.SetSubTitle(fmt.Sprintf("Current pos: (%.5g, %.5g)", x, y))
+	s.moveCard.SetSubTitle(fmt.Sprintf("Position: (%.5g, %.5g)", x, y))
 	// in the entries, always show all digits
 	s.moveSetX.SetText(FormatFloat(x, 3))
 	s.moveSetY.SetText(FormatFloat(y, 3))
@@ -146,7 +159,7 @@ func (s *mySidebar) updatePos(x, y float64) {
 //  Build the rotate card
 // --------------------------------------------------------------------------------
 
-func (s *mySidebar) buildRotate() {
+func (s *mySidebar) buildRotate() *widget.Card {
 
 	// buttons to control the rotation
 	rotVal := map[int]float64{0: -10, 1: -1, 2: -0.1, 3: 0.1, 4: 1, 5: 10}
@@ -174,7 +187,8 @@ func (s *mySidebar) buildRotate() {
 
 	// card content
 	contCard := container.NewVBox(contRotBank, contRotSet)
-	s.rotCard = widget.NewCard("Rotate", "Current orientation:", contCard)
+	s.rotCard = widget.NewCard("Rotate", "Orientation:", contCard)
+	return s.rotCard
 }
 
 // ##### Reactions to user input #####
@@ -208,7 +222,6 @@ func (s *mySidebar) rotSetSubmitted(_ string) {
 func (s *mySidebar) updateOri(o float64) {
 	fmt.Printf("SIDE: updateOri o = %+v\n", o)
 	// in the label, show short number if it grows large
-	// s.rotLabel.SetText(fmt.Sprintf("Current orientation: %.5g", o))
 	s.rotCard.SetSubTitle(fmt.Sprintf("Current orientation: %.5g", o))
 	// in the entries, always show all digits
 	s.rotSet.SetText(FormatFloat(o, 3))
@@ -218,8 +231,72 @@ func (s *mySidebar) updateOri(o float64) {
 //  Build the pen card
 // --------------------------------------------------------------------------------
 
-func (s *mySidebar) buildPen() {
-	s.penCard = widget.NewCard("Pen", "", nil)
+func (s *mySidebar) buildPen() *widget.Card {
+
+	// toggle the pen
+	s.penCheck = widget.NewCheck("Draw", s.penCheckCB)
+	s.penCheck.Checked = true
+
+	// dialog shown when clicking the button
+	s.penPickShow = widget.NewButton("Change", s.penPickerShowCB)
+	s.penPicker = dialog.NewColorPicker("Pick a color", "Pen color",
+		s.penPickerCB, s.a.mainWin)
+	s.penPicker.Advanced = true
+
+	// current color
+	s.penCurrent = canvas.NewRectangle(color.RGBA{})
+	size := 2 * theme.IconInlineSize()
+	s.penCurrent.SetMinSize(fyne.NewSize(size, size))
+
+	// first row of widgets
+	contRow1 := container.NewHBox(
+		s.penCheck,
+		layout.NewSpacer(),
+		s.penCurrent, s.penPickShow)
+
+	// second row of widgets
+	s.penSizeLab = widget.NewLabel("Size:")
+	s.penSizeSli = widget.NewSlider(1, 30)
+	s.penSizeSli.Step = 1
+	s.penSizeSli.OnChanged = s.penSizeSliCB
+	contRow2 := container.NewBorder(nil, nil, s.penSizeLab, nil, s.penSizeSli)
+
+	contCard := container.NewVBox(contRow1, contRow2)
+	s.penCard = widget.NewCard("Pen", "", contCard)
+	return s.penCard
+}
+
+// ##### Reactions to user input #####
+
+func (s *mySidebar) penPickerCB(c color.Color) {
+	fmt.Printf("SIDE: penPickerCB c = %+v\n", c)
+	s.a.c.setPenColor(c)
+}
+
+func (s *mySidebar) penPickerShowCB() {
+	s.penPicker.Show()
+}
+
+func (s *mySidebar) penCheckCB(b bool) {
+	fmt.Printf("SIDE: penCheckCB b = %+v\n", b)
+	s.a.c.setPenState(b)
+}
+
+func (s *mySidebar) penSizeSliCB(f float64) {
+	fmt.Printf("SIDE: penSizeSliCB f = %+v\n", f)
+	s.a.c.setPenSize(f)
+}
+
+// ##### Update the widgets #####
+
+func (s *mySidebar) updatePenColor(c color.Color) {
+	s.penCurrent.FillColor = c
+	canvas.Refresh(s.penCurrent)
+}
+
+func (s *mySidebar) updatePenSize(i int) {
+	s.penSizeLab.SetText(fmt.Sprintf("Size: %d", i))
+	s.penSizeSli.SetValue(float64(i))
 }
 
 // --------------------------------------------------------------------------------
@@ -227,25 +304,36 @@ func (s *mySidebar) buildPen() {
 // --------------------------------------------------------------------------------
 
 // Hilbert.
-// Reset.
-func (s *mySidebar) buildSpec() {
+func (s *mySidebar) buildSpec() *widget.Card {
 	s.specCard = widget.NewCard("Special", "", nil)
+	return s.specCard
+}
+
+// --------------------------------------------------------------------------------
+//  Build the reset card
+// --------------------------------------------------------------------------------
+
+func (s *mySidebar) buildReset() *widget.Card {
+	s.resCard = widget.NewCard("Reset", "", nil)
+	return s.resCard
 }
 
 // --------------------------------------------------------------------------------
 //  Build the save card
 // --------------------------------------------------------------------------------
 
-func (s *mySidebar) buildSave() {
+func (s *mySidebar) buildSave() *widget.Card {
 
 	s.saveSetBtn = widget.NewButton("Save", s.saveSetBtnCB)
 	s.saveSet = widget.NewEntry()
 	s.saveSet.Text = "out.png"
 	s.saveSet.Wrapping = fyne.TextWrapOff
 	s.saveSet.OnSubmitted = s.saveSetSubmitted
-	contSaveSet := container.NewBorder(nil, nil, nil, s.saveSetBtn, s.saveSet)
+	saveLab := widget.NewLabel("To:")
 
-	s.saveCard = widget.NewCard("Save", "Save the current image to:", contSaveSet)
+	contSaveSet := container.NewBorder(nil, nil, saveLab, s.saveSetBtn, s.saveSet)
+	s.saveCard = widget.NewCard("Save", "", contSaveSet)
+	return s.saveCard
 }
 
 // ##### Reactions to user input #####
