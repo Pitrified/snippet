@@ -90,4 +90,5 @@ func (a *myApp) typedKey(ev *fyne.KeyEvent) {
 
 func (a *myApp) updateImg(i *image.RGBA) {
 	a.img.Image = i
+	canvas.Refresh(a.img)
 }

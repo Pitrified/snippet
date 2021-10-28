@@ -77,6 +77,12 @@ func (c *myController) rotate(d float64) {
 	c.updatedImg()
 }
 
+// The user requested saving the world to file.
+func (c *myController) save(s string) {
+	fmt.Printf("CONT: save s = %+v\n", s)
+	c.w.SaveImage(s)
+}
+
 // --------------------------------------------------------------------------------
 //  Reacts to change of the state model
 // --------------------------------------------------------------------------------
