@@ -80,21 +80,36 @@ func (a *myApp) typedKey(ev *fyne.KeyEvent) {
 	switch ev.Name {
 	case fyne.KeyEscape:
 		a.fyneApp.Quit()
-	case fyne.KeyW:
-		a.c.move(10)
-	case fyne.KeyS:
-		a.c.move(-10)
-	case fyne.KeyD:
-		a.c.rotate(-10)
-	case fyne.KeyE:
-		a.c.move(10)
-		a.c.rotate(-10)
-	case fyne.KeyA:
-		a.c.rotate(10)
-	case fyne.KeyQ:
-		a.c.move(10)
-		a.c.rotate(10)
+	case fyne.KeyW, fyne.KeyS, fyne.KeyD, fyne.KeyE, fyne.KeyA, fyne.KeyQ:
+		a.control(ev.Name)
 	default:
+	}
+}
+
+func (a *myApp) control(k fyne.KeyName) {
+	// extract the data from the custom pos/ori change entries
+	d, errD := entry2F64(a.s.moveCustEnt)
+	r, errR := entry2F64(a.s.rotCustEnt)
+	if errD != nil || errR != nil {
+		return
+	}
+
+	// move around by the specified amount
+	switch k {
+	case fyne.KeyW:
+		a.c.move(d)
+	case fyne.KeyS:
+		a.c.move(-d)
+	case fyne.KeyD:
+		a.c.rotate(-r)
+	case fyne.KeyE:
+		a.c.move(d)
+		a.c.rotate(-r)
+	case fyne.KeyA:
+		a.c.rotate(r)
+	case fyne.KeyQ:
+		a.c.move(d)
+		a.c.rotate(r)
 	}
 }
 
