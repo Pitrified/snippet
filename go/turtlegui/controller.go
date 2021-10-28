@@ -23,6 +23,7 @@ func newController() *myController {
 	c.w = turtle.NewWorld(900, 600)
 	// create the turtle to control
 	c.t = turtle.NewTurtleDraw(c.w)
+	c.t.PenDown()
 
 	return c
 }
@@ -60,6 +61,22 @@ func (c *myController) move(d float64) {
 	c.updatedImg()
 }
 
+// The user requested a orientation set.
+func (c *myController) setOri(d float64) {
+	fmt.Printf("CONT: rotate d = %+v\n", d)
+	c.t.SetHeading(d)
+	c.updatedOri()
+	c.updatedImg()
+}
+
+// The user requested a rotation.
+func (c *myController) rotate(d float64) {
+	fmt.Printf("CONT: rotate d = %+v\n", d)
+	c.t.Left(d)
+	c.updatedOri()
+	c.updatedImg()
+}
+
 // --------------------------------------------------------------------------------
 //  Reacts to change of the state model
 // --------------------------------------------------------------------------------
@@ -67,12 +84,18 @@ func (c *myController) move(d float64) {
 // Update all the view elements.
 func (c *myController) initAll() {
 	c.updatedPos()
+	c.updatedOri()
 	c.updatedImg()
 }
 
 // The position has been updated in the model: update the view accordingly.
 func (c *myController) updatedPos() {
 	c.a.s.updatePos(c.t.X, c.t.Y)
+}
+
+// The orientation has been updated in the model: update the view accordingly.
+func (c *myController) updatedOri() {
+	c.a.s.updateOri(c.t.Deg)
 }
 
 // The world image has been updated.

@@ -18,9 +18,15 @@ type mySidebar struct {
 	moveSetX   *widget.Entry
 	moveSetY   *widget.Entry
 
-	rotCard *widget.Card
+	rotCard   *widget.Card
+	rotBank   []*widget.Button
+	rotLabel  *widget.Label
+	rotSetBtn *widget.Button
+	rotSet    *widget.Entry
 
 	penCard *widget.Card
+
+	saveCard *widget.Card
 }
 
 func newSidebar(a *myApp) *mySidebar {
@@ -37,11 +43,9 @@ func (s *mySidebar) buildSidebar() *fyne.Container {
 	s.buildMove()
 	s.buildRotate()
 	s.buildPen()
+	s.buildSave()
 
-	// ----- All the sidebar content -----
-
-	vCont := container.NewVBox(s.moveCard, s.rotCard, s.penCard)
-	// vCont := container.NewVBox(s.title, s.moveCard)
+	vCont := container.NewVBox(s.moveCard, s.rotCard, s.penCard, s.saveCard)
 	return vCont
 }
 
@@ -101,7 +105,7 @@ func (s *mySidebar) buildMove() {
 
 // ##### Reactions to user input #####
 
-// Clicked one of the rotate bank buttons
+// Clicked one of the move bank buttons
 func (s *mySidebar) moveBankCB(d float64) {
 	fmt.Printf("SIDE: moveBankCB d = %+v\n", d)
 	s.a.c.move(d)
@@ -121,7 +125,7 @@ func (s *mySidebar) moveSetBtnCB() {
 	s.a.c.jump(x, y)
 }
 
-// Press enter on either set entry.
+// Press enter on either set pos entry.
 func (s *mySidebar) moveSetSubmitted(_ string) {
 	s.moveSetBtnCB()
 }
@@ -143,7 +147,73 @@ func (s *mySidebar) updatePos(x, y float64) {
 // --------------------------------------------------------------------------------
 
 func (s *mySidebar) buildRotate() {
-	s.rotCard = widget.NewCard("Rotate", "", nil)
+	// buttons to control the rotation
+	rotVal := map[int]float64{0: -10, 1: -1, 2: -0.1, 3: 0.1, 4: 1, 5: 10}
+	s.rotBank = make([]*widget.Button, 6)
+	for i := 0; i < len(s.rotBank); i++ {
+		c := rotVal[i]
+		s.rotBank[i] = widget.NewButton(
+			fmt.Sprintf("%+v", c),
+			func() { s.rotBankCB(c) },
+		)
+	}
+	contRotBank := container.NewGridWithColumns(
+		6,
+		s.rotBank[0], s.rotBank[1], s.rotBank[2], s.rotBank[3], s.rotBank[4], s.rotBank[5],
+	)
+
+	// label with the current position
+	s.rotLabel = widget.NewLabel("Current orientation:")
+
+	// ##### entries + button to set position #####
+
+	s.rotSetBtn = widget.NewButton("Set", s.rotSetBtnCB)
+	s.rotSet = widget.NewEntry()
+	s.rotSet.Text = "0.000"
+	s.rotSet.Wrapping = fyne.TextWrapOff
+	s.rotSet.OnSubmitted = s.rotSetSubmitted
+	labRot := widget.NewLabel("Deg:")
+	elRot := container.NewBorder(nil, nil, labRot, nil, s.rotSet)
+	contRotSet := container.NewBorder(nil, nil, nil, s.rotSetBtn, elRot)
+
+	contCard := container.NewVBox(contRotBank, s.rotLabel, contRotSet)
+	s.rotCard = widget.NewCard("Rotate", "", contCard)
+}
+
+// ##### Reactions to user input #####
+
+// Clicked one of the rotate bank buttons
+func (s *mySidebar) rotBankCB(d float64) {
+	fmt.Printf("SIDE: rotBankCB d = %+v\n", d)
+	s.a.c.rotate(d)
+}
+
+// Clicked button set orientation from entry.
+func (s *mySidebar) rotSetBtnCB() {
+	// try to parse the text
+	o, err := entry2F64(s.rotSet)
+	if err != nil {
+		return
+	}
+	fmt.Printf("SIDE: rotSetBtnCB o = %+v\n", o)
+
+	s.a.c.setOri(o)
+}
+
+// Press enter on set orientation entry.
+func (s *mySidebar) rotSetSubmitted(_ string) {
+	s.rotSetBtnCB()
+}
+
+// ##### Update the widgets #####
+
+// The orientation changed.
+func (s *mySidebar) updateOri(o float64) {
+	fmt.Printf("SIDE: updateOri o = %+v\n", o)
+	// in the label, show short number if it grows large
+	s.rotLabel.SetText(fmt.Sprintf("Current orientation: %.5g", o))
+	// in the entries, always show all digits
+	s.rotSet.SetText(FormatFloat(o, 3))
 }
 
 // --------------------------------------------------------------------------------
@@ -152,4 +222,12 @@ func (s *mySidebar) buildRotate() {
 
 func (s *mySidebar) buildPen() {
 	s.penCard = widget.NewCard("Pen", "", nil)
+}
+
+// --------------------------------------------------------------------------------
+//  Build the save card
+// --------------------------------------------------------------------------------
+
+func (s *mySidebar) buildSave() {
+	s.saveCard = widget.NewCard("Save", "", nil)
 }

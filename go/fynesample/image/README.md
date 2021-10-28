@@ -21,3 +21,7 @@ Take care with the scaling.
 ### image5
 
 Giant example of a zoomable image.
+
+### image6
+
+TODO: try to extend the `canvas.Image` widget and implement the `Hoverable` etc. interfaces.
