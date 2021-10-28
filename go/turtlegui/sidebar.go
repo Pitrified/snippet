@@ -19,7 +19,7 @@ type mySidebar struct {
 	moveCard    *widget.Card
 	moveBank    []*widget.Button
 	moveSetBtn  *widget.Button
-	moveSetX    *widget.Entry
+	moveSetX    *WideEntry
 	moveSetY    *widget.Entry
 	moveCustBtn *widget.Button
 	moveCustEnt *widget.Entry
@@ -97,7 +97,6 @@ func (s *mySidebar) buildMove() *widget.Card {
 	s.moveCustBtn = widget.NewButton("Move", s.moveCustBtnCB)
 	s.moveCustEnt = widget.NewEntry()
 	s.moveCustEnt.Text = "20"
-	// s.moveCustEnt.Wrapping = fyne.TextWrapOff
 	s.moveCustEnt.OnSubmitted = s.moveCustSubmitted
 	labCust := widget.NewLabel("Move by:")
 	contCust := container.NewBorder(nil, nil, labCust, s.moveCustBtn, s.moveCustEnt)
@@ -105,16 +104,13 @@ func (s *mySidebar) buildMove() *widget.Card {
 	// ##### entries + button to set position #####
 
 	s.moveSetBtn = widget.NewButton("Set", s.moveSetBtnCB)
-	// Entry x
-	s.moveSetX = widget.NewEntry()
-	// s.moveCustEnt = NewWideEntry(fyne.NewSize(200, 0))
+	// Entry x, at least wide 4*IconInlineSize
+	s.moveSetX = NewWideEntry(fyne.NewSize(4*theme.IconInlineSize(), 0))
 	s.moveSetX.Text = "0.000"
-	// s.moveSetX.Wrapping = fyne.TextWrapOff
 	s.moveSetX.OnSubmitted = s.moveSetSubmitted
 	// Entry y
 	s.moveSetY = widget.NewEntry()
 	s.moveSetY.Text = "0.000"
-	// s.moveSetY.Wrapping = fyne.TextWrapOff
 	s.moveSetY.OnSubmitted = s.moveSetSubmitted
 	// Labels
 	labMoveX := widget.NewLabel("X:")
@@ -144,7 +140,7 @@ func (s *mySidebar) moveBankCB(d float64) {
 // Clicked button set position from entries.
 func (s *mySidebar) moveSetBtnCB() {
 	// try to parse the text
-	x, errX := entry2F64(s.moveSetX)
+	x, errX := entry2F64(&s.moveSetX.Entry)
 	y, errY := entry2F64(s.moveSetY)
 	if errX != nil || errY != nil {
 		return
@@ -214,7 +210,6 @@ func (s *mySidebar) buildRotate() *widget.Card {
 	s.rotCustBtn = widget.NewButton("Rotate", s.rotCustBtnCB)
 	s.rotCustEnt = widget.NewEntry()
 	s.rotCustEnt.Text = "20"
-	// s.rotCustEnt.Wrapping = fyne.TextWrapOff
 	s.rotCustEnt.OnSubmitted = s.rotCustSubmitted
 	labCust := widget.NewLabel("Rotate by:")
 	contCust := container.NewBorder(nil, nil, labCust, s.rotCustBtn, s.rotCustEnt)
@@ -223,7 +218,6 @@ func (s *mySidebar) buildRotate() *widget.Card {
 	s.rotSetBtn = widget.NewButton("Set", s.rotSetBtnCB)
 	s.rotSet = widget.NewEntry()
 	s.rotSet.Text = "0.000"
-	// s.rotSet.Wrapping = fyne.TextWrapOff
 	s.rotSet.OnSubmitted = s.rotSetSubmitted
 	labRot := widget.NewLabel("Deg:")
 	contRotSet := container.NewBorder(nil, nil, labRot, s.rotSetBtn, s.rotSet)
@@ -376,7 +370,6 @@ func (s *mySidebar) buildSave() *widget.Card {
 	s.saveSetBtn = widget.NewButton("Save", s.saveSetBtnCB)
 	s.saveSet = widget.NewEntry()
 	s.saveSet.Text = "out.png"
-	// s.saveSet.Wrapping = fyne.TextWrapOff
 	s.saveSet.OnSubmitted = s.saveSetSubmitted
 	saveLab := widget.NewLabel("To:")
 
