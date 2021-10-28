@@ -1,3 +1,5 @@
+// A model/view application:
+// the model has binding inside, directly linked to the widgets.
 package main
 
 import (
@@ -16,11 +18,9 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+// Wrapper for Get: the err is always nil
 func FGet(f binding.Float) float64 {
-	v, err := f.Get()
-	if err != nil {
-		return 0
-	}
+	v, _ := f.Get()
 	return v
 }
 
@@ -48,7 +48,6 @@ func newMiniTurtle() *miniTurtle {
 func (t *miniTurtle) move(d float64) {
 	t.x.Set(FGet(t.x) + d*math.Cos(t.ori))
 	t.y.Set(FGet(t.y) + d*math.Sin(t.ori))
-
 }
 
 // --------------------------------------------------------------------------------
@@ -150,7 +149,7 @@ func newApp() *myApp {
 	return theApp
 }
 
-// Create the app entire UI
+// Create the entire UI of the app
 func (a *myApp) buildUI() {
 
 	// ##### TOP #####
