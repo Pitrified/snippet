@@ -48,7 +48,13 @@ type mySidebar struct {
 	resPickShow *widget.Button
 	resCurrent  *canvas.Rectangle
 
-	specCard *widget.Card
+	specCard   *widget.Card
+	specNamesM map[string]string
+	specNamesS []string
+	specSel    *widget.Select
+	specGo     *widget.Button
+	specLevel  *widget.Entry
+	specLenght *widget.Entry
 
 	saveCard   *widget.Card
 	saveSet    *widget.Entry
@@ -349,14 +355,77 @@ func (s *mySidebar) updatePenSize(i int) {
 	s.penSizeSli.SetValue(float64(i))
 }
 
+func (s *mySidebar) updatePenState(b bool) {
+	s.penCheck.SetChecked(b)
+}
+
 // --------------------------------------------------------------------------------
 //  Build the special card
 // --------------------------------------------------------------------------------
 
 // Hilbert.
 func (s *mySidebar) buildSpec() *widget.Card {
-	s.specCard = widget.NewCard("Special", "", nil)
+
+	// map from visualized names to labels
+	// so if we change the visualized one, there is no need to change other code
+	s.specNamesM = map[string]string{
+		"Hilbert":              "hilbert",
+		"Dragon":               "dragon",
+		"Sierpinski Triangle":  "sierpTri",
+		"Sierpinski Arrowhead": "sierpArrow",
+	}
+	// copy the keys to a slice
+	s.specNamesS = make([]string, len(s.specNamesM))
+	i := 0
+	for k := range s.specNamesM {
+		s.specNamesS[i] = k
+		i++
+	}
+	// no-op on selection
+	s.specSel = widget.NewSelect(s.specNamesS, func(_ string) {})
+	s.specSel.Selected = s.specNamesS[0]
+	s.specGo = widget.NewButton("Draw", s.specGoCB)
+	selLabel := widget.NewLabel("Fractal:")
+	contSel := container.NewBorder(nil, nil, selLabel, s.specGo,
+		s.specSel)
+
+	// recursion level
+	s.specLevel = widget.NewEntry()
+	s.specLevel.Text = "6"
+	s.specLenght = widget.NewEntry()
+	s.specLenght.Text = "20"
+
+	labLevel := widget.NewLabel("Recursion level:")
+	labLenght := widget.NewLabel("Segment lenght:")
+	// Pair label and entry
+	// elLevel := container.NewBorder(nil, nil, labLevel, nil, s.specLevel)
+	// elLenght := container.NewBorder(nil, nil, labLenght, nil, s.specLenght)
+	// // Pair the EL
+	// elLL := container.NewGridWithColumns(2, elLevel, elLenght)
+	elLL := container.NewHBox(labLevel, s.specLevel,
+		layout.NewSpacer(),
+		labLenght, s.specLenght)
+
+	contCard := container.NewVBox(contSel, elLL)
+	s.specCard = widget.NewCard("Special", "", contCard)
 	return s.specCard
+}
+
+// Clicked button draw fractal.
+func (s *mySidebar) specGoCB() {
+	// data from the entries
+	segLen, errS := entry2F64(s.specLenght)
+	level, errL := entry2F64(s.specLevel)
+	if errS != nil || errL != nil {
+		return
+	}
+	levelI := int(math.Round(level))
+	// data from the select
+	visName := s.specSel.Selected
+	tag := s.specNamesM[visName]
+
+	// call the controller
+	s.a.c.drawFractal(segLen, levelI, tag)
 }
 
 // --------------------------------------------------------------------------------
@@ -370,11 +439,11 @@ func (s *mySidebar) buildReset() *widget.Card {
 	// entries to set world size
 	// Entry W, at least wide 4*IconInlineSize
 	s.resResetW = NewWideEntry(fyne.NewSize(4*theme.IconInlineSize(), 0))
-	s.resResetW.Text = "900"
+	s.resResetW.Text = "3840"
 	s.resResetW.OnSubmitted = s.resResetSubmitted
 	// Entry H, the width is set equal to W by the grid layout
 	s.resResetH = widget.NewEntry()
-	s.resResetH.Text = "600"
+	s.resResetH.Text = "2160"
 	s.resResetH.OnSubmitted = s.resResetSubmitted
 	// Labels
 	labResetW := widget.NewLabel("W:")
@@ -395,7 +464,7 @@ func (s *mySidebar) buildReset() *widget.Card {
 	s.resPicker.Advanced = true
 
 	// current color
-	s.resCurrent = canvas.NewRectangle(color.RGBA{100, 10, 10, 255})
+	s.resCurrent = canvas.NewRectangle(color.RGBA{10, 10, 10, 255})
 	size := 2 * theme.IconInlineSize()
 	s.resCurrent.SetMinSize(fyne.NewSize(size, size))
 
@@ -414,14 +483,12 @@ func (s *mySidebar) buildReset() *widget.Card {
 func (s *mySidebar) resResetCB() {
 	w, errW := entry2F64(&s.resResetW.Entry)
 	h, errH := entry2F64(s.resResetH)
-	fmt.Printf("resResetCB = %+v %+v\n", w, h)
 	if errW != nil || errH != nil {
 		return
 	}
 	wi := int(math.Round(w))
 	hi := int(math.Round(h))
 	rc := s.resCurrent.FillColor
-	fmt.Printf("data = %+v %+v %+v\n", w, h, rc)
 	s.a.c.reset(wi, hi, rc)
 }
 

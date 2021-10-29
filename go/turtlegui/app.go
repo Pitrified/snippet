@@ -26,7 +26,7 @@ func newApp(c *myController) *myApp {
 
 	// create the app
 	fyneApp := app.NewWithID("com.pitrified.turtlegui")
-	mainWin := fyneApp.NewWindow("Image test")
+	mainWin := fyneApp.NewWindow("Turtle GUI")
 	theApp := &myApp{fyneApp: fyneApp, mainWin: mainWin, c: c}
 
 	// add the link for typed runes
@@ -81,6 +81,8 @@ func (a *myApp) typedKey(ev *fyne.KeyEvent) {
 		a.fyneApp.Quit()
 	case fyne.KeyW, fyne.KeyS, fyne.KeyD, fyne.KeyE, fyne.KeyA, fyne.KeyQ:
 		a.control(ev.Name)
+	case fyne.KeySpace:
+		a.c.togglePenState()
 	default:
 	}
 }

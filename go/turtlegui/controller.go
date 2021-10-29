@@ -5,6 +5,7 @@ import (
 	"math"
 
 	"github.com/Pitrified/go-turtle"
+	"github.com/Pitrified/go-turtle/fractal"
 )
 
 type myController struct {
@@ -21,7 +22,7 @@ func newController() *myController {
 	c.a = newApp(c)
 
 	// create a new world to draw in
-	c.w = turtle.NewWorld(900, 600)
+	c.w = turtle.NewWorld(3840, 2160)
 	// create the turtle to control
 	c.t = turtle.NewTurtleDraw(c.w)
 
@@ -88,7 +89,7 @@ func (c *myController) setPenColor(o color.Color) {
 	c.updatedPenColor()
 }
 
-// Change the pen state.
+// Set the pen state.
 func (c *myController) setPenState(b bool) {
 	if b {
 		c.t.PenDown()
@@ -97,15 +98,47 @@ func (c *myController) setPenState(b bool) {
 	}
 }
 
+// Toggle the pen state.
+func (c *myController) togglePenState() {
+	c.t.PenToggle()
+	c.updatedPenState()
+}
+
 // Change the pen size.
 func (c *myController) setPenSize(f float64) {
 	c.t.SetSize(int(math.Round(f)))
 	c.updatedPenSize()
 }
 
+// Create a fresh image.
 func (c *myController) reset(w, h int, rc color.Color) {
 	c.w.ResetImageWithSizeColor(w, h, rc)
 	c.updatedImg()
+}
+
+// Draw a fractal.
+func (c *myController) drawFractal(segLen float64, level int, tag string) {
+
+	// set up the instruction stream
+	instructions := make(chan turtle.Instruction)
+	switch tag {
+	case "hilbert":
+		go fractal.GenerateHilbert(level, instructions, segLen)
+	case "dragon":
+		go fractal.GenerateDragon(level, instructions, segLen)
+	case "sierpTri":
+		go fractal.GenerateSierpinskiTriangle(level, instructions, segLen)
+	case "sierpArrow":
+		go fractal.GenerateSierpinskiArrowhead(level, instructions, segLen)
+	}
+
+	// draw the fractal
+	for i := range instructions {
+		c.t.DoInstruction(i)
+		c.updatedImg()
+		c.updatedPos()
+		c.updatedOri()
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -144,4 +177,9 @@ func (c *myController) updatedPenColor() {
 // The pen size has been updated.
 func (c *myController) updatedPenSize() {
 	c.a.s.updatePenSize(c.t.Size)
+}
+
+// The pen state has been updated.
+func (c *myController) updatedPenState() {
+	c.a.s.updatePenState(c.t.On)
 }
