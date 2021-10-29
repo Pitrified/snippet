@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -76,7 +75,7 @@ func (a *myApp) buildUI() {
 }
 
 func (a *myApp) typedKey(ev *fyne.KeyEvent) {
-	fmt.Printf("typedKey  = %+v %T\n", ev, ev)
+	// fmt.Printf("typedKey  = %+v %T\n", ev, ev)
 	switch ev.Name {
 	case fyne.KeyEscape:
 		a.fyneApp.Quit()

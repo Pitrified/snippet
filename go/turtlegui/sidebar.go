@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"image/color"
+	"math"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -39,7 +40,13 @@ type mySidebar struct {
 	penSizeLab  *widget.Label
 	penSizeSli  *widget.Slider
 
-	resCard *widget.Card
+	resCard     *widget.Card
+	resReset    *widget.Button
+	resResetW   *WideEntry
+	resResetH   *widget.Entry
+	resPicker   *dialog.ColorPickerDialog
+	resPickShow *widget.Button
+	resCurrent  *canvas.Rectangle
 
 	specCard *widget.Card
 
@@ -104,11 +111,11 @@ func (s *mySidebar) buildMove() *widget.Card {
 	// ##### entries + button to set position #####
 
 	s.moveSetBtn = widget.NewButton("Set", s.moveSetBtnCB)
-	// Entry x, at least wide 4*IconInlineSize
+	// Entry X, at least wide 4*IconInlineSize
 	s.moveSetX = NewWideEntry(fyne.NewSize(4*theme.IconInlineSize(), 0))
 	s.moveSetX.Text = "0.000"
 	s.moveSetX.OnSubmitted = s.moveSetSubmitted
-	// Entry y
+	// Entry Y, the width is set equal to X by the grid layout
 	s.moveSetY = widget.NewEntry()
 	s.moveSetY.Text = "0.000"
 	s.moveSetY.OnSubmitted = s.moveSetSubmitted
@@ -120,7 +127,7 @@ func (s *mySidebar) buildMove() *widget.Card {
 	elMoveY := container.NewBorder(nil, nil, labMoveY, nil, s.moveSetY)
 	// Pair the EL
 	elMoveXY := container.NewGridWithColumns(2, elMoveX, elMoveY)
-	// Pair the ELpair and the button
+	// Pair the ELpair and the button and the label
 	labPos := widget.NewLabel("Pos:")
 	contMoveSet := container.NewBorder(nil, nil, labPos, s.moveSetBtn, elMoveXY)
 
@@ -357,8 +364,82 @@ func (s *mySidebar) buildSpec() *widget.Card {
 // --------------------------------------------------------------------------------
 
 func (s *mySidebar) buildReset() *widget.Card {
-	s.resCard = widget.NewCard("Reset", "", nil)
+
+	// button to reset world
+	s.resReset = widget.NewButton("Reset", s.resResetCB)
+	// entries to set world size
+	// Entry W, at least wide 4*IconInlineSize
+	s.resResetW = NewWideEntry(fyne.NewSize(4*theme.IconInlineSize(), 0))
+	s.resResetW.Text = "900"
+	s.resResetW.OnSubmitted = s.resResetSubmitted
+	// Entry H, the width is set equal to W by the grid layout
+	s.resResetH = widget.NewEntry()
+	s.resResetH.Text = "600"
+	s.resResetH.OnSubmitted = s.resResetSubmitted
+	// Labels
+	labResetW := widget.NewLabel("W:")
+	labResetH := widget.NewLabel("H:")
+	// Pair label and entry
+	elResetW := container.NewBorder(nil, nil, labResetW, nil, s.resResetW)
+	elResetH := container.NewBorder(nil, nil, labResetH, nil, s.resResetH)
+	// Pair the EL
+	elResetWH := container.NewGridWithColumns(2, elResetW, elResetH)
+	// Pair the ELpair and the button and the label
+	labPos := widget.NewLabel("Size:")
+	contReset := container.NewBorder(nil, nil, labPos, s.resReset, elResetWH)
+
+	// color picker and button
+	s.resPickShow = widget.NewButton("Change", s.resPickerShowCB)
+	s.resPicker = dialog.NewColorPicker("Pick a color", "Pen color",
+		s.resPickerCB, s.a.mainWin)
+	s.resPicker.Advanced = true
+
+	// current color
+	s.resCurrent = canvas.NewRectangle(color.RGBA{100, 10, 10, 255})
+	size := 2 * theme.IconInlineSize()
+	s.resCurrent.SetMinSize(fyne.NewSize(size, size))
+
+	contRow2 := container.NewHBox(
+		widget.NewLabel("Background color:"),
+		layout.NewSpacer(),
+		s.resCurrent, s.resPickShow,
+	)
+
+	contCard := container.NewVBox(contReset, contRow2)
+	s.resCard = widget.NewCard("Reset", "", contCard)
 	return s.resCard
+}
+
+// Clicked button reset world.
+func (s *mySidebar) resResetCB() {
+	w, errW := entry2F64(&s.resResetW.Entry)
+	h, errH := entry2F64(s.resResetH)
+	fmt.Printf("resResetCB = %+v %+v\n", w, h)
+	if errW != nil || errH != nil {
+		return
+	}
+	wi := int(math.Round(w))
+	hi := int(math.Round(h))
+	rc := s.resCurrent.FillColor
+	fmt.Printf("data = %+v %+v %+v\n", w, h, rc)
+	s.a.c.reset(wi, hi, rc)
+}
+
+func (s *mySidebar) resResetSubmitted(_ string) {
+	s.resResetCB()
+}
+
+// A color was selected from the color picker for the world background.
+func (s *mySidebar) resPickerCB(c color.Color) {
+	// We break the MVC pattern because this color is not part of the model,
+	// but only something to reset the model with.
+	s.resCurrent.FillColor = c
+	canvas.Refresh(s.resCurrent)
+}
+
+// Show the color picker for the world background.
+func (s *mySidebar) resPickerShowCB() {
+	s.resPicker.Show()
 }
 
 // --------------------------------------------------------------------------------
@@ -380,13 +461,13 @@ func (s *mySidebar) buildSave() *widget.Card {
 
 // ##### Reactions to user input #####
 
-// Clicked button set orientation from entry.
+// Clicked button save image.
 func (s *mySidebar) saveSetBtnCB() {
 	p := s.saveSet.Text
 	s.a.c.save(p)
 }
 
-// Press enter on set orientation entry.
+// Press enter on save image file name entry.
 func (s *mySidebar) saveSetSubmitted(_ string) {
 	s.saveSetBtnCB()
 }

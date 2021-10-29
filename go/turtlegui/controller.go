@@ -103,6 +103,11 @@ func (c *myController) setPenSize(f float64) {
 	c.updatedPenSize()
 }
 
+func (c *myController) reset(w, h int, rc color.Color) {
+	c.w.ResetImageWithSizeColor(w, h, rc)
+	c.updatedImg()
+}
+
 // --------------------------------------------------------------------------------
 //  Reacts to change of the state model: update the view accordingly.
 // --------------------------------------------------------------------------------
