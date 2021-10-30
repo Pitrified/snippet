@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"math"
+	"os"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -56,9 +57,10 @@ type mySidebar struct {
 	specLevel  *widget.Entry
 	specLenght *widget.Entry
 
-	saveCard   *widget.Card
-	saveSet    *widget.Entry
-	saveSetBtn *widget.Button
+	saveCard        *widget.Card
+	saveSet         *widget.Entry
+	saveSetBtn      *widget.Button
+	saveConfirmPath string
 
 	miscCard   *widget.Card
 	miscCredit *widget.Button
@@ -290,7 +292,7 @@ func (s *mySidebar) updateOri(o float64) {
 	// in the label, show short number if it grows large
 	// s.rotCard.SetSubTitle(fmt.Sprintf("Current orientation: %.5g°", o))
 	// in the entries, always show all digits
-	s.rotSet.SetText(FormatFloat(o, 3))
+	s.rotSet.SetText(FormatFloat(math.Mod(o, 360), 3))
 }
 
 // --------------------------------------------------------------------------------
@@ -535,10 +537,33 @@ func (s *mySidebar) buildSave() *widget.Card {
 
 // ##### Reactions to user input #####
 
+// Callback for the overwrite confirm dialog.
+func (s *mySidebar) saveConfirmCB(overwrite bool) {
+	p := s.saveConfirmPath
+	if overwrite {
+		s.a.c.save(p)
+		fmt.Printf("overwrite %+v\n", p)
+	}
+}
+
 // Clicked button save image.
 func (s *mySidebar) saveSetBtnCB() {
 	p := s.saveSet.Text
-	s.a.c.save(p)
+	// if the file exists, ask for overwrite
+	if _, err := os.Stat(p); err == nil {
+		s.saveConfirmPath = p
+		cnf := dialog.NewConfirm(fmt.Sprintf("%s already exists", p),
+			"Do you want to overwrite the file?",
+			s.saveConfirmCB, s.a.mainWin)
+		cnf.SetDismissText("No")
+		cnf.SetConfirmText("Yes")
+		cnf.Show()
+	} else
+	// save the file
+	{
+		s.a.c.save(p)
+		fmt.Printf("saved %+v\n", p)
+	}
 }
 
 // Press enter on save image file name entry.
@@ -553,19 +578,74 @@ func (s *mySidebar) saveSetSubmitted(_ string) {
 func (s *mySidebar) buildMisc() *widget.Card {
 	s.miscCredit = widget.NewButton("Credits", s.miscCreditCB)
 	s.miscHelp = widget.NewButton("Help", s.miscHelpCB)
-	contCard := container.NewGridWithRows(1, s.miscHelp, s.miscCredit)
+	contCard := container.NewGridWithColumns(2, s.miscHelp, s.miscCredit)
 	s.miscCard = widget.NewCard("Misc", "", contCard)
 	return s.miscCard
 }
 
 // Clicked button show credits.
 func (s *mySidebar) miscCreditCB() {
-	CreditsWindow(fyne.CurrentApp(), fyne.NewSize(800, 400)).Show()
+	w := CreditsWindow(fyne.CurrentApp(), fyne.NewSize(800, 400))
+	w.Canvas().SetOnTypedKey(func(ev *fyne.KeyEvent) {
+		if ev.Name == fyne.KeyEscape {
+			w.Close()
+		}
+	})
+	w.Show()
 }
 
 // Clicked button show help.
 func (s *mySidebar) miscHelpCB() {
-	w := s.a.fyneApp.NewWindow("Hello")
-	w.SetContent(widget.NewLabel("Hello World!"))
+	w := s.a.fyneApp.NewWindow("Help")
+	w.Canvas().SetOnTypedKey(func(ev *fyne.KeyEvent) {
+		if ev.Name == fyne.KeyEscape {
+			w.Close()
+		}
+	})
+	titleAlign := fyne.TextAlignCenter
+	titleStyle := fyne.TextStyle{Bold: true}
+	cmdAlign := fyne.TextAlignTrailing
+	cmdStyle := fyne.TextStyle{}
+	descAlign := fyne.TextAlignLeading
+	descStyle := fyne.TextStyle{}
+	w.SetContent(container.NewVBox(
+		widget.NewCard("Keyboard", "",
+			container.NewVBox(
+				widget.NewLabelWithStyle("Movement", titleAlign, titleStyle),
+				container.NewHBox(
+					container.NewVBox(
+						widget.NewLabelWithStyle("Q", cmdAlign, cmdStyle),
+						widget.NewLabelWithStyle("W", cmdAlign, cmdStyle),
+						widget.NewLabelWithStyle("E", cmdAlign, cmdStyle),
+						widget.NewLabelWithStyle("A", cmdAlign, cmdStyle),
+						widget.NewLabelWithStyle("S", cmdAlign, cmdStyle),
+						widget.NewLabelWithStyle("D", cmdAlign, cmdStyle),
+					),
+					container.NewVBox(
+						widget.NewLabelWithStyle("Forward and left.", descAlign, descStyle),
+						widget.NewLabelWithStyle("Forward.", descAlign, descStyle),
+						widget.NewLabelWithStyle("Forward and right.", descAlign, descStyle),
+						widget.NewLabelWithStyle("Left.", descAlign, descStyle),
+						widget.NewLabelWithStyle("Backward.", descAlign, descStyle),
+						widget.NewLabelWithStyle("Right.", descAlign, descStyle),
+					),
+				),
+				widget.NewLabelWithStyle("Misc", titleAlign, titleStyle),
+				container.NewHBox(
+					container.NewVBox(
+						widget.NewLabelWithStyle("H", cmdAlign, cmdStyle),
+						widget.NewLabelWithStyle("ESC", cmdAlign, cmdStyle),
+					),
+					container.NewVBox(
+						widget.NewLabelWithStyle("Show this help.", descAlign, descStyle),
+						widget.NewLabelWithStyle("Close the focused window.", descAlign, descStyle),
+					),
+				),
+			),
+		),
+		layout.NewSpacer(),
+		widget.NewButton("Close", func() { w.Close() }),
+	))
+	// w.Resize(fyne.NewSize(600, 600))
 	w.Show()
 }

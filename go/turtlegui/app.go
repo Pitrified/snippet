@@ -83,6 +83,8 @@ func (a *myApp) typedKey(ev *fyne.KeyEvent) {
 		a.control(ev.Name)
 	case fyne.KeySpace:
 		a.c.togglePenState()
+	case fyne.KeyH:
+		a.s.miscHelpCB()
 	default:
 	}
 }

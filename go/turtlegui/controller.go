@@ -25,10 +25,10 @@ func newController() *myController {
 	c.w = turtle.NewWorld(3840, 2160)
 	// create the turtle to control
 	c.t = turtle.NewTurtleDraw(c.w)
-
+	c.t.SetPos(3840/2, 2160/2)
 	// set the pen state
 	c.t.PenDown()
-	c.t.SetColor(color.RGBA{R: 80, G: 20, B: 20, A: 255})
+	c.t.SetColor(turtle.DarkOrange)
 
 	return c
 }
