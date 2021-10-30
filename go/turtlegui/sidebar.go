@@ -59,6 +59,9 @@ type mySidebar struct {
 	saveCard   *widget.Card
 	saveSet    *widget.Entry
 	saveSetBtn *widget.Button
+
+	miscCard   *widget.Card
+	miscCredit *widget.Button
 }
 
 func newSidebar(a *myApp) *mySidebar {
@@ -71,14 +74,17 @@ func newSidebar(a *myApp) *mySidebar {
 
 // Build the sidebar.
 func (s *mySidebar) buildSidebar() *container.Scroll {
-	return container.NewVScroll(container.NewVBox(
-		s.buildMove(),
-		s.buildRotate(),
-		s.buildPen(),
-		s.buildReset(),
-		s.buildSpec(),
-		s.buildSave(),
-	))
+	return container.NewVScroll(
+		container.NewVBox(
+			s.buildMove(),
+			s.buildRotate(),
+			s.buildPen(),
+			s.buildReset(),
+			s.buildSpec(),
+			s.buildSave(),
+			s.buildMisc(),
+		),
+	)
 }
 
 // --------------------------------------------------------------------------------
@@ -537,4 +543,23 @@ func (s *mySidebar) saveSetBtnCB() {
 // Press enter on save image file name entry.
 func (s *mySidebar) saveSetSubmitted(_ string) {
 	s.saveSetBtnCB()
+}
+
+// --------------------------------------------------------------------------------
+//  Build the misc card
+// --------------------------------------------------------------------------------
+
+func (s *mySidebar) buildMisc() *widget.Card {
+	s.miscCredit = widget.NewButton("Credits", s.miscCreditCB)
+	contCard := container.NewGridWithColumns(1, s.miscCredit)
+	s.miscCard = widget.NewCard("Misc", "", contCard)
+	return s.miscCard
+}
+
+// Clicked button show credits.
+func (s *mySidebar) miscCreditCB() {
+	w := s.a.fyneApp.NewWindow("Hello")
+	w.SetContent(widget.NewLabel("Hello World!"))
+
+	w.Show()
 }

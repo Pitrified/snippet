@@ -49,3 +49,8 @@ Image on the left, controls on a sidebar.
 * a whole lot of keyboard shortcut (SetOnTypedKey)
 
 # TODOs
+
+* Mic card, with credits and help popup.
+* Splash window, with preference to not show again.
+* Use fyne.canvas array to build the banks.
+* Use custom scroller with preference to change the speed if needed.
