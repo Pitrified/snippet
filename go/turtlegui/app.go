@@ -2,13 +2,14 @@ package main
 
 import (
 	"image"
-	"image/color"
 	"image/draw"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/theme"
+	"github.com/Pitrified/go-turtle"
 )
 
 type myApp struct {
@@ -56,12 +57,12 @@ func (a *myApp) buildUI() {
 
 	// just a placeholder for now
 	m := image.NewRGBA(image.Rect(0, 0, 400, 400))
-	draw.Draw(m, m.Bounds(), &image.Uniform{color.RGBA{10, 10, 10, 255}}, image.Point{0, 0}, draw.Src)
+	draw.Draw(m, m.Bounds(), &image.Uniform{turtle.SoftBlack}, image.Point{0, 0}, draw.Src)
 	a.img = canvas.NewImageFromImage(m)
 	a.img.FillMode = canvas.ImageFillContain
 	a.img.ScaleMode = canvas.ImageScaleFastest
 	a.img.SetMinSize(fyne.NewSize(200, 200))
-	allBlack := canvas.NewRectangle(color.RGBA{30, 30, 30, 255})
+	allBlack := canvas.NewRectangle(theme.InputBackgroundColor())
 	imageBorder := container.NewBorder(nil, nil, nil, nil,
 		allBlack, a.img)
 
