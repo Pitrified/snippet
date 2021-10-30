@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"math"
+	"net/url"
 	"os"
 
 	"fyne.io/fyne/v2"
@@ -65,6 +66,7 @@ type mySidebar struct {
 	miscCard   *widget.Card
 	miscCredit *widget.Button
 	miscHelp   *widget.Button
+	miscFull   *widget.Button
 }
 
 func newSidebar(a *myApp) *mySidebar {
@@ -578,7 +580,9 @@ func (s *mySidebar) saveSetSubmitted(_ string) {
 func (s *mySidebar) buildMisc() *widget.Card {
 	s.miscCredit = widget.NewButton("Credits", s.miscCreditCB)
 	s.miscHelp = widget.NewButton("Help", s.miscHelpCB)
-	contCard := container.NewGridWithColumns(2, s.miscHelp, s.miscCredit)
+	s.miscFull = widget.NewButton("Fullscreen", s.miscFullCB)
+	// contCard := container.NewGridWithColumns(2, s.miscHelp, s.miscCredit)
+	contCard := container.NewGridWithRows(1, s.miscHelp, s.miscFull, s.miscCredit)
 	s.miscCard = widget.NewCard("Misc", "", contCard)
 	return s.miscCard
 }
@@ -602,6 +606,10 @@ func (s *mySidebar) miscHelpCB() {
 			w.Close()
 		}
 	})
+	explanation := widget.NewLabel(
+		"The turtle movement and rotation amounts can be set using the 'Move by' and 'Rotate by' entries.")
+	explanation.Wrapping = fyne.TextWrapWord
+	urlRepo, _ := url.Parse("https://github.com/Pitrified/snippet/tree/master/go/turtlegui")
 	titleAlign := fyne.TextAlignCenter
 	titleStyle := fyne.TextStyle{Bold: true}
 	cmdAlign := fyne.TextAlignTrailing
@@ -630,22 +638,42 @@ func (s *mySidebar) miscHelpCB() {
 						widget.NewLabelWithStyle("Right.", descAlign, descStyle),
 					),
 				),
+				explanation,
 				widget.NewLabelWithStyle("Misc", titleAlign, titleStyle),
 				container.NewHBox(
 					container.NewVBox(
 						widget.NewLabelWithStyle("H", cmdAlign, cmdStyle),
 						widget.NewLabelWithStyle("ESC", cmdAlign, cmdStyle),
+						widget.NewLabelWithStyle("F, F11", cmdAlign, cmdStyle),
 					),
 					container.NewVBox(
 						widget.NewLabelWithStyle("Show this help.", descAlign, descStyle),
 						widget.NewLabelWithStyle("Close the focused window.", descAlign, descStyle),
+						widget.NewLabelWithStyle("Toggle fullscreen.", descAlign, descStyle),
 					),
+				),
+			),
+		),
+		widget.NewCard("Credits", "",
+			container.NewVBox(
+				container.NewHBox(
+					widget.NewLabel("Written by Pitrified."),
+					widget.NewHyperlink("GitHub", urlRepo),
+				),
+				container.NewHBox(
+					widget.NewLabel("Libraries used:"),
+					widget.NewButton("Credits", s.miscCreditCB),
 				),
 			),
 		),
 		layout.NewSpacer(),
 		widget.NewButton("Close", func() { w.Close() }),
 	))
-	// w.Resize(fyne.NewSize(600, 600))
+	w.Resize(fyne.NewSize(400, 150))
 	w.Show()
+}
+
+// Clicked button toggle fullscreen.
+func (s *mySidebar) miscFullCB() {
+	s.a.toggleFullscreen()
 }

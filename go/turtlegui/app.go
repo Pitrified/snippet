@@ -85,6 +85,8 @@ func (a *myApp) typedKey(ev *fyne.KeyEvent) {
 		a.c.togglePenState()
 	case fyne.KeyH:
 		a.s.miscHelpCB()
+	case fyne.KeyF, fyne.KeyF11:
+		a.toggleFullscreen()
 	default:
 	}
 }
@@ -113,6 +115,16 @@ func (a *myApp) control(k fyne.KeyName) {
 	case fyne.KeyQ:
 		a.c.move(d)
 		a.c.rotate(r)
+	}
+}
+
+func (a *myApp) toggleFullscreen() {
+	newState := !a.mainWin.FullScreen()
+	a.mainWin.SetFullScreen(newState)
+	if newState {
+		a.s.miscFull.SetText("Window")
+	} else {
+		a.s.miscFull.SetText("Fullscreen")
 	}
 }
 
