@@ -62,6 +62,7 @@ type mySidebar struct {
 
 	miscCard   *widget.Card
 	miscCredit *widget.Button
+	miscHelp   *widget.Button
 }
 
 func newSidebar(a *myApp) *mySidebar {
@@ -551,15 +552,20 @@ func (s *mySidebar) saveSetSubmitted(_ string) {
 
 func (s *mySidebar) buildMisc() *widget.Card {
 	s.miscCredit = widget.NewButton("Credits", s.miscCreditCB)
-	contCard := container.NewGridWithColumns(1, s.miscCredit)
+	s.miscHelp = widget.NewButton("Help", s.miscHelpCB)
+	contCard := container.NewGridWithRows(1, s.miscHelp, s.miscCredit)
 	s.miscCard = widget.NewCard("Misc", "", contCard)
 	return s.miscCard
 }
 
 // Clicked button show credits.
 func (s *mySidebar) miscCreditCB() {
+	CreditsWindow(fyne.CurrentApp(), fyne.NewSize(800, 400)).Show()
+}
+
+// Clicked button show help.
+func (s *mySidebar) miscHelpCB() {
 	w := s.a.fyneApp.NewWindow("Hello")
 	w.SetContent(widget.NewLabel("Hello World!"))
-
 	w.Show()
 }
