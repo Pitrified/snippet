@@ -13,12 +13,12 @@ func main() {
 
 	// usage:
 	// ./main sample -which=ticker1
-	// ./main hatch -num 500 -comm 5
+	// ./main circle -num 500 -comm 5
 	// ./main images
 
-	hatchCmd := flag.NewFlagSet("hatch", flag.ExitOnError)
-	hatchNum := hatchCmd.Int("num", 500, "Number of fireflies.")
-	hatchComm := hatchCmd.Int("comm", 5, "Comm max distance on the toro.")
+	circleCmd := flag.NewFlagSet("circle", flag.ExitOnError)
+	circleNum := circleCmd.Int("num", 500, "Number of fireflies.")
+	circleComm := circleCmd.Int("comm", 5, "Comm max distance on the toro.")
 
 	sampleCmd := flag.NewFlagSet("sample", flag.ExitOnError)
 	sampleWhich := sampleCmd.String("which", "timediff", "Which sample to run.")
@@ -34,19 +34,19 @@ func main() {
 	)
 
 	if len(os.Args) < 2 {
-		fmt.Println("Expected 'hatch', 'image' or 'sample' subcommands.")
+		fmt.Println("Expected 'circle', 'image' or 'sample' subcommands.")
 		os.Exit(1)
 	}
 
 	switch os.Args[1] {
 
-	case "hatch":
-		hatchCmd.Parse(os.Args[2:])
-		fmt.Println("Subcommand 'hatch'")
-		fmt.Println("  num:", *hatchNum)
-		fmt.Println("  comm:", *hatchComm)
+	case "circle":
+		circleCmd.Parse(os.Args[2:])
+		fmt.Println("Subcommand 'circle'")
+		fmt.Println("  num:", *circleNum)
+		fmt.Println("  comm:", *circleComm)
 
-		circle.Hatch(*hatchNum, *hatchComm)
+		circle.Hatch(*circleNum, *circleComm)
 
 	case "sample":
 		sampleCmd.Parse(os.Args[2:])
@@ -77,7 +77,7 @@ func main() {
 		circle.MakeImages(*imgNum, *imgComm, *imgSize)
 
 	default:
-		fmt.Println("Expected 'hatch', 'images' or 'sample' subcommands.")
+		fmt.Println("Expected 'circle', 'images' or 'sample' subcommands.")
 		os.Exit(1)
 
 	}
