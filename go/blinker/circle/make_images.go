@@ -1,6 +1,7 @@
-package main
+package circle
 
 import (
+	"blinker/utils"
 	"encoding/csv"
 	"fmt"
 	"image"
@@ -45,7 +46,7 @@ type BlinkID struct {
 func yieldBlinkIDs(c chan<- *BlinkID, fileName string) {
 
 	f, err := os.Open(fileName)
-	check(err)
+	utils.Check(err)
 	defer f.Close()
 
 	r := csv.NewReader(f)
@@ -69,11 +70,11 @@ func yieldBlinkIDs(c chan<- *BlinkID, fileName string) {
 		}
 
 		fID, err := strconv.Atoi(record[0])
-		check(err)
+		utils.Check(err)
 		sec, err := strconv.Atoi(record[1])
-		check(err)
+		utils.Check(err)
 		millisec, err := strconv.Atoi(record[2])
-		check(err)
+		utils.Check(err)
 
 		// if you see a 0 sec and new_minute is true
 		// increment the minutes and set it to false
@@ -178,7 +179,7 @@ func generateImage(
 	png.Encode(f, img)
 }
 
-func makeImages(nF, nComm int, imgSizeType string) {
+func MakeImages(nF, nComm int, imgSizeType string) {
 	// build circle of positions
 	// parse the blinking txt file
 	// build the blinking images!
@@ -226,16 +227,16 @@ func makeImages(nF, nComm int, imgSizeType string) {
 
 	// create the base image dir if it does not exist
 	baseImgDir := "images"
-	err := ensureDir(baseImgDir, 0775)
-	check(err)
+	err := utils.EnsureDir(baseImgDir, 0775)
+	utils.Check(err)
 
 	// remove and re-create the output dir
 	outImgDirName := fmt.Sprintf("images_%v_%v", nF, nComm)
 	outImgDir := filepath.Join(baseImgDir, outImgDirName)
 	err = os.RemoveAll(outImgDir)
-	check(err)
+	utils.Check(err)
 	err = os.Mkdir(outImgDir, 0775)
-	check(err)
+	utils.Check(err)
 
 	// output name template
 	outImgTempl := "frame_%04d.png"

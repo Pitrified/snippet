@@ -4,9 +4,8 @@ import logging
 import matplotlib.pyplot as plt  # type: ignore
 import numpy as np  # type: ignore
 from pathlib import Path
-import typing as ty
 
-
+# import typing as ty
 # from timeit import default_timer as timer
 
 
@@ -59,16 +58,7 @@ def parse_arguments() -> argparse.Namespace:
     return args
 
 
-def setup_logger(
-    console_fmt_type: str = "m",
-    console_log_level: str = "WARN",
-    ui_fmt_type: ty.Optional[str] = None,
-    ui_log_level: str = "INFO",
-    file_fmt_type: ty.Optional[str] = None,
-    file_log_level: str = "WARN",
-    file_log_path: ty.Optional[Path] = None,
-    file_log_mode: str = "a",
-) -> None:
+def setup_logger(console_fmt_type: str = "m", console_log_level: str = "WARN") -> None:
     r"""Setup loggers for the module.
 
     Args:

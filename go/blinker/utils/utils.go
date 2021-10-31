@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"io/fs"
@@ -7,16 +7,16 @@ import (
 	"time"
 )
 
-func randSleep(sec float64, ch chan<- string) {
+func RandSleep(sec float64, ch chan<- string) {
 	time.Sleep(time.Duration(rand.Float64() * 1e9 * sec))
 	ch <- "Done."
 }
 
-func randDuration(begin float64, length float64) time.Duration {
+func RandDuration(begin float64, length float64) time.Duration {
 	return time.Duration((begin + rand.Float64()*length) * 1e9)
 }
 
-func intAbs(x int) int {
+func IntAbs(x int) int {
 	if x < 0 {
 		return -x
 	}
@@ -24,7 +24,7 @@ func intAbs(x int) int {
 }
 
 // https://stackoverflow.com/a/56600630/2237151
-func ensureDir(dirName string, mode fs.FileMode) error {
+func EnsureDir(dirName string, mode fs.FileMode) error {
 	err := os.Mkdir(dirName, mode)
 	if err == nil || os.IsExist(err) {
 		return nil
@@ -33,7 +33,7 @@ func ensureDir(dirName string, mode fs.FileMode) error {
 	}
 }
 
-func check(e error) {
+func Check(e error) {
 	if e != nil {
 		panic(e)
 	}

@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+
+	"blinker/circle"
 )
 
 func main() {
@@ -44,7 +46,7 @@ func main() {
 		fmt.Println("  num:", *hatchNum)
 		fmt.Println("  comm:", *hatchComm)
 
-		hatch(*hatchNum, *hatchComm)
+		circle.Hatch(*hatchNum, *hatchComm)
 
 	case "sample":
 		sampleCmd.Parse(os.Args[2:])
@@ -53,15 +55,15 @@ func main() {
 
 		switch *sampleWhich {
 		case "single":
-			blinkTimeoutSingle()
+			circle.BlinkTimeoutSingle()
 		case "ticker1":
-			blinkTicker1()
+			circle.BlinkTicker1()
 		case "ticker2":
-			blinkTicker2()
+			circle.BlinkTicker2()
 		case "timediff":
-			timeDiff()
+			circle.TimeDiff()
 		case "safetimer":
-			blinkBlinkTimer()
+			circle.BlinkBlinkTimer()
 		}
 
 	case "images":
@@ -72,7 +74,7 @@ func main() {
 		fmt.Println("  shape :", *imgShape)
 		fmt.Println("  size  :", *imgSize)
 
-		makeImages(*imgNum, *imgComm, *imgSize)
+		circle.MakeImages(*imgNum, *imgComm, *imgSize)
 
 	default:
 		fmt.Println("Expected 'hatch', 'images' or 'sample' subcommands.")

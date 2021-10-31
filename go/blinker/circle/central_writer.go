@@ -1,10 +1,12 @@
-package main
+package circle
 
 import (
 	"bufio"
 	"fmt"
 	"os"
 	"time"
+
+	"blinker/utils"
 )
 
 // prints all the strings received on input channel
@@ -64,7 +66,7 @@ func centralWriter(input <-chan string, done chan bool, fileName string) {
 		// write the received value
 		case val := <-input:
 			_, err := w.WriteString(val)
-			check(err)
+			utils.Check(err)
 			count++
 
 		// flush every period

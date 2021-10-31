@@ -1,6 +1,7 @@
-package main
+package circle
 
 import (
+	"blinker/utils"
 	"fmt"
 	"math/rand"
 	"time"
@@ -12,12 +13,12 @@ import (
 ////////////////////////////////////////////////////////////////////////////////
 
 // sample use of a timeout
-func blinkTimeoutSingle() {
+func BlinkTimeoutSingle() {
 	rand.Seed(time.Now().UnixNano())
 
 	ch := make(chan string)
 
-	go randSleep(2, ch)
+	go utils.RandSleep(2, ch)
 
 	select {
 	case res := <-ch:
@@ -30,7 +31,7 @@ func blinkTimeoutSingle() {
 ////////////////////////////////////////////////////////////////////////////////
 
 // sample use of a ticker
-func blinkTicker1() {
+func BlinkTicker1() {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 
@@ -58,7 +59,7 @@ func blinkTicker1() {
 // generate blinks every 0.8-1.2 sec
 // after 1 sec blink anyway
 // if the blink is forced, stop the other timer
-func blinkTicker2() {
+func BlinkTicker2() {
 	rand.Seed(time.Now().UnixNano())
 
 	// begin := 0.8
@@ -69,7 +70,7 @@ func blinkTicker2() {
 	length := 0.002
 
 	ticker := time.NewTicker(time.Second)
-	timer := time.NewTimer(randDuration(begin, length))
+	timer := time.NewTimer(utils.RandDuration(begin, length))
 
 	// to quit the loop someday
 	done := make(chan bool)
@@ -91,14 +92,14 @@ func blinkTicker2() {
 				fmt.Println("Flushing timer channel.")
 				<-timer.C
 			}
-			timer.Reset(randDuration(begin, length))
+			timer.Reset(utils.RandDuration(begin, length))
 
 		case t := <-timer.C:
 			fmt.Println("Timer : ", t)
 			// reset the ticker
 			ticker.Reset(time.Second)
 			// reset the timer as well to restart it
-			timer.Reset(randDuration(begin, length))
+			timer.Reset(utils.RandDuration(begin, length))
 		}
 	}
 }
@@ -106,19 +107,19 @@ func blinkTicker2() {
 ////////////////////////////////////////////////////////////////////////////////
 
 // test with manipulating time
-func timeDiff() {
+func TimeDiff() {
 	rand.Seed(time.Now().UnixNano())
 
 	// setup some deadline
 	now := time.Now()
 	fmt.Printf("now         : %v %T\n", now, now)
-	period := randDuration(0.9, 0.2)
+	period := utils.RandDuration(0.9, 0.2)
 	fmt.Printf("period      : %v %T\n", period, period)
 	nextBlink := time.Now().Add(period)
 	fmt.Printf("nextBlink   : %v %T\n", nextBlink, nextBlink)
 
 	// sleep for a while
-	sleep := randDuration(0.1, 0.1)
+	sleep := utils.RandDuration(0.1, 0.1)
 	fmt.Printf("sleep       : %v %T\n", sleep, sleep)
 	time.Sleep(sleep)
 

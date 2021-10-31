@@ -1,3 +1,3 @@
-module example.com/blinker
+module blinker
 
 go 1.16

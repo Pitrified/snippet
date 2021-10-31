@@ -1,6 +1,7 @@
-package main
+package circle
 
 import (
+	"blinker/utils"
 	"fmt"
 	"path/filepath"
 	"time"
@@ -121,7 +122,7 @@ func nudgeCentral(fireflies map[int]*Firefly, blinkCh <-chan *Firefly, nF int, n
 				continue
 			}
 			// can only communicate between fireflies with similar fID
-			minDist := intAbs(fBlink.fID - fOther.fID)
+			minDist := utils.IntAbs(fBlink.fID - fOther.fID)
 			if minDist > nF/2 {
 				minDist = nF - minDist
 			}
@@ -141,7 +142,7 @@ func nudgeCentral(fireflies map[int]*Firefly, blinkCh <-chan *Firefly, nF int, n
 
 }
 
-func hatch(nF, nComm int) {
+func Hatch(nF, nComm int) {
 
 	// the swarm
 	fireflies := make(map[int]*Firefly)
@@ -153,8 +154,8 @@ func hatch(nF, nComm int) {
 
 	// create the base hist dir if it does not exist
 	baseHistDir := "histBlink"
-	err := ensureDir(baseHistDir, 0775)
-	check(err)
+	err := utils.EnsureDir(baseHistDir, 0775)
+	utils.Check(err)
 
 	// channel to save blinks to file
 	writeCh := make(chan string, 1000)
@@ -172,9 +173,9 @@ func hatch(nF, nComm int) {
 	// create the fireflies
 	for i := 0; i < nF; i++ {
 		// time left before this Firefly blinks
-		blinkTimer := NewBlinkTimer(randDuration(0.1, 1))
+		blinkTimer := NewBlinkTimer(utils.RandDuration(0.1, 1))
 		// blinking period
-		period := randDuration(0.9, 0.2)
+		period := utils.RandDuration(0.9, 0.2)
 		// each firefly can be nudged independently
 		nudgeCh := make(chan int)
 		// can be nudged right now

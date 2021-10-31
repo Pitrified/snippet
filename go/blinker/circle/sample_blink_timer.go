@@ -1,4 +1,4 @@
-package main
+package circle
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func blinkBlinkTimer() {
+func BlinkBlinkTimer() {
 	rand.Seed(time.Now().UnixNano())
 
 	nudgePeriod := time.Duration(0.9 * 1e9)
