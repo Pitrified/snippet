@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"blinker/circle"
+	"blinker/firefly"
 )
 
 func main() {
@@ -15,6 +16,7 @@ func main() {
 	// ./main sample -which=ticker1
 	// ./main circle -num 500 -comm 5
 	// ./main images
+	// ./main fireflies
 
 	circleCmd := flag.NewFlagSet("circle", flag.ExitOnError)
 	circleNum := circleCmd.Int("num", 500, "Number of fireflies.")
@@ -34,7 +36,7 @@ func main() {
 	)
 
 	if len(os.Args) < 2 {
-		fmt.Println("Expected 'circle', 'image' or 'sample' subcommands.")
+		fmt.Println("Expected 'circle', 'images', 'fireflies' or 'sample' subcommands.")
 		os.Exit(1)
 	}
 
@@ -76,8 +78,11 @@ func main() {
 
 		circle.MakeImages(*imgNum, *imgComm, *imgSize)
 
+	case "fireflies":
+		firefly.CreateFireflies()
+
 	default:
-		fmt.Println("Expected 'circle', 'images' or 'sample' subcommands.")
+		fmt.Println("Expected 'circle', 'images', 'fireflies' or 'sample' subcommands.")
 		os.Exit(1)
 
 	}
