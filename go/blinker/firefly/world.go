@@ -29,6 +29,7 @@ func NewWorld(cw, ch int, cellSize float32) *World {
 		c[i] = make([]*Cell, ch)
 		for ii := 0; ii < ch; ii++ {
 			c[i][ii] = NewCell(w, i, ii)
+			// go c[i][ii].Listen()
 		}
 	}
 	w.Cells = c

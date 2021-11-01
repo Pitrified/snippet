@@ -5,16 +5,23 @@ import "fmt"
 type Cell struct {
 	Fireflies map[int]*Firefly // Fireflies in this cell.
 
+	chEnter, chLeave chan *Firefly // Channels for fireflies to enter/leave the cell.
+
 	w                        *World  // World this cell is in.
 	cx, cy                   int     // Coordinates of the cell in the world.
 	top, bottom, left, right float32 // Borders of the cell.
 }
 
+// Create a new cell and start listening on the channels.
 func NewCell(w *World, cx, cy int) *Cell {
 	c := &Cell{}
 
 	// fireflies in this cell
 	c.Fireflies = make(map[int]*Firefly)
+
+	// channels
+	c.chEnter = make(chan *Firefly)
+	c.chLeave = make(chan *Firefly)
 
 	// general info
 	c.w = w
@@ -28,7 +35,24 @@ func NewCell(w *World, cx, cy int) *Cell {
 	c.bottom = c.w.CellSize * fcy
 	c.top = c.bottom + c.w.CellSize
 
+	// start listening on the channels
+	go c.Listen()
+
 	return c
+}
+
+// Listen to all the channels to react.
+func (c *Cell) Listen() {
+	for {
+		select {
+
+		case f := <-c.chEnter:
+			c.Enter(f)
+		case f := <-c.chLeave:
+			c.Leave(f)
+
+		}
+	}
 }
 
 // Enter adds a firefly to the cell.
