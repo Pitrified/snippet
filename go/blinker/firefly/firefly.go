@@ -12,23 +12,58 @@ type Firefly struct {
 	w *World // World this firefly is in.
 }
 
-func NewFirefly(x, y float32, o uint8, id int, c *Cell) *Firefly {
-	return &Firefly{x, y, validateOri(o), id, c, c.w}
+func NewFirefly(x, y float32, o uint8, id int, w *World) *Firefly {
+	// find the the right cell
+	cx := int(x / w.CellSize)
+	cy := int(y / w.CellSize)
+	c := w.Cells[cx][cy]
+
+	// create the firefly
+	f := &Firefly{x, y, validateOri(o), id, c, w}
+
+	// enter the right cell
+	c.Enter(f)
+
+	return f
 }
 
 func (f *Firefly) Move() {
 	// change orientation sometimes
+	newO := f.O + randUint8Range(-1, 1)
+	f.O = validateOri(newO)
 
 	// move
 	f.X += cos[f.O]
 	f.Y += sin[f.O]
+	// fmt.Printf("moving %+v %+v, %+v, %+v %+v\n", f.X, f.Y, f.O, cos[f.O], sin[f.O])
 
 	// change cell if needed
 	if f.X < f.c.left {
 		// move to cell to the left
 		f.c.Leave(f)
-		newCell := f.w.Cells[0][0]
-		f.c = newCell
+		ncx, ncy := f.w.MoveWrap(f.c.cx, f.c.cy, -1, 0)
+		f.c = f.w.Cells[ncx][ncy]
+		f.c.Enter(f)
+	}
+	if f.X > f.c.right {
+		// move to cell to the right
+		f.c.Leave(f)
+		ncx, ncy := f.w.MoveWrap(f.c.cx, f.c.cy, 1, 0)
+		f.c = f.w.Cells[ncx][ncy]
+		f.c.Enter(f)
+	}
+	if f.Y < f.c.bottom {
+		// move to cell to the bottom
+		f.c.Leave(f)
+		ncx, ncy := f.w.MoveWrap(f.c.cx, f.c.cy, 0, -1)
+		f.c = f.w.Cells[ncx][ncy]
+		f.c.Enter(f)
+	}
+	if f.Y > f.c.top {
+		// move to cell to the top
+		f.c.Leave(f)
+		ncx, ncy := f.w.MoveWrap(f.c.cx, f.c.cy, 0, 1)
+		f.c = f.w.Cells[ncx][ncy]
 		f.c.Enter(f)
 	}
 }

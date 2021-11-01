@@ -1,12 +1,15 @@
 package firefly
 
-import "math"
+import (
+	"math"
+	"math/rand"
+)
 
 var cos, sin map[uint8]float32
 
-// Convert degrees to radians.
-func uint8Deg2float64Rad(d uint8) float64 {
-	return float64(d) * math.Pi / 180
+// Convert orientation (half degrees) to radians.
+func uint8Ori2float64Rad(d uint8) float64 {
+	return float64(d) * 2 * math.Pi / 180
 }
 
 // Populate the half degree cos/sin cache.
@@ -15,8 +18,8 @@ func cacheCosSin() {
 	cos = make(map[uint8]float32)
 	sin = make(map[uint8]float32)
 	for o := uint8(0); o < 180; o++ {
-		cos[o] = float32(math.Cos(uint8Deg2float64Rad(o * 2)))
-		sin[o] = float32(math.Sin(uint8Deg2float64Rad(o * 2)))
+		cos[o] = float32(math.Cos(uint8Ori2float64Rad(o)))
+		sin[o] = float32(math.Sin(uint8Ori2float64Rad(o)))
 	}
 }
 
@@ -26,4 +29,9 @@ func validateOri(o uint8) uint8 {
 		return o - 180
 	}
 	return o
+}
+
+// Returns a uint8 in the requested range, including extremes.
+func randUint8Range(min, max int) uint8 {
+	return uint8(rand.Intn(max+1-min) + min)
 }

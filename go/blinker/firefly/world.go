@@ -44,16 +44,8 @@ func (w *World) HatchFireflies(n int) {
 		y := rand.Float32() * w.SizeH
 		o := uint8(rand.Float64() * 180)
 
-		// find the the right cell
-		cx := int(x / w.CellSize)
-		cy := int(y / w.CellSize)
-		c := w.Cells[cx][cy]
-
 		// create the firefly
-		f := NewFirefly(x, y, o, i, c)
-
-		// place it in the cell
-		c.Enter(f)
+		NewFirefly(x, y, o, i, w)
 	}
 }
 
