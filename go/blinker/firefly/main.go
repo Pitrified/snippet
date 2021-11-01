@@ -3,7 +3,10 @@ package firefly
 func CreateFireflies() {
 	cacheCosSin()
 
-	w, h := 3, 3
+	cw, ch := 3, 3
 	cellSize := float32(100)
-	NewWorld(w, h, cellSize)
+	w := NewWorld(cw, ch, cellSize)
+
+	nF := 10
+	w.HatchFireflies(nF)
 }
