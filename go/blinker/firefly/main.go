@@ -1,5 +1,7 @@
 package firefly
 
+import "fmt"
+
 func CreateFireflies() {
 	cacheCosSin()
 
@@ -9,4 +11,6 @@ func CreateFireflies() {
 
 	nF := 10
 	w.HatchFireflies(nF)
+
+	fmt.Printf("%+v\n", w)
 }

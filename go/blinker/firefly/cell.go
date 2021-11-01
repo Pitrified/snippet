@@ -1,5 +1,7 @@
 package firefly
 
+import "fmt"
+
 type Cell struct {
 	Fireflies map[int]*Firefly
 
@@ -18,6 +20,7 @@ func NewCell(w *World, cx, cy int) *Cell {
 	c.cx, c.cy = cx, cy
 
 	// compute borders
+	// TODO
 
 	return c
 }
@@ -30,4 +33,14 @@ func (c *Cell) Enter(f *Firefly) {
 // Leave removes a firefly from the cell.
 func (c *Cell) Leave(f *Firefly) {
 	delete(c.Fireflies, f.id)
+}
+
+// String implements fmt.Stringer.
+func (c *Cell) String() string {
+	s := ""
+	for _, f := range c.Fireflies {
+		// Add the state of the firefly to the Cell repr.
+		s += fmt.Sprintf("\n\tF: %v", f)
+	}
+	return s
 }

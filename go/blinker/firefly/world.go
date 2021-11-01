@@ -1,6 +1,9 @@
 package firefly
 
-import "math/rand"
+import (
+	"fmt"
+	"math/rand"
+)
 
 type World struct {
 	Cells    [][]*Cell // Cells in the world.
@@ -47,4 +50,23 @@ func (w *World) HatchFireflies(n int) {
 		cy := int(y / w.CellSize)
 		w.Cells[cx][cy].Enter(f)
 	}
+}
+
+// String implements fmt.Stringer.
+func (w *World) String() string {
+	s := fmt.Sprintf("W: %dx%d (%.2f) %.2fx%.2f",
+		w.CellWNum, w.CellHNum,
+		w.CellSize,
+		w.SizeW, w.SizeH,
+	)
+	for i := 0; i < w.CellWNum; i++ {
+		for ii := 0; ii < w.CellHNum; ii++ {
+			// Add the state of the cell to the World repr.
+			s += fmt.Sprintf("\nC[% 3d,% 3d]: %v",
+				i, ii,
+				w.Cells[i][ii],
+			)
+		}
+	}
+	return s
 }
