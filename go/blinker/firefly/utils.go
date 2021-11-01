@@ -19,3 +19,11 @@ func cacheCosSin() {
 		sin[o] = float32(math.Sin(uint8Deg2float64Rad(o * 2)))
 	}
 }
+
+// Returns a valid orientation in [0, 180)
+func validateOri(o uint8) uint8 {
+	if o >= 180 {
+		return o - 180
+	}
+	return o
+}

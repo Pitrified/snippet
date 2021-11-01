@@ -10,7 +10,12 @@ type Firefly struct {
 }
 
 func NewFirefly(x, y float32, o uint8, id int) *Firefly {
-	return &Firefly{x, y, o, id}
+	return &Firefly{x, y, validateOri(o), id}
+}
+
+func (f *Firefly) Move() {
+	// change orientation sometimes
+	// move
 }
 
 // String implements fmt.Stringer.

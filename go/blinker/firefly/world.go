@@ -42,7 +42,7 @@ func (w *World) HatchFireflies(n int) {
 		// create the firefly
 		x := rand.Float32() * w.SizeW
 		y := rand.Float32() * w.SizeH
-		o := uint8(rand.Int())
+		o := uint8(rand.Float64() * 180)
 		f := NewFirefly(x, y, o, i)
 
 		// place the firefly in the right cell
@@ -62,8 +62,7 @@ func (w *World) String() string {
 	for i := 0; i < w.CellWNum; i++ {
 		for ii := 0; ii < w.CellHNum; ii++ {
 			// Add the state of the cell to the World repr.
-			s += fmt.Sprintf("\nC[% 3d,% 3d]: %v",
-				i, ii,
+			s += fmt.Sprintf("\nC: %v",
 				w.Cells[i][ii],
 			)
 		}

@@ -38,3 +38,18 @@ func TestCacheCosSin(t *testing.T) {
 	}
 
 }
+
+func TestValidateOri(t *testing.T) {
+	casesCos := []struct {
+		in   uint8
+		want uint8
+	}{
+		{0, 0},
+		{15, 15},
+		{179, 179},
+		{180, 180},
+	}
+	for _, c := range casesCos {
+		assert.Equal(t, c.in, c.want, fmt.Sprintf("Failed %+v", c))
+	}
+}
