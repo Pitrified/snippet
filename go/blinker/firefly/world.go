@@ -39,16 +39,21 @@ func NewWorld(cw, ch int, cellSize float32) *World {
 // HatchFireflies creates a swarm of fireflies.
 func (w *World) HatchFireflies(n int) {
 	for i := 0; i < n; i++ {
-		// create the firefly
+		// random pos/ori
 		x := rand.Float32() * w.SizeW
 		y := rand.Float32() * w.SizeH
 		o := uint8(rand.Float64() * 180)
-		f := NewFirefly(x, y, o, i)
 
-		// place the firefly in the right cell
+		// find the the right cell
 		cx := int(x / w.CellSize)
 		cy := int(y / w.CellSize)
-		w.Cells[cx][cy].Enter(f)
+		c := w.Cells[cx][cy]
+
+		// create the firefly
+		f := NewFirefly(x, y, o, i, c)
+
+		// place it in the cell
+		c.Enter(f)
 	}
 }
 
@@ -68,4 +73,23 @@ func (w *World) String() string {
 		}
 	}
 	return s
+}
+
+// Move by (dcx, dcy) around the cells' toro, from cell (cx, cy).
+func (w *World) MoveWrap(cx, cy, dcx, dcy int) (int, int) {
+	cx += dcx
+	for cx < 0 {
+		cx += w.CellWNum
+	}
+	for cx >= w.CellWNum {
+		cx -= w.CellWNum
+	}
+	cy += dcy
+	for cy < 0 {
+		cy += w.CellWNum
+	}
+	for cy >= w.CellWNum {
+		cy -= w.CellWNum
+	}
+	return cx, cy
 }
