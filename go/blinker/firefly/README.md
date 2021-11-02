@@ -51,4 +51,29 @@ Hierarchy:
 
 * Use Manhattan distance, no one cares.
 
+The fireflies *do* move with an internal `ticker` they listen to,
+but one of the channels the firefly is listening to is `doRender`:
+inside the firefly will wait on `doRenderDone`.
+The cell rendering also listens on `doRender` (from the world):
+* No need to lock the map
+    (the cell rendering channel is one in the `Listen` select,
+    so `Enter/Leave` do not fire).
+* Some fireflies might be waiting on `Enter/Leave` ch, remember that.
+* Some fireflies might be in limbo: left one but still not joined the other.
+    (MAYBE: the world has a channel `chCellChange`
+    where the fireflies sends the request to change cells:
+    the world tells to a cell that a firefly wants to move and the destination,
+    and the cell coordinates with the neighbor)
+    (MAYBE: the firefly computes the new cell and when sending the `Leave`
+    message the cell takes care of contacting the neighbor)
+
+A whole lot of deadlock risks:
+* A firefly is trying to blink (and needs to communicate with a cell)
+* The cell is trying to move the fireflies (and need to coomunicate with them)
+* Alternatively, a firefly is trying to move and needs to communicate
+    with a cell or with the world.
+
+The world might keep a queue of `changeCell` requests,
+to free as fast as he can the fireflies.
+
 # TODOs

@@ -36,36 +36,34 @@ func (f *Firefly) Move() {
 	newO := f.O + randUint8Range(-1, 1)
 	f.O = validateOri(newO)
 
-	// move
+	// move (TODO also wrap around world)
 	f.X += cos[f.O]
 	f.Y += sin[f.O]
 
 	// change cell if needed
+	changed := false
+	dx, dy := 0, 0
 	if f.X < f.c.left {
-		// move to cell to the left
-		f.c.chLeave <- f
-		ncx, ncy := f.w.MoveWrap(f.c.cx, f.c.cy, -1, 0)
-		f.c = f.w.Cells[ncx][ncy]
-		f.c.chEnter <- f
-	}
-	if f.X > f.c.right {
-		// move to cell to the right
-		f.c.chLeave <- f
-		ncx, ncy := f.w.MoveWrap(f.c.cx, f.c.cy, 1, 0)
-		f.c = f.w.Cells[ncx][ncy]
-		f.c.chEnter <- f
+		// move to the cell to the left
+		changed = true
+		dx = -1
+	} else if f.X > f.c.right {
+		// move to the cell to the right
+		changed = true
+		dx = 1
 	}
 	if f.Y < f.c.bottom {
-		// move to cell to the bottom
-		f.c.chLeave <- f
-		ncx, ncy := f.w.MoveWrap(f.c.cx, f.c.cy, 0, -1)
-		f.c = f.w.Cells[ncx][ncy]
-		f.c.chEnter <- f
+		// move to the cell to the bottom
+		changed = true
+		dy = -1
+	} else if f.Y > f.c.top {
+		// move to the cell to the top
+		changed = true
+		dy = 1
 	}
-	if f.Y > f.c.top {
-		// move to cell to the top
+	if changed {
 		f.c.chLeave <- f
-		ncx, ncy := f.w.MoveWrap(f.c.cx, f.c.cy, 0, 1)
+		ncx, ncy := f.w.MoveWrap(f.c.cx, f.c.cy, dx, dy)
 		f.c = f.w.Cells[ncx][ncy]
 		f.c.chEnter <- f
 	}
