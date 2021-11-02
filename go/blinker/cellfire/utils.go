@@ -33,3 +33,9 @@ func ValidateOri(o int16) int16 {
 func RandRangeUint16(min, max int) int16 {
 	return int16(rand.Intn(max+1-min) + min)
 }
+
+// A message to be sent to the world when a firefly wants to change cell.
+type ChangeCellReq struct {
+	f        *Firefly
+	from, to *Cell
+}
