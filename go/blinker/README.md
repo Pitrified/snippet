@@ -10,4 +10,6 @@ A proof of concept implementation,
 with the fireflies placed on a circle,
 is [here](circle).
 
-![proof-of-concept-500-8-circle](circle/images/out_500_8_square.mp4)
+A simulation with 500 fireflies:
+
+https://user-images.githubusercontent.com/29520339/139825960-a816691e-8321-40f6-b88f-422595420946.mp4
