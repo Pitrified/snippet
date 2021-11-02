@@ -11,14 +11,31 @@ type Firefly struct {
 
 	c *Cell  // Cell currently occupied.
 	w *World // World this firefly is in.
+
+	chMoveDone chan *ChangeCellReq // Channel for fireflies to enter/leave the cell.
 }
 
 // Create a new firefly.
 func NewFirefly(x, y float32, o int16, id int, c *Cell, w *World) *Firefly {
 	// create the firefly
-	f := &Firefly{x, y, o, id, c, w}
+	f := &Firefly{}
+	f.X = x
+	f.Y = y
+	f.O = o
+	f.id = id
+	f.c = c
+	f.w = w
+
+	f.chMoveDone = make(chan *ChangeCellReq)
+
 	w.chChangeCell <- &ChangeCellReq{f, nil, c}
+
 	return f
+}
+
+func (f *Firefly) Move() {
+	// do the movement
+	// send a (possibly nil) request on chMoveDone
 }
 
 // String implements fmt.Stringer.

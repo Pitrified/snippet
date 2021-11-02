@@ -16,6 +16,7 @@ type World struct {
 
 	chChangeCell chan *ChangeCellReq // Channel for fireflies to enter/leave the cell.
 	chRender     chan byte           // Channel to request a render of the env.
+	chStep       chan byte           // Channel to request a step of the env.
 }
 
 // NewWorld creates a new World.
@@ -32,6 +33,7 @@ func NewWorld(cw, ch int, cellSize float32) *World {
 	// channels
 	w.chChangeCell = make(chan *ChangeCellReq)
 	w.chRender = make(chan byte)
+	w.chStep = make(chan byte)
 
 	// create the cells
 	c := make([][]*Cell, cw)
@@ -75,12 +77,28 @@ func (w *World) Listen() {
 		case r := <-w.chChangeCell:
 			w.ChangeCell(r)
 
+		// render the env
 		case <-w.chRender:
-			// render the env
 
-			// tick forward the env
+		// tick forward the env
+		case <-w.chStep:
+			w.Step()
 		}
 	}
+}
+
+func (w *World) Step() {
+
+	// move all the fireflies
+	for i := 0; i < w.CellWNum; i++ {
+		for ii := 0; ii < w.CellHNum; ii++ {
+			w.Cells[i][ii].chMove <- 'M'
+		}
+	}
+
+	// wait for the wg to be done
+
+	// perform all the cell change
 }
 
 func (w *World) ChangeCell(r *ChangeCellReq) {
