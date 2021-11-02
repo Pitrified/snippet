@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"blinker/cellfire"
 	"blinker/circle"
 	"blinker/firefly"
 )
@@ -17,6 +18,7 @@ func main() {
 	// ./main circle -num 500 -comm 5
 	// ./main images
 	// ./main fireflies
+	// ./main cellfire
 
 	circleCmd := flag.NewFlagSet("circle", flag.ExitOnError)
 	circleNum := circleCmd.Int("num", 500, "Number of fireflies.")
@@ -36,7 +38,7 @@ func main() {
 	)
 
 	if len(os.Args) < 2 {
-		fmt.Println("Expected 'circle', 'images', 'fireflies' or 'sample' subcommands.")
+		fmt.Println("Expected 'circle', 'images', 'fireflies', 'cellfire' or 'sample' subcommands.")
 		os.Exit(1)
 	}
 
@@ -81,8 +83,11 @@ func main() {
 	case "fireflies":
 		firefly.CreateFireflies()
 
+	case "cellfire":
+		cellfire.StartFire()
+
 	default:
-		fmt.Println("Expected 'circle', 'images', 'fireflies' or 'sample' subcommands.")
+		fmt.Println("Expected 'circle', 'images', 'fireflies', 'cellfire' or 'sample' subcommands.")
 		os.Exit(1)
 
 	}

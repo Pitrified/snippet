@@ -76,4 +76,8 @@ A whole lot of deadlock risks:
 The world might keep a queue of `changeCell` requests,
 to free as fast as he can the fireflies.
 
+One goroutine per firefly is probably madness.
+
+Lets work on the [cellfire](../cellfire) version :D
+
 # TODOs
