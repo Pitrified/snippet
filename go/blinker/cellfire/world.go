@@ -15,15 +15,20 @@ type World struct {
 	SizeW    float32   // Width of the world in pixels.
 	SizeH    float32   // Height of the world in pixels.
 
-	chChangeCell     chan *ChangeCellReq // A firefly needs to enter/leave the cell.
-	chChangeCellDone chan bool           // The cell change is done.
+	Clock        int            // Internal time of the simulation, in us.
+	ClockTickLen int            // Update per tick.
+	wgClockTick  sync.WaitGroup // WG to sync the blinking
+	NudgeAmount  int            // How much to nudge the firefly deadlines.
 
-	chChangeCells chan []*ChangeCellReq // Channel for many fireflies to enter/leave the cell.
+	chChangeCell     chan *ChangeCellReq   // A firefly needs to enter/leave the cell.
+	chChangeCellDone chan bool             // The cell change is done.
+	chChangeCells    chan []*ChangeCellReq // Channel for many fireflies to enter/leave the cell.
 
 	chRender chan byte // Channel to request a render of the env.
 
-	chStep chan byte      // Channel to request a step of the env.
-	wgStep sync.WaitGroup // WG to sync the steps
+	chStep chan byte // Channel to request a step of the env.
+
+	wgMove sync.WaitGroup // WG to sync the steps
 }
 
 // NewWorld creates a new World.
@@ -36,6 +41,10 @@ func NewWorld(cw, ch int, cellSize float32) *World {
 	w.CellHNum = ch
 	w.SizeW = float32(cw) * cellSize
 	w.SizeH = float32(ch) * cellSize
+
+	w.ClockTickLen = 1000  // 1 ms
+	w.Clock = 1_000_000    // start at 1 second
+	w.NudgeAmount = 50_000 // 50 ms
 
 	// channels
 	w.chChangeCell = make(chan *ChangeCellReq)
@@ -73,8 +82,11 @@ func (w *World) HatchFireflies(n int) {
 		cy := int(y / w.CellSize)
 		c := w.Cells[cx][cy]
 
+		// 0.9-1.1 s
+		p := RandRangeInt(900_000, 1_100_000)
+
 		// create the firefly
-		NewFirefly(x, y, o, i, c, w)
+		NewFirefly(x, y, o, i, p, c, w)
 	}
 }
 
@@ -104,6 +116,7 @@ func (w *World) Step() {
 	w.Move()
 
 	// ##### BLINK #####
+	w.ClockTick()
 
 }
 
@@ -114,14 +127,14 @@ func (w *World) Move() {
 	for i := 0; i < w.CellWNum; i++ {
 		for ii := 0; ii < w.CellHNum; ii++ {
 			w.Cells[i][ii].chMove <- 'M'
-			w.wgStep.Add(1)
+			w.wgMove.Add(1)
 		}
 	}
 
 	// wait for the wg to be done
 	// so that all the fireflies are done moving
 	// and no cell is still iterating on c.Fireflies
-	w.wgStep.Wait()
+	w.wgMove.Wait()
 
 	// perform all the cell change
 	for i := 0; i < w.CellWNum; i++ {
@@ -132,6 +145,24 @@ func (w *World) Move() {
 			}
 		}
 	}
+
+}
+
+// Perform a clock tick and blink the fireflies.
+func (w *World) ClockTick() {
+	w.Clock += w.ClockTickLen
+
+	// blink all the fireflies
+	for i := 0; i < w.CellWNum; i++ {
+		for ii := 0; ii < w.CellHNum; ii++ {
+			w.Cells[i][ii].chBlink <- 'B'
+			w.wgClockTick.Add(1)
+		}
+	}
+	w.wgClockTick.Wait()
+
+	// TODO here send a signal on all cell channels
+	// to quit blinking
 
 }
 

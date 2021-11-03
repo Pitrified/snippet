@@ -29,9 +29,14 @@ func ValidateOri(o int16) int16 {
 	return o
 }
 
-// Returns a int16 in the requested range, including extremes.
+// Returns an int16 in the requested range, including extremes.
 func RandRangeUint16(min, max int) int16 {
 	return int16(rand.Intn(max+1-min) + min)
+}
+
+// Returns an int in the requested range, including extremes.
+func RandRangeInt(min, max int) int {
+	return rand.Intn(max+1-min) + min
 }
 
 // A message to be sent to the world when a firefly wants to change cell.

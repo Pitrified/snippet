@@ -14,6 +14,10 @@ type Cell struct {
 
 	chRender chan byte // Channel to request a render of the cell.
 	chMove   chan byte // Channel to request a move of all the fireflies in the cell.
+	chBlink  chan byte // Channel to request a blink  of all the fireflies in the cell.
+
+	blinkQueue chan *Firefly // Blinks to process.
+	blinkDone  chan bool     // All the cells are done blinking and can return.
 }
 
 // Create a new cell and start listening on the channels.
@@ -30,6 +34,9 @@ func NewCell(w *World, cx, cy int) *Cell {
 	// channels
 	c.chRender = make(chan byte)
 	c.chMove = make(chan byte)
+	c.chBlink = make(chan byte)
+	c.blinkDone = make(chan bool)
+	c.blinkQueue = make(chan *Firefly, 100)
 
 	// compute borders
 	fcx := float32(c.cx)
@@ -55,11 +62,14 @@ func (c *Cell) Listen() {
 		case <-c.chMove:
 			c.Move()
 
+		case <-c.chBlink:
+			c.Blink()
+
 		}
 	}
 }
 
-// Move perform a movement for all the fireflies in the cell.
+// Move performs a movement for all the fireflies in the cell.
 func (c *Cell) Move() {
 
 	// accumulate all the ChangeCellReqs
@@ -78,10 +88,78 @@ func (c *Cell) Move() {
 	}
 
 	// tick the wg by one
-	c.w.wgStep.Done()
+	c.w.wgMove.Done()
 
 	// send all the ChangeCellReq to the world
 	c.w.chChangeCells <- reqs
+}
+
+// Blink performs a clock update for all the fireflies in the cell.
+func (c *Cell) Blink() {
+
+	// use a for select
+	// quit
+	// received a blink?
+
+	// len(channel) to see if there are more to do
+	// at the end of blinkDone check the len:
+	// if 0, mark wg.Done,
+	// else you dont, and for sure the World will not fire blinkDone
+	// if you were waiting for a new blink or done,
+	// and receive a blink: increment wg.Add again
+	// if you were just looping on the blinkQueue do nothing
+
+	// MAYBE copy the Fireflies map to Nudgeable map
+	// then a firefly blinks, delete her from Nudgeable
+	// and when computing the distances, use onlu Nudgeable
+	// so the loops get shorter and there is no need to access f.nudgeable
+
+	restarting := false
+
+	// TODO reset all fireflies as nudgeable
+
+	for {
+		select {
+
+		case f := <-c.blinkQueue:
+			fmt.Printf("blink [% 3d,% 3d] : %+v\n", c.cx, c.cy, f.id)
+
+			// if this cell had previously emptied the queue
+			// mark again that we have work to do
+			if restarting {
+				c.w.wgClockTick.Add(1)
+			}
+
+			// iterate over all nudgeable fireflies
+			// if the nudged deadline is earlier than Clock
+			// blink that firefly
+			// put her on the blinkQueue
+			// and on the blinkQueues of the neighbors
+
+			// nudge all the fireflies
+			for _, f := range c.Fireflies {
+				if !f.nudgeable {
+					continue
+				}
+				blinked := f.Nudge()
+				if blinked {
+					c.blinkQueue <- f
+				}
+				// TODO neighbors
+			}
+
+			// if there are no more blinks to procees
+			// this cell might be done
+			if len(c.blinkQueue) == 0 {
+				restarting = true
+				c.w.wgClockTick.Done()
+			}
+
+		case <-c.blinkDone:
+			return
+
+		}
+	}
 }
 
 // Enter adds a firefly to the cell.

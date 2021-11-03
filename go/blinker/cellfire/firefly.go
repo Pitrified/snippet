@@ -11,12 +11,23 @@ type Firefly struct {
 
 	c *Cell  // Cell currently occupied.
 	w *World // World this firefly is in.
+
+	period    int  // Period between blinks for this firefly (us).
+	nextBlink int  // Virtual time of the next scheduled blink (us).
+	nudgeable bool // True if the firefly timer can be nudged.
 }
 
 // Create a new firefly.
 //
 // NOTE: The World must already be listening on chChangeCell.
-func NewFirefly(x, y float32, o int16, id int, c *Cell, w *World) *Firefly {
+func NewFirefly(
+	x, y float32,
+	o int16,
+	id int,
+	period int,
+	c *Cell,
+	w *World,
+) *Firefly {
 
 	// create the firefly
 	f := &Firefly{}
@@ -27,6 +38,10 @@ func NewFirefly(x, y float32, o int16, id int, c *Cell, w *World) *Firefly {
 	f.c = c
 	f.w = w
 
+	f.period = period
+	f.nextBlink = w.Clock + f.period
+	f.nudgeable = true
+
 	// enter the right cell
 	w.chChangeCell <- &ChangeCellReq{f, nil, c}
 	<-w.chChangeCellDone
@@ -34,8 +49,9 @@ func NewFirefly(x, y float32, o int16, id int, c *Cell, w *World) *Firefly {
 	return f
 }
 
-// do a movement.
-// return a ChangeCellReq if needed
+// Move the firefly.
+//
+// Return a ChangeCellReq if needed, nil if it stays in the same cell.
 func (f *Firefly) Move() *ChangeCellReq {
 
 	// change orientation sometimes
@@ -75,6 +91,19 @@ func (f *Firefly) Move() *ChangeCellReq {
 	}
 
 	return r
+}
+
+// Nudge the internal deadline.
+//
+// Return true if the firefly blinked.
+func (f *Firefly) Nudge() bool {
+	f.nextBlink -= f.w.NudgeAmount
+	if f.nextBlink <= f.w.Clock {
+		// MAYBE atomic operation?
+		f.nudgeable = false
+		return true
+	}
+	return false
 }
 
 // String implements fmt.Stringer.
