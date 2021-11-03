@@ -14,6 +14,8 @@ type Firefly struct {
 }
 
 // Create a new firefly.
+//
+// NOTE: The World must already be listening on chChangeCell.
 func NewFirefly(x, y float32, o int16, id int, c *Cell, w *World) *Firefly {
 
 	// create the firefly
@@ -27,6 +29,7 @@ func NewFirefly(x, y float32, o int16, id int, c *Cell, w *World) *Firefly {
 
 	// enter the right cell
 	w.chChangeCell <- &ChangeCellReq{f, nil, c}
+	<-w.chChangeCellDone
 
 	return f
 }
@@ -39,12 +42,39 @@ func (f *Firefly) Move() *ChangeCellReq {
 	newO := f.O + RandRangeUint16(-1, 1)
 	f.O = ValidateOri(newO)
 
-	// move
+	// move and validate the pos
 	f.X += cos[f.O]
 	f.Y += sin[f.O]
 	f.w.validatePos(f)
 
-	return &ChangeCellReq{}
+	// change cell if needed
+	r := (*ChangeCellReq)(nil)
+	changed := false
+	dx, dy := 0, 0
+	if f.X < f.c.left {
+		// move to the cell to the left
+		changed = true
+		dx = -1
+	} else if f.X > f.c.right {
+		// move to the cell to the right
+		changed = true
+		dx = 1
+	}
+	if f.Y < f.c.bottom {
+		// move to the cell to the bottom
+		changed = true
+		dy = -1
+	} else if f.Y > f.c.top {
+		// move to the cell to the top
+		changed = true
+		dy = 1
+	}
+	if changed {
+		ncx, ncy := f.w.MoveWrap(f.c.cx, f.c.cy, dx, dy)
+		r = &ChangeCellReq{f, f.c, f.w.Cells[ncx][ncy]}
+	}
+
+	return r
 }
 
 // String implements fmt.Stringer.

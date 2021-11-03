@@ -29,7 +29,8 @@ func TestCacheCosSin(t *testing.T) {
 		{165, float32(math.Sqrt(3) / 2)},
 	}
 	for _, c := range casesCos {
-		assert.InDelta(t, cos[c.o], c.want, 1e-6, fmt.Sprintf("Failed %+v, had %+v", c, cos[c.o]))
+		got := cos[c.o]
+		assert.InDelta(t, got, c.want, 1e-6, fmt.Sprintf("Failed %+v, got %+v", c, got))
 	}
 
 	casesSin := []struct {
@@ -50,7 +51,8 @@ func TestCacheCosSin(t *testing.T) {
 		{165, -0.5},
 	}
 	for _, c := range casesSin {
-		assert.InDelta(t, sin[c.o], c.want, 1e-6, fmt.Sprintf("Failed %+v", c))
+		got := sin[c.o]
+		assert.InDelta(t, got, c.want, 1e-6, fmt.Sprintf("Failed %+v, got %+v", c, got))
 	}
 
 }
@@ -63,9 +65,10 @@ func TestValidateOri(t *testing.T) {
 		{0, 0},
 		{15, 15},
 		{179, 179},
-		{180, 180},
+		{180, 0},
 	}
 	for _, c := range casesCos {
-		assert.Equal(t, c.in, c.want, fmt.Sprintf("Failed %+v", c))
+		got := validateOri(c.in)
+		assert.Equal(t, got, c.want, fmt.Sprintf("Failed %+v", c))
 	}
 }

@@ -56,3 +56,24 @@ func TestCacheCosSin(t *testing.T) {
 	}
 
 }
+
+func TestValidateOri(t *testing.T) {
+	casesCos := []struct {
+		in   int16
+		want int16
+	}{
+		{0, 0},
+		{15, 15},
+		{179, 179},
+		{180, 180},
+		{359, 359},
+		{360, 0},
+		{720, 0},
+		{-360, 0},
+		{-1, 359},
+	}
+	for _, c := range casesCos {
+		got := ValidateOri(c.in)
+		assert.Equal(t, got, c.want, fmt.Sprintf("Failed case %+v, got %+v", c, got))
+	}
+}

@@ -3,5 +3,8 @@
 *.png
 *.mp4
 
+*.out
+*.html
+
 blinker
 image*/
