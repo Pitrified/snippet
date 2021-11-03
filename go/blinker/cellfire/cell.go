@@ -62,18 +62,26 @@ func (c *Cell) Listen() {
 // Move perform a movement for all the fireflies in the cell.
 func (c *Cell) Move() {
 
+	// accumulate all the ChangeCellReqs
+	// TODO check size of this 10
+	// slower if we reduce it and we have a lot of reqs,
+	// faster but we waste memory it it is large.
+	reqs := make([]*ChangeCellReq, 0, 10)
+
 	// move all the fireflies
 	for _, f := range c.Fireflies {
-		go f.Move()
-	}
-
-	// get the ChangeCellReq
-	for _, f := range c.Fireflies {
-		<-f.chMoveDone
+		// get the ChangeCellReq
+		r := f.Move()
+		if r != nil {
+			reqs = append(reqs, r)
+		}
 	}
 
 	// tick the wg by one
+	c.w.wgStep.Done()
+
 	// send all the ChangeCellReq to the world
+	c.w.chChangeCells <- reqs
 }
 
 // Enter adds a firefly to the cell.
@@ -88,8 +96,9 @@ func (c *Cell) Leave(f *Firefly) {
 
 // String implements fmt.Stringer.
 func (c *Cell) String() string {
-	s := fmt.Sprintf("[% 3d,% 3d]: (%8.2f, %8.2f)x(%8.2f, %8.2f)",
+	s := fmt.Sprintf("[% 3d,% 3d]: % 4d @ (%8.2f, %8.2f)x(%8.2f, %8.2f)",
 		c.cx, c.cy,
+		len(c.Fireflies),
 		c.left, c.bottom,
 		c.right, c.top,
 	)

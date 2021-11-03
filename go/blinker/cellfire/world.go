@@ -3,6 +3,7 @@ package cellfire
 import (
 	"fmt"
 	"math/rand"
+	"sync"
 )
 
 // World represents the whole environment.
@@ -14,9 +15,11 @@ type World struct {
 	SizeW    float32   // Width of the world in pixels.
 	SizeH    float32   // Height of the world in pixels.
 
-	chChangeCell chan *ChangeCellReq // Channel for fireflies to enter/leave the cell.
-	chRender     chan byte           // Channel to request a render of the env.
-	chStep       chan byte           // Channel to request a step of the env.
+	chChangeCell  chan *ChangeCellReq   // Channel for fireflies to enter/leave the cell.
+	chChangeCells chan []*ChangeCellReq // Channel for fireflies to enter/leave the cell.
+	chRender      chan byte             // Channel to request a render of the env.
+	chStep        chan byte             // Channel to request a step of the env.
+	wgStep        sync.WaitGroup        // WG to sync the steps
 }
 
 // NewWorld creates a new World.
@@ -32,6 +35,7 @@ func NewWorld(cw, ch int, cellSize float32) *World {
 
 	// channels
 	w.chChangeCell = make(chan *ChangeCellReq)
+	w.chChangeCells = make(chan []*ChangeCellReq)
 	w.chRender = make(chan byte)
 	w.chStep = make(chan byte)
 
@@ -87,25 +91,66 @@ func (w *World) Listen() {
 	}
 }
 
+// Perform a step of the simulation.
 func (w *World) Step() {
+
+	// ##### MOVE #####
+	w.Move()
+
+	// ##### BLINK #####
+
+}
+
+// Perform a movement of the fireflies.
+func (w *World) Move() {
 
 	// move all the fireflies
 	for i := 0; i < w.CellWNum; i++ {
 		for ii := 0; ii < w.CellHNum; ii++ {
 			w.Cells[i][ii].chMove <- 'M'
+			w.wgStep.Add(1)
 		}
 	}
 
 	// wait for the wg to be done
+	// so that all the fireflies are done moving
+	// and no cell is still iterating on c.Fireflies
+	w.wgStep.Wait()
 
 	// perform all the cell change
+	for i := 0; i < w.CellWNum; i++ {
+		for ii := 0; ii < w.CellHNum; ii++ {
+			reqs := <-w.chChangeCells
+			for _, r := range reqs {
+				w.ChangeCell(r)
+			}
+		}
+	}
+
 }
 
+// ChangeCell carries out the received ChangeCellReq.
+// Moving a firefly from a cell to another.
 func (w *World) ChangeCell(r *ChangeCellReq) {
 	if r.from != nil {
 		r.from.Leave(r.f)
 	}
 	r.to.Enter(r.f)
+}
+
+func (w *World) validatePos(f *Firefly) {
+	for f.X < 0 {
+		f.X += w.SizeW
+	}
+	for f.X >= w.SizeW {
+		f.X -= w.SizeW
+	}
+	for f.Y < 0 {
+		f.Y += w.SizeH
+	}
+	for f.Y >= w.SizeH {
+		f.Y -= w.SizeH
+	}
 }
 
 // String implements fmt.Stringer.
