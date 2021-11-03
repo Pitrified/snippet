@@ -44,3 +44,28 @@ type ChangeCellReq struct {
 	f        *Firefly
 	from, to *Cell
 }
+
+// Compute the Manhattan distance on a torus between two fireflies.
+func ManhattanDist(f, g *Firefly) float32 {
+
+	// if the two are further apart than the SizeHalf
+	// the shorter distance is by going around the toro
+	ax := AbsFloat32(f.X - g.X)
+	if ax > f.w.SizeHalfW {
+		ax = f.w.SizeW - ax
+	}
+	ay := AbsFloat32(f.Y - g.Y)
+	if ay > f.w.SizeHalfH {
+		ay = f.w.SizeH - ay
+	}
+
+	return ax + ay
+}
+
+// Absolute value for float32
+func AbsFloat32(a float32) float32 {
+	if a < 0 {
+		return -a
+	}
+	return a
+}

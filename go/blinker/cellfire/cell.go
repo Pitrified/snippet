@@ -116,13 +116,16 @@ func (c *Cell) Blink() {
 
 	restarting := false
 
-	// TODO reset all fireflies as nudgeable
+	// reset all fireflies as nudgeable
+	for _, f := range c.Fireflies {
+		f.nudgeable = true
+	}
 
 	for {
 		select {
 
-		case f := <-c.blinkQueue:
-			fmt.Printf("blink [% 3d,% 3d] : %+v\n", c.cx, c.cy, f.id)
+		case fBlink := <-c.blinkQueue:
+			fmt.Printf("blink [% 3d,% 3d] : %+v\n", c.cx, c.cy, fBlink.id)
 
 			// if this cell had previously emptied the queue
 			// mark again that we have work to do
@@ -137,15 +140,34 @@ func (c *Cell) Blink() {
 			// and on the blinkQueues of the neighbors
 
 			// nudge all the fireflies
-			for _, f := range c.Fireflies {
-				if !f.nudgeable {
+			for _, fOther := range c.Fireflies {
+				// if the other already blinked in this round, skip it
+				if !fOther.nudgeable {
 					continue
 				}
-				blinked := f.Nudge()
+				// nudge the other
+				blinked := fOther.Nudge(fBlink)
 				if blinked {
-					c.blinkQueue <- f
+					c.blinkQueue <- fOther
+					// nudge the neighboring cells if close to the border
+					// MAYBE also on the corner cell
+					// left
+					if fOther.X-c.left < c.w.borderDist {
+						c.w.SendBlinkTo(fOther, c, 'L')
+					} else
+					// right
+					if c.right-fOther.X < c.w.borderDist {
+						c.w.SendBlinkTo(fOther, c, 'R')
+					}
+					// bottom
+					if fOther.Y-c.bottom < c.w.borderDist {
+						c.w.SendBlinkTo(fOther, c, 'B')
+					} else
+					// top
+					if c.top-fOther.Y < c.w.borderDist {
+						c.w.SendBlinkTo(fOther, c, 'T')
+					}
 				}
-				// TODO neighbors
 			}
 
 			// if there are no more blinks to procees

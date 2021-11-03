@@ -8,17 +8,21 @@ import (
 
 // World represents the whole environment.
 type World struct {
-	Cells    [][]*Cell // Cells in the world.
-	CellWNum int       // Width of the world in cells.
-	CellHNum int       // Height of the world in cells.
-	CellSize float32   // Size of the cells in pixels.
-	SizeW    float32   // Width of the world in pixels.
-	SizeH    float32   // Height of the world in pixels.
+	Cells     [][]*Cell // Cells in the world.
+	CellWNum  int       // Width of the world in cells.
+	CellHNum  int       // Height of the world in cells.
+	CellSize  float32   // Size of the cells in pixels.
+	SizeW     float32   // Width of the world in pixels.
+	SizeH     float32   // Height of the world in pixels.
+	SizeHalfW float32   // Half the width of the world in pixels.
+	SizeHalfH float32   // Half the height of the world in pixels.
 
 	Clock        int            // Internal time of the simulation, in us.
 	ClockTickLen int            // Update per tick.
 	wgClockTick  sync.WaitGroup // WG to sync the blinking
 	NudgeAmount  int            // How much to nudge the firefly deadlines.
+	NudgeRadius  float32        // Distance between communicating fireflies.
+	borderDist   float32        // Distance from a border to require a blinkQueue to the neighbor.
 
 	chChangeCell     chan *ChangeCellReq   // A firefly needs to enter/leave the cell.
 	chChangeCellDone chan bool             // The cell change is done.
@@ -41,10 +45,14 @@ func NewWorld(cw, ch int, cellSize float32) *World {
 	w.CellHNum = ch
 	w.SizeW = float32(cw) * cellSize
 	w.SizeH = float32(ch) * cellSize
+	w.SizeHalfW = w.SizeW / 2
+	w.SizeHalfH = w.SizeH / 2
 
 	w.ClockTickLen = 1000  // 1 ms
 	w.Clock = 1_000_000    // start at 1 second
 	w.NudgeAmount = 50_000 // 50 ms
+	w.NudgeRadius = 20
+	w.borderDist = 10
 
 	// channels
 	w.chChangeCell = make(chan *ChangeCellReq)
@@ -161,8 +169,12 @@ func (w *World) ClockTick() {
 	}
 	w.wgClockTick.Wait()
 
-	// TODO here send a signal on all cell channels
-	// to quit blinking
+	// send a signal to all cells to quit blinking
+	for i := 0; i < w.CellWNum; i++ {
+		for ii := 0; ii < w.CellHNum; ii++ {
+			w.Cells[i][ii].blinkDone <- true
+		}
+	}
 
 }
 
@@ -195,6 +207,26 @@ func (w *World) MoveWrap(cx, cy, dcx, dcy int) (int, int) {
 		cy -= w.CellWNum
 	}
 	return cx, cy
+}
+
+// Send a blink to the required neighbor.
+func (w *World) SendBlinkTo(f *Firefly, c *Cell, dir byte) {
+
+	dx, dy := 0, 0
+
+	switch dir {
+	case 'L':
+		dx = -1
+	case 'R':
+		dx = 1
+	case 'B':
+		dy = -1
+	case 'T':
+		dy = 1
+	}
+
+	ncx, ncy := f.w.MoveWrap(f.c.cx, f.c.cy, dx, dy)
+	w.Cells[ncx][ncy].blinkQueue <- f
 }
 
 // Ensure that this firefly is in a valid world position.
