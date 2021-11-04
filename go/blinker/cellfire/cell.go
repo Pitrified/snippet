@@ -127,6 +127,14 @@ func (c *Cell) Blink() {
 		}
 	}
 
+	// if no firefly blinked on her own
+	// mark that this cell might be done
+	// (fBlink := <-c.blinkQueue might never fire, if no neighbor act)
+	if len(c.blinkQueue) == 0 {
+		restarting = true
+		c.w.wgClockTick.Done()
+	}
+
 	for {
 		select {
 
@@ -151,6 +159,9 @@ func (c *Cell) Blink() {
 				if !fOther.nudgeable {
 					continue
 				}
+				// do not self-nudge
+				// no need for this check: fBlink has nudgeable set to false
+				// if fBlink.id == fOther.id { continue }
 				// nudge the other
 				blinked := fOther.Nudge(fBlink)
 				if blinked {
