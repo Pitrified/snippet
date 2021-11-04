@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// The cached values of cos/sin are correct.
 func TestCacheCosSin(t *testing.T) {
 	cacheCosSin()
 
@@ -57,8 +58,9 @@ func TestCacheCosSin(t *testing.T) {
 
 }
 
+// Validate the orientation in the [0,360) interval.
 func TestValidateOri(t *testing.T) {
-	casesCos := []struct {
+	cases := []struct {
 		in   int16
 		want int16
 	}{
@@ -72,8 +74,68 @@ func TestValidateOri(t *testing.T) {
 		{-360, 0},
 		{-1, 359},
 	}
-	for _, c := range casesCos {
+	for _, c := range cases {
 		got := ValidateOri(c.in)
 		assert.Equal(t, got, c.want, fmt.Sprintf("Failed case %+v, got %+v", c, got))
+	}
+}
+
+// Absolute value for a float32.
+func TestAbsFloat32(t *testing.T) {
+	cases := []struct {
+		in   float32
+		want float32
+	}{
+		{0, 0},
+		{10, 10},
+		{-10, 10},
+	}
+	for _, c := range cases {
+		got := AbsFloat32(c.in)
+		assert.InDelta(t, got, c.want, 1e-6, fmt.Sprintf("Failed case %+v, got %+v", c, got))
+	}
+}
+
+// Test the computed Manhattan distances on a toro.
+func TestManhattanDist(t *testing.T) {
+	w := NewWorld(10, 10, 100)
+	cases := []struct {
+		f, g *Firefly
+		want float32
+	}{
+		{
+			NewFirefly(99.5, 99.5, 0, 0, 1000, w),
+			NewFirefly(99.5, 99.5, 0, 0, 1000, w),
+			0,
+		},
+		{
+			NewFirefly(50, 50, 0, 0, 1000, w),
+			NewFirefly(50, 950, 0, 0, 1000, w),
+			100,
+		},
+		{
+			NewFirefly(50, 850, 0, 0, 1000, w),
+			NewFirefly(50, 950, 0, 0, 1000, w),
+			100,
+		},
+		{
+			NewFirefly(50, 50, 0, 0, 1000, w),
+			NewFirefly(950, 50, 0, 0, 1000, w),
+			100,
+		},
+		{
+			NewFirefly(50, 50, 0, 0, 1000, w),
+			NewFirefly(950, 950, 0, 0, 1000, w),
+			200,
+		},
+		{
+			NewFirefly(50, 50, 0, 0, 1000, w),
+			NewFirefly(150, 150, 0, 0, 1000, w),
+			200,
+		},
+	}
+	for _, c := range cases {
+		got := ManhattanDist(c.f, c.g)
+		assert.InDelta(t, got, c.want, 1e-6, fmt.Sprintf("Failed case %+v, got %+v", c, got))
 	}
 }

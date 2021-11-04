@@ -25,7 +25,6 @@ func NewFirefly(
 	o int16,
 	id int,
 	period int,
-	c *Cell,
 	w *World,
 ) *Firefly {
 
@@ -35,8 +34,17 @@ func NewFirefly(
 	f.Y = y
 	f.O = o
 	f.id = id
-	f.c = c
 	f.w = w
+
+	// validate the pos/ori
+	f.w.validatePos(f)
+	f.O = ValidateOri(f.O)
+
+	// find the the right cell
+	cx := int(f.X / f.w.CellSize)
+	cy := int(f.Y / f.w.CellSize)
+	c := f.w.Cells[cx][cy]
+	f.c = c
 
 	f.period = period
 	f.nextBlink = w.Clock + f.period

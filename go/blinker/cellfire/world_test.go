@@ -9,14 +9,14 @@ import (
 
 func TestChangeCell(t *testing.T) {
 	w := NewWorld(10, 10, 100)
-	c := w.Cells[0][0]
-	f := NewFirefly(0, 0, 0, 0, 1000, c, w)
+	f := NewFirefly(0, 0, 0, 0, 1000, w)
 
+	c := f.c
 	assert.Contains(t, c.Fireflies, f.id)
 
 	// change cell
 	nc := w.Cells[1][1]
-	w.chChangeCell <- &ChangeCellReq{f, c, nc}
+	w.chChangeCell <- &ChangeCellReq{f, f.c, nc}
 	<-w.chChangeCellDone
 	assert.NotContains(t, c.Fireflies, f.id)
 }
@@ -28,7 +28,7 @@ func TestMove(t *testing.T) {
 	c := w.Cells[0][0]
 
 	// near the top right corner, pointing right
-	f := NewFirefly(99.5, 99.5, 0, 0, 1000, c, w)
+	f := NewFirefly(99.5, 99.5, 0, 0, 1000, w)
 	assert.Contains(t, c.Fireflies, f.id)
 	// move to the right
 	w.Move()
@@ -86,7 +86,6 @@ func TestMoveWrap(t *testing.T) {
 
 func TestValidatePos(t *testing.T) {
 	w := NewWorld(10, 10, 100)
-	cell := w.Cells[0][0]
 
 	cases := []struct {
 		x, y   float32
@@ -97,7 +96,7 @@ func TestValidatePos(t *testing.T) {
 		{-10, -10, 990, 990},
 	}
 	for _, c := range cases {
-		f := NewFirefly(c.x, c.y, 0, 0, 1000, cell, w)
+		f := NewFirefly(c.x, c.y, 0, 0, 1000, w)
 		w.validatePos(f)
 		gotX, gotY := f.X, f.Y
 		assert.InDelta(t, gotX, c.nx, 1e-6, fmt.Sprintf("Failed case %+v, got %+v", c, gotX))
