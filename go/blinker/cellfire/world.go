@@ -130,8 +130,8 @@ func (w *World) Move() {
 	// move all the fireflies
 	for i := 0; i < w.CellWNum; i++ {
 		for ii := 0; ii < w.CellHNum; ii++ {
-			w.Cells[i][ii].chMove <- 'M'
 			w.wgMove.Add(1)
+			w.Cells[i][ii].chMove <- 'M'
 		}
 	}
 

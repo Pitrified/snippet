@@ -25,11 +25,10 @@ func TestMove(t *testing.T) {
 	cacheCosSin()
 
 	w := NewWorld(10, 10, 100)
-	c := w.Cells[0][0]
 
 	// near the top right corner, pointing right
 	f := NewFirefly(99.5, 99.5, 0, 0, 1000, w)
-	assert.Contains(t, c.Fireflies, f.id)
+	assert.Contains(t, w.Cells[0][0].Fireflies, f.id)
 	// move to the right
 	w.Move()
 	assert.Contains(t, w.Cells[1][0].Fireflies, f.id)
