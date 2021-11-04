@@ -21,7 +21,7 @@ type World struct {
 	ClockTickLen int            // Update per tick.
 	wgClockTick  sync.WaitGroup // WG to sync the blinking
 	NudgeAmount  int            // How much to nudge the firefly deadlines.
-	NudgeRadius  float32        // Distance between communicating fireflies.
+	NudgeRadius  float32        // Max distance between communicating fireflies.
 	borderDist   float32        // Distance from a border to require a blinkQueue to the neighbor.
 
 	chChangeCell     chan *ChangeCellReq   // A firefly needs to enter/leave the cell.
@@ -39,7 +39,7 @@ type World struct {
 func NewWorld(cw, ch int, cellSize float32) *World {
 	w := &World{}
 
-	// general params
+	// dimensions params
 	w.CellSize = cellSize
 	w.CellWNum = cw
 	w.CellHNum = ch
@@ -48,11 +48,12 @@ func NewWorld(cw, ch int, cellSize float32) *World {
 	w.SizeHalfW = w.SizeW / 2
 	w.SizeHalfH = w.SizeH / 2
 
-	w.ClockTickLen = 1000  // 1 ms
+	// nudging params
 	w.Clock = 1_000_000    // start at 1 second
+	w.ClockTickLen = 1000  // 1 ms
 	w.NudgeAmount = 50_000 // 50 ms
 	w.NudgeRadius = 20
-	w.borderDist = 10
+	w.borderDist = w.NudgeRadius / 2
 
 	// channels
 	w.chChangeCell = make(chan *ChangeCellReq)

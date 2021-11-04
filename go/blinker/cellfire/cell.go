@@ -117,8 +117,14 @@ func (c *Cell) Blink() {
 	restarting := false
 
 	// reset all fireflies as nudgeable
+	// check if some fireflies are blinking with the current w.Clock
+	// and put them on the correct queues
 	for _, f := range c.Fireflies {
 		f.nudgeable = true
+		if f.CheckBlink() {
+			c.blinkQueue <- f
+			c.blinkNeighbors(f)
+		}
 	}
 
 	for {
@@ -150,37 +156,44 @@ func (c *Cell) Blink() {
 				if blinked {
 					c.blinkQueue <- fOther
 					// nudge the neighboring cells if close to the border
-					// MAYBE also on the corner cell
-					// left
-					if fOther.X-c.left < c.w.borderDist {
-						c.w.SendBlinkTo(fOther, c, 'L')
-					} else
-					// right
-					if c.right-fOther.X < c.w.borderDist {
-						c.w.SendBlinkTo(fOther, c, 'R')
-					}
-					// bottom
-					if fOther.Y-c.bottom < c.w.borderDist {
-						c.w.SendBlinkTo(fOther, c, 'B')
-					} else
-					// top
-					if c.top-fOther.Y < c.w.borderDist {
-						c.w.SendBlinkTo(fOther, c, 'T')
-					}
+					c.blinkNeighbors(fOther)
 				}
 			}
 
 			// if there are no more blinks to procees
-			// this cell might be done
+			// mark that this cell might be done
 			if len(c.blinkQueue) == 0 {
 				restarting = true
 				c.w.wgClockTick.Done()
 			}
 
 		case <-c.blinkDone:
+			// all the cells had empty queues
+			// the World went ahead and is sending the done signals
 			return
 
 		}
+	}
+}
+
+// Send the Firefly to the neighboring cells' blink queue.
+func (c *Cell) blinkNeighbors(f *Firefly) {
+	// MAYBE also on the corner cell
+	// left
+	if f.X-c.left < c.w.borderDist {
+		c.w.SendBlinkTo(f, c, 'L')
+	} else
+	// right
+	if c.right-f.X < c.w.borderDist {
+		c.w.SendBlinkTo(f, c, 'R')
+	}
+	// bottom
+	if f.Y-c.bottom < c.w.borderDist {
+		c.w.SendBlinkTo(f, c, 'B')
+	} else
+	// top
+	if c.top-f.Y < c.w.borderDist {
+		c.w.SendBlinkTo(f, c, 'T')
 	}
 }
 

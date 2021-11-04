@@ -103,15 +103,24 @@ func (f *Firefly) Move() *ChangeCellReq {
 
 // Nudge the internal deadline, if the other Firefly is close.
 //
-// Return true if the firefly blinked.
-func (f *Firefly) Nudge(fBlink *Firefly) bool {
-	if ManhattanDist(f, fBlink) < f.w.NudgeRadius {
+// Return true if this firefly blinked.
+func (f *Firefly) Nudge(fOther *Firefly) bool {
+	if ManhattanDist(f, fOther) < f.w.NudgeRadius {
 		f.nextBlink -= f.w.NudgeAmount
-		if f.nextBlink <= f.w.Clock {
-			// MAYBE atomic operation?
-			f.nudgeable = false
-			return true
-		}
+	}
+	return f.CheckBlink()
+}
+
+// Check if the deadline is before the clock.
+//
+// Return true if the firefly blinked.
+func (f *Firefly) CheckBlink() bool {
+	if f.nextBlink <= f.w.Clock {
+		// compute the next deadline
+		f.nextBlink += f.period
+		// MAYBE atomic operation?
+		f.nudgeable = false
+		return true
 	}
 	return false
 }
