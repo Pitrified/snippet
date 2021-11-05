@@ -126,6 +126,17 @@ func (c *Cell) Blink() {
 			c.blinkNeighbors(f)
 		}
 	}
+	// NOTE: all this might fire simultaneously, not just in this step
+	// the first blink could nudge some of them and make them blink in step
+	// eg deadlines f1 1010 f2 1020, clock 1050
+	// both blink, but if f2 is in range with f1, f2 should blink at 1010
+	// MAYBE do a minimal distance check only between these?
+	// but also the neighboring ones...
+	// The point is that if they nudge each other in this simulation step,
+	// there is actually a NudgeAmount of time elapsed
+	// eg deadlines f1 1010 f2 1020 f3 1015, clock 1050, all in range
+	// if f3 is the first parsed in the map, f2 is nudged by her (f1 is not)
+	// and we have to wait f1-f2 for the correct firing of f2 at 1010
 
 	// if no firefly blinked on her own
 	// mark that this cell might be done
@@ -143,6 +154,10 @@ func (c *Cell) Blink() {
 
 			// if this cell had previously emptied the queue
 			// mark again that we have work to do
+			// NOTE: this is marked as a data race with the Wait
+			// do not do the Add here, but call it inside blinkNeighbors
+			// have to check if the neighbor was idling (mutex?)
+			// so that Add is called well before Done
 			if restarting {
 				c.w.wgClockTick.Add(1)
 			}
@@ -175,6 +190,10 @@ func (c *Cell) Blink() {
 			// mark that this cell might be done
 			if len(c.blinkQueue) == 0 {
 				restarting = true
+				// NOTE: here is super shaky:
+				// if the neighbors do not react quickly with blinkQueue and restart
+				// the Done is called before they call Add(1)
+				// and the thing starts to unravel
 				c.w.wgClockTick.Done()
 			}
 
