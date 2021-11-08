@@ -28,7 +28,7 @@ func TestBlinkNeighbors(t *testing.T) {
 
 // A blinking firefly will nudge a neighbor.
 func TestBlinkTwo(t *testing.T) {
-	PrinterInit()
+	PrinterInit(10)
 
 	w := NewWorld(3, 3, 100)
 

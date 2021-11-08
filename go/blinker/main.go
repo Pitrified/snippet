@@ -84,13 +84,21 @@ func main() {
 		firefly.CreateFireflies()
 
 	case "cellfire":
-		// cellfire.StartFire(2, 2, 50, 100)
-		// cellfire.StartFire(2, 2, 50, 300)
+		cellfire.StartFire(2, 2, 50, 100)
+		// cellfire.StartFire(2, 2, 50, 300) // rad 20
 		// cellfire.StartFire(2, 2, 50, 500)
 		// cellfire.StartFire(2, 2, 50, 1_000)
 		// cellfire.StartFire(2, 2, 50, 10_000)
 		// cellfire.StartFire(4, 4, 100, 1_000)
-		cellfire.StartFire(8, 8, 50, 7_900)
+		// cellfire.StartFire(8, 8, 50, 8_000)
+		// cellfire.StartFire(16, 16, 100, 50_000)
+		// cellfire.StartFire(16, 16, 200, 50_000) // rad 50, 10s in 8s, fails
+		// cellfire.StartFire(16, 16, 200, 50_000) // rad 50, 10s in 6s
+		// cellfire.StartFire(16, 16, 400, 250_000) // rad 100, 25s in 2m44s
+		// cellfire.StartFire(32, 32, 200, 250_000) // rad 50, 10s in 43s, fails
+		// cellfire.StartFire(32, 32, 200, 250_000) // rad 100, 25s in 1m34s
+		// cellfire.StartFire(64, 64, 100, 250_000) // rad 100, 25s in 1m57s
+		// cellfire.StartFire(32, 32, 50, 50_000)
 
 	default:
 		fmt.Println("Expected 'circle', 'images', 'fireflies', 'cellfire' or 'sample' subcommands.")

@@ -17,6 +17,8 @@ We want to simulate 1.000.000+ fireflies.
 
 # IDEAs
 
+Random communications between cells and fireflies.
+
 No fancy timers to make the fireflies blink.
 We keep an internal `us` clock, and advance it as needed.
 (Possibly as parallel as possible.)

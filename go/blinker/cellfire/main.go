@@ -12,7 +12,7 @@ func StartFire(
 ) {
 	cacheCosSin()
 
-	PrinterInit()
+	PrinterInit(1)
 
 	w := NewWorld(cw, ch, cellSize)
 
@@ -22,7 +22,7 @@ func StartFire(
 		fmt.Printf("%+v\n", w)
 	}
 
-	N := 10 * 40
+	N := 10 * 40 // n seconds * tick per second
 	s := time.Now()
 	for i := 0; i < N; i++ {
 		w.Step()
