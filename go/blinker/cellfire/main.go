@@ -12,7 +12,7 @@ func StartFire(
 ) {
 	cacheCosSin()
 
-	PrinterInit(1)
+	PrinterInit(100)
 
 	w := NewWorld(cw, ch, cellSize)
 

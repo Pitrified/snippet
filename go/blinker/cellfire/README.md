@@ -19,6 +19,34 @@ We want to simulate 1.000.000+ fireflies.
 
 Random communications between cells and fireflies.
 
+Cache the entire distance comm decision as `[][]bool`:
+even with radius 200, you need only 40kB.
+You could then use proper L2 distance easily.
+
+MAYBE copy the Fireflies map to Nudgeable map,
+then a firefly blinks, delete her from Nudgeable.
+When computing the distances, use only Nudgeable,
+so the loops get shorter and there is no need to access f.nudgeable.
+
+
+NOTE: all this might fire simultaneously, not just in this step
+the first blink could nudge some of them and make them blink in step
+eg deadlines f1 1010 f2 1020, clock 1050
+both blink, but if f2 is in range with f1, f2 should blink at 1010
+MAYBE do a minimal distance check only between these?
+but also the neighboring ones...
+The point is that if they nudge each other in this simulation step,
+there is actually a NudgeAmount of time elapsed
+eg deadlines f1 1010 f2 1020 f3 1015, clock 1050, all in range
+if f3 is the first parsed in the map, f2 is nudged by her (f1 is not)
+and we have to wait f1-f2 for the correct firing of f2 at 1010
+so maybe we could keep computing all pairs?
+at this point a cache of distances might be useful.
+
+Send the nudge to the neighbors also on the corner cell.
+
+# Implementation details
+
 No fancy timers to make the fireflies blink.
 We keep an internal `us` clock, and advance it as needed.
 (Possibly as parallel as possible.)

@@ -84,7 +84,7 @@ func main() {
 		firefly.CreateFireflies()
 
 	case "cellfire":
-		cellfire.StartFire(2, 2, 50, 100)
+		// cellfire.StartFire(2, 2, 50, 100)
 		// cellfire.StartFire(2, 2, 50, 300) // rad 20
 		// cellfire.StartFire(2, 2, 50, 500)
 		// cellfire.StartFire(2, 2, 50, 1_000)
@@ -93,7 +93,7 @@ func main() {
 		// cellfire.StartFire(8, 8, 50, 8_000)
 		// cellfire.StartFire(16, 16, 100, 50_000)
 		// cellfire.StartFire(16, 16, 200, 50_000) // rad 50, 10s in 8s, fails
-		// cellfire.StartFire(16, 16, 200, 50_000) // rad 50, 10s in 6s
+		cellfire.StartFire(16, 16, 200, 50_000) // rad 100, 10s in 7s
 		// cellfire.StartFire(16, 16, 400, 250_000) // rad 100, 25s in 2m44s
 		// cellfire.StartFire(32, 32, 200, 250_000) // rad 50, 10s in 43s, fails
 		// cellfire.StartFire(32, 32, 200, 250_000) // rad 100, 25s in 1m34s

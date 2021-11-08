@@ -49,13 +49,13 @@ func NewWorld(cw, ch int, cellSize float32) *World {
 	w.SizeHalfH = w.SizeH / 2
 
 	// nudging params
-	w.Clock = 1_000_000 // start at 1 second
-	// w.ClockTickLen = 25_000 // 25 ms
-	w.ClockTickLen = 1_000 // 1 ms
+	w.Clock = 1_000_000     // start at 1 second
+	w.ClockTickLen = 25_000 // 25 ms
+	// w.ClockTickLen = 1_000 // 1 ms
 	w.NudgeAmount = 50_000 // 50 ms
-	w.NudgeRadius = 20
+	// w.NudgeRadius = 20
 	// w.NudgeRadius = 50
-	// w.NudgeRadius = 100
+	w.NudgeRadius = 100
 	w.borderDist = w.NudgeRadius / 2
 
 	// channels
@@ -162,9 +162,7 @@ func (w *World) ClockTick() {
 	// reset all to working
 	for i := 0; i < w.CellWNum; i++ {
 		for ii := 0; ii < w.CellHNum; ii++ {
-			w.Cells[i][ii].idleLock.Lock()
 			w.Cells[i][ii].idle = false
-			w.Cells[i][ii].idleLock.Unlock()
 		}
 	}
 
@@ -172,34 +170,20 @@ func (w *World) ClockTick() {
 	for i := 0; i < w.CellWNum; i++ {
 		for ii := 0; ii < w.CellHNum; ii++ {
 			w.wgClockTick.Add(1)
-			w.Cells[i][ii].idleLock.Lock()
-			w.Cells[i][ii].idle = false
-			w.Cells[i][ii].idleLock.Unlock()
 			w.Cells[i][ii].chBlink <- 'B'
 		}
 	}
-	// time.Sleep(10 * time.Millisecond)
 	w.wgClockTick.Wait()
-
-	// chPrint <- "Done blinking, now quit.\n"
-	// time.Sleep(10 * time.Millisecond)
 
 	// send a signal to all cells to quit blinking
 	for i := 0; i < w.CellWNum; i++ {
 		for ii := 0; ii < w.CellHNum; ii++ {
-			// w.wgClockTick.Add(1)
 			w.Cells[i][ii].blinkDone <- true
 		}
 	}
-	// chPrint <- "Sent blinkDone, now wait.\n"
-	// time.Sleep(10 * time.Millisecond)
-	// w.wgClockTick.Wait()
-
-	// chPrint <- "Done ClockTick.\n"
 }
 
-// ChangeCell carries out the received ChangeCellReq.
-// Moving a firefly from a cell to another.
+// ChangeCell moves a firefly from a cell to another.
 func (w *World) ChangeCell(r *ChangeCellReq) {
 	// update the cells
 	if r.from != nil {
@@ -245,17 +229,17 @@ func (w *World) SendBlinkTo(f *Firefly, c *Cell, dir byte) {
 		dy = 1
 	}
 
+	// find the neighboring cell on the toro
 	ncx, ncy := f.w.MoveWrap(f.c.cx, f.c.cy, dx, dy)
 	nc := w.Cells[ncx][ncy]
-	nc.idleLock.Lock()
-	nc.blinkQueue <- f
 
 	// check if ncx,ncy was idling
 	// if so, set idle to false and Add(1)
+	nc.idleLock.Lock()
+	nc.blinkQueue <- f
 	if nc.idle {
 		nc.w.wgClockTick.Add(1)
 		nc.idle = false
-		// chPrint <- fmt.Sprintf("Restart [% 3d,% 3d] by [% 3d,% 3d]\n", nc.cx, nc.cy, c.cx, c.cy)
 	}
 	nc.idleLock.Unlock()
 }
