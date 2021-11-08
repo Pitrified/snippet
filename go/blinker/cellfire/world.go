@@ -222,7 +222,17 @@ func (w *World) SendBlinkTo(f *Firefly, c *Cell, dir byte) {
 	}
 
 	ncx, ncy := f.w.MoveWrap(f.c.cx, f.c.cy, dx, dy)
-	w.Cells[ncx][ncy].blinkQueue <- f
+	nc := w.Cells[ncx][ncy]
+	nc.blinkQueue <- f
+
+	// check if ncx,ncy was idling
+	// if so, set idle to false and Add(1)
+	nc.idleLock.Lock()
+	if nc.idle {
+		nc.w.wgClockTick.Add(1)
+		nc.idle = false
+	}
+	nc.idleLock.Unlock()
 }
 
 // Ensure that this firefly is in a valid world position.

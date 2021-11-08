@@ -3,6 +3,7 @@ package cellfire
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -123,6 +124,14 @@ func TestSendBlinkTo(t *testing.T) {
 	w.SendBlinkTo(g, w.Cells[0][0], 'B')
 	assert.Equal(t, 1, len(w.Cells[0][9].blinkQueue),
 		"The cell to the bottom should have received the Firefly on the blinkQueue.")
+}
+
+func TestClockTick(t *testing.T) {
+	w := NewWorld(4, 4, 50)
+	w.HatchFireflies(1000)
+	s := time.Now()
+	w.ClockTick()
+	fmt.Printf("time.Since(s) = %+v\n", time.Since(s))
 }
 
 // Check that the fields/verbs used when printing are valid.

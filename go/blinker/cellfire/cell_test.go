@@ -58,7 +58,7 @@ func TestBlinkThree(t *testing.T) {
 	// f2 will blink when nudged by f1
 	f2 := NewFirefly(151, 151, 0, 1, 1000000, w)
 	f2.nextBlink = w.Clock + 1
-	// f3 will blink when nudged by f2
+	// f3 will blink when nudged by f1 and f2
 	f3 := NewFirefly(152, 152, 0, 2, 1000000, w)
 	f3.nextBlink = w.Clock + 1 + w.NudgeAmount
 
