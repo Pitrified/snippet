@@ -42,7 +42,7 @@ func NewCell(w *World, cx, cy int) *Cell {
 	c.chMove = make(chan byte)
 	c.chBlink = make(chan byte)
 	c.blinkDone = make(chan bool)
-	c.blinkQueue = make(chan *Firefly, 100)
+	c.blinkQueue = make(chan *Firefly, 100000)
 
 	// compute borders
 	fcx := float32(c.cx)
@@ -121,7 +121,10 @@ func (c *Cell) Blink() {
 	// so the loops get shorter and there is no need to access f.nudgeable
 
 	c.idleLock.Lock()
+	// if c.idle {
 	c.idle = false
+	// c.w.wgClockTick.Add(1)
+	// }
 	c.idleLock.Unlock()
 
 	// reset all fireflies as nudgeable
@@ -154,6 +157,7 @@ func (c *Cell) Blink() {
 	c.idleLock.Lock()
 	if len(c.blinkQueue) == 0 {
 		c.idle = true
+		// chPrint <- "No firefly to blink in the beginning\n"
 		c.w.wgClockTick.Done()
 	}
 	c.idleLock.Unlock()
@@ -214,6 +218,7 @@ func (c *Cell) Blink() {
 				// if the neighbors do not react quickly with blinkQueue and restart
 				// the Done is called before they call Add(1)
 				// and the thing starts to unravel
+				// chPrint <- fmt.Sprintf("Done work [% 3d,% 3d]\n", c.cx, c.cy)
 				c.w.wgClockTick.Done()
 			}
 			c.idleLock.Unlock()
@@ -221,6 +226,8 @@ func (c *Cell) Blink() {
 		case <-c.blinkDone:
 			// all the cells had empty queues
 			// the World went ahead and is sending the done signals
+			// chPrint <- fmt.Sprintf("Done blink [% 3d,% 3d]\n", c.cx, c.cy)
+			// c.w.wgClockTick.Done()
 			return
 
 		}

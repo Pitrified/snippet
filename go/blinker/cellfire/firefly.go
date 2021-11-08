@@ -47,7 +47,7 @@ func NewFirefly(
 	f.c = c
 
 	f.period = period
-	f.nextBlink = w.Clock + f.period
+	f.nextBlink = w.Clock + RandRangeInt(10, f.period)
 	f.nudgeable = true
 
 	// enter the right cell
@@ -120,6 +120,7 @@ func (f *Firefly) CheckBlink() bool {
 		f.nextBlink += f.period
 		// MAYBE atomic operation?
 		f.nudgeable = false
+		chPrint <- "."
 		return true
 	}
 	return false

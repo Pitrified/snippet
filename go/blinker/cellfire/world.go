@@ -49,9 +49,9 @@ func NewWorld(cw, ch int, cellSize float32) *World {
 	w.SizeHalfH = w.SizeH / 2
 
 	// nudging params
-	w.Clock = 1_000_000    // start at 1 second
-	w.ClockTickLen = 1000  // 1 ms
-	w.NudgeAmount = 50_000 // 50 ms
+	w.Clock = 1_000_000     // start at 1 second
+	w.ClockTickLen = 25_000 // 25 ms
+	w.NudgeAmount = 50_000  // 50 ms
 	w.NudgeRadius = 20
 	w.borderDist = w.NudgeRadius / 2
 
@@ -156,22 +156,43 @@ func (w *World) Move() {
 func (w *World) ClockTick() {
 	w.Clock += w.ClockTickLen
 
+	// reset all to working
+	for i := 0; i < w.CellWNum; i++ {
+		for ii := 0; ii < w.CellHNum; ii++ {
+			w.Cells[i][ii].idleLock.Lock()
+			w.Cells[i][ii].idle = false
+			w.Cells[i][ii].idleLock.Unlock()
+		}
+	}
+
 	// blink all the fireflies
 	for i := 0; i < w.CellWNum; i++ {
 		for ii := 0; ii < w.CellHNum; ii++ {
-			w.Cells[i][ii].chBlink <- 'B'
 			w.wgClockTick.Add(1)
+			w.Cells[i][ii].idleLock.Lock()
+			w.Cells[i][ii].idle = false
+			w.Cells[i][ii].idleLock.Unlock()
+			w.Cells[i][ii].chBlink <- 'B'
 		}
 	}
+	// time.Sleep(10 * time.Millisecond)
 	w.wgClockTick.Wait()
+
+	// chPrint <- "Done blinking, now quit.\n"
+	// time.Sleep(10 * time.Millisecond)
 
 	// send a signal to all cells to quit blinking
 	for i := 0; i < w.CellWNum; i++ {
 		for ii := 0; ii < w.CellHNum; ii++ {
+			// w.wgClockTick.Add(1)
 			w.Cells[i][ii].blinkDone <- true
 		}
 	}
+	// chPrint <- "Sent blinkDone, now wait.\n"
+	// time.Sleep(10 * time.Millisecond)
+	// w.wgClockTick.Wait()
 
+	// chPrint <- "Done ClockTick.\n"
 }
 
 // ChangeCell carries out the received ChangeCellReq.
@@ -223,14 +244,15 @@ func (w *World) SendBlinkTo(f *Firefly, c *Cell, dir byte) {
 
 	ncx, ncy := f.w.MoveWrap(f.c.cx, f.c.cy, dx, dy)
 	nc := w.Cells[ncx][ncy]
+	nc.idleLock.Lock()
 	nc.blinkQueue <- f
 
 	// check if ncx,ncy was idling
 	// if so, set idle to false and Add(1)
-	nc.idleLock.Lock()
 	if nc.idle {
 		nc.w.wgClockTick.Add(1)
 		nc.idle = false
+		// chPrint <- fmt.Sprintf("Restart [% 3d,% 3d] by [% 3d,% 3d]\n", nc.cx, nc.cy, c.cx, c.cy)
 	}
 	nc.idleLock.Unlock()
 }
