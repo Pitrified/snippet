@@ -47,7 +47,7 @@ func NewFirefly(
 	f.c = c
 
 	f.period = period
-	f.nextBlink = w.Clock + RandRangeInt(10, f.period)
+	f.nextBlink = w.Clock + RandRangeInt(w.NudgeAmount*4, f.period)
 	f.nudgeable = true
 
 	// enter the right cell

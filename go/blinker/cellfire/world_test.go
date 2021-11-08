@@ -10,7 +10,7 @@ import (
 
 func TestChangeCell(t *testing.T) {
 	w := NewWorld(10, 10, 100)
-	f := NewFirefly(0, 0, 0, 0, 1000, w)
+	f := NewFirefly(0, 0, 0, 0, 1000000, w)
 
 	c := f.c
 	assert.Contains(t, c.Fireflies, f.id)
@@ -28,7 +28,7 @@ func TestMove(t *testing.T) {
 	w := NewWorld(10, 10, 100)
 
 	// near the top right corner, pointing right
-	f := NewFirefly(99.5, 99.5, 0, 0, 1000, w)
+	f := NewFirefly(99.5, 99.5, 0, 0, 1000000, w)
 	assert.Contains(t, w.Cells[0][0].Fireflies, f.id)
 	// move to the right
 	w.Move()
@@ -96,7 +96,7 @@ func TestValidatePos(t *testing.T) {
 		{-10, -10, 990, 990},
 	}
 	for _, c := range cases {
-		f := NewFirefly(c.x, c.y, 0, 0, 1000, w)
+		f := NewFirefly(c.x, c.y, 0, 0, 1000000, w)
 		w.validatePos(f)
 		gotX, gotY := f.X, f.Y
 		assert.InDelta(t, gotX, c.nx, 1e-6, fmt.Sprintf("Failed case %+v, got %+v", c, gotX))
@@ -108,7 +108,7 @@ func TestSendBlinkTo(t *testing.T) {
 	w := NewWorld(10, 10, 100)
 
 	// near the right top corner
-	f := NewFirefly(99.5, 99.5, 0, 0, 1000, w)
+	f := NewFirefly(99.5, 99.5, 0, 0, 1000000, w)
 	w.SendBlinkTo(f, w.Cells[0][0], 'R')
 	assert.Equal(t, 1, len(w.Cells[1][0].blinkQueue),
 		"The cell to the right should have received the Firefly on the blinkQueue.")
@@ -117,7 +117,7 @@ func TestSendBlinkTo(t *testing.T) {
 		"The cell to the top should have received the Firefly on the blinkQueue.")
 
 	// near the left bottom corner
-	g := NewFirefly(0.5, 0.5, 0, 0, 1000, w)
+	g := NewFirefly(0.5, 0.5, 0, 0, 1000000, w)
 	w.SendBlinkTo(g, w.Cells[0][0], 'L')
 	assert.Equal(t, 1, len(w.Cells[9][0].blinkQueue),
 		"The cell to the left should have received the Firefly on the blinkQueue.")

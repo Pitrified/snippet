@@ -12,7 +12,7 @@ func StartFire(
 ) {
 	cacheCosSin()
 
-	go Printer()
+	PrinterInit()
 
 	w := NewWorld(cw, ch, cellSize)
 
@@ -27,9 +27,9 @@ func StartFire(
 	for i := 0; i < N; i++ {
 		w.Step()
 		// if i%40 == 0 {
-		if i%4 == 0 {
-			chPrint <- fmt.Sprintf("%d: %dus\n", i, w.Clock)
-		}
+		// if i%4 == 0 {
+		chPrint <- fmt.Sprintf("%d: %dus\n", i, w.Clock)
+		// }
 	}
 	fmt.Printf("Simulated %+v s in %+v\n", N*w.ClockTickLen/1_000_000, time.Since(s))
 }

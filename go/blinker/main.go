@@ -84,12 +84,13 @@ func main() {
 		firefly.CreateFireflies()
 
 	case "cellfire":
-		// cellfire.StartFire(4, 4, 100, 10_000)
 		// cellfire.StartFire(2, 2, 50, 100)
-		cellfire.StartFire(2, 2, 50, 300)
+		// cellfire.StartFire(2, 2, 50, 300)
 		// cellfire.StartFire(2, 2, 50, 500)
 		// cellfire.StartFire(2, 2, 50, 1_000)
 		// cellfire.StartFire(2, 2, 50, 10_000)
+		// cellfire.StartFire(4, 4, 100, 1_000)
+		cellfire.StartFire(8, 8, 50, 7_900)
 
 	default:
 		fmt.Println("Expected 'circle', 'images', 'fireflies', 'cellfire' or 'sample' subcommands.")

@@ -104,33 +104,33 @@ func TestManhattanDist(t *testing.T) {
 		want float32
 	}{
 		{
-			NewFirefly(99.5, 99.5, 0, 0, 1000, w),
-			NewFirefly(99.5, 99.5, 0, 0, 1000, w),
+			NewFirefly(99.5, 99.5, 0, 0, 1000000, w),
+			NewFirefly(99.5, 99.5, 0, 0, 1000000, w),
 			0,
 		},
 		{
-			NewFirefly(50, 50, 0, 0, 1000, w),
-			NewFirefly(50, 950, 0, 0, 1000, w),
+			NewFirefly(50, 50, 0, 0, 1000000, w),
+			NewFirefly(50, 950, 0, 0, 1000000, w),
 			100,
 		},
 		{
-			NewFirefly(50, 850, 0, 0, 1000, w),
-			NewFirefly(50, 950, 0, 0, 1000, w),
+			NewFirefly(50, 850, 0, 0, 1000000, w),
+			NewFirefly(50, 950, 0, 0, 1000000, w),
 			100,
 		},
 		{
-			NewFirefly(50, 50, 0, 0, 1000, w),
-			NewFirefly(950, 50, 0, 0, 1000, w),
+			NewFirefly(50, 50, 0, 0, 1000000, w),
+			NewFirefly(950, 50, 0, 0, 1000000, w),
 			100,
 		},
 		{
-			NewFirefly(50, 50, 0, 0, 1000, w),
-			NewFirefly(950, 950, 0, 0, 1000, w),
+			NewFirefly(50, 50, 0, 0, 1000000, w),
+			NewFirefly(950, 950, 0, 0, 1000000, w),
 			200,
 		},
 		{
-			NewFirefly(50, 50, 0, 0, 1000, w),
-			NewFirefly(150, 150, 0, 0, 1000, w),
+			NewFirefly(50, 50, 0, 0, 1000000, w),
+			NewFirefly(150, 150, 0, 0, 1000000, w),
 			200,
 		},
 	}

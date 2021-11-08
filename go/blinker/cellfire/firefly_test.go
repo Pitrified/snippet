@@ -9,18 +9,18 @@ import (
 // Check that the fields/verbs used when printing are valid.
 func TestStringFirefly(t *testing.T) {
 	w := NewWorld(10, 10, 100)
-	f := NewFirefly(0, 0, 0, 0, 1000, w)
+	f := NewFirefly(0, 0, 0, 0, 1000000, w)
 	f.String()
 }
 
 func TestCheckBlink(t *testing.T) {
 	w := NewWorld(10, 10, 100)
 
-	f := NewFirefly(0, 0, 0, 0, 1000, w)
+	f := NewFirefly(0, 0, 0, 0, 1000000, w)
 	blinked := f.CheckBlink()
 	assert.Equal(t, false, blinked, "The Firefly should not have blinked.")
 
-	w.Clock += 2000
+	w.Clock += 2000000
 
 	blinked = f.CheckBlink()
 	assert.Equal(t, true, blinked, "The Firefly should have blinked.")
@@ -31,8 +31,8 @@ func TestCheckBlink(t *testing.T) {
 func TestNudge(t *testing.T) {
 	w := NewWorld(10, 10, 100)
 
-	f := NewFirefly(0, 0, 0, 0, 1000, w)
-	g := NewFirefly(1, 1, 0, 0, 1000, w)
+	f := NewFirefly(0, 0, 0, 0, 1000000, w)
+	g := NewFirefly(1, 1, 0, 0, 1000000, w)
 
 	oldNextBlink := f.nextBlink
 	blinked := f.Nudge(g)

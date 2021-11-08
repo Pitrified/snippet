@@ -10,7 +10,7 @@ func TestBlinkNeighbors(t *testing.T) {
 	w := NewWorld(10, 10, 100)
 
 	// near the right top corner
-	f := NewFirefly(99.5, 99.5, 0, 0, 1000, w)
+	f := NewFirefly(99.5, 99.5, 0, 0, 1000000, w)
 	f.c.blinkNeighbors(f)
 	assert.Equal(t, 1, len(w.Cells[1][0].blinkQueue),
 		"The cell to the right should have received the Firefly on the blinkQueue.")
@@ -18,7 +18,7 @@ func TestBlinkNeighbors(t *testing.T) {
 		"The cell to the top should have received the Firefly on the blinkQueue.")
 
 	// near the left bottom corner
-	g := NewFirefly(0.5, 0.5, 0, 0, 1000, w)
+	g := NewFirefly(0.5, 0.5, 0, 0, 1000000, w)
 	g.c.blinkNeighbors(g)
 	assert.Equal(t, 1, len(w.Cells[9][0].blinkQueue),
 		"The cell to the left should have received the Firefly on the blinkQueue.")
@@ -28,6 +28,8 @@ func TestBlinkNeighbors(t *testing.T) {
 
 // A blinking firefly will nudge a neighbor.
 func TestBlinkTwo(t *testing.T) {
+	PrinterInit()
+
 	w := NewWorld(3, 3, 100)
 
 	// f will blink immediately
@@ -99,6 +101,6 @@ func TestBlinkNeighbor(t *testing.T) {
 // Check that the fields/verbs used when printing are valid.
 func TestStringCell(t *testing.T) {
 	w := NewWorld(10, 10, 100)
-	f := NewFirefly(0, 0, 0, 0, 1000, w)
+	f := NewFirefly(0, 0, 0, 0, 1000000, w)
 	f.c.String()
 }
