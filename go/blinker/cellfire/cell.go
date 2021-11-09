@@ -108,14 +108,16 @@ func (c *Cell) Move() {
 // if you were just looping on the blinkQueue do nothing
 func (c *Cell) Blink() {
 
-	// reset all fireflies as nudgeable
+	// reset all fireflies nudgeable state
 	// check if some fireflies are blinking with the current w.Clock
 	// and put them on the correct queues
 	for _, f := range c.Fireflies {
-		f.nudgeable = true
-		if f.CheckBlink() {
-			c.blinkQueue <- f
-			c.blinkNeighbors(f)
+		f.ResetNudgeable()
+		if f.nudgeable {
+			if f.CheckBlink() {
+				c.blinkQueue <- f
+				c.blinkNeighbors(f)
+			}
 		}
 	}
 

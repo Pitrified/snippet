@@ -128,7 +128,7 @@ func TestSendBlinkTo(t *testing.T) {
 
 func TestClockTick(t *testing.T) {
 	w := NewWorld(4, 4, 50)
-	w.HatchFireflies(1000)
+	w.HatchFireflies(10)
 	s := time.Now()
 	w.ClockTick()
 	fmt.Printf("time.Since(s) = %+v\n", time.Since(s))

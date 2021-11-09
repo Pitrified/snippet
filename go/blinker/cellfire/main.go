@@ -22,7 +22,7 @@ func StartFire(
 		fmt.Printf("%+v\n", w)
 	}
 
-	N := 10 * 40 // n seconds * tick per second
+	N := 100 * 40 // n seconds * tick per second
 	s := time.Now()
 	for i := 0; i < N; i++ {
 		w.Step()

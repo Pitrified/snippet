@@ -33,11 +33,15 @@ func TestBlinkTwo(t *testing.T) {
 	w := NewWorld(3, 3, 100)
 
 	// f will blink immediately
-	f := NewFirefly(150, 150, 0, 0, 1000000, w)
+	f := NewFirefly(150, 150, 0, 0, 1_000_000, w)
 	f.NextBlink = w.Clock - 1
+	f.LastBlink = f.NextBlink - f.Period
 
 	// we want to see g being nudged, but not blinking
-	g := NewFirefly(151, 151, 0, 1, 1000000, w)
+	g := NewFirefly(151, 151, 0, 1, 1_000_000, w)
+	g.nudgeable = true
+	g.NextBlink = w.Clock + 500_000
+	g.LastBlink = g.NextBlink - g.Period
 	oldNextBlink := g.NextBlink
 
 	w.wgClockTick.Add(1)

@@ -13,6 +13,7 @@ type Firefly struct {
 	w *World // World this firefly is in.
 
 	Period    int  // Period between blinks for this firefly (us).
+	LastBlink int  // Virtual time of the last blink (us).
 	NextBlink int  // Virtual time of the next scheduled blink (us).
 	nudgeable bool // True if the firefly timer can be nudged.
 }
@@ -48,7 +49,8 @@ func NewFirefly(
 
 	f.Period = period
 	f.NextBlink = w.Clock + RandRangeInt(1000, f.Period)
-	f.nudgeable = true
+	f.LastBlink = f.NextBlink - f.LastBlink
+	f.ResetNudgeable()
 
 	// enter the right cell
 	w.chChangeCell <- &ChangeCellReq{f, nil, c}
@@ -116,14 +118,28 @@ func (f *Firefly) Nudge(fOther *Firefly) bool {
 // Return true if the firefly blinked.
 func (f *Firefly) CheckBlink() bool {
 	if f.NextBlink <= f.w.Clock {
-		// compute the next deadline
+		// update the next deadline
+		f.LastBlink = f.NextBlink
 		f.NextBlink += f.Period
-		// MAYBE atomic operation?
+		// cannot be nudged for a while
 		f.nudgeable = false
+		// madness
 		chPrint <- "."
 		return true
 	}
 	return false
+}
+
+// Reset the nudgeable status of the Firefly using the current clock.
+func (f *Firefly) ResetNudgeable() {
+	// if it is already nudgeable no problem
+	if f.nudgeable {
+		return
+	}
+	// check if enough time has passed since the last blink
+	if f.w.Clock-f.LastBlink > f.w.BlinkCooldown {
+		f.nudgeable = true
+	}
 }
 
 // String implements fmt.Stringer.

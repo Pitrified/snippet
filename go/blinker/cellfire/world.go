@@ -17,12 +17,13 @@ type World struct {
 	sizeHalfW float32   // Half the width of the world in pixels.
 	sizeHalfH float32   // Half the height of the world in pixels.
 
-	Clock        int            // Internal time of the simulation, in us.
-	ClockTickLen int            // Update per tick.
-	wgClockTick  sync.WaitGroup // WG to sync the blinking.
-	NudgeAmount  int            // How much to nudge the firefly deadlines.
-	NudgeRadius  float32        // Max distance between communicating fireflies.
-	borderDist   float32        // Distance from a border to require a blinkQueue to the neighbor.
+	Clock         int            // Internal time of the simulation, in us.
+	ClockTickLen  int            // Update per tick.
+	wgClockTick   sync.WaitGroup // WG to sync the blinking.
+	NudgeAmount   int            // How much to nudge the firefly deadlines.
+	NudgeRadius   float32        // Max distance between communicating fireflies.
+	borderDist    float32        // Distance from a border to require a blinkQueue to the neighbor.
+	BlinkCooldown int            // Cooldown after blinking while the Firefly is not nudgeable.
 
 	chChangeCell     chan *ChangeCellReq   // A firefly needs to enter/leave the cell.
 	chChangeCellDone chan bool             // The cell change is done.
@@ -58,6 +59,7 @@ func NewWorld(cw, ch int, cellSize float32) *World {
 	// w.NudgeRadius = 50
 	// w.NudgeRadius = 100
 	w.borderDist = w.NudgeRadius / 2
+	w.BlinkCooldown = 200_000 // 200 ms
 
 	// channels
 	w.chChangeCell = make(chan *ChangeCellReq)
