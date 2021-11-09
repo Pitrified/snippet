@@ -61,14 +61,14 @@ func newApp() *myApp {
 	a.mainWin.Canvas().SetOnTypedKey(a.typedKey)
 
 	// create the world to simulate
-	a.wCellW = 3
-	a.wCellH = 3
+	a.wCellW = 16
+	a.wCellH = 16
 	a.wCellSize = 100
 	a.w = cellfire.NewWorld(a.wCellW, a.wCellH, float32(a.wCellSize))
-	nF := 500
+	nF := 10000
 	a.w.HatchFireflies(nF)
 
-	cellfire.PrinterInit(100)
+	cellfire.PrinterInit(10000)
 
 	// size of the image to render the world in
 	// MAYBE needs a -1 on the right/top border

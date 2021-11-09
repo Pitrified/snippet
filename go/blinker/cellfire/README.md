@@ -89,3 +89,6 @@ Hierarchy:
 * Use Manhattan distance, no one cares.
 
 # TODOs
+
+The fireflies must stay with `nudgeable` set to false for more than one round!
+At least `200ms`.
