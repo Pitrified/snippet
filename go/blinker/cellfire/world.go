@@ -34,6 +34,9 @@ type World struct {
 
 // NewWorld creates a new World.
 func NewWorld(cw, ch int, cellSize float32) *World {
+
+	cacheCosSin()
+
 	w := &World{}
 
 	// dimensions params
@@ -51,8 +54,9 @@ func NewWorld(cw, ch int, cellSize float32) *World {
 	// w.ClockTickLen = 1_000 // 1 ms
 	w.NudgeAmount = 50_000 // 50 ms
 	// w.NudgeRadius = 20
+	w.NudgeRadius = 50
 	// w.NudgeRadius = 50
-	w.NudgeRadius = 100
+	// w.NudgeRadius = 100
 	w.borderDist = w.NudgeRadius / 2
 
 	// channels
@@ -87,6 +91,8 @@ func (w *World) HatchFireflies(n int) {
 
 		// 0.9-1.1 s
 		p := RandRangeInt(900_000, 1_100_000)
+		// p := RandRangeInt(980_000, 1_020_000)
+		// p := 1_000_000
 
 		// create the firefly
 		NewFirefly(x, y, o, i, p, w)

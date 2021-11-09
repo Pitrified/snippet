@@ -195,12 +195,12 @@ func (c *Cell) blinkNeighbors(f *Firefly) {
 
 // Enter adds a firefly to the cell.
 func (c *Cell) Enter(f *Firefly) {
-	c.Fireflies[f.id] = f
+	c.Fireflies[f.Id] = f
 }
 
 // Leave removes a firefly from the cell.
 func (c *Cell) Leave(f *Firefly) {
-	delete(c.Fireflies, f.id)
+	delete(c.Fireflies, f.Id)
 }
 
 // String implements fmt.Stringer.

@@ -13,13 +13,13 @@ func TestChangeCell(t *testing.T) {
 	f := NewFirefly(0, 0, 0, 0, 1000000, w)
 
 	c := f.c
-	assert.Contains(t, c.Fireflies, f.id)
+	assert.Contains(t, c.Fireflies, f.Id)
 
 	// change cell
 	nc := w.Cells[1][1]
 	w.chChangeCell <- &ChangeCellReq{f, f.c, nc}
 	<-w.chChangeCellDone
-	assert.NotContains(t, c.Fireflies, f.id)
+	assert.NotContains(t, c.Fireflies, f.Id)
 }
 
 func TestMove(t *testing.T) {
@@ -29,22 +29,22 @@ func TestMove(t *testing.T) {
 
 	// near the top right corner, pointing right
 	f := NewFirefly(99.5, 99.5, 0, 0, 1000000, w)
-	assert.Contains(t, w.Cells[0][0].Fireflies, f.id)
+	assert.Contains(t, w.Cells[0][0].Fireflies, f.Id)
 	// move to the right
 	w.Move()
-	assert.Contains(t, w.Cells[1][0].Fireflies, f.id)
+	assert.Contains(t, w.Cells[1][0].Fireflies, f.Id)
 	// move to the top
 	f.O = 90
 	w.Move()
-	assert.Contains(t, w.Cells[1][1].Fireflies, f.id)
+	assert.Contains(t, w.Cells[1][1].Fireflies, f.Id)
 	// move to the left
 	f.O = 180
 	w.Move()
-	assert.Contains(t, w.Cells[0][1].Fireflies, f.id)
+	assert.Contains(t, w.Cells[0][1].Fireflies, f.Id)
 	// move to the bottom
 	f.O = 270
 	w.Move()
-	assert.Contains(t, w.Cells[0][0].Fireflies, f.id)
+	assert.Contains(t, w.Cells[0][0].Fireflies, f.Id)
 }
 
 func TestHatch(t *testing.T) {

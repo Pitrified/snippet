@@ -34,14 +34,14 @@ func TestNudge(t *testing.T) {
 	f := NewFirefly(0, 0, 0, 0, 1000000, w)
 	g := NewFirefly(1, 1, 0, 0, 1000000, w)
 
-	oldNextBlink := f.nextBlink
+	oldNextBlink := f.NextBlink
 	blinked := f.Nudge(g)
 	// remember that nudge also calls CheckBlink
 	p := 0
 	if blinked {
-		p = f.period
+		p = f.Period
 	}
-	newNextBlink := f.nextBlink
+	newNextBlink := f.NextBlink
 	assert.Equal(t, w.NudgeAmount, oldNextBlink-newNextBlink+p,
 		"The deadline should have been nudged by w.NudgeAmount")
 

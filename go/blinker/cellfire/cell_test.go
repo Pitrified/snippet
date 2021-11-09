@@ -34,17 +34,17 @@ func TestBlinkTwo(t *testing.T) {
 
 	// f will blink immediately
 	f := NewFirefly(150, 150, 0, 0, 1000000, w)
-	f.nextBlink = w.Clock - 1
+	f.NextBlink = w.Clock - 1
 
 	// we want to see g being nudged, but not blinking
 	g := NewFirefly(151, 151, 0, 1, 1000000, w)
-	oldNextBlink := g.nextBlink
+	oldNextBlink := g.NextBlink
 
 	w.wgClockTick.Add(1)
 	go f.c.Blink()
 	w.wgClockTick.Wait()
 
-	newNextBlink := g.nextBlink
+	newNextBlink := g.NextBlink
 	assert.Equal(t, w.NudgeAmount, oldNextBlink-newNextBlink,
 		"The deadline should have been nudged by w.NudgeAmount")
 }
@@ -56,13 +56,13 @@ func TestBlinkThree(t *testing.T) {
 
 	// f1 will blink immediately
 	f1 := NewFirefly(150, 150, 0, 0, 1000000, w)
-	f1.nextBlink = w.Clock - 1
+	f1.NextBlink = w.Clock - 1
 	// f2 will blink when nudged by f1
 	f2 := NewFirefly(151, 151, 0, 1, 1000000, w)
-	f2.nextBlink = w.Clock + 1
+	f2.NextBlink = w.Clock + 1
 	// f3 will blink when nudged by f1 and f2
 	f3 := NewFirefly(152, 152, 0, 2, 1000000, w)
-	f3.nextBlink = w.Clock + 1 + w.NudgeAmount
+	f3.NextBlink = w.Clock + 1 + w.NudgeAmount
 
 	w.wgClockTick.Add(1)
 	go f1.c.Blink()
@@ -82,10 +82,10 @@ func TestBlinkNeighbor(t *testing.T) {
 
 	// f1 will blink immediately
 	f1 := NewFirefly(199, 150, 0, 0, 1000000, w)
-	f1.nextBlink = w.Clock - 1
+	f1.NextBlink = w.Clock - 1
 	// f2 will blink when nudged by f1
 	f2 := NewFirefly(201, 150, 0, 1, 1000000, w)
-	f2.nextBlink = w.Clock + 1
+	f2.NextBlink = w.Clock + 1
 
 	w.wgClockTick.Add(2)
 	go f2.c.Blink() // start f2 first, so that it will pause with empty blinkQueue

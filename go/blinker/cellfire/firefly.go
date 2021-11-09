@@ -7,13 +7,13 @@ type Firefly struct {
 	X, Y float32 // Position on the map.
 	O    int16   // Orientation in degrees.
 
-	id int // Unique id of the firefly.
+	Id int // Unique id of the firefly.
 
 	c *Cell  // Cell currently occupied.
 	w *World // World this firefly is in.
 
-	period    int  // Period between blinks for this firefly (us).
-	nextBlink int  // Virtual time of the next scheduled blink (us).
+	Period    int  // Period between blinks for this firefly (us).
+	NextBlink int  // Virtual time of the next scheduled blink (us).
 	nudgeable bool // True if the firefly timer can be nudged.
 }
 
@@ -33,7 +33,7 @@ func NewFirefly(
 	f.X = x
 	f.Y = y
 	f.O = o
-	f.id = id
+	f.Id = id
 	f.w = w
 
 	// validate the pos/ori
@@ -46,8 +46,8 @@ func NewFirefly(
 	c := f.w.Cells[cx][cy]
 	f.c = c
 
-	f.period = period
-	f.nextBlink = w.Clock + RandRangeInt(1000, f.period)
+	f.Period = period
+	f.NextBlink = w.Clock + RandRangeInt(1000, f.Period)
 	f.nudgeable = true
 
 	// enter the right cell
@@ -106,7 +106,7 @@ func (f *Firefly) Move() *ChangeCellReq {
 // Return true if this firefly blinked.
 func (f *Firefly) Nudge(fOther *Firefly) bool {
 	if ManhattanDist(f, fOther) < f.w.NudgeRadius {
-		f.nextBlink -= f.w.NudgeAmount
+		f.NextBlink -= f.w.NudgeAmount
 	}
 	return f.CheckBlink()
 }
@@ -115,9 +115,9 @@ func (f *Firefly) Nudge(fOther *Firefly) bool {
 //
 // Return true if the firefly blinked.
 func (f *Firefly) CheckBlink() bool {
-	if f.nextBlink <= f.w.Clock {
+	if f.NextBlink <= f.w.Clock {
 		// compute the next deadline
-		f.nextBlink += f.period
+		f.NextBlink += f.Period
 		// MAYBE atomic operation?
 		f.nudgeable = false
 		chPrint <- "."
@@ -129,7 +129,7 @@ func (f *Firefly) CheckBlink() bool {
 // String implements fmt.Stringer.
 func (f *Firefly) String() string {
 	return fmt.Sprintf("% 4d: % 8.2f x % 8.2f @ % 4d",
-		f.id,
+		f.Id,
 		f.X, f.Y, f.O,
 	)
 }
