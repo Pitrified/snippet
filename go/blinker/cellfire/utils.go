@@ -51,11 +51,11 @@ func ManhattanDist(f, g *Firefly) float32 {
 	// if the two are further apart than the SizeHalf
 	// the shorter distance is by going around the toro
 	ax := AbsFloat32(f.X - g.X)
-	if ax > f.w.SizeHalfW {
+	if ax > f.w.sizeHalfW {
 		ax = f.w.SizeW - ax
 	}
 	ay := AbsFloat32(f.Y - g.Y)
-	if ay > f.w.SizeHalfH {
+	if ay > f.w.sizeHalfH {
 		ay = f.w.SizeH - ay
 	}
 

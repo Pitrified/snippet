@@ -14,12 +14,12 @@ type World struct {
 	CellSize  float32   // Size of the cells in pixels.
 	SizeW     float32   // Width of the world in pixels.
 	SizeH     float32   // Height of the world in pixels.
-	SizeHalfW float32   // Half the width of the world in pixels.
-	SizeHalfH float32   // Half the height of the world in pixels.
+	sizeHalfW float32   // Half the width of the world in pixels.
+	sizeHalfH float32   // Half the height of the world in pixels.
 
 	Clock        int            // Internal time of the simulation, in us.
 	ClockTickLen int            // Update per tick.
-	wgClockTick  sync.WaitGroup // WG to sync the blinking
+	wgClockTick  sync.WaitGroup // WG to sync the blinking.
 	NudgeAmount  int            // How much to nudge the firefly deadlines.
 	NudgeRadius  float32        // Max distance between communicating fireflies.
 	borderDist   float32        // Distance from a border to require a blinkQueue to the neighbor.
@@ -28,11 +28,8 @@ type World struct {
 	chChangeCellDone chan bool             // The cell change is done.
 	chChangeCells    chan []*ChangeCellReq // Channel for many fireflies to enter/leave the cell.
 
-	chRender chan byte // Channel to request a render of the env.
-
-	chStep chan byte // Channel to request a step of the env.
-
-	wgMove sync.WaitGroup // WG to sync the steps
+	DoStep chan byte      // Channel to request a step of the env.
+	wgMove sync.WaitGroup // WG to sync the fireflies movement.
 }
 
 // NewWorld creates a new World.
@@ -45,8 +42,8 @@ func NewWorld(cw, ch int, cellSize float32) *World {
 	w.CellHNum = ch
 	w.SizeW = float32(cw) * cellSize
 	w.SizeH = float32(ch) * cellSize
-	w.SizeHalfW = w.SizeW / 2
-	w.SizeHalfH = w.SizeH / 2
+	w.sizeHalfW = w.SizeW / 2
+	w.sizeHalfH = w.SizeH / 2
 
 	// nudging params
 	w.Clock = 1_000_000     // start at 1 second
@@ -62,8 +59,7 @@ func NewWorld(cw, ch int, cellSize float32) *World {
 	w.chChangeCell = make(chan *ChangeCellReq)
 	w.chChangeCellDone = make(chan bool)
 	w.chChangeCells = make(chan []*ChangeCellReq)
-	w.chRender = make(chan byte)
-	w.chStep = make(chan byte)
+	w.DoStep = make(chan byte)
 
 	// create the cells
 	c := make([][]*Cell, cw)
@@ -106,25 +102,17 @@ func (w *World) Listen() {
 			w.ChangeCell(r)
 			w.chChangeCellDone <- true
 
-		// render the env
-		case <-w.chRender:
-
 		// tick forward the env
-		case <-w.chStep:
+		case <-w.DoStep:
 			w.Step()
 		}
 	}
 }
 
-// Perform a step of the simulation.
+// Perform a step of the simulation: move the fireflies and advance the clock.
 func (w *World) Step() {
-
-	// ##### MOVE #####
 	w.Move()
-
-	// ##### BLINK #####
 	w.ClockTick()
-
 }
 
 // Perform a movement of the fireflies.
@@ -166,7 +154,7 @@ func (w *World) ClockTick() {
 		}
 	}
 
-	// blink all the fireflies
+	// blink all the fireflies in each cell
 	for i := 0; i < w.CellWNum; i++ {
 		for ii := 0; ii < w.CellHNum; ii++ {
 			w.wgClockTick.Add(1)
