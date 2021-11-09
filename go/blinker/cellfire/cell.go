@@ -10,7 +10,7 @@ type Cell struct {
 	Fireflies map[int]*Firefly // Fireflies in this cell.
 
 	w                        *World  // World this cell is in.
-	cx, cy                   int     // Coordinates of the cell in the world.
+	Cx, Cy                   int     // Coordinates of the cell in the world.
 	top, bottom, left, right float32 // Borders of the cell.
 
 	chMove  chan byte // Channel to request a move of all the fireflies in the cell.
@@ -32,7 +32,7 @@ func NewCell(w *World, cx, cy int) *Cell {
 
 	// general info
 	c.w = w
-	c.cx, c.cy = cx, cy
+	c.Cx, c.Cy = cx, cy
 
 	// channels
 	c.chMove = make(chan byte)
@@ -42,8 +42,8 @@ func NewCell(w *World, cx, cy int) *Cell {
 	c.blinkQueue = make(chan *Firefly, 100000)
 
 	// compute borders
-	fcx := float32(c.cx)
-	fcy := float32(c.cy)
+	fcx := float32(c.Cx)
+	fcy := float32(c.Cy)
 	c.left = c.w.CellSize * fcx
 	c.right = c.left + c.w.CellSize
 	c.bottom = c.w.CellSize * fcy
@@ -206,7 +206,7 @@ func (c *Cell) Leave(f *Firefly) {
 // String implements fmt.Stringer.
 func (c *Cell) String() string {
 	s := fmt.Sprintf("[% 3d,% 3d]: % 4d @ (%8.2f, %8.2f)x(%8.2f, %8.2f)",
-		c.cx, c.cy,
+		c.Cx, c.Cy,
 		len(c.Fireflies),
 		c.left, c.bottom,
 		c.right, c.top,

@@ -94,7 +94,7 @@ func (f *Firefly) Move() *ChangeCellReq {
 		dy = 1
 	}
 	if changed {
-		ncx, ncy := f.w.MoveWrap(f.c.cx, f.c.cy, dx, dy)
+		ncx, ncy := f.w.MoveWrap(f.c.Cx, f.c.Cy, dx, dy)
 		r = &ChangeCellReq{f, f.c, f.w.Cells[ncx][ncy]}
 	}
 

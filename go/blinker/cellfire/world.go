@@ -218,7 +218,7 @@ func (w *World) SendBlinkTo(f *Firefly, c *Cell, dir byte) {
 	}
 
 	// find the neighboring cell on the toro
-	ncx, ncy := f.w.MoveWrap(f.c.cx, f.c.cy, dx, dy)
+	ncx, ncy := f.w.MoveWrap(f.c.Cx, f.c.Cy, dx, dy)
 	nc := w.Cells[ncx][ncy]
 
 	// check if ncx,ncy was idling
