@@ -53,7 +53,8 @@ func NewWorld(cw, ch int, cellSize float32) *World {
 	w.Clock = 1_000_000     // start at 1 second
 	w.ClockTickLen = 25_000 // 25 ms
 	// w.ClockTickLen = 1_000 // 1 ms
-	w.NudgeAmount = 50_000 // 50 ms
+	// w.NudgeAmount = 50_000 // 50 ms
+	w.NudgeAmount = 100_000 // 50 ms
 	// w.NudgeRadius = 20
 	w.NudgeRadius = 50
 	// w.NudgeRadius = 50
