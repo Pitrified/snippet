@@ -39,12 +39,19 @@ func brightness(x int, decay float64) float64 {
 type mySidebar struct {
 	a *myApp
 
-	configCard *widget.Card
+	confCard    *widget.Card
+	confTickLen *widget.Entry
+	// confNAmount *WideEntry
+	confNAmount *widget.Entry
+	confNRadius *widget.Entry
 
-	resetCard *widget.Card
-	resReset  *widget.Button
-	resResetW *WideEntry
-	resResetH *widget.Entry
+	resCard     *widget.Card
+	resReset    *widget.Button
+	resCellsW   *WideEntry
+	resCellsH   *widget.Entry
+	resPerMin   *WideEntry
+	resPerMax   *widget.Entry
+	resCellSize *WideEntry
 }
 
 func newSidebar(a *myApp) *mySidebar {
@@ -69,10 +76,48 @@ func (s *mySidebar) buildSidebar() *container.Scroll {
 // * nudgeAmount
 // * nudgeRadius
 // * blinkCooldown
+// * drawCheckerboard
+// * interact fireflies
 func (s *mySidebar) buildConfig() *widget.Card {
-	// contCard := container.NewVBox(contReset, contRow2)
-	s.configCard = widget.NewCard("Config", "", nil)
-	return s.configCard
+
+	// clockTickLen entry
+	s.confTickLen = widget.NewEntry()
+	s.confTickLen.Text = "25"
+	s.confTickLen.OnSubmitted = s.confConfigSubmitted
+	contClockLen := container.NewBorder(
+		nil, nil, widget.NewLabel("Tick length:"), widget.NewLabel("ms"),
+		s.confTickLen,
+	)
+
+	// nudge
+	s.confNAmount = widget.NewEntry()
+	s.confNAmount.Text = "50"
+	s.confNAmount.OnSubmitted = s.confConfigSubmitted
+	s.confNRadius = widget.NewEntry()
+	s.confNRadius.Text = "20"
+	s.confNRadius.OnSubmitted = s.confConfigSubmitted
+	contNudge := container.NewBorder(
+		nil, nil, widget.NewLabel("Nudge:"), nil,
+		container.NewGridWithColumns(2,
+			container.NewBorder(
+				nil, nil, widget.NewLabel("By:"), widget.NewLabel("ms"),
+				s.confNAmount,
+			),
+			container.NewBorder(
+				nil, nil, widget.NewLabel("Radius:"), widget.NewLabel("px"),
+				s.confNRadius,
+			),
+		),
+	)
+
+	contCard := container.NewVBox(contClockLen, contNudge)
+	s.confCard = widget.NewCard("Config", "", contCard)
+	return s.confCard
+}
+
+// Pressed enter on any entry in the world config card.
+func (s *mySidebar) confConfigSubmitted(_ string) {
+	s.a.configWorld()
 }
 
 // ##### RESET #####
@@ -85,44 +130,73 @@ func (s *mySidebar) buildReset() *widget.Card {
 
 	// button to reset world
 	s.resReset = widget.NewButton("Reset", s.resResetCB)
-	// entries to set world size
-	// Entry W, at least wide 4*IconInlineSize
-	s.resResetW = NewWideEntry(fyne.NewSize(4*theme.IconInlineSize(), 0))
-	s.resResetW.Text = "3840"
-	s.resResetW.OnSubmitted = s.resResetSubmitted
-	// Entry H, the width is set equal to W by the grid layout
-	s.resResetH = widget.NewEntry()
-	s.resResetH.Text = "2160"
-	s.resResetH.OnSubmitted = s.resResetSubmitted
-	// Labels
-	labResetW := widget.NewLabel("W:")
-	labResetH := widget.NewLabel("H:")
-	// Pair label and entry
-	elResetW := container.NewBorder(nil, nil, labResetW, nil, s.resResetW)
-	elResetH := container.NewBorder(nil, nil, labResetH, nil, s.resResetH)
-	// Pair the EL
-	elResetWH := container.NewGridWithColumns(2, elResetW, elResetH)
-	// Pair the ELpair and the button and the label
-	labPos := widget.NewLabel("Size:")
-	contReset := container.NewBorder(nil, nil, labPos, s.resReset, elResetWH)
 
-	// contCard := container.NewVBox(contReset, contRow2)
-	s.resetCard = widget.NewCard("Reset", "", contReset)
-	return s.resetCard
+	// entries to set world size in cells
+	// Entry W, at least wide 3*IconInlineSize
+	s.resCellsW = NewWideEntry(fyne.NewSize(3*theme.IconInlineSize(), 0))
+	s.resCellsW.Text = "3"
+	s.resCellsW.OnSubmitted = s.resResetSubmitted
+	// Entry H, the width is set equal to W by the grid layout
+	s.resCellsH = widget.NewEntry()
+	s.resCellsH.Text = "3"
+	s.resCellsH.OnSubmitted = s.resResetSubmitted
+	contCells := container.NewBorder(
+		nil, nil, widget.NewLabel("World size:"), widget.NewLabel("cells"),
+		container.NewGridWithColumns(2,
+			container.NewBorder(
+				nil, nil, widget.NewLabel("W:"), nil,
+				s.resCellsW,
+			),
+			container.NewBorder(
+				nil, nil, widget.NewLabel("H:"), nil,
+				s.resCellsH,
+			),
+		),
+	)
+
+	// cell size
+	s.resCellSize = NewWideEntry(fyne.NewSize(3*theme.IconInlineSize(), 0))
+	s.resCellSize.Text = "100"
+	s.resCellSize.OnSubmitted = s.resResetSubmitted
+	contSize := container.NewBorder(
+		nil, nil, widget.NewLabel("Cell size:"), widget.NewLabel("pixels"),
+		s.resCellSize,
+	)
+
+	// period controls
+	s.resPerMin = NewWideEntry(fyne.NewSize(3*theme.IconInlineSize(), 0))
+	s.resPerMin.Text = "900"
+	s.resPerMin.OnSubmitted = s.resResetSubmitted
+	s.resPerMax = widget.NewEntry()
+	s.resPerMax.Text = "1100"
+	s.resPerMax.OnSubmitted = s.resResetSubmitted
+	contPer := container.NewBorder(
+		nil, nil, widget.NewLabel("Period:"), widget.NewLabel("ms"),
+		container.NewGridWithColumns(2,
+			container.NewBorder(
+				nil, nil, widget.NewLabel("Min:"), nil,
+				s.resPerMin,
+			),
+			container.NewBorder(
+				nil, nil, widget.NewLabel("Max:"), nil,
+				s.resPerMax,
+			),
+		),
+	)
+
+	contCard := container.NewVBox(contCells, contSize, contPer, s.resReset)
+	s.resCard = widget.NewCard("Reset", "", contCard)
+	return s.resCard
 }
 
 // Clicked button reset world.
 func (s *mySidebar) resResetCB() {
-	w, errW := entry2F64(&s.resResetW.Entry)
-	h, errH := entry2F64(s.resResetH)
-	if errW != nil || errH != nil {
-		return
-	}
-	fmt.Printf("w, h = %+v %+v\n", w, h)
+	s.a.resetWorld()
 }
 
+// Pressed enter on any entry in the world reset card.
 func (s *mySidebar) resResetSubmitted(_ string) {
-	s.resResetCB()
+	s.a.resetWorld()
 }
 
 // --------------------------------------------------------------------------------
@@ -164,32 +238,7 @@ func newApp() *myApp {
 	// add the link for typed runes
 	a.mainWin.Canvas().SetOnTypedKey(a.typedKey)
 
-	// create the world to simulate
-	a.wCellW = 16
-	a.wCellH = 16
-	a.wCellSize = 100
-	clockStart := 1_000_000
-	a.clockTickLen = 25_000
-	a.nudgeAmount = 100_000
-	a.nudgeRadius = 50
-	a.blinkCooldown = 500_000
-	a.periodMin = 900_000
-	a.periodMax = 1_100_000
-	a.w = cellfire.NewWorld(
-		a.wCellW, a.wCellH, float32(a.wCellSize),
-		clockStart, a.clockTickLen,
-		a.nudgeAmount, a.nudgeRadius,
-		a.blinkCooldown,
-		a.periodMin, a.periodMax,
-	)
-	nF := 10000
-	a.w.HatchFireflies(nF)
-
 	cellfire.PrinterInit(10000)
-
-	// size of the image to render the world in
-	// MAYBE needs a -1 on the right/top border
-	a.wSize = image.Rect(0, 0, a.wCellW*a.wCellSize, a.wCellH*a.wCellSize)
 
 	a.decay = 1.0 / 600_000.0
 
@@ -219,8 +268,45 @@ func (a *myApp) buildUI() {
 	a.mainWin.SetContent(borderCont)
 }
 
+// Reset the world to simulate.
+//
+// Get all the values from the current UI state.
+func (a *myApp) resetWorld() {
+	a.wCellW = 16
+	a.wCellH = 16
+	a.wCellSize = 100
+	clockStart := 1_000_000
+	a.clockTickLen = 25_000
+	a.nudgeAmount = 100_000
+	a.nudgeRadius = 50
+	a.blinkCooldown = 500_000
+	a.periodMin = 900_000
+	a.periodMax = 1_100_000
+	a.w = cellfire.NewWorld(
+		a.wCellW, a.wCellH, float32(a.wCellSize),
+		clockStart, a.clockTickLen,
+		a.nudgeAmount, a.nudgeRadius,
+		a.blinkCooldown,
+		a.periodMin, a.periodMax,
+	)
+	nF := 10000
+	a.w.HatchFireflies(nF)
+
+	// size of the image to render the world in
+	// MAYBE needs a -1 on the right/top border
+	a.wSize = image.Rect(0, 0, a.wCellW*a.wCellSize, a.wCellH*a.wCellSize)
+
+}
+
+// Update the world with the new params.
+func (a *myApp) configWorld() {
+}
+
 func (a *myApp) runApp() {
-	a.mainWin.Resize(fyne.NewSize(900, 900))
+	a.buildUI()
+	a.resetWorld()
+	a.animate()
+	a.mainWin.Resize(fyne.NewSize(1200, 900))
 	a.mainWin.Show()
 	a.fyneApp.Run()
 }
@@ -233,8 +319,8 @@ func (a *myApp) animate() {
 		// for { select { case <-tickRender.C: } }
 		for range tickRender.C {
 			a.renderWorld()
-			// a.w.Move()
 			// a.w.DoStep <- 'M'
+			a.w.Move()
 			a.w.ClockTick()
 		}
 
@@ -280,7 +366,7 @@ func (a *myApp) renderWorld() {
 // Render the cell.
 func (a *myApp) renderCell(c *cellfire.Cell, m *image.RGBA) {
 
-	// checkerboard pattern
+	// // checkerboard pattern
 	// left := c.Cx * a.wCellSize
 	// bottom := c.Cy * a.wCellSize
 	// col := uint8(20)
@@ -313,7 +399,5 @@ func (a *myApp) renderCell(c *cellfire.Cell, m *image.RGBA) {
 
 func main() {
 	theApp := newApp()
-	theApp.buildUI()
-	theApp.animate()
 	theApp.runApp()
 }
