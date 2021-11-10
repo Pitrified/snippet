@@ -46,15 +46,15 @@ func NewFirefly(
 	cy := int(f.Y / f.w.CellSize)
 	c := f.w.Cells[cx][cy]
 	f.c = c
+	// enter the right cell
+	w.chChangeCell <- &ChangeCellReq{f, nil, c}
+	<-w.chChangeCellDone
 
+	// setup the period and deadlines
 	f.Period = period
 	f.NextBlink = w.Clock + RandRangeInt(1000, f.Period)
 	f.LastBlink = f.NextBlink - f.LastBlink
 	f.ResetNudgeable()
-
-	// enter the right cell
-	w.chChangeCell <- &ChangeCellReq{f, nil, c}
-	<-w.chChangeCellDone
 
 	return f
 }
@@ -96,6 +96,7 @@ func (f *Firefly) Move() *ChangeCellReq {
 		dy = 1
 	}
 	if changed {
+		// find the new cell and request to move there
 		ncx, ncy := f.w.MoveWrap(f.c.Cx, f.c.Cy, dx, dy)
 		r = &ChangeCellReq{f, f.c, f.w.Cells[ncx][ncy]}
 	}

@@ -14,6 +14,8 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/widget"
 )
 
 // --------------------------------------------------------------------------------
@@ -31,12 +33,107 @@ func brightness(x int, decay float64) float64 {
 }
 
 // --------------------------------------------------------------------------------
+//  SIDEBAR
+// --------------------------------------------------------------------------------
+
+type mySidebar struct {
+	a *myApp
+
+	configCard *widget.Card
+
+	resetCard *widget.Card
+	resReset  *widget.Button
+	resResetW *WideEntry
+	resResetH *widget.Entry
+}
+
+func newSidebar(a *myApp) *mySidebar {
+	return &mySidebar{a: a}
+}
+
+// Build the sidebar.
+func (s *mySidebar) buildSidebar() *container.Scroll {
+	return container.NewVScroll(
+		container.NewVBox(
+			s.buildConfig(),
+			s.buildReset(),
+		),
+	)
+}
+
+// ##### CONFIG #####
+
+// Set params that do not require a reset of the world.
+//
+// * clockTickLen
+// * nudgeAmount
+// * nudgeRadius
+// * blinkCooldown
+func (s *mySidebar) buildConfig() *widget.Card {
+	// contCard := container.NewVBox(contReset, contRow2)
+	s.configCard = widget.NewCard("Config", "", nil)
+	return s.configCard
+}
+
+// ##### RESET #####
+
+// Set params that require a reset of the world.
+//
+// * CellW/CellH/CellSize
+// * Period
+func (s *mySidebar) buildReset() *widget.Card {
+
+	// button to reset world
+	s.resReset = widget.NewButton("Reset", s.resResetCB)
+	// entries to set world size
+	// Entry W, at least wide 4*IconInlineSize
+	s.resResetW = NewWideEntry(fyne.NewSize(4*theme.IconInlineSize(), 0))
+	s.resResetW.Text = "3840"
+	s.resResetW.OnSubmitted = s.resResetSubmitted
+	// Entry H, the width is set equal to W by the grid layout
+	s.resResetH = widget.NewEntry()
+	s.resResetH.Text = "2160"
+	s.resResetH.OnSubmitted = s.resResetSubmitted
+	// Labels
+	labResetW := widget.NewLabel("W:")
+	labResetH := widget.NewLabel("H:")
+	// Pair label and entry
+	elResetW := container.NewBorder(nil, nil, labResetW, nil, s.resResetW)
+	elResetH := container.NewBorder(nil, nil, labResetH, nil, s.resResetH)
+	// Pair the EL
+	elResetWH := container.NewGridWithColumns(2, elResetW, elResetH)
+	// Pair the ELpair and the button and the label
+	labPos := widget.NewLabel("Size:")
+	contReset := container.NewBorder(nil, nil, labPos, s.resReset, elResetWH)
+
+	// contCard := container.NewVBox(contReset, contRow2)
+	s.resetCard = widget.NewCard("Reset", "", contReset)
+	return s.resetCard
+}
+
+// Clicked button reset world.
+func (s *mySidebar) resResetCB() {
+	w, errW := entry2F64(&s.resResetW.Entry)
+	h, errH := entry2F64(s.resResetH)
+	if errW != nil || errH != nil {
+		return
+	}
+	fmt.Printf("w, h = %+v %+v\n", w, h)
+}
+
+func (s *mySidebar) resResetSubmitted(_ string) {
+	s.resResetCB()
+}
+
+// --------------------------------------------------------------------------------
 //  APP
 // --------------------------------------------------------------------------------
 
 type myApp struct {
 	fyneApp fyne.App
 	mainWin fyne.Window
+
+	s *mySidebar
 
 	w         *cellfire.World // World to render.
 	wImg      *canvas.Image   // Canvas to render the world on.
@@ -45,6 +142,13 @@ type myApp struct {
 	wCellSize int             // Size of each cell as int.
 	wCellW    int             // Width of the world in cells.
 	wCellH    int             // Height of the world in cells.
+
+	clockTickLen  int
+	nudgeAmount   int
+	nudgeRadius   float32
+	blinkCooldown int
+	periodMin     int
+	periodMax     int
 
 	decay float64 // Decay rate of the brightness since the blink.
 }
@@ -64,7 +168,20 @@ func newApp() *myApp {
 	a.wCellW = 16
 	a.wCellH = 16
 	a.wCellSize = 100
-	a.w = cellfire.NewWorld(a.wCellW, a.wCellH, float32(a.wCellSize))
+	clockStart := 1_000_000
+	a.clockTickLen = 25_000
+	a.nudgeAmount = 100_000
+	a.nudgeRadius = 50
+	a.blinkCooldown = 500_000
+	a.periodMin = 900_000
+	a.periodMax = 1_100_000
+	a.w = cellfire.NewWorld(
+		a.wCellW, a.wCellH, float32(a.wCellSize),
+		clockStart, a.clockTickLen,
+		a.nudgeAmount, a.nudgeRadius,
+		a.blinkCooldown,
+		a.periodMin, a.periodMax,
+	)
 	nF := 10000
 	a.w.HatchFireflies(nF)
 
@@ -92,7 +209,10 @@ func (a *myApp) buildUI() {
 	a.wImg.FillMode = canvas.ImageFillContain
 	a.wImg.SetMinSize(fyne.NewSize(400, 400))
 
-	borderCont := container.NewBorder(nil, nil, nil, nil,
+	a.s = newSidebar(a)
+	contSidebar := a.s.buildSidebar()
+
+	borderCont := container.NewBorder(nil, nil, contSidebar, nil,
 		a.wImg,
 	)
 
