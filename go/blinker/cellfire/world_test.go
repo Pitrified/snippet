@@ -9,7 +9,7 @@ import (
 )
 
 func TestChangeCell(t *testing.T) {
-	w := NewWorld(10, 10, 100)
+	w := NewWorld(10, 10, 100, 1_000_000, 25_000, 50_000, 50, 500_000, 900_000, 1_1000_000)
 	f := NewFirefly(0, 0, 0, 0, 1000000, w)
 
 	c := f.c
@@ -25,7 +25,7 @@ func TestChangeCell(t *testing.T) {
 func TestMove(t *testing.T) {
 	cacheCosSin()
 
-	w := NewWorld(10, 10, 100)
+	w := NewWorld(10, 10, 100, 1_000_000, 25_000, 50_000, 50, 500_000, 900_000, 1_1000_000)
 
 	// near the top right corner, pointing right
 	f := NewFirefly(99.5, 99.5, 0, 0, 1000000, w)
@@ -50,7 +50,7 @@ func TestMove(t *testing.T) {
 func TestHatch(t *testing.T) {
 	cacheCosSin()
 
-	w := NewWorld(10, 10, 100)
+	w := NewWorld(10, 10, 100, 1_000_000, 25_000, 50_000, 50, 500_000, 900_000, 1_1000_000)
 	nF := 10
 	w.HatchFireflies(nF)
 
@@ -66,7 +66,7 @@ func TestHatch(t *testing.T) {
 }
 
 func TestMoveWrap(t *testing.T) {
-	w := NewWorld(10, 10, 100)
+	w := NewWorld(10, 10, 100, 1_000_000, 25_000, 50_000, 50, 500_000, 900_000, 1_1000_000)
 
 	cases := []struct {
 		cx, cy, dcx, dcy, nx, ny int
@@ -85,7 +85,7 @@ func TestMoveWrap(t *testing.T) {
 }
 
 func TestValidatePos(t *testing.T) {
-	w := NewWorld(10, 10, 100)
+	w := NewWorld(10, 10, 100, 1_000_000, 25_000, 50_000, 50, 500_000, 900_000, 1_1000_000)
 
 	cases := []struct {
 		x, y   float32
@@ -105,7 +105,7 @@ func TestValidatePos(t *testing.T) {
 }
 
 func TestSendBlinkTo(t *testing.T) {
-	w := NewWorld(10, 10, 100)
+	w := NewWorld(10, 10, 100, 1_000_000, 25_000, 50_000, 50, 500_000, 900_000, 1_1000_000)
 
 	// near the right top corner
 	f := NewFirefly(99.5, 99.5, 0, 0, 1000000, w)
@@ -127,7 +127,7 @@ func TestSendBlinkTo(t *testing.T) {
 }
 
 func TestClockTick(t *testing.T) {
-	w := NewWorld(4, 4, 50)
+	w := NewWorld(4, 4, 50, 1_000_000, 25_000, 50_000, 50, 500_000, 900_000, 1_1000_000)
 	w.HatchFireflies(10)
 	s := time.Now()
 	w.ClockTick()
@@ -136,6 +136,6 @@ func TestClockTick(t *testing.T) {
 
 // Check that the fields/verbs used when printing are valid.
 func TestStringWorld(t *testing.T) {
-	w := NewWorld(10, 10, 100)
+	w := NewWorld(10, 10, 100, 1_000_000, 25_000, 50_000, 50, 500_000, 900_000, 1_1000_000)
 	w.String()
 }

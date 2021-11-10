@@ -7,7 +7,7 @@ import (
 )
 
 func TestBlinkNeighbors(t *testing.T) {
-	w := NewWorld(10, 10, 100)
+	w := NewWorld(10, 10, 100, 1_000_000, 25_000, 50_000, 50, 500_000, 900_000, 1_1000_000)
 
 	// near the right top corner
 	f := NewFirefly(99.5, 99.5, 0, 0, 1000000, w)
@@ -30,7 +30,7 @@ func TestBlinkNeighbors(t *testing.T) {
 func TestBlinkTwo(t *testing.T) {
 	PrinterInit(10)
 
-	w := NewWorld(3, 3, 100)
+	w := NewWorld(3, 3, 100, 1_000_000, 25_000, 50_000, 50, 500_000, 900_000, 1_1000_000)
 
 	// f will blink immediately
 	f := NewFirefly(150, 150, 0, 0, 1_000_000, w)
@@ -56,7 +56,7 @@ func TestBlinkTwo(t *testing.T) {
 // A blinking firefly will nudge a neighbor, which will blink.
 // The blinking propagates, and a 3rd neighbor will blink after a 2nd nudge.
 func TestBlinkThree(t *testing.T) {
-	w := NewWorld(3, 3, 100)
+	w := NewWorld(3, 3, 100, 1_000_000, 25_000, 50_000, 50, 500_000, 900_000, 1_1000_000)
 
 	// f1 will blink immediately
 	f1 := NewFirefly(150, 150, 0, 0, 1000000, w)
@@ -82,7 +82,7 @@ func TestBlinkThree(t *testing.T) {
 
 // A blinking firefly nudges a neighbor in a neighboring cell.
 func TestBlinkNeighbor(t *testing.T) {
-	w := NewWorld(3, 3, 100)
+	w := NewWorld(3, 3, 100, 1_000_000, 25_000, 50_000, 50, 500_000, 900_000, 1_1000_000)
 
 	// f1 will blink immediately
 	f1 := NewFirefly(199, 150, 0, 0, 1000000, w)
@@ -104,7 +104,7 @@ func TestBlinkNeighbor(t *testing.T) {
 
 // Check that the fields/verbs used when printing are valid.
 func TestStringCell(t *testing.T) {
-	w := NewWorld(10, 10, 100)
+	w := NewWorld(3, 3, 100, 1_000_000, 25_000, 50_000, 50, 500_000, 900_000, 1_1000_000)
 	f := NewFirefly(0, 0, 0, 0, 1000000, w)
 	f.c.String()
 }

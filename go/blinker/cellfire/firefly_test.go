@@ -8,13 +8,13 @@ import (
 
 // Check that the fields/verbs used when printing are valid.
 func TestStringFirefly(t *testing.T) {
-	w := NewWorld(10, 10, 100)
+	w := NewWorld(3, 3, 100, 1_000_000, 25_000, 50_000, 50, 500_000, 900_000, 1_1000_000)
 	f := NewFirefly(0, 0, 0, 0, 1000000, w)
 	f.String()
 }
 
 func TestCheckBlink(t *testing.T) {
-	w := NewWorld(10, 10, 100)
+	w := NewWorld(3, 3, 100, 1_000_000, 25_000, 50_000, 50, 500_000, 900_000, 1_1000_000)
 
 	f := NewFirefly(0, 0, 0, 0, 1000000, w)
 	blinked := f.CheckBlink()
@@ -29,7 +29,7 @@ func TestCheckBlink(t *testing.T) {
 }
 
 func TestNudge(t *testing.T) {
-	w := NewWorld(10, 10, 100)
+	w := NewWorld(3, 3, 100, 1_000_000, 25_000, 50_000, 50, 500_000, 900_000, 1_1000_000)
 
 	f := NewFirefly(0, 0, 0, 0, 1000000, w)
 	g := NewFirefly(1, 1, 0, 0, 1000000, w)

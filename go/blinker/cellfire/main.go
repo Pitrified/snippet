@@ -12,9 +12,23 @@ func StartFire(
 ) {
 	cacheCosSin()
 
-	PrinterInit(100)
+	PrinterInit(50)
 
-	w := NewWorld(cw, ch, cellSize)
+	clockStart, clockTickLen := 1_000_000, 25_000
+	// nudgeAmount := 50_000
+	nudgeAmount := 100_000
+	nudgeRadius := float32(50)
+	// nudgeRadius := float32(100)
+	blinkCooldown := 200_000
+	periodMin, periodMax := 900_000, 1_1000_000
+
+	w := NewWorld(
+		cw, ch, cellSize,
+		clockStart, clockTickLen,
+		nudgeAmount, nudgeRadius,
+		blinkCooldown,
+		periodMin, periodMax,
+	)
 
 	w.HatchFireflies(nF)
 
@@ -22,7 +36,7 @@ func StartFire(
 		fmt.Printf("%+v\n", w)
 	}
 
-	N := 100 * 40 // n seconds * tick per second
+	N := 10 * 40 // n seconds * tick per second
 	s := time.Now()
 	for i := 0; i < N; i++ {
 		w.Step()

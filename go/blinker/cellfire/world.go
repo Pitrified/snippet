@@ -24,6 +24,8 @@ type World struct {
 	NudgeRadius   float32        // Max distance between communicating fireflies.
 	borderDist    float32        // Distance from a border to require a blinkQueue to the neighbor.
 	BlinkCooldown int            // Cooldown after blinking while the Firefly is not nudgeable.
+	PeriodMin     int            // Minimum length of the fireflies' period.
+	PeriodMax     int            // Maximum length of the fireflies' period.
 
 	chChangeCell     chan *ChangeCellReq   // A firefly needs to enter/leave the cell.
 	chChangeCellDone chan bool             // The cell change is done.
@@ -34,7 +36,15 @@ type World struct {
 }
 
 // NewWorld creates a new World.
-func NewWorld(cw, ch int, cellSize float32) *World {
+func NewWorld(
+	cw, ch int,
+	cellSize float32,
+	clockStart, clockTickLen int,
+	nudgeAmount int,
+	nudgeRadius float32,
+	blinkCooldown int,
+	periodMin, periodMax int,
+) *World {
 
 	cacheCosSin()
 
@@ -50,17 +60,24 @@ func NewWorld(cw, ch int, cellSize float32) *World {
 	w.sizeHalfH = w.SizeH / 2
 
 	// nudging params
-	w.Clock = 1_000_000     // start at 1 second
-	w.ClockTickLen = 25_000 // 25 ms
+	w.Clock = clockStart
+	w.ClockTickLen = clockTickLen
+	w.NudgeAmount = nudgeAmount
+	w.NudgeRadius = nudgeRadius
+	w.borderDist = w.NudgeRadius / 2
+	w.BlinkCooldown = blinkCooldown
+	w.PeriodMin = periodMin
+	w.PeriodMax = periodMax
+	// w.Clock = 1_000_000     // start at 1 second
+	// w.ClockTickLen = 25_000 // 25 ms
 	// w.ClockTickLen = 1_000 // 1 ms
 	// w.NudgeAmount = 50_000 // 50 ms
-	w.NudgeAmount = 100_000 // 50 ms
+	// w.NudgeAmount = 100_000 // 50 ms
 	// w.NudgeRadius = 20
-	w.NudgeRadius = 50
+	// w.NudgeRadius = 50
 	// w.NudgeRadius = 50
 	// w.NudgeRadius = 100
-	w.borderDist = w.NudgeRadius / 2
-	w.BlinkCooldown = 200_000 // 200 ms
+	// w.BlinkCooldown = 500_000 // 200 ms
 
 	// channels
 	w.chChangeCell = make(chan *ChangeCellReq)
@@ -93,7 +110,8 @@ func (w *World) HatchFireflies(n int) {
 		o := int16(rand.Float64() * 360)
 
 		// 0.9-1.1 s
-		p := RandRangeInt(900_000, 1_100_000)
+		p := RandRangeInt(w.PeriodMin, w.PeriodMax)
+		// p := RandRangeInt(900_000, 1_100_000)
 		// p := RandRangeInt(980_000, 1_020_000)
 		// p := 1_000_000
 

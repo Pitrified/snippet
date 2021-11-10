@@ -98,7 +98,7 @@ func TestAbsFloat32(t *testing.T) {
 
 // Test the computed Manhattan distances on a toro.
 func TestManhattanDist(t *testing.T) {
-	w := NewWorld(10, 10, 100)
+	w := NewWorld(10, 10, 100, 1_000_000, 25_000, 50_000, 50, 500_000, 900_000, 1_1000_000)
 	cases := []struct {
 		f, g *Firefly
 		want float32
