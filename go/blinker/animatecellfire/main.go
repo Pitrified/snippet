@@ -7,6 +7,7 @@ import (
 	"image/color"
 	"image/draw"
 	"math"
+	"strconv"
 	"sync"
 	"time"
 
@@ -56,6 +57,7 @@ type mySidebar struct {
 	resPerMin   *WideEntry
 	resPerMax   *widget.Entry
 	resCellSize *WideEntry
+	resRequest  bool
 }
 
 func newSidebar(a *myApp) *mySidebar {
@@ -64,12 +66,20 @@ func newSidebar(a *myApp) *mySidebar {
 
 // Build the sidebar.
 func (s *mySidebar) buildSidebar() *container.Scroll {
-	return container.NewVScroll(
+	contSidebar := container.NewVScroll(
 		container.NewVBox(
 			s.buildConfig(),
 			s.buildReset(),
 		),
 	)
+	return contSidebar
+}
+
+// Conlcude the setup of the sidebar widget.
+func (s *mySidebar) initSidebar() {
+	// we can only init this after the build is done
+	// the callback needs all widget to exist
+	s.confInteract.SetChecked(true)
 }
 
 // ##### CONFIG #####
@@ -88,7 +98,6 @@ func (s *mySidebar) buildConfig() *widget.Card {
 	// draw grid - interact fireflies
 	s.confDrawGrid = widget.NewCheck("Draw grid", s.confConfigChecked)
 	s.confInteract = widget.NewCheck("Interaction", s.confConfigChecked)
-	s.confInteract.SetChecked(true)
 
 	// button to reset world
 	s.confApply = widget.NewButton("Apply", s.confApplyCB)
@@ -97,35 +106,27 @@ func (s *mySidebar) buildConfig() *widget.Card {
 	s.confTickLen = widget.NewEntry()
 	s.confTickLen.Text = "25"
 	s.confTickLen.OnSubmitted = s.confConfigSubmitted
-	// contClockLen := container.NewBorder(
-	// 	nil, nil, widget.NewLabel("Tick length:"), widget.NewLabel("ms"),
-	// 	s.confTickLen,
-	// )
+	// contClockLen := container.NewBorder( nil, nil, widget.NewLabel("Tick length:"), widget.NewLabel("ms"), s.confTickLen)
 
 	// blinkCooldown entry
 	s.confBliCool = widget.NewEntry()
 	s.confBliCool.Text = "500"
 	s.confBliCool.OnSubmitted = s.confConfigSubmitted
-	// contBlinkCooldown := container.NewBorder(
-	// 	nil, nil, widget.NewLabel("Blink cooldown:"), widget.NewLabel("ms"),
-	// 	s.confBliCool,
-	// )
+	// contBlinkCooldown := container.NewBorder(nil, nil, widget.NewLabel("Blink cooldown:"), widget.NewLabel("ms"), s.confBliCool)
 
 	// number of fireflies entry
 	s.confFireNum = widget.NewEntry()
-	s.confFireNum.Text = "10000"
+	s.confFireNum.Text = "400"
 	s.confFireNum.OnSubmitted = s.confConfigSubmitted
 	contFireNum := container.NewBorder(
-		nil, nil, widget.NewLabel("Fireflies:"), nil,
-		container.NewBorder(
-			nil, nil, widget.NewLabel("Num:"), s.confInteract,
-			s.confFireNum,
-		),
+		nil, nil, widget.NewLabel("Fireflies:"), s.confInteract,
+		s.confFireNum,
 	)
 
 	// nudge
+	// TODO sliders are a lot better
 	s.confNAmount = widget.NewEntry()
-	s.confNAmount.Text = "50"
+	s.confNAmount.Text = "100"
 	s.confNAmount.OnSubmitted = s.confConfigSubmitted
 	s.confNRadius = widget.NewEntry()
 	s.confNRadius.Text = "20"
@@ -158,17 +159,17 @@ func (s *mySidebar) buildConfig() *widget.Card {
 
 // Pressed button to apply config changes.
 func (s *mySidebar) confApplyCB() {
-	s.a.configWorld()
+	s.a.configWorld("config")
 }
 
 // Pressed enter on any entry in the world config card.
 func (s *mySidebar) confConfigSubmitted(_ string) {
-	s.a.configWorld()
+	s.a.configWorld("config")
 }
 
 // Checked any checkbutton in the world config card.
 func (s *mySidebar) confConfigChecked(state bool) {
-	s.a.configWorld()
+	s.a.configWorld("config")
 }
 
 // ##### RESET #####
@@ -242,12 +243,12 @@ func (s *mySidebar) buildReset() *widget.Card {
 
 // Clicked button reset world.
 func (s *mySidebar) resResetCB() {
-	s.a.resetWorld()
+	s.resRequest = true
 }
 
 // Pressed enter on any entry in the world reset card.
 func (s *mySidebar) resResetSubmitted(_ string) {
-	s.a.resetWorld()
+	s.resRequest = true
 }
 
 // --------------------------------------------------------------------------------
@@ -274,6 +275,8 @@ type myApp struct {
 	blinkCooldown int
 	periodMin     int
 	periodMax     int
+	nF            int
+	nFold         int
 
 	decay    float64 // Decay rate of the brightness since the blink.
 	drawGrid bool    // Draw the cell grid.
@@ -318,31 +321,60 @@ func (a *myApp) buildUI() {
 	)
 
 	a.mainWin.SetContent(borderCont)
+
+	// // for the first reset to work we need this placeholder values
+	// // will be set to the correct ones in the first reset
+	// a.nudgeAmount = 100_000
+	// a.nudgeRadius = 20
+	// a.nF = 400
+
 }
 
 // Reset the world to simulate.
 //
 // Get all the values from the current UI state.
 func (a *myApp) resetWorld() {
-	a.wCellW = 3
-	a.wCellH = 3
-	a.wCellSize = 100
-	clockStart := 1_000_000
-	a.clockTickLen = 25_000
-	a.nudgeAmount = 100_000
-	a.nudgeRadius = 20
-	a.blinkCooldown = 500_000
-	a.periodMin = 900_000
-	a.periodMax = 1_100_000
+
+	// read only from UI to load the values
+	a.configRead("reset")
+
+	// get the reset params from the UI
+	a.resetRead()
+
+	// create a new world
 	a.w = cellfire.NewWorld(
 		a.wCellW, a.wCellH, float32(a.wCellSize),
-		clockStart, a.clockTickLen,
+		1_000_000, a.clockTickLen,
 		a.nudgeAmount, a.nudgeRadius,
 		a.blinkCooldown,
 		a.periodMin, a.periodMax,
 	)
-	nF := 400
-	a.w.HatchFireflies(nF)
+	a.w.HatchFireflies(a.nF)
+
+	// mark the request as done
+	a.s.resRequest = false
+
+	// update the config params
+	a.configApply("reset")
+}
+
+// Read the reset params from the UI
+func (a *myApp) resetRead() {
+
+	cW, cWerr := strconv.Atoi(a.s.resCellsW.Text)
+	cH, cHerr := strconv.Atoi(a.s.resCellsH.Text)
+	cS, cSerr := strconv.Atoi(a.s.resCellSize.Text)
+	pMin, pMinerr := strconv.Atoi(a.s.resPerMin.Text)
+	pMax, pMaxerr := strconv.Atoi(a.s.resPerMax.Text)
+	if cWerr != nil || cHerr != nil || cSerr != nil || pMinerr != nil || pMaxerr != nil {
+		return
+	}
+
+	a.wCellW = cW
+	a.wCellH = cH
+	a.wCellSize = cS
+	a.periodMin = pMin * 1000
+	a.periodMax = pMax * 1000
 
 	// size of the image to render the world in
 	// MAYBE needs a -1 on the right/top border
@@ -350,16 +382,66 @@ func (a *myApp) resetWorld() {
 
 }
 
-// Update the world with the new params.
+// Update the world with the new config params.
 //
 // Extract the data from the UI and update the world.
-func (a *myApp) configWorld() {
+func (a *myApp) configWorld(source string) {
+	a.configRead("config")
+	a.configApply("config")
+}
+
+// Extract the data from the UI.
+func (a *myApp) configRead(source string) {
+
+	// from checkbox
 	a.drawGrid = a.s.confDrawGrid.Checked
+
+	// get data from entries
+	nF, nFerr := strconv.Atoi(a.s.confFireNum.Text)
+	nA, nAerr := strconv.Atoi(a.s.confNAmount.Text)
+	nR, nRerr := strconv.Atoi(a.s.confNRadius.Text)
+	if nFerr != nil || nAerr != nil || nRerr != nil {
+		return
+	}
+	// fmt.Printf("nF, nA, nR = %+v %+v %+v\n", nF, nA, nR)
+
+	// save data in the app
+	a.nudgeAmount = nA * 1000
+	a.nudgeRadius = float32(nR)
+
+	// constants for now, too confusing for the user
+	a.clockTickLen = 25_000
+	a.blinkCooldown = 500_000
+
+	switch source {
+	case "reset":
+		// if we reset, also set old to nF
+		// the new world created will respect the requested value
+		a.nFold = nF
+		a.nF = nF
+	case "config":
+		// if this was a config, we need to add/remove fireflies manually
+		a.nFold = a.nF
+		a.nF = nF
+	}
+}
+
+// Apply the configuration to the world
+func (a *myApp) configApply(source string) {
+	a.w.NudgeAmount = a.nudgeAmount
+	a.w.NudgeRadius = a.nudgeRadius
+
+	// TODO add/remove fireflies
+	if a.nFold != a.nF {
+		fmt.Printf("a.nFold, a.nF = %+v %+v\n", a.nFold, a.nF)
+	}
+	a.nFold = a.nF
 }
 
 func (a *myApp) runApp() {
 	a.buildUI()
 	a.resetWorld()
+	a.s.initSidebar()
 	a.animate()
 	a.mainWin.Resize(fyne.NewSize(1200, 900))
 	a.mainWin.Show()
@@ -373,6 +455,13 @@ func (a *myApp) animate() {
 
 		// for { select { case <-tickRender.C: } }
 		for range tickRender.C {
+			// if a reset request is pending, reset the world
+			if a.s.resRequest {
+				a.resetWorld()
+			} else {
+				// update the world config
+				a.configWorld("animate")
+			}
 			a.renderWorld()
 			// a.w.DoStep <- 'M'
 			a.w.Move()
