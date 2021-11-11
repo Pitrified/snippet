@@ -39,11 +39,15 @@ func brightness(x int, decay float64) float64 {
 type mySidebar struct {
 	a *myApp
 
-	confCard    *widget.Card
-	confTickLen *widget.Entry
-	// confNAmount *WideEntry
-	confNAmount *widget.Entry
-	confNRadius *widget.Entry
+	confCard     *widget.Card
+	confApply    *widget.Button
+	confFireNum  *widget.Entry
+	confTickLen  *widget.Entry
+	confBliCool  *widget.Entry
+	confNAmount  *widget.Entry
+	confNRadius  *widget.Entry
+	confDrawGrid *widget.Check
+	confInteract *widget.Check
 
 	resCard     *widget.Card
 	resReset    *widget.Button
@@ -72,6 +76,7 @@ func (s *mySidebar) buildSidebar() *container.Scroll {
 
 // Set params that do not require a reset of the world.
 //
+// * firefly amount
 // * clockTickLen
 // * nudgeAmount
 // * nudgeRadius
@@ -80,13 +85,42 @@ func (s *mySidebar) buildSidebar() *container.Scroll {
 // * interact fireflies
 func (s *mySidebar) buildConfig() *widget.Card {
 
+	// draw grid - interact fireflies
+	s.confDrawGrid = widget.NewCheck("Draw grid", s.confConfigChecked)
+	s.confInteract = widget.NewCheck("Interaction", s.confConfigChecked)
+	s.confInteract.SetChecked(true)
+
+	// button to reset world
+	s.confApply = widget.NewButton("Apply", s.confApplyCB)
+
 	// clockTickLen entry
 	s.confTickLen = widget.NewEntry()
 	s.confTickLen.Text = "25"
 	s.confTickLen.OnSubmitted = s.confConfigSubmitted
-	contClockLen := container.NewBorder(
-		nil, nil, widget.NewLabel("Tick length:"), widget.NewLabel("ms"),
-		s.confTickLen,
+	// contClockLen := container.NewBorder(
+	// 	nil, nil, widget.NewLabel("Tick length:"), widget.NewLabel("ms"),
+	// 	s.confTickLen,
+	// )
+
+	// blinkCooldown entry
+	s.confBliCool = widget.NewEntry()
+	s.confBliCool.Text = "500"
+	s.confBliCool.OnSubmitted = s.confConfigSubmitted
+	// contBlinkCooldown := container.NewBorder(
+	// 	nil, nil, widget.NewLabel("Blink cooldown:"), widget.NewLabel("ms"),
+	// 	s.confBliCool,
+	// )
+
+	// number of fireflies entry
+	s.confFireNum = widget.NewEntry()
+	s.confFireNum.Text = "10000"
+	s.confFireNum.OnSubmitted = s.confConfigSubmitted
+	contFireNum := container.NewBorder(
+		nil, nil, widget.NewLabel("Fireflies:"), nil,
+		container.NewBorder(
+			nil, nil, widget.NewLabel("Num:"), s.confInteract,
+			s.confFireNum,
+		),
 	)
 
 	// nudge
@@ -110,13 +144,30 @@ func (s *mySidebar) buildConfig() *widget.Card {
 		),
 	)
 
-	contCard := container.NewVBox(contClockLen, contNudge)
+	contCard := container.NewVBox(
+		contFireNum,
+		contNudge,
+		// contClockLen,
+		// contBlinkCooldown,
+		s.confDrawGrid,
+		s.confApply,
+	)
 	s.confCard = widget.NewCard("Config", "", contCard)
 	return s.confCard
 }
 
+// Pressed button to apply config changes.
+func (s *mySidebar) confApplyCB() {
+	s.a.configWorld()
+}
+
 // Pressed enter on any entry in the world config card.
 func (s *mySidebar) confConfigSubmitted(_ string) {
+	s.a.configWorld()
+}
+
+// Checked any checkbutton in the world config card.
+func (s *mySidebar) confConfigChecked(state bool) {
 	s.a.configWorld()
 }
 
@@ -224,7 +275,8 @@ type myApp struct {
 	periodMin     int
 	periodMax     int
 
-	decay float64 // Decay rate of the brightness since the blink.
+	decay    float64 // Decay rate of the brightness since the blink.
+	drawGrid bool    // Draw the cell grid.
 }
 
 // Create a new app.
@@ -272,13 +324,13 @@ func (a *myApp) buildUI() {
 //
 // Get all the values from the current UI state.
 func (a *myApp) resetWorld() {
-	a.wCellW = 16
-	a.wCellH = 16
+	a.wCellW = 3
+	a.wCellH = 3
 	a.wCellSize = 100
 	clockStart := 1_000_000
 	a.clockTickLen = 25_000
 	a.nudgeAmount = 100_000
-	a.nudgeRadius = 50
+	a.nudgeRadius = 20
 	a.blinkCooldown = 500_000
 	a.periodMin = 900_000
 	a.periodMax = 1_100_000
@@ -289,7 +341,7 @@ func (a *myApp) resetWorld() {
 		a.blinkCooldown,
 		a.periodMin, a.periodMax,
 	)
-	nF := 10000
+	nF := 400
 	a.w.HatchFireflies(nF)
 
 	// size of the image to render the world in
@@ -299,7 +351,10 @@ func (a *myApp) resetWorld() {
 }
 
 // Update the world with the new params.
+//
+// Extract the data from the UI and update the world.
 func (a *myApp) configWorld() {
+	a.drawGrid = a.s.confDrawGrid.Checked
 }
 
 func (a *myApp) runApp() {
@@ -366,20 +421,22 @@ func (a *myApp) renderWorld() {
 // Render the cell.
 func (a *myApp) renderCell(c *cellfire.Cell, m *image.RGBA) {
 
-	// // checkerboard pattern
-	// left := c.Cx * a.wCellSize
-	// bottom := c.Cy * a.wCellSize
-	// col := uint8(20)
-	// if c.Cx%2 == c.Cy%2 {
-	// 	col = 30
-	// }
-	// for i := 0; i < a.wCellSize; i++ {
-	// 	for ii := 0; ii < a.wCellSize; ii++ {
-	// 		m.Set(left+i, bottom+ii, color.RGBA{col, col, col, 255})
-	// 	}
-	// }
+	// checkerboard pattern
+	if a.drawGrid {
+		left := c.Cx * a.wCellSize
+		bottom := c.Cy * a.wCellSize
+		col := uint8(20)
+		if c.Cx%2 == c.Cy%2 {
+			col = 30
+		}
+		for i := 0; i < a.wCellSize; i++ {
+			for ii := 0; ii < a.wCellSize; ii++ {
+				m.Set(left+i, bottom+ii, color.RGBA{col, col, col, 255})
+			}
+		}
+	}
 
-	minBr := 60.0
+	minBr := 30.0
 	fCol := color.RGBA{10, 10, uint8(minBr), 255}
 	for _, f := range c.Fireflies {
 		since := a.w.Clock - (f.NextBlink - f.Period)
