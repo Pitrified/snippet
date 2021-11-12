@@ -7,6 +7,7 @@ import (
 	"image/color"
 	"image/draw"
 	"math"
+	"math/rand"
 	"strconv"
 	"sync"
 	"time"
@@ -49,6 +50,7 @@ type mySidebar struct {
 	confNRadius  *widget.Entry
 	confDrawGrid *widget.Check
 	confInteract *widget.Check
+	confRequest  bool
 
 	resCard     *widget.Card
 	resReset    *widget.Button
@@ -159,17 +161,17 @@ func (s *mySidebar) buildConfig() *widget.Card {
 
 // Pressed button to apply config changes.
 func (s *mySidebar) confApplyCB() {
-	s.a.configWorld("config")
+	s.confRequest = true
 }
 
 // Pressed enter on any entry in the world config card.
 func (s *mySidebar) confConfigSubmitted(_ string) {
-	s.a.configWorld("config")
+	s.confRequest = true
 }
 
 // Checked any checkbutton in the world config card.
 func (s *mySidebar) confConfigChecked(state bool) {
-	s.a.configWorld("config")
+	s.confRequest = true
 }
 
 // ##### RESET #####
@@ -277,6 +279,7 @@ type myApp struct {
 	periodMax     int
 	nF            int
 	nFold         int
+	newFId        int
 
 	decay    float64 // Decay rate of the brightness since the blink.
 	drawGrid bool    // Draw the cell grid.
@@ -350,9 +353,11 @@ func (a *myApp) resetWorld() {
 		a.periodMin, a.periodMax,
 	)
 	a.w.HatchFireflies(a.nF)
+	a.newFId = a.nF + 1
 
 	// mark the request as done
 	a.s.resRequest = false
+	a.s.confRequest = false
 
 	// update the config params
 	a.configApply("reset")
@@ -433,42 +438,79 @@ func (a *myApp) configApply(source string) {
 
 	// TODO add/remove fireflies
 	if a.nFold != a.nF {
-		fmt.Printf("a.nFold, a.nF = %+v %+v\n", a.nFold, a.nF)
+		a.changeFireflyNum()
 	}
 	a.nFold = a.nF
+}
+
+func (a *myApp) changeFireflyNum() {
+	fmt.Printf("a.nFold, a.nF = %+v %+v\n", a.nFold, a.nF)
+
+	totCNum := a.wCellW * a.wCellH
+
+	// remove fireflies
+	i := 0
+	for a.nFold > a.nF {
+		cId := i % totCNum
+		cX := cId % a.wCellW
+		cY := cId / a.wCellH
+		fId := getMapKey(a.w.Cells[cX][cY].Fireflies)
+		// fmt.Printf("i, cId, cX, cY, fId = %+v %+v %+v %+v %+v\n", i, cId, cX, cY, fId)
+		i++
+		if fId == -1 {
+			continue
+		}
+		f := a.w.Cells[cX][cY].Fireflies[fId]
+		a.w.Cells[cX][cY].Leave(f)
+		a.nFold--
+	}
+	for a.nFold < a.nF {
+		x := rand.Float32() * a.w.SizeW
+		y := rand.Float32() * a.w.SizeH
+		o := int16(rand.Float64() * 360)
+		p := cellfire.RandRangeInt(a.w.PeriodMin, a.w.PeriodMax)
+		cellfire.NewFirefly(x, y, o, a.newFId, p, a.w)
+		a.newFId++
+		a.nFold++
+	}
 }
 
 func (a *myApp) runApp() {
 	a.buildUI()
 	a.resetWorld()
 	a.s.initSidebar()
-	a.animate()
+	go a.animate()
 	a.mainWin.Resize(fyne.NewSize(1200, 900))
 	a.mainWin.Show()
 	a.fyneApp.Run()
 }
 
 func (a *myApp) animate() {
-	go func() {
-		// Render rate limiter
-		tickRender := time.NewTicker(time.Second / 25)
+	// Render rate limiter
+	tickRender := time.NewTicker(time.Second / 25)
 
-		// for { select { case <-tickRender.C: } }
-		for range tickRender.C {
-			// if a reset request is pending, reset the world
-			if a.s.resRequest {
-				a.resetWorld()
-			} else {
-				// update the world config
-				a.configWorld("animate")
-			}
-			a.renderWorld()
-			// a.w.DoStep <- 'M'
-			a.w.Move()
-			a.w.ClockTick()
+	// for { select { case <-tickRender.C: } }
+	for range tickRender.C {
+		// evade outstanding requests
+		if a.s.resRequest {
+			a.resetWorld()
+		} else if a.s.confRequest {
+			a.configWorld("animate")
 		}
-
-	}()
+		// t1 := time.Now()
+		a.renderWorld()
+		// t2 := time.Now()
+		// a.w.DoStep <- 'M'
+		a.w.Move()
+		// t3 := time.Now()
+		a.w.ClockTick()
+		// t4 := time.Now()
+		// fmt.Printf("render %+v move %+v tick %+v\n",
+		// 	t2.Sub(t1),
+		// 	t3.Sub(t2),
+		// 	t4.Sub(t3),
+		// )
+	}
 }
 
 func (a *myApp) typedKey(ev *fyne.KeyEvent) {

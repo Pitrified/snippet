@@ -1,9 +1,7 @@
 package main
 
 import (
-	"strconv"
-
-	"fyne.io/fyne/v2/widget"
+	"blinker/cellfire"
 )
 
 func MaxFloat32(a, b float32) float32 {
@@ -14,7 +12,15 @@ func MaxFloat32(a, b float32) float32 {
 	}
 }
 
-// Extract the float64 from an entry.
-func entry2F64(e *widget.Entry) (float64, error) {
-	return strconv.ParseFloat(e.Text, 64)
+// // Extract the float64 from an entry.
+// func entry2F64(e *widget.Entry) (float64, error) {
+// 	return strconv.ParseFloat(e.Text, 64)
+// }
+
+// https://stackoverflow.com/q/23482786/2237151
+func getMapKey(m map[int]*cellfire.Firefly) int {
+	for k := range m {
+		return k
+	}
+	return -1
 }
