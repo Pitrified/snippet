@@ -118,7 +118,8 @@ func (s *mySidebar) buildConfig() *widget.Card {
 
 	// number of fireflies entry
 	s.confFireNum = widget.NewEntry()
-	s.confFireNum.Text = "400"
+	// s.confFireNum.Text = "40000"
+	s.confFireNum.Text = "2000"
 	s.confFireNum.OnSubmitted = s.confConfigSubmitted
 	contFireNum := container.NewBorder(
 		nil, nil, widget.NewLabel("Fireflies:"), s.confInteract,
@@ -128,10 +129,11 @@ func (s *mySidebar) buildConfig() *widget.Card {
 	// nudge
 	// TODO sliders are a lot better
 	s.confNAmount = widget.NewEntry()
-	s.confNAmount.Text = "100"
+	s.confNAmount.Text = "20"
 	s.confNAmount.OnSubmitted = s.confConfigSubmitted
 	s.confNRadius = widget.NewEntry()
-	s.confNRadius.Text = "20"
+	// s.confNRadius.Text = "30"
+	s.confNRadius.Text = "25"
 	s.confNRadius.OnSubmitted = s.confConfigSubmitted
 	contNudge := container.NewBorder(
 		nil, nil, widget.NewLabel("Nudge:"), nil,
@@ -188,11 +190,13 @@ func (s *mySidebar) buildReset() *widget.Card {
 	// entries to set world size in cells
 	// Entry W, at least wide 3*IconInlineSize
 	s.resCellsW = NewWideEntry(fyne.NewSize(3*theme.IconInlineSize(), 0))
-	s.resCellsW.Text = "3"
+	// s.resCellsW.Text = "16"
+	s.resCellsW.Text = "4"
 	s.resCellsW.OnSubmitted = s.resResetSubmitted
 	// Entry H, the width is set equal to W by the grid layout
 	s.resCellsH = widget.NewEntry()
-	s.resCellsH.Text = "3"
+	// s.resCellsH.Text = "16"
+	s.resCellsH.Text = "4"
 	s.resCellsH.OnSubmitted = s.resResetSubmitted
 	contCells := container.NewBorder(
 		nil, nil, widget.NewLabel("World size:"), widget.NewLabel("cells"),
@@ -281,8 +285,9 @@ type myApp struct {
 	nFold         int
 	newFId        int
 
-	decay    float64 // Decay rate of the brightness since the blink.
-	drawGrid bool    // Draw the cell grid.
+	decay         float64 // Decay rate of the brightness since the blink.
+	drawGrid      bool    // Draw the cell grid.
+	doInteraction bool    // Do the interactions between fireflies.
 }
 
 // Create a new app.
@@ -400,6 +405,7 @@ func (a *myApp) configRead(source string) {
 
 	// from checkbox
 	a.drawGrid = a.s.confDrawGrid.Checked
+	a.doInteraction = a.s.confInteract.Checked
 
 	// get data from entries
 	nF, nFerr := strconv.Atoi(a.s.confFireNum.Text)
@@ -412,7 +418,12 @@ func (a *myApp) configRead(source string) {
 
 	// save data in the app
 	a.nudgeAmount = nA * 1000
-	a.nudgeRadius = float32(nR)
+	// to stop the interaction set the redius to 0
+	if a.doInteraction {
+		a.nudgeRadius = float32(nR)
+	} else {
+		a.nudgeRadius = 0
+	}
 
 	// constants for now, too confusing for the user
 	a.clockTickLen = 25_000
@@ -436,7 +447,7 @@ func (a *myApp) configApply(source string) {
 	a.w.NudgeAmount = a.nudgeAmount
 	a.w.NudgeRadius = a.nudgeRadius
 
-	// TODO add/remove fireflies
+	// add/remove fireflies
 	if a.nFold != a.nF {
 		a.changeFireflyNum()
 	}
@@ -476,6 +487,7 @@ func (a *myApp) changeFireflyNum() {
 }
 
 func (a *myApp) runApp() {
+	rand.Seed(time.Now().UnixNano())
 	a.buildUI()
 	a.resetWorld()
 	a.s.initSidebar()
