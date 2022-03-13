@@ -75,6 +75,15 @@ var templateFirefly = [][]byte{
 	{'W', 'O', 'W'},
 }
 
+var templateFirefly45 = [][]byte{
+	// {'A', 'I', 'H'},
+	// {'I', 'O', 'I'},
+	// {'O', 'I', 'A'},
+	{'I', 'I', 'H'},
+	{'A', 'O', 'I'},
+	{'O', 'A', 'I'},
+}
+
 var templateFireflyLarge = [][]byte{
 	{'A', 'A', 'H', 'A', 'A'},
 	{'W', 'W', 'B', 'W', 'W'},
@@ -109,9 +118,9 @@ func tryColorful() {
 
 			key := keys[ii]
 			col := elemColor[key].GetBlent(t)
-			fmt.Printf("elemColor[%v].GetBlent(%v) = %+v\n",
-				key, t, col,
-			)
+			// fmt.Printf("elemColor[%v].GetBlent(%v) = %+v\n",
+			// 	key, t, col,
+			// )
 			draw.Draw(img,
 				image.Rect(i*blockw, ii*blockw, (i+1)*blockw, (ii+1)*blockw),
 				&image.Uniform{col},
@@ -121,6 +130,7 @@ func tryColorful() {
 	SavePNG("testBlend.png", img)
 
 	fmt.Printf("templateFirefly = %+v\n", templateFirefly)
+	fmt.Printf("templateFirefly45 = %+v\n", templateFirefly45)
 	fmt.Printf("templateFireflyLarge = %+v\n", templateFireflyLarge)
 
 	img = image.NewRGBA(image.Rect(0, 0, 100, 100))
@@ -220,6 +230,7 @@ func tryColorful() {
 
 	tmp := templateFireflyLarge
 	// tmp := templateFirefly
+	// tmp := templateFirefly45
 	steps := 11
 	fireflyImg := image.NewRGBA(image.Rect(0, 0, len(tmp)*steps, len(tmp[0])))
 	fmt.Printf("size = %vx%v\n", len(tmp), len(tmp[0]))
@@ -228,19 +239,128 @@ func tryColorful() {
 			for x := 0; x < len(tmp[0]); x++ {
 				key := tmp[y][x] // this is swapped, the first row is y=0
 				blend := elemColor[key].GetBlent(float64(ti) * 0.1)
-				fmt.Printf("i, ii, blend = %vx%v : %+v\n", y, x, blend)
+				// fmt.Printf("i, ii, blend = %vx%v : %+v\n", y, x, blend)
 				r, g, b := blend.Clamped().RGB255()
 				fireflyImg.SetRGBA(x+len(tmp)*ti, y, color.RGBA{r, g, b, 255})
 			}
 		}
-
 	}
+
 	SavePNG("testFirefly.png", fireflyImg)
 	pixSize := 50
 	largeSize := image.Rect(0, 0, len(tmp)*pixSize*steps, len(tmp[0])*pixSize)
 	dst := image.NewRGBA(largeSize)
-	draw.NearestNeighbor.Scale(dst, largeSize, fireflyImg, fireflyImg.Bounds(), draw.Over, nil)
+	draw.NearestNeighbor.Scale(dst, largeSize, fireflyImg, fireflyImg.Bounds(), draw.Src, nil)
 	SavePNG("testUpscaledFirefly.png", dst)
+
+	fSize := len(tmp)
+	fireflyRotImg := image.NewRGBA(image.Rect(0, 0, fSize*4, len(tmp[0])))
+	for y := 0; y < fSize; y++ {
+		for x := 0; x < len(tmp[0]); x++ {
+			key := tmp[y][x] // this is swapped, the first row is y=0
+			blend := elemColor[key].GetBlent(float64(1) * 0.1)
+			r, g, b := blend.Clamped().RGB255()
+			// upright
+			fmt.Printf("x, y = %v, %v\n", x, y)
+			fireflyRotImg.SetRGBA(x, y, color.RGBA{r, g, b, 255})
+			// right
+			fmt.Printf("-y+fSize-1, x = %v, %v\n", -y+fSize-1, x)
+			fireflyRotImg.SetRGBA(-y+fSize-1+fSize, x, color.RGBA{r, g, b, 255})
+			// bottom
+			fmt.Printf("-x+fSize-1, -y+fSize-1 = %v, %v\n", -x+fSize-1, -y+fSize-1)
+			fireflyRotImg.SetRGBA(-x+fSize-1+(fSize*2), -y+fSize-1, color.RGBA{r, g, b, 255})
+			// left
+			fmt.Printf("y, -x+fSize-1 = %v, %v\n", y, -x+fSize-1)
+			fireflyRotImg.SetRGBA(y+(fSize*3), -x+fSize-1, color.RGBA{r, g, b, 255})
+		}
+	}
+	// pixSize = 50
+	// largeSize = image.Rect(0, 0, len(tmp)*pixSize*4, len(tmp[0])*pixSize)
+	// dst = image.NewRGBA(largeSize)
+	// draw.NearestNeighbor.Scale(dst, largeSize, fireflyRotImg, fireflyRotImg.Bounds(), draw.Src, nil)
+	dst = UpscaleImg(fireflyRotImg, 50)
+	SavePNG("testRotatedFirefly.png", dst)
+}
+
+// Generate an image with all the needed fireflies to use.
+// horizontal change the luminosity
+// vertical change the rotation
+func GenBlitMap() {
+
+	// firefly templates
+	templateFirefly := [][][]byte{
+		{
+			{'A', 'H', 'A'},
+			// {'W', 'B', 'W'},
+			{'I', 'O', 'I'},
+			{'I', 'O', 'I'},
+		},
+		{
+			// {'A', 'I', 'H'},
+			// {'I', 'O', 'I'},
+			// {'O', 'I', 'A'},
+			{'I', 'I', 'H'},
+			{'A', 'O', 'I'},
+			{'O', 'A', 'I'},
+		},
+	}
+
+	// number of lightness levels (-1)
+	lLevels := 10
+
+	numTemplates := len(templateFirefly)
+	fSize := len(templateFirefly[0])
+
+	fireflyRotImg := image.NewRGBA(image.Rect(0, 0, fSize*(lLevels+1), fSize*numTemplates*4))
+
+	// helper to read rotation directions
+	rotName := []string{
+		"up",
+		"right",
+		"down",
+		"left",
+	}
+
+	// iterate over the lightness level
+	for il := 0; il <= lLevels; il++ {
+
+		// compute the lightness level in [0,1]
+		l := float64(il) * 1.0 / float64(lLevels)
+		fmt.Printf("l = %+v\n", l)
+		// how much to shift the template right
+		lSh := fSize * il
+
+		// iterate over the template position
+		for y := 0; y < fSize; y++ {
+			for x := 0; x < fSize; x++ {
+
+				// iterate over the different templates
+				for it := 0; it < numTemplates; it++ {
+
+					// get the color to use
+					key := templateFirefly[it][y][x] // this is swapped, the first row is y=0
+					blend := elemColor[key].GetBlent(l)
+					r, g, b := blend.Clamped().RGB255()
+
+					// how much to shift the template down
+					tSh := fSize * (numTemplates - 1) * it
+
+					// iterate over the different rotations
+					for ir := 0; ir < len(rotName); ir++ {
+						// get the rotated coordinates
+						xr, yr := GetRotatedCoords(x, y, fSize, rotName[ir])
+						// how much to shift the template right
+						rSh := fSize * numTemplates * ir
+						fireflyRotImg.SetRGBA(xr+lSh, yr+tSh+rSh, color.RGBA{r, g, b, 255})
+					}
+				}
+			}
+		}
+	}
+
+	dst := UpscaleImg(fireflyRotImg, 20)
+	SavePNG("testBlitFirefly.png", dst)
+
 }
 
 func SavePNG(name string, img image.Image) {
@@ -256,7 +376,32 @@ func SavePNG(name string, img image.Image) {
 
 // rescale image
 // https://gist.github.com/logrusorgru/570d64fd6a051e0441014387b89286ca
+func UpscaleImg(img image.Image, pixSize int) *image.RGBA {
+	largeSize := image.Rect(0, 0, img.Bounds().Dx()*pixSize, img.Bounds().Dy()*pixSize)
+	dst := image.NewRGBA(largeSize)
+	draw.NearestNeighbor.Scale(dst, largeSize, img, img.Bounds(), draw.Src, nil)
+	return dst
+}
+
+func GetRotatedCoords(x, y, size int, rot string) (int, int) {
+	switch rot {
+	case "up":
+		return x, y
+	case "right":
+		return -y + size - 1, x
+	case "down":
+		return -x + size - 1, -y + size - 1
+	case "left":
+		return y, -x + size - 1
+	}
+	// this should never happen lol
+	return 0, 0
+}
+
+// rescale image
+// https://gist.github.com/logrusorgru/570d64fd6a051e0441014387b89286ca
 func main() {
 	fmt.Println("vim-go")
 	tryColorful()
+	GenBlitMap()
 }
