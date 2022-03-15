@@ -285,7 +285,7 @@ func tryColorful() {
 // Generate an image with all the needed fireflies to use.
 // horizontal change the luminosity
 // vertical change the rotation
-func GenBlitMap() {
+func GenBlitMap() *image.RGBA {
 
 	// firefly templates
 	templateFirefly := [][][]byte{
@@ -361,6 +361,91 @@ func GenBlitMap() {
 	dst := UpscaleImg(fireflyRotImg, 20)
 	SavePNG("testBlitFirefly.png", dst)
 
+	return fireflyRotImg
+}
+
+type Firefly struct {
+	X, Y float32 // Position on the map.
+	O    int16   // Orientation in degrees.
+}
+
+// orientation and lightness level
+func findBlitPos(o int16, l int, templateSize int) (int, int) {
+
+	tO := o + 22
+	if tO > 360 {
+		tO -= 360
+	}
+	rotI := tO / 45
+
+	return l * templateSize, int(rotI) * templateSize
+}
+
+func tryBlitting(blitTemplate *image.RGBA) {
+
+	// blitSize := image.Rect(0, 0, 3, 3)
+
+	// the world is 30x20, upscaled 3x
+
+	img := image.NewRGBA(image.Rect(0, 0, 90, 60))
+	backCol := elemColor['A'].GetBlent(1)
+
+	draw.Draw(img,
+		img.Bounds(),
+		&image.Uniform{backCol},
+		image.Point{}, draw.Src)
+
+	// find the corner of the rect in the source image
+	x, y := findBlitPos(0, 1, 3) // == sr.Min
+	// rectangle in the source image
+	sr := image.Rect(x, y, x+3, y+3)
+	// corner of the rect in the dest image
+	dp := image.Pt(10, 10)
+	// rectangle in the dest image
+	dr := image.Rectangle{dp, dp.Add(sr.Size())}
+	draw.Draw(img, dr, blitTemplate, sr.Min, draw.Src)
+
+	// regular placement
+	x, y = findBlitPos(45, 1, 3)
+	sr = image.Rect(x, y, x+3, y+3)
+	dp = image.Pt(20, 10)
+	dr = image.Rectangle{dp, dp.Add(sr.Size())}
+	draw.Draw(img, dr, blitTemplate, sr.Min, draw.Src)
+
+	// out of border: no problem!
+	x, y = findBlitPos(135, 1, 3)
+	sr = image.Rect(x, y, x+3, y+3)
+	dp = image.Pt(-1, -1)
+	dr = image.Rectangle{dp, dp.Add(sr.Size())}
+	draw.Draw(img, dr, blitTemplate, sr.Min, draw.Src)
+
+	// out of border: no problem!
+	x, y = findBlitPos(135, 1, 3)
+	sr = image.Rect(x, y, x+3, y+3)
+	dp = image.Pt(img.Bounds().Max.X-2, img.Bounds().Max.Y-2)
+	dr = image.Rectangle{dp, dp.Add(sr.Size())}
+	draw.Draw(img, dr, blitTemplate, sr.Min, draw.Src)
+
+	_, y = findBlitPos(270, 1, 3)
+	x = 3 * 6
+	sr = image.Rect(x, y, x+3, y+3)
+	dp = image.Pt(20, 20)
+	dr = image.Rectangle{dp, dp.Add(sr.Size())}
+	draw.Draw(img, dr, blitTemplate, sr.Min, draw.Src)
+
+	_, y = findBlitPos(270, 1, 3)
+	x = 3 * 7
+	sr = image.Rect(x, y, x+3, y+3)
+	dp = image.Pt(25, 20)
+	dr = image.Rectangle{dp, dp.Add(sr.Size())}
+	draw.Draw(img, dr, blitTemplate, sr.Min, draw.Src)
+
+	SavePNG("testBlitting.png", img)
+	dst := UpscaleImg(img, 20)
+	SavePNG("testBlittingUpscaled.png", dst)
+	SavePNG("testBlittingUpscaled2.png", UpscaleImg(img, 2))
+	SavePNG("testBlittingUpscaled3.png", UpscaleImg(img, 3))
+
 }
 
 func SavePNG(name string, img image.Image) {
@@ -403,5 +488,6 @@ func GetRotatedCoords(x, y, size int, rot string) (int, int) {
 func main() {
 	fmt.Println("vim-go")
 	tryColorful()
-	GenBlitMap()
+	blit := GenBlitMap()
+	tryBlitting(blit)
 }
