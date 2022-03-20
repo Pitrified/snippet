@@ -60,36 +60,71 @@ func (r *RangeColorHCL) GetBlent(t float64) colorful.Color {
 }
 
 var elemColor = map[byte]*RangeColorHCL{
-	'H': NewRangeColorHCL(20, 0.5, 0.7, 0.2),   // Head
-	'B': NewRangeColorHCL(36, 0.5, 0.01, 0.01), // Body
-	'O': NewRangeColorHCL(55, 0.9, 0.7, 0.2),   // bOdy glowing
-	'W': NewRangeColorHCL(240, 0.7, 0.2, 0.2),  // Wings
-	'I': NewRangeColorHCL(240, 0.7, 0.7, 0.2),  // wIngs glowing
-	'A': NewRangeColorHCL(0, 0.0, 0.2, 0.2),    // bAckground
-	'C': NewRangeColorHCL(0, 0.0, 0.4, 0.2),    // baCkground glowing
+	'h': NewRangeColorHCL(20, 0.5, 0.7, 0.2),   // head
+	'b': NewRangeColorHCL(36, 0.5, 0.01, 0.01), // body
+	'B': NewRangeColorHCL(55, 0.9, 0.7, 0.2),   // Body glowing
+	'w': NewRangeColorHCL(240, 0.7, 0.2, 0.2),  // wings
+	'W': NewRangeColorHCL(240, 0.7, 0.7, 0.2),  // Wings glowing
+	'a': NewRangeColorHCL(0, 0.0, 0.2, 0.2),    // background
+	'A': NewRangeColorHCL(0, 0.0, 0.4, 0.2),    // bAckground glowing
 }
 
-var templateFirefly = [][]byte{
-	{'A', 'H', 'A'},
-	{'I', 'B', 'I'},
-	{'W', 'O', 'W'},
+var templateFireflySingle = [][]byte{
+	{'a', 'h', 'a'},
+	{'W', 'b', 'W'},
+	{'w', 'B', 'w'},
 }
 
-var templateFirefly45 = [][]byte{
-	// {'A', 'I', 'H'},
-	// {'I', 'O', 'I'},
-	// {'O', 'I', 'A'},
-	{'I', 'I', 'H'},
-	{'A', 'O', 'I'},
-	{'O', 'A', 'I'},
+var templateFireflySingle45 = [][]byte{
+	// {'a', 'W', 'h'},
+	// {'W', 'B', 'W'},
+	// {'B', 'W', 'a'},
+	{'W', 'W', 'h'},
+	{'a', 'B', 'W'},
+	{'B', 'a', 'W'},
 }
 
-var templateFireflyLarge = [][]byte{
-	{'A', 'A', 'H', 'A', 'A'},
-	{'W', 'W', 'B', 'W', 'W'},
-	{'W', 'I', 'O', 'I', 'W'},
-	{'W', 'C', 'O', 'C', 'W'},
-	{'A', 'C', 'O', 'C', 'A'},
+var templateFireflyLargeSingle = [][]byte{
+	{'a', 'a', 'h', 'a', 'a'},
+	{'w', 'w', 'b', 'w', 'w'},
+	{'w', 'W', 'B', 'W', 'w'},
+	{'w', 'A', 'B', 'A', 'w'},
+	{'a', 'A', 'B', 'A', 'a'},
+}
+
+// firefly templates
+var TemplateFirefly = [][][]byte{
+	{
+		{'a', 'h', 'a'},
+		// {'w', 'b', 'w'},
+		{'W', 'B', 'W'},
+		{'W', 'B', 'W'},
+	},
+	{
+		// {'a', 'W', 'h'},
+		// {'W', 'B', 'W'},
+		// {'B', 'W', 'a'},
+		{'W', 'W', 'h'},
+		{'a', 'B', 'W'},
+		{'B', 'a', 'W'},
+	},
+}
+
+var TemplateFireflyLarge = [][][]byte{
+	{
+		{'a', 'a', 'h', 'a', 'a'},
+		{'W', 'W', 'b', 'W', 'W'},
+		{'W', 'W', 'B', 'W', 'W'},
+		{'W', 'A', 'B', 'A', 'W'},
+		{'a', 'A', 'B', 'A', 'a'},
+	},
+	{
+		{'W', 'W', 'W', 'a', 'h'},
+		{'a', 'W', 'W', 'b', 'a'},
+		{'a', 'A', 'B', 'W', 'W'},
+		{'A', 'B', 'A', 'W', 'W'},
+		{'B', 'A', 'a', 'a', 'W'},
+	},
 }
 
 func tryColorful() {
@@ -102,9 +137,8 @@ func tryColorful() {
 	fmt.Printf("elemColor['O'] = %+v\n", elemColor['O'])
 
 	keys := []byte{
-		'O', 'I', 'C',
-		'H', 'B', 'W', 'A',
-		// 'a', 'b', 'c', 'd', 'e', 'f',
+		'B', 'W', 'A',
+		'h', 'b', 'w', 'a',
 	}
 
 	blocks := 11
@@ -129,9 +163,9 @@ func tryColorful() {
 	}
 	SavePNG("testBlend.png", img)
 
-	fmt.Printf("templateFirefly = %+v\n", templateFirefly)
-	fmt.Printf("templateFirefly45 = %+v\n", templateFirefly45)
-	fmt.Printf("templateFireflyLarge = %+v\n", templateFireflyLarge)
+	fmt.Printf("templateFirefly = %+v\n", templateFireflySingle)
+	fmt.Printf("templateFirefly45 = %+v\n", templateFireflySingle45)
+	fmt.Printf("templateFireflyLarge = %+v\n", templateFireflyLargeSingle)
 
 	img = image.NewRGBA(image.Rect(0, 0, 100, 100))
 	H := 60.0
@@ -228,7 +262,7 @@ func tryColorful() {
 	}
 	SavePNG("testHSLuvHueBlendedLuvLCh.png", img)
 
-	tmp := templateFireflyLarge
+	tmp := templateFireflyLargeSingle
 	// tmp := templateFirefly
 	// tmp := templateFirefly45
 	steps := 11
@@ -238,6 +272,7 @@ func tryColorful() {
 		for y := 0; y < len(tmp); y++ {
 			for x := 0; x < len(tmp[0]); x++ {
 				key := tmp[y][x] // this is swapped, the first row is y=0
+				fmt.Printf("i, ii, key = %vx%v : %c\n", y, x, key)
 				blend := elemColor[key].GetBlent(float64(ti) * 0.1)
 				// fmt.Printf("i, ii, blend = %vx%v : %+v\n", y, x, blend)
 				r, g, b := blend.Clamped().RGB255()
@@ -283,30 +318,9 @@ func tryColorful() {
 }
 
 // Generate an image with all the needed fireflies to use.
-// horizontal change the luminosity
-// vertical change the rotation
-func GenBlitMap() *image.RGBA {
-
-	// firefly templates
-	templateFirefly := [][][]byte{
-		{
-			{'A', 'H', 'A'},
-			// {'W', 'B', 'W'},
-			{'I', 'O', 'I'},
-			{'I', 'O', 'I'},
-		},
-		{
-			// {'A', 'I', 'H'},
-			// {'I', 'O', 'I'},
-			// {'O', 'I', 'A'},
-			{'I', 'I', 'H'},
-			{'A', 'O', 'I'},
-			{'O', 'A', 'I'},
-		},
-	}
-
-	// number of lightness levels (-1)
-	lLevels := 10
+// horizontal (X): change the luminosity
+// vertical   (Y): change the rotation
+func GenBlitMap(templateFirefly [][][]byte, lLevels int) *image.RGBA {
 
 	numTemplates := len(templateFirefly)
 	fSize := len(templateFirefly[0])
@@ -488,6 +502,10 @@ func GetRotatedCoords(x, y, size int, rot string) (int, int) {
 func main() {
 	fmt.Println("vim-go")
 	tryColorful()
-	blit := GenBlitMap()
+
+	// number of lightness levels (-1)
+	lLevels := 10
+	blit := GenBlitMap(TemplateFireflyLarge, lLevels)
+
 	tryBlitting(blit)
 }
