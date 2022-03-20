@@ -462,6 +462,69 @@ func tryBlitting(blitTemplate *image.RGBA) {
 
 }
 
+func tryBlittingParallel(blitTemplate *image.RGBA) {
+
+	// world is 300x200
+	worldW, worldH := 240, 160
+	// cell size
+	cellSize := 40
+	// upscaling factor
+	scale := 5
+	// size of the template
+	blitSize := image.Rect(0, 0, 3, 3)
+	blitSizeF32 := float32(blitSize.Bounds().Max.X)
+
+	img := image.NewRGBA(image.Rect(0, 0, worldW*cellSize*scale, worldH*cellSize*scale))
+	backCol := elemColor['A'].GetBlent(1)
+	draw.Draw(img,
+		img.Bounds(),
+		&image.Uniform{backCol},
+		image.Point{}, draw.Src)
+
+	borderDraw := make(chan *Firefly, 100)
+	borderDrawClose := make(chan bool)
+	go drawFireBorder(img, borderDraw, borderDrawClose)
+
+	// fireflies are all in the same cell
+	// you just need to check if the template is crossing on the next cell
+	aFirefly := &Firefly{10.1, 10.1, 0}
+
+	// check if the firefly goes to the next cell
+
+	// which cell the firefly is in
+	cellX := int(aFirefly.X) / cellSize
+	// cellY := int(firefly.Y) / cellSize
+
+	// border of the cell in the scaled world
+	right := float32((cellX + 1) * cellSize * scale)
+	// bottom := (cellY + 1) * cellSize * scale
+
+	// position of the firefly in the scaled world
+	scaledX := aFirefly.X * float32(scale)
+	// scaledY := firefly.Y * float32(scale)
+
+	// NOTE TODO also check if is close to the left side
+	if scaledX+blitSizeF32 > right {
+		borderDraw <- aFirefly
+	}
+	<-borderDrawClose
+
+}
+
+func drawFireBorder(
+	img *image.RGBA,
+	borderDraw chan *Firefly,
+	borderDrawClose chan bool,
+) {
+
+	// listen on borderDraw
+	// when you see a nil it's over
+
+	// signal that the drawing is done
+	borderDrawClose <- true
+
+}
+
 func SavePNG(name string, img image.Image) {
 	toimg, err := os.Create(name)
 	if err != nil {
@@ -508,4 +571,5 @@ func main() {
 	blit := GenBlitMap(TemplateFireflyLarge, lLevels)
 
 	tryBlitting(blit)
+	tryBlittingParallel(blit)
 }
