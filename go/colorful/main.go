@@ -67,6 +67,13 @@ var elemColor = map[byte]*RangeColorHCL{
 	'W': NewRangeColorHCL(240, 0.7, 0.7, 0.2),  // Wings glowing
 	'a': NewRangeColorHCL(0, 0.0, 0.2, 0.2),    // background
 	'A': NewRangeColorHCL(0, 0.0, 0.4, 0.2),    // bAckground glowing
+	'1': NewRangeColorHCL(55, 0.9, 0.7, 0.2),   // just glow a bit
+	'2': NewRangeColorHCL(55, 0.9, 0.6, 0.18),  // just glow a bit
+	'3': NewRangeColorHCL(55, 0.9, 0.5, 0.16),  // just glow a bit
+	'4': NewRangeColorHCL(55, 0.9, 0.4, 0.14),  // just glow a bit
+	'5': NewRangeColorHCL(55, 0.9, 0.3, 0.12),  // just glow a bit
+	'6': NewRangeColorHCL(55, 0.9, 0.2, 0.1),   // just glow a bit
+	'7': NewRangeColorHCL(55, 0.9, 0.1, 0.08),  // just glow a bit
 }
 
 var templateFireflySingle = [][]byte{
@@ -124,6 +131,16 @@ var TemplateFireflyLarge = [][][]byte{
 		{'a', 'A', 'B', 'W', 'W'},
 		{'A', 'B', 'A', 'W', 'W'},
 		{'B', 'A', 'a', 'a', 'W'},
+	},
+}
+
+var TemplateFireflySpherical = [][][]byte{
+	{
+		{'5', '4', '4', '4', '5'},
+		{'4', '3', '2', '3', '4'},
+		{'4', '2', '1', '2', '4'},
+		{'4', '3', '2', '3', '4'},
+		{'5', '4', '4', '4', '5'},
 	},
 }
 
@@ -384,13 +401,15 @@ type Firefly struct {
 }
 
 // orientation and lightness level
-func findBlitPos(o int16, l int, templateSize int) (int, int) {
+func findBlitPos(o int16, l, templateSize, rotNum int) (int, int) {
 
-	tO := o + 22
+	sectorSize := int16(90 / rotNum)
+
+	tO := o + sectorSize/2
 	if tO > 360 {
 		tO -= 360
 	}
-	rotI := tO / 45
+	rotI := tO / sectorSize
 
 	return l * templateSize, int(rotI) * templateSize
 }
@@ -410,7 +429,7 @@ func tryBlitting(blitTemplate *image.RGBA) {
 		image.Point{}, draw.Src)
 
 	// find the corner of the rect in the source image
-	x, y := findBlitPos(0, 1, 3) // == sr.Min
+	x, y := findBlitPos(0, 1, 3, 2) // == sr.Min
 	// rectangle in the source image
 	sr := image.Rect(x, y, x+3, y+3)
 	// corner of the rect in the dest image
@@ -420,34 +439,34 @@ func tryBlitting(blitTemplate *image.RGBA) {
 	draw.Draw(img, dr, blitTemplate, sr.Min, draw.Src)
 
 	// regular placement
-	x, y = findBlitPos(45, 1, 3)
+	x, y = findBlitPos(45, 1, 3, 2)
 	sr = image.Rect(x, y, x+3, y+3)
 	dp = image.Pt(20, 10)
 	dr = image.Rectangle{dp, dp.Add(sr.Size())}
 	draw.Draw(img, dr, blitTemplate, sr.Min, draw.Src)
 
 	// out of border: no problem!
-	x, y = findBlitPos(135, 1, 3)
+	x, y = findBlitPos(135, 1, 3, 2)
 	sr = image.Rect(x, y, x+3, y+3)
 	dp = image.Pt(-1, -1)
 	dr = image.Rectangle{dp, dp.Add(sr.Size())}
 	draw.Draw(img, dr, blitTemplate, sr.Min, draw.Src)
 
 	// out of border: no problem!
-	x, y = findBlitPos(135, 1, 3)
+	x, y = findBlitPos(135, 1, 3, 2)
 	sr = image.Rect(x, y, x+3, y+3)
 	dp = image.Pt(img.Bounds().Max.X-2, img.Bounds().Max.Y-2)
 	dr = image.Rectangle{dp, dp.Add(sr.Size())}
 	draw.Draw(img, dr, blitTemplate, sr.Min, draw.Src)
 
-	_, y = findBlitPos(270, 1, 3)
+	_, y = findBlitPos(270, 1, 3, 2)
 	x = 3 * 6
 	sr = image.Rect(x, y, x+3, y+3)
 	dp = image.Pt(20, 20)
 	dr = image.Rectangle{dp, dp.Add(sr.Size())}
 	draw.Draw(img, dr, blitTemplate, sr.Min, draw.Src)
 
-	_, y = findBlitPos(270, 1, 3)
+	_, y = findBlitPos(270, 1, 3, 2)
 	x = 3 * 7
 	sr = image.Rect(x, y, x+3, y+3)
 	dp = image.Pt(25, 20)
@@ -567,9 +586,11 @@ func main() {
 	tryColorful()
 
 	// number of lightness levels (-1)
-	lLevels := 10
-	blit := GenBlitMap(TemplateFireflyLarge, lLevels)
+	lLevels := 50
 
+	blit := GenBlitMap(TemplateFirefly, lLevels)
 	tryBlitting(blit)
+
+	blit = GenBlitMap(TemplateFireflySpherical, lLevels)
 	tryBlittingParallel(blit)
 }

@@ -34,7 +34,7 @@ func TestCheckBlink(t *testing.T) {
 		{45*7 + 22, 7},
 	}
 	for _, c := range casesCos {
-		_, r := findBlitPos(c.o, 1, 1)
+		_, r := findBlitPos(c.o, 1, 1, 2)
 		assert.Equal(t, r, c.want,
 			fmt.Sprintf("Failed case %+v, had %+v", c, r))
 	}
