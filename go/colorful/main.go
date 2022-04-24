@@ -170,7 +170,7 @@ func tryColorful() {
 			key := keys[ii]
 			col := elemColor[key].GetBlent(t)
 			// fmt.Printf("elemColor[%v].GetBlent(%v) = %+v\n",
-			// 	key, t, col,
+			//	key, t, col,
 			// )
 			draw.Draw(img,
 				image.Rect(i*blockw, ii*blockw, (i+1)*blockw, (ii+1)*blockw),
@@ -289,7 +289,7 @@ func tryColorful() {
 		for y := 0; y < len(tmp); y++ {
 			for x := 0; x < len(tmp[0]); x++ {
 				key := tmp[y][x] // this is swapped, the first row is y=0
-				fmt.Printf("i, ii, key = %vx%v : %c\n", y, x, key)
+				// fmt.Printf("i, ii, key = %vx%v : %c\n", y, x, key)
 				blend := elemColor[key].GetBlent(float64(ti) * 0.1)
 				// fmt.Printf("i, ii, blend = %vx%v : %+v\n", y, x, blend)
 				r, g, b := blend.Clamped().RGB255()
@@ -357,7 +357,7 @@ func GenBlitMap(templateFirefly [][][]byte, lLevels int) *image.RGBA {
 
 		// compute the lightness level in [0,1]
 		l := float64(il) * 1.0 / float64(lLevels)
-		fmt.Printf("l = %+v\n", l)
+		// fmt.Printf("l = %+v\n", l)
 		// how much to shift the template right
 		lSh := fSize * il
 
@@ -530,6 +530,54 @@ func tryBlittingParallel(blitTemplate *image.RGBA) {
 
 }
 
+func tryBlittingOrientation(blitTemplate *image.RGBA) {
+
+	img := image.NewRGBA(image.Rect(0, 0, 90, 60))
+	backCol := elemColor['A'].GetBlent(1)
+
+	draw.Draw(img,
+		img.Bounds(),
+		&image.Uniform{backCol},
+		image.Point{}, draw.Src)
+
+	for i := 0; i < 8; i++ {
+		remappedOri := remapOri(int16(45 * i))
+		x, y := findBlitPos(remappedOri, 1, 3, 2)
+		sr := image.Rect(x, y, x+3, y+3)
+		dp := image.Pt(10+i*10, 10+i*5)
+		dr := image.Rectangle{dp, dp.Add(sr.Size())}
+		draw.Draw(img, dr, blitTemplate, sr.Min, draw.Src)
+	}
+
+	dst := UpscaleImg(img, 20)
+	SavePNG("testBlittingOrientation20.png", dst)
+}
+
+func remapOri(o int16) int16 {
+	// screen | fire
+	// 0   0  | 90
+	// 45  1  | 45
+	// 90  2  | 0
+	// 135 3  | -45  315
+	// 180 4  | -90  270
+	// 225 5  | -135 225
+	// 270 6  | -180 180
+	// 315 7  | -225 135
+
+	remappedOri := -o + 90
+	fmt.Printf("o = %+v remappedOri = %+v\n", o, remappedOri)
+
+	for remappedOri < 0 {
+		remappedOri += 360
+	}
+	for remappedOri > 360 {
+		remappedOri -= 360
+	}
+
+	return remappedOri
+
+}
+
 func drawFireBorder(
 	img *image.RGBA,
 	borderDraw chan *Firefly,
@@ -590,6 +638,7 @@ func main() {
 
 	blit := GenBlitMap(TemplateFirefly, lLevels)
 	tryBlitting(blit)
+	tryBlittingOrientation(blit)
 
 	blit = GenBlitMap(TemplateFireflySpherical, lLevels)
 	tryBlittingParallel(blit)
