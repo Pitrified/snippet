@@ -28,8 +28,6 @@ UNHASH_FUNC = {t: lambda x: 0 for t in UNHASHABLE_TYPES}
 
 # task = "en_to_fr"
 # translator = {task: pipeline("translation_en_to_fr")}
-
-
 # def sad_hash(t): return 0
 
 
@@ -47,10 +45,39 @@ def translate(translator, sentence):
     return translator(sentence)
 
 
+def split_par(par: str, min_sentence_len: int = 10) -> list[str]:
+    sentences = re.split("(\\.|!|\\?)", par)
+    sentences = [s.strip() for s in sentences]
+    i = 0
+    while i < len(sentences) - 1:
+        # if the current sentence is short
+        # or the next is punctiation
+        if sentences[i].count(" ") < min_sentence_len or len(sentences[i + 1]) == 1:
+            # decide if we need a space between sentences, not needed for punctuation
+            space = " " if len(sentences[i + 1]) > 1 else ""
+            # merge i on the next
+            sentences[i + 1] = sentences[i] + space + sentences[i + 1]
+            # there cannot be another sentence like [i] before [i],
+            # as it would have been merged
+            sentences.remove(sentences[i])
+            # the list is now shorter
+            i -= 1
+        i += 1
+
+    # if the paragraph ends with punctiation, there is an empty last sentence
+    if len(sentences) > 0 and sentences[-1] == "":
+        sentences = sentences[:-1]
+
+    return sentences
+
+
 def main():
 
     title = st.title("Load and show an epub")
     st.sidebar.title("Load and show an epub")
+
+    # load the translator model
+    translator = load_translator()
 
     # load a file in the app
     epub_file = cast(
@@ -98,36 +125,27 @@ def main():
         st.write("No paragraphs found in the chapter, try to select another one.")
         return
 
+    translate_start = timer()
+    # split each paragraph in sentences, and translate them
     for i, par in enumerate(all_p):
         par_str = par.string
-        st.write(f"{i} {par_str}")
-        st.write(re.split("\\.|!|\\?", par_str))
+        # st.write(f"------ {i} {par_str}")
+
+        split_par_list = split_par(par_str)
+        translated = translate(translator, split_par_list)
+        translated = [t["translation_text"] for t in translated]
+
+        # st.write(list(zip(split_par_list, translated)))
+        for orig, tran in zip(split_par_list, translated):
+            col1, col2 = st.columns(2)
+            col1.write(orig)
+            col2.write(tran)
+
         if i > 5:
             break
 
-    t_start_load = timer()
-    translator = load_translator()
-    t_end_load = timer()
-
-    # translated = translate(translator, "How old are you?")[0]["translation_text"]
-    # st.write(translated)
-
-    st.write(f"Loaded {type(translator)=}")
-    st.write(f"Loading took {t_end_load-t_start_load} s")
-
-    translated = translate(
-        translator,
-        [
-            "How old are you?",
-            "How are you?",
-            "What is the difference between good and evil?",
-            "Is this the real life?",
-        ],
-    )
-    t_end_translate = timer()
-    st.write(translated)
-
-    st.write(f"Translating took {t_end_translate-t_end_load} s")
+    translate_end = timer()
+    st.write(f"Translating took {translate_end-translate_start:.0f}s")
 
 
 if __name__ == "__main__":
