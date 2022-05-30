@@ -142,7 +142,10 @@ def run_sample_lemmatizer(args: argparse.Namespace) -> None:
 
     # a doc can easily be split in sentences
     for sentence in doc.sents:
-        print(f"{sentence}")
+        print(f"{type(sentence)=} {sentence}")
+
+    print(f"{type(doc.sents)=}")
+    print(f"{list(doc.sents)=}")
 
 
 if __name__ == "__main__":

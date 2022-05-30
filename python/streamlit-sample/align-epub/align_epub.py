@@ -39,6 +39,57 @@ def translate(translator, sentence):
     return translator(sentence)
 
 
+def preprocess_chapter():
+    """
+
+    input: bytes?
+
+    get the soup
+    get the body
+    find paragraphs
+    remove empty paragraphs
+    split par in sentences
+    translate sentences
+
+    class EPub:
+        zip_file: ZipFile
+        zipped_file_paths: [ Path ]
+        chap_file_names: [ str ] # filtered as well as you want
+        lang: str
+
+    class Chapter:
+        book
+        soup
+        body
+        parlist: [ Paragraph ]
+
+    class Paragraph:
+        chapter
+        tag: bs4.Tag
+        par_str: str # paragraph as readable string
+        par_doc: Doc # the whole paragraph as spacy object
+        sent_original: [ Doc ] # extract it explicitly from par_doc
+        sent_translation: [ Doc ] # build Doc from translations
+    """
+
+
+def align_chap():
+    """
+
+    input: magic chapter object
+
+    for each eng sentence, match the translation on french
+    for each eng paragraph, place it after the last french par that matched a sentence
+    """
+
+
+def translate_cached():
+    """
+
+    Translate only new sentences, save the rest as .json
+    """
+
+
 def main():
     """Main function of the aligner."""
 
@@ -129,6 +180,7 @@ def main():
     # st.write(list(all_p.values()))
     # st.write(all_p.values())
 
+    # TODO use as fillvalue a micro tag <p>_</p>
     # for p1, p2 in zip_longest(*all_p.values(), fillvalue="-"):
     for p1, p2 in zip_longest(*all_p.values()):
         # print(f"\n{p1.string=}\n{p2.string=}")
