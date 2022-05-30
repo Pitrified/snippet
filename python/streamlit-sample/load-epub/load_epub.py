@@ -35,7 +35,8 @@ UNHASH_FUNC = {t: lambda x: 0 for t in UNHASHABLE_TYPES}
 @st.cache(hash_funcs=UNHASH_FUNC, allow_output_mutation=True)
 def load_translator():
     # return pipeline("translation_en_to_fr", model_max_length=512)
-    model_checkpoint = "Helsinki-NLP/opus-mt-en-fr"
+    # model_checkpoint = "Helsinki-NLP/opus-mt-en-fr"
+    model_checkpoint = "Helsinki-NLP/opus-mt-fr-en"
     return pipeline("translation", model=model_checkpoint)
 
 
