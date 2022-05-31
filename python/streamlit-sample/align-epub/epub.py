@@ -3,26 +3,54 @@ from typing import IO, Union
 import zipfile
 
 from bs4 import BeautifulSoup, Tag  # type:ignore
-import spacy  # type: ignore
+from spacy.language import Language  # type: ignore
+from transformers.pipelines.text2text_generation import TranslationPipeline
 
 VALID_CHAP_EXT = [".xhtml", ".xml", ".html"]
 
 
 class Paragraph:
-    def __init__(self, p_tag: Tag, nlp: spacy.language.Language) -> None:
+    def __init__(
+        self,
+        p_tag: Tag,
+        nlp: dict[str, Language],
+        pipe: dict[str, TranslationPipeline],
+        lang_orig: str,
+        lang_dest: str,
+        chapter: "Chapter",
+    ) -> None:
         """Initialize a paragraph."""
 
         self.nlp = nlp
+        self.pipe = pipe
+        self.lang_orig = lang_orig
+        self.lang_dest = lang_dest
+        self.chapter = chapter
+
+        self.lang_tr = f"{self.lang_orig}_{self.lang_dest}"
 
         self.p_tag = p_tag
         self.par_str = str(self.p_tag.string)  # we want a str, not a NavigableString
-        self.par_doc = self.nlp(self.par_str)
-        self.sentences = list(self.par_doc.sents)
+        self.par_doc = self.nlp[self.lang_orig](self.par_str)
+        self.sents_orig = list(self.par_doc.sents)
+
+        self.sents_tran = []
+        for sent in self.sents_orig:
+            str_tran = self.pipe[self.lang_tr](sent.text)
+            sent_tran = self.nlp[self.lang_dest](str_tran[0]["translation_text"])
+            self.sents_tran.append(sent_tran)
 
 
 class Chapter:
     def __init__(
-        self, chap_content: bytes, chap_file_name: str, nlp: spacy.language.Language
+        self,
+        chap_content: bytes,
+        chap_file_name: str,
+        nlp: dict[str, Language],
+        pipe: dict[str, TranslationPipeline],
+        lang_orig: str,
+        lang_dest: str,
+        epub: "EPub",
     ) -> None:
         """Initialize a chapter.
 
@@ -33,6 +61,10 @@ class Chapter:
 
         self.chap_file_name = chap_file_name
         self.nlp = nlp
+        self.pipe = pipe
+        self.lang_orig = lang_orig
+        self.lang_dest = lang_dest
+        self.epub = epub
 
         # parse the soup and get the body
         self.soup = BeautifulSoup(chap_content, features="html.parser")
@@ -41,26 +73,48 @@ class Chapter:
             print(f"No body found in chapter {self.chap_file_name} of book {'book'}.")
             return
 
-        # load the paragraphs
+        # find the paragraphs
         self.all_p_tag = self.body.find_all("p")
         if len(self.all_p_tag) == 0:
             print(f"No paragraphs found in chapter {self.chap_file_name} of book {'book'}.")
             return
 
-        # build the list of sentences
-        self.paragraphs = [Paragraph(p_tag, self.nlp) for p_tag in self.all_p_tag]
+        # build the list of Paragraphs
+        # self.paragraphs = [Paragraph(p_tag, self.nlp) for p_tag in self.all_p_tag]
+        self.paragraphs = []
+        for p_tag in self.all_p_tag[:5]:
+            self.paragraphs.append(
+                Paragraph(
+                    p_tag,
+                    self.nlp,
+                    self.pipe,
+                    self.lang_orig,
+                    self.lang_dest,
+                    self,
+                )
+            )
 
 
 class EPub:
-    def __init__(self, zipped_file: Union[str, IO[bytes]], nlp: spacy.language.Language) -> None:
+    def __init__(
+        self,
+        zipped_file: Union[str, IO[bytes]],
+        nlp: dict[str, Language],
+        pipe: dict[str, TranslationPipeline],
+        lang_orig: str,
+        lang_dest: str,
+    ) -> None:
         """Initialize an epub.
 
         TODO:
-            Pass lang tags?
-            Pass file name?
+            Pass lang tags? Yes, we need them to cache the translationz
+            Pass file name? Yes, better debug. No can do with streamlit...
         """
 
         self.nlp = nlp
+        self.pipe = pipe
+        self.lang_orig = lang_orig
+        self.lang_dest = lang_dest
 
         # load the file in memory
         self.zipped_file = zipped_file
@@ -76,7 +130,20 @@ class EPub:
         self.chap_file_names = [str(p) for p in self.chap_file_paths]
 
         # build a list of chapters
-        self.chapters = [
-            Chapter(self.input_zip.read(chap_file_name), chap_file_name, self.nlp)
-            for chap_file_name in self.chap_file_names
-        ]
+        # self.chapters = [
+        #     Chapter(self.input_zip.read(chap_file_name), chap_file_name, self.nlp)
+        #     for chap_file_name in self.chap_file_names
+        # ]
+        self.chapters = []
+        for chap_file_name in self.chap_file_names[:2]:
+            self.chapters.append(
+                Chapter(
+                    self.input_zip.read(chap_file_name),
+                    chap_file_name,
+                    self.nlp,
+                    self.pipe,
+                    self.lang_orig,
+                    self.lang_dest,
+                    self,
+                )
+            )
