@@ -1,10 +1,13 @@
+from __future__ import annotations
+
 from pathlib import Path
 from typing import IO, Union
 import zipfile
 
 from bs4 import BeautifulSoup, Tag  # type:ignore
 from spacy.language import Language  # type: ignore
-from transformers.pipelines.text2text_generation import TranslationPipeline
+
+from cached_pipe import PipelineCache
 
 VALID_CHAP_EXT = [".xhtml", ".xml", ".html"]
 
@@ -13,31 +16,40 @@ class Paragraph:
     def __init__(
         self,
         p_tag: Tag,
-        nlp: dict[str, Language],
-        pipe: dict[str, TranslationPipeline],
-        lang_orig: str,
-        lang_dest: str,
-        chapter: "Chapter",
+        chapter: Chapter,
     ) -> None:
-        """Initialize a paragraph."""
+        """Initialize a paragraph.
 
-        self.nlp = nlp
-        self.pipe = pipe
-        self.lang_orig = lang_orig
-        self.lang_dest = lang_dest
+        TODO:
+            Some clean up of the text? Eg remove \\n.
+            Filter sentences that are too short?
+        """
+
         self.chapter = chapter
+
+        self.nlp: dict[str, Language] = self.chapter.nlp
+        self.pipe: dict[str, PipelineCache] = self.chapter.pipe
+        self.lang_orig: str = self.chapter.lang_orig
+        self.lang_dest: str = self.chapter.lang_dest
 
         self.lang_tr = f"{self.lang_orig}_{self.lang_dest}"
 
         self.p_tag = p_tag
+
+        # MAYBE: move to method that does clean up well
         self.par_str = str(self.p_tag.string)  # we want a str, not a NavigableString
+        self.par_str = self.par_str.replace("\n\r", " ")
+        self.par_str = self.par_str.replace("\n", " ")
+        self.par_str = self.par_str.replace("\r", " ")
+
         self.par_doc = self.nlp[self.lang_orig](self.par_str)
         self.sents_orig = list(self.par_doc.sents)
 
         self.sents_tran = []
         for sent in self.sents_orig:
             str_tran = self.pipe[self.lang_tr](sent.text)
-            sent_tran = self.nlp[self.lang_dest](str_tran[0]["translation_text"])
+            # sent_tran = self.nlp[self.lang_dest](str_tran[0]["translation_text"])
+            sent_tran = self.nlp[self.lang_dest](str_tran)
             self.sents_tran.append(sent_tran)
 
 
@@ -46,11 +58,7 @@ class Chapter:
         self,
         chap_content: bytes,
         chap_file_name: str,
-        nlp: dict[str, Language],
-        pipe: dict[str, TranslationPipeline],
-        lang_orig: str,
-        lang_dest: str,
-        epub: "EPub",
+        epub: EPub,
     ) -> None:
         """Initialize a chapter.
 
@@ -60,11 +68,12 @@ class Chapter:
         """
 
         self.chap_file_name = chap_file_name
-        self.nlp = nlp
-        self.pipe = pipe
-        self.lang_orig = lang_orig
-        self.lang_dest = lang_dest
         self.epub = epub
+
+        self.nlp: dict[str, Language] = self.epub.nlp
+        self.pipe: dict[str, PipelineCache] = self.epub.pipe
+        self.lang_orig: str = self.epub.lang_orig
+        self.lang_dest: str = self.epub.lang_dest
 
         # parse the soup and get the body
         self.soup = BeautifulSoup(chap_content, features="html.parser")
@@ -76,23 +85,16 @@ class Chapter:
         # find the paragraphs
         self.all_p_tag = self.body.find_all("p")
         if len(self.all_p_tag) == 0:
-            print(f"No paragraphs found in chapter {self.chap_file_name} of book {'book'}.")
+            print(
+                f"No paragraphs found in chapter {self.chap_file_name} of book {'book'}."
+            )
             return
 
         # build the list of Paragraphs
         # self.paragraphs = [Paragraph(p_tag, self.nlp) for p_tag in self.all_p_tag]
         self.paragraphs = []
         for p_tag in self.all_p_tag[:5]:
-            self.paragraphs.append(
-                Paragraph(
-                    p_tag,
-                    self.nlp,
-                    self.pipe,
-                    self.lang_orig,
-                    self.lang_dest,
-                    self,
-                )
-            )
+            self.paragraphs.append(Paragraph(p_tag, self))
 
 
 class EPub:
@@ -100,15 +102,16 @@ class EPub:
         self,
         zipped_file: Union[str, IO[bytes]],
         nlp: dict[str, Language],
-        pipe: dict[str, TranslationPipeline],
+        pipe: dict[str, PipelineCache],
         lang_orig: str,
         lang_dest: str,
     ) -> None:
         """Initialize an epub.
 
         TODO:
-            Pass lang tags? Yes, we need them to cache the translationz
             Pass file name? Yes, better debug. No can do with streamlit...
+                But I'd rather pass a fake name inside streamlit,
+                and the real one usually.
         """
 
         self.nlp = nlp
@@ -140,10 +143,6 @@ class EPub:
                 Chapter(
                     self.input_zip.read(chap_file_name),
                     chap_file_name,
-                    self.nlp,
-                    self.pipe,
-                    self.lang_orig,
-                    self.lang_dest,
                     self,
                 )
             )
