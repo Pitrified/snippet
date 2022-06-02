@@ -93,8 +93,21 @@ class Chapter:
         # build the list of Paragraphs
         # self.paragraphs = [Paragraph(p_tag, self.nlp) for p_tag in self.all_p_tag]
         self.paragraphs = []
-        for p_tag in self.all_p_tag[:5]:
+        for p_tag in self.all_p_tag[:15]:
             self.paragraphs.append(Paragraph(p_tag, self))
+
+        self.build_index()
+
+    def build_index(self):
+        """Build maps to go from ``sent_in_chap_id`` to ``(par_id, sent_in_par_id)`` and vice-versa."""
+        self.parsent_to_sent = {}
+        self.sent_to_parsent = {}
+        sc_id = 0
+        for p_id, par in enumerate(self.paragraphs):
+            for sp_id, sent in enumerate(par.sents_orig):
+                self.parsent_to_sent[(p_id, sp_id)] = sc_id
+                self.sent_to_parsent[sc_id] = (p_id, sp_id)
+                sc_id += 1
 
 
 class EPub:
@@ -138,7 +151,7 @@ class EPub:
         #     for chap_file_name in self.chap_file_names
         # ]
         self.chapters = []
-        for chap_file_name in self.chap_file_names[:2]:
+        for chap_file_name in self.chap_file_names[:3]:
             self.chapters.append(
                 Chapter(
                     self.input_zip.read(chap_file_name),
