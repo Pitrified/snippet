@@ -93,7 +93,7 @@ class Chapter:
         # build the list of Paragraphs
         # self.paragraphs = [Paragraph(p_tag, self.nlp) for p_tag in self.all_p_tag]
         self.paragraphs = []
-        for p_tag in self.all_p_tag[:15]:
+        for p_tag in self.all_p_tag[:]:
             self.paragraphs.append(Paragraph(p_tag, self))
 
         self.build_index()
@@ -141,7 +141,9 @@ class EPub:
         self.chap_file_paths = [
             f
             for f in self.zipped_file_paths
-            if f.suffix in VALID_CHAP_EXT and "META-INF" not in str(f)
+            if f.suffix in VALID_CHAP_EXT
+            and "META-INF" not in str(f)
+            and "feedbooks" not in str(f)
         ]
         self.chap_file_names = [str(p) for p in self.chap_file_paths]
 
