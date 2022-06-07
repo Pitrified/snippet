@@ -23,6 +23,7 @@ class Paragraph:
         TODO:
             Some clean up of the text? Eg remove \\n.
             Filter sentences that are too short?
+                No: do not split in sentences if the par is short.
         """
 
         self.chapter = chapter
@@ -153,7 +154,7 @@ class EPub:
         #     for chap_file_name in self.chap_file_names
         # ]
         self.chapters = []
-        for chap_file_name in self.chap_file_names[:3]:
+        for chap_file_name in self.chap_file_names[:6]:
             self.chapters.append(
                 Chapter(
                     self.input_zip.read(chap_file_name),

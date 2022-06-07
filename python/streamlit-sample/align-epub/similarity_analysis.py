@@ -4,7 +4,7 @@ from typing import (
     IO,
 )
 
-from sentence_transformers import (
+from sentence_transformers import (  # type: ignore
     SentenceTransformer,
     util,
 )
