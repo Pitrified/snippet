@@ -46,14 +46,28 @@ def translate(translator, sentence):
     return translator(sentence)
 
 
-def split_par(par: str, min_sentence_len: int = 10) -> list[str]:
+def split_par(
+    par: str,
+    min_sentence_len: int = 10,
+    max_sentence_len: int = 100,
+) -> list[str]:
     sentences = re.split("(\\.|!|\\?)", par)
     sentences = [s.strip() for s in sentences]
     i = 0
     while i < len(sentences) - 1:
         # if the current sentence is short
         # or the next is punctiation
-        if sentences[i].count(" ") < min_sentence_len or len(sentences[i + 1]) == 1:
+        # or the next is short and the current is also not super long
+        # or the next is a »
+        curr_sent_len = sentences[i].count(" ")
+        next_sent_len = sentences[i + 1].count(" ")
+        if (
+            curr_sent_len < min_sentence_len
+            or len(sentences[i + 1]) == 1
+            or (next_sent_len < min_sentence_len and curr_sent_len < max_sentence_len)
+            or sentences[i + 1][0] == "»"
+            or sentences[i].endswith("M.")
+        ):
             # decide if we need a space between sentences, not needed for punctuation
             space = " " if len(sentences[i + 1]) > 1 else ""
             # merge i on the next
@@ -94,7 +108,7 @@ def main():
     input_zip = ZipFile(epub_file)
 
     # get the file list, use Path because we need the suffixex
-    zipped_file_paths = [Path(p) for p in input_zip.namelist()]
+    zipped_file_paths = sorted([Path(p) for p in input_zip.namelist()])
 
     # filter some non-text chapter
     chap_file_paths = [
@@ -129,7 +143,8 @@ def main():
     translate_start = timer()
     # split each paragraph in sentences, and translate them
     for i, par in enumerate(all_p):
-        par_str = par.string
+        # st.write(f"------ {i} {par}")
+        par_str = par.getText()
         # st.write(f"------ {i} {par_str}")
 
         split_par_list = split_par(par_str)
@@ -142,8 +157,7 @@ def main():
             col1.write(orig)
             col2.write(tran)
 
-        if i > 5:
-            break
+        # if i > 5: break
 
     translate_end = timer()
     st.write(f"Translating took {translate_end-translate_start:.0f}s")
