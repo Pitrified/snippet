@@ -1,14 +1,13 @@
+"""Utils to deal with with ebooks."""
 from pathlib import Path
 
-from epub import (
-    EPub,
-    Chapter,
-)
+import spacy
+
+from epub import Chapter, EPub
 
 
 def get_ebook_folder():
     """Get the folder holding the books in the snippet repo."""
-
     this_file = Path(__file__).absolute()
     snippet_folder = this_file.parent.parent.parent.parent
     ebook_folder = snippet_folder / "datasets" / "ebook"
@@ -30,3 +29,31 @@ def enumerate_sent(
                 yield (i_p + start_par, i_s), sent
             elif which_sent == "tran":
                 yield (i_p + start_par, i_s), par.sents_tran[i_s]
+
+
+def spacy_load_cached(model_path: str, cache_dir: Path) -> spacy.language.Language:
+    """Load cached spacy models from a single location.
+
+    https://stackoverflow.com/a/67750919
+
+    Args:
+        model_path (str): Name of the model, compatible with
+            ``nlp = spacy.load(model_path)``.
+        cache_dir (Path): Folder to search the models in.
+
+    Returns:
+        spacy.language.Language: Loaded model.
+    """
+    if not cache_dir.exists():
+        Path.mkdir(cache_dir, parents=True)
+
+    try:
+        # try to load from cache
+        nlp = spacy.load(cache_dir / model_path)
+    except OSError:
+        # load with spacy.load
+        nlp = spacy.load(model_path)
+        # save to disk
+        nlp.to_disk(cache_dir / model_path)
+
+    return nlp

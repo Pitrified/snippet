@@ -1,35 +1,39 @@
-from __future__ import annotations
+"""Class to load an EPub in memory and analyze it.
 
+Split in chapter, paragraph, sentences.
+
+Sentences are translated.
+"""
+import zipfile
 from pathlib import Path
 from typing import IO, Union
-import zipfile
 
 from bs4 import BeautifulSoup, Tag  # type:ignore
 from spacy.language import Language  # type: ignore
 
-from cached_pipe import PipelineCache
+from cached_pipe import TranslationPipelineCache
 
 VALID_CHAP_EXT = [".xhtml", ".xml", ".html"]
 
 
 class Paragraph:
+    """Paragraph class."""
+
     def __init__(
         self,
         p_tag: Tag,
-        chapter: Chapter,
+        chapter: "Chapter",
     ) -> None:
         """Initialize a paragraph.
 
         TODO:
-            Some clean up of the text? Eg remove \\n.
             Filter sentences that are too short?
                 No: do not split in sentences if the par is short.
         """
-
         self.chapter = chapter
 
         self.nlp: dict[str, Language] = self.chapter.nlp
-        self.pipe: dict[str, PipelineCache] = self.chapter.pipe
+        self.pipe: dict[str, TranslationPipelineCache] = self.chapter.pipe
         self.lang_orig: str = self.chapter.lang_orig
         self.lang_dest: str = self.chapter.lang_dest
 
@@ -55,11 +59,13 @@ class Paragraph:
 
 
 class Chapter:
+    """Chapter class."""
+
     def __init__(
         self,
         chap_content: bytes,
         chap_file_name: str,
-        epub: EPub,
+        epub: "EPub",
     ) -> None:
         """Initialize a chapter.
 
@@ -67,12 +73,11 @@ class Chapter:
             Pass lang tags?
             Pass reference to EPub?
         """
-
         self.chap_file_name = chap_file_name
         self.epub = epub
 
         self.nlp: dict[str, Language] = self.epub.nlp
-        self.pipe: dict[str, PipelineCache] = self.epub.pipe
+        self.pipe: dict[str, TranslationPipelineCache] = self.epub.pipe
         self.lang_orig: str = self.epub.lang_orig
         self.lang_dest: str = self.epub.lang_dest
 
@@ -112,11 +117,13 @@ class Chapter:
 
 
 class EPub:
+    """EPub class."""
+
     def __init__(
         self,
-        zipped_file: Union[str, IO[bytes]],
+        zipped_file: Union[str, IO[bytes], Path],
         nlp: dict[str, Language],
-        pipe: dict[str, PipelineCache],
+        pipe: dict[str, TranslationPipelineCache],
         lang_orig: str,
         lang_dest: str,
     ) -> None:
@@ -127,7 +134,6 @@ class EPub:
                 But I'd rather pass a fake name inside streamlit,
                 and the real one usually.
         """
-
         self.nlp = nlp
         self.pipe = pipe
         self.lang_orig = lang_orig
@@ -135,7 +141,7 @@ class EPub:
 
         # load the file in memory
         self.zipped_file = zipped_file
-        self.input_zip = zipfile.ZipFile(zipped_file)
+        self.input_zip = zipfile.ZipFile(self.zipped_file)
 
         # analyze the contents and find the chapter file names
         self.zipped_file_paths = [Path(p) for p in self.input_zip.namelist()]
