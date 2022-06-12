@@ -8,10 +8,11 @@ import re
 import zipfile
 from collections import Counter
 from pathlib import Path
-from typing import IO, Union
+from typing import IO, Literal, Union
 
-from bs4 import BeautifulSoup, Tag  # type:ignore
-from spacy.language import Language  # type: ignore
+from bs4 import BeautifulSoup, Tag
+from spacy.language import Language
+from spacy.tokens import Doc, Span
 
 from cached_pipe import TranslationPipelineCache
 
@@ -19,7 +20,10 @@ VALID_CHAP_EXT = [".xhtml", ".xml", ".html"]
 
 
 class Paragraph:
-    """Paragraph class."""
+    """Paragraph class.
+
+    Split the paragraph in sentences using spacy and translate them using huggingface.
+    """
 
     def __init__(
         self,
@@ -30,7 +34,8 @@ class Paragraph:
 
         TODO:
             Filter sentences that are too short?
-                No: do not split in sentences if the par is short.
+                Do not split in sentences if the par is short.
+                Merge short sentences.
         """
         self.chapter = chapter
 
@@ -52,7 +57,7 @@ class Paragraph:
         self.par_doc = self.nlp[self.lang_orig](self.par_str)
         self.sents_orig = list(self.par_doc.sents)
 
-        self.sents_tran = []
+        self.sents_tran: list[Doc] = []
         for sent in self.sents_orig:
             str_tran = self.pipe[self.lang_tr](sent.text)
             # sent_tran = self.nlp[self.lang_dest](str_tran[0]["translation_text"])
@@ -61,7 +66,10 @@ class Paragraph:
 
 
 class Chapter:
-    """Chapter class."""
+    """Chapter class.
+
+    Parse the chapter content to find the Paragraphs in <p> tags.
+    """
 
     def __init__(
         self,
@@ -73,7 +81,6 @@ class Chapter:
 
         TODO:
             Pass lang tags?
-            Pass reference to EPub?
         """
         self.chap_file_name = chap_file_name
         self.epub = epub
@@ -105,6 +112,7 @@ class Chapter:
             self.paragraphs.append(Paragraph(p_tag, self))
 
         self.build_index()
+        self.build_flat_sents()
 
     def build_index(self):
         """Build maps to go from ``sent_in_chap_id`` to ``(par_id, sent_in_par_id)`` and vice-versa."""
@@ -117,12 +125,26 @@ class Chapter:
                 self.sent_to_parsent[sc_id] = (p_id, sp_id)
                 sc_id += 1
 
-    def enumerate_sents(
-        self,
-        start_par: int = 0,
-        end_par: int = 0,
-        which_sent="orig",
-    ):
+    def build_flat_sents(self):
+        """Build lists of sentences in the chapter, as Doc and text."""
+        # original sentences
+        self.sents_text_orig = []
+        self.sents_doc_orig = []
+        for _, sent_orig in self.enumerate_sents(which_sent="orig"):
+            self.sents_text_orig.append(sent_orig.text)
+            self.sents_doc_orig.append(sent_orig)
+
+        # translated sentences
+        self.sents_text_tran = []
+        self.sents_doc_tran = []
+        for _, sent_tran in self.enumerate_sents(which_sent="tran"):
+            self.sents_text_tran.append(sent_tran.text)
+            self.sents_doc_tran.append(sent_tran)
+
+        # the number of sentences in this chapter
+        self.sents_num = len(self.sents_text_orig)
+
+    def enumerate_sents(self, start_par: int = 0, end_par: int = 0, which_sent="orig"):
         """Enumerate all the sentences in the chapter, indexed as (par_id, sent_id)."""
         if end_par == 0:
             end_par = len(self.paragraphs) + 1
@@ -132,6 +154,25 @@ class Chapter:
                     yield (i_p + start_par, i_s), sent
                 elif which_sent == "tran":
                     yield (i_p + start_par, i_s), par.sents_tran[i_s]
+
+    def get_sent_with_parsent_id(
+        self, par_id: int, sent_id: int, which_sent=Literal["orig", "tran"]
+    ) -> Span:
+        """Get the sentence in the chapter indexed as (par_id, sent_id)."""
+        if which_sent == "orig":
+            return self.paragraphs[par_id].sents_orig[sent_id]
+        else:
+            return self.paragraphs[par_id].sents_tran[sent_id]
+
+    def get_sent_with_chapsent_id(
+        self, chapsent_id: int, which_sent=Literal["orig", "tran"]
+    ) -> Span:
+        """Get the sentence in the chapter indexed as the sentence number in the chapter."""
+        par_id, sent_id = self.sent_to_parsent[chapsent_id]
+        if which_sent == "orig":
+            return self.paragraphs[par_id].sents_orig[sent_id]
+        else:
+            return self.paragraphs[par_id].sents_tran[sent_id]
 
 
 class EPub:

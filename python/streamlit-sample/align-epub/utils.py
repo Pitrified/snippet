@@ -82,3 +82,43 @@ def sentence_encode_np(
     )
     encodings = encodings.detach().cpu().numpy()
     return encodings
+
+
+def match_similarity(
+    sim: np.ndarray, chap_src: Chapter, chap_dst: Chapter, win_len: int
+):
+    """Compute the matches between sentences in the two chapters."""
+    all_good_max = []
+    all_good_i = []
+
+    sent_num_src = chap_src.sents_num
+    sent_num_dst = chap_dst.sents_num
+
+    ratio = sent_num_src / sent_num_dst
+
+    for i in range(sent_num_src):
+
+        # the similarity of this src sent to all the translated ones
+        this_sent_sim = sim[i]
+
+        # find the center rescaled because there are different number of sents in the two chapters
+        ii = int(i / ratio)
+
+        # the chopped similarity array
+        win_left = max(0, ii - win_len)
+        win_right = min(sent_num_dst, ii + win_len + 1)
+        some_sent_sim = this_sent_sim[win_left:win_right]
+
+        # the dst sent id with highest similarity
+        max_id = some_sent_sim.argmax() + win_left
+
+        if (
+            len(chap_src.sents_doc_orig[i]) > 4
+            and len(chap_dst.sents_doc_tran[max_id]) > 4
+        ):
+            all_good_i.append(i)
+            all_good_max.append(max_id)
+        else:
+            print(
+                f"skipping {chap_src.sents_doc_orig[i]} or {chap_dst.sents_doc_tran[max_id]}"
+            )
