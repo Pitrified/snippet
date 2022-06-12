@@ -1,24 +1,21 @@
+"""Analyze the similarity of sentences."""
 from pathlib import Path
-from typing import (
-    cast,
-    IO,
-)
+from typing import IO, cast
 
-from sentence_transformers import (  # type: ignore
-    SentenceTransformer,
-    util,
-)
-import streamlit as st
 import spacy
-import transformers
-from transformers import pipeline
+import streamlit as st
 import tokenizers  # type: ignore
 import torch
-import thinc
+import transformers
+from sentence_transformers import SentenceTransformer, util  # type: ignore
+from sklearn.metrics.pairwise import cosine_similarity
+from thinc.model import Model
+from transformers.pipelines import pipeline
+from transformers.pipelines.text2text_generation import TranslationPipeline
 
-from cached_pipe import PipelineCache
+from cached_pipe import TranslationPipelineCache
 from epub import EPub
-from utils import enumerate_sent
+from utils import enumerate_sent, sentence_encode_np
 
 VALID_EBOOK_EXT = [".epub"]
 UNHASHABLE_TYPES = [
@@ -27,7 +24,8 @@ UNHASHABLE_TYPES = [
     spacy.language.Language,
     spacy.vocab.Vocab,
     spacy.pipeline.tok2vec.Tok2Vec,
-    thinc.model.Model,
+    # thinc.model.Model,
+    Model,
     tokenizers.Tokenizer,
     torch.nn.parameter.Parameter,
     transformers.pipelines.text2text_generation.TranslationPipeline,
@@ -36,10 +34,12 @@ UNHASH_FUNC = {t: lambda x: 0 for t in UNHASHABLE_TYPES}
 
 
 @st.cache(hash_funcs=UNHASH_FUNC, allow_output_mutation=True)
-def load_translator(lts_pair):
+def load_translator(lts_pair) -> dict[str, TranslationPipeline]:
+    """Load the translator pipelines."""
     pipe = {
-        f"{lt}_{lt_other}": pipeline(
-            "translation", model=f"Helsinki-NLP/opus-mt-{lt}-{lt_other}"
+        f"{lt}_{lt_other}": cast(
+            TranslationPipeline,
+            pipeline("translation", model=f"Helsinki-NLP/opus-mt-{lt}-{lt_other}"),
         )
         for lt, lt_other in lts_pair
     }
@@ -48,6 +48,7 @@ def load_translator(lts_pair):
 
 @st.cache(hash_funcs=UNHASH_FUNC, allow_output_mutation=True)
 def load_nlp_spacy():
+    """Load the spacy models."""
     nlp = {
         "en": spacy.load("en_core_web_md"),
         "fr": spacy.load("fr_core_news_md"),
@@ -57,6 +58,7 @@ def load_nlp_spacy():
 
 @st.cache(hash_funcs=UNHASH_FUNC, allow_output_mutation=True)
 def load_sent_transformer():
+    """Load the sentence transformer."""
     st = {
         "en": SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2"),
     }
@@ -65,7 +67,7 @@ def load_sent_transformer():
 
 @st.cache(hash_funcs=UNHASH_FUNC, allow_output_mutation=True)
 def load_epubs(lts_pair, pipe_cache, nlp, epub_file):
-    # load the epubs
+    """Load the EPubs."""
     epub = {
         lt: EPub(epub_file[lt], nlp, pipe_cache, lt, lt_other)
         for lt, lt_other in lts_pair
@@ -74,7 +76,7 @@ def load_epubs(lts_pair, pipe_cache, nlp, epub_file):
 
 
 def main():
-
+    """Run streamlit app."""
     text = st.sidebar.text("Starting!")
 
     # basic lang info and useful tags
@@ -89,7 +91,7 @@ def main():
         for lt, lt_other in lts_pair
     }
     pipe_cache = {
-        (lt_pair := f"{lt}_{lt_other}"): PipelineCache(
+        (lt_pair := f"{lt}_{lt_other}"): TranslationPipelineCache(
             pipe[lt_pair], cache_file_path[lt_pair], lt, lt_other
         )
         for lt, lt_other in lts_pair
@@ -163,13 +165,17 @@ def main():
     st.write(sent_text_fr_tran[0])
 
     # encode them
-    enc_en = sent_transformer["en"].encode(sent_text_en, convert_to_tensor=True)
-    enc_fr_tran = sent_transformer["en"].encode(
-        sent_text_fr_tran, convert_to_tensor=True
-    )
+    # enc_en = sent_transformer["en"].encode(sent_text_en, convert_to_tensor=True)
+    # enc_fr_tran = sent_transformer["en"].encode(
+    #     sent_text_fr_tran, convert_to_tensor=True
+    # )
+    enc_en = sentence_encode_np(sent_transformer["en"], sent_text_en)
+    enc_fr_tran = sentence_encode_np(sent_transformer["en"], sent_text_fr_tran)
 
     st.write("en", enc_en.shape, sent_num_en, enc_en[0].shape)
     st.write("fr", enc_fr_tran.shape, sent_num_fr, enc_fr_tran[0].shape)
+
+    sim = cosine_similarity(enc_en, enc_fr_tran)
 
     text.text("Done computing similarity!")
 

@@ -1,7 +1,11 @@
 """Utils to deal with with ebooks."""
 from pathlib import Path
+from typing import cast
 
+import numpy as np
 import spacy
+from sentence_transformers import SentenceTransformer, util
+from torch import Tensor
 
 from epub import Chapter, EPub
 
@@ -57,3 +61,22 @@ def spacy_load_cached(model_path: str, cache_dir: Path) -> spacy.language.Langua
         nlp.to_disk(cache_dir / model_path)
 
     return nlp
+
+
+def sentence_encode_np(
+    sentence_transformer: SentenceTransformer,
+    sentences: list[str],
+) -> np.ndarray:
+    """Wrap around sentence_transformer.encode that casts the result to numpy array.
+
+    To compute the similarity you can use::
+
+        from sklearn.metrics.pairwise import cosine_similarity
+        sim = cosine_similarity(enc0, enc1)
+    """
+    encodings = cast(
+        Tensor,
+        sentence_transformer.encode(sentences, convert_to_tensor=True),
+    )
+    encodings = encodings.detach().cpu().numpy()
+    return encodings
