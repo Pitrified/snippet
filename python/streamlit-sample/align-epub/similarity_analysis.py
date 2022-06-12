@@ -16,7 +16,7 @@ from transformers.pipelines.text2text_generation import TranslationPipeline
 
 from cached_pipe import TranslationPipelineCache
 from epub import EPub
-from utils import sentence_encode_np, spacy_load_cached
+from utils import match_similarity, sentence_encode_np, spacy_load_cached
 
 VALID_EBOOK_EXT = [".epub"]
 UNHASHABLE_TYPES = [
@@ -216,16 +216,17 @@ def main():
     text.text("Done computing similarity!")
 
     # show sentences to understand what is happening
+    # # show them
+    # for sent_en_orig, sent_fr_tran, sent_fr_orig in zip(
+    #     sents_text_en_orig, sents_text_fr_tran, sents_text_fr_orig
+    # ):
+    #     col1, col2, col3 = st.columns(3)
+    #     col1.write(sent_en_orig)
+    #     col2.write(sent_fr_tran)
+    #     col3.write(sent_fr_orig)
+    #     # if i > 5: break
 
-    # show them
-    for sent_en_orig, sent_fr_tran, sent_fr_orig in zip(
-        sents_text_en_orig, sents_text_fr_tran, sents_text_fr_orig
-    ):
-        col1, col2, col3 = st.columns(3)
-        col1.write(sent_en_orig)
-        col2.write(sent_fr_tran)
-        col3.write(sent_fr_orig)
-    # if i > 5: break
+    match_similarity(sim, chap_selected["en"], chap_selected["fr"])
 
 
 if __name__ == "__main__":
