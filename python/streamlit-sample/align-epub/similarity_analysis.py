@@ -1,12 +1,13 @@
 """Analyze the similarity of sentences."""
 from pathlib import Path
-from typing import IO, cast
+from typing import IO, Optional, cast
 
 import spacy
 import streamlit as st
 import tokenizers  # type: ignore
 import torch
 import transformers
+from matplotlib import pyplot as plt
 from sentence_transformers import SentenceTransformer, util  # type: ignore
 from sklearn.metrics.pairwise import cosine_similarity
 from thinc.model import Model
@@ -15,7 +16,7 @@ from transformers.pipelines.text2text_generation import TranslationPipeline
 
 from cached_pipe import TranslationPipelineCache
 from epub import EPub
-from utils import enumerate_sent, sentence_encode_np
+from utils import sentence_encode_np, spacy_load_cached
 
 VALID_EBOOK_EXT = [".epub"]
 UNHASHABLE_TYPES = [
@@ -29,18 +30,23 @@ UNHASHABLE_TYPES = [
     tokenizers.Tokenizer,
     torch.nn.parameter.Parameter,
     transformers.pipelines.text2text_generation.TranslationPipeline,
+    TranslationPipelineCache,
 ]
 UNHASH_FUNC = {t: lambda x: 0 for t in UNHASHABLE_TYPES}
 
 
 @st.cache(hash_funcs=UNHASH_FUNC, allow_output_mutation=True)
-def load_translator(lts_pair) -> dict[str, TranslationPipeline]:
+def load_translator(
+    lts_pair, load_pipeline
+) -> dict[str, Optional[TranslationPipeline]]:
     """Load the translator pipelines."""
     pipe = {
         f"{lt}_{lt_other}": cast(
             TranslationPipeline,
             pipeline("translation", model=f"Helsinki-NLP/opus-mt-{lt}-{lt_other}"),
         )
+        if load_pipeline[lt]
+        else None
         for lt, lt_other in lts_pair
     }
     return pipe
@@ -49,10 +55,12 @@ def load_translator(lts_pair) -> dict[str, TranslationPipeline]:
 @st.cache(hash_funcs=UNHASH_FUNC, allow_output_mutation=True)
 def load_nlp_spacy():
     """Load the spacy models."""
+    cache_dir = Path("~/.cache/spacy_my_models").expanduser()
     nlp = {
-        "en": spacy.load("en_core_web_md"),
-        "fr": spacy.load("fr_core_news_md"),
+        "en": spacy_load_cached("en_core_web_md", cache_dir),
+        "fr": spacy_load_cached("fr_core_news_md", cache_dir),
     }
+
     return nlp
 
 
@@ -85,7 +93,12 @@ def main():
     lt_to_lang_name = {"en": "English", "fr": "French"}
 
     # load huggingface magic
-    pipe = load_translator(lts_pair)
+    load_pipeline = {
+        "en": False,
+        # "fr": True,
+        "fr": False,
+    }
+    pipe = load_translator(lts_pair, load_pipeline)
     cache_file_path = {
         f"{lt}_{lt_other}": Path(f"translated_{lt}_{lt_other}.json")
         for lt, lt_other in lts_pair
@@ -131,53 +144,88 @@ def main():
         st.write("Drop two files in the sidebar!")
         return
 
+    # load the epubs
     epub = load_epubs(lts_pair, pipe_cache, nlp, epub_file)
-
     text.text("Done loading EPubs!")
 
-    sent_fr = epub["fr"].chapters[0].paragraphs[0].sents_orig[0]
-    st.write(sent_fr.text)
+    # add selectors for chapters
+    chap_selectbox = {
+        lt: side_cont[lt].selectbox(
+            "Pick a chapter:", epub[lt].chap_file_names, key=f"selectbox_{lt}"
+        )
+        for lt in lts
+    }
 
-    sent_fr_to_en = pipe["fr_en"](sent_fr.text)
-    st.write(sent_fr_to_en[0]["translation_text"])
+    # get the right chapter name
+    chap_selected_name = {lt: chap_selectbox[lt] for lt in lts}
+    st.write(f"{chap_selected_name}")
 
-    # TODO chapter number picker
-    # TODO chapter delta fixer
-    ch_index = {lt: 0 for lt in lts}
-    ch_delta = 2
+    # get the chapter
+    chap_selected = {lt: epub[lt].get_chapter_by_name(chap_selectbox[lt]) for lt in lts}
+    st.write(f"{chap_selected}")
+
+    # print some sentence to see something
+    sent_fr = chap_selected["fr"].paragraphs[0].sents_orig[0]
+    st.write(f"{sent_fr.text=}")
+    sent_en = chap_selected["en"].paragraphs[0].sents_orig[0]
+    st.write(f"{sent_en.text=}")
+    if pipe["fr_en"] is not None:
+        sent_fr_to_en = pipe["fr_en"](sent_fr.text)
+        st.write(f'{sent_fr_to_en[0]["translation_text"]=}')
+
+    # # TODO chapter number picker
+    # # TODO chapter delta fixer
+    # ch_index = {lt: 0 for lt in lts}
+    # ch_delta = 0
+    # epub["en"].chapters[ch_index["en"] + ch_delta]
 
     # all sentences at once
-    sent_text_en = []
-    for k, sent in enumerate_sent(
-        epub["en"].chapters[ch_index["en"] + ch_delta], which_sent="orig"
-    ):
+    sents_text_en_orig = []
+    for k, sent in chap_selected["en"].enumerate_sents(which_sent="orig"):
         text_en = sent.text
-        sent_text_en.append(text_en)
-    sent_text_fr_tran = []
-    for k, sent in enumerate_sent(
-        epub["fr"].chapters[ch_index["fr"]], which_sent="tran"
-    ):
+        sents_text_en_orig.append(text_en)
+    sents_text_fr_tran = []
+    for k, sent in chap_selected["fr"].enumerate_sents(which_sent="tran"):
         text_fr_tran = sent.text
-        sent_text_fr_tran.append(text_fr_tran)
-    sent_num_en = len(sent_text_en)
-    sent_num_fr = len(sent_text_fr_tran)
-    st.write(sent_text_en[0])
-    st.write(sent_text_fr_tran[0])
+        sents_text_fr_tran.append(text_fr_tran)
+    sents_text_fr_orig = []
+    for k, sent in chap_selected["fr"].enumerate_sents(which_sent="orig"):
+        text_fr_orig = sent.text
+        sents_text_fr_orig.append(text_fr_orig)
+    sents_num_en = len(sents_text_en_orig)
+    sents_num_fr = len(sents_text_fr_tran)
+    st.write(f"{sents_text_en_orig[0]=}")
+    st.write(f"{sents_text_fr_tran[0]=}")
+    st.write(f"{sents_text_fr_orig[0]=}")
 
     # encode them
-    # enc_en = sent_transformer["en"].encode(sent_text_en, convert_to_tensor=True)
-    # enc_fr_tran = sent_transformer["en"].encode(
-    #     sent_text_fr_tran, convert_to_tensor=True
-    # )
-    enc_en = sentence_encode_np(sent_transformer["en"], sent_text_en)
-    enc_fr_tran = sentence_encode_np(sent_transformer["en"], sent_text_fr_tran)
+    enc_en_orig = sentence_encode_np(sent_transformer["en"], sents_text_en_orig)
+    enc_fr_tran = sentence_encode_np(sent_transformer["en"], sents_text_fr_tran)
+    st.write("en", enc_en_orig.shape, sents_num_en, enc_en_orig[0].shape)
+    st.write("fr", enc_fr_tran.shape, sents_num_fr, enc_fr_tran[0].shape)
 
-    st.write("en", enc_en.shape, sent_num_en, enc_en[0].shape)
-    st.write("fr", enc_fr_tran.shape, sent_num_fr, enc_fr_tran[0].shape)
-
-    sim = cosine_similarity(enc_en, enc_fr_tran)
+    # compute the similarity
+    sim = cosine_similarity(enc_en_orig, enc_fr_tran)
+    fig, ax = plt.subplots()
+    ax.imshow(sim)
+    ax.set_title(f"Similarity *en* vs *fr_translated*")
+    ax.set_ylabel("en")
+    ax.set_xlabel("fr_tran")
+    st.pyplot(fig)
 
     text.text("Done computing similarity!")
+
+    # show sentences to understand what is happening
+
+    # show them
+    for sent_en_orig, sent_fr_tran, sent_fr_orig in zip(
+        sents_text_en_orig, sents_text_fr_tran, sents_text_fr_orig
+    ):
+        col1, col2, col3 = st.columns(3)
+        col1.write(sent_en_orig)
+        col2.write(sent_fr_tran)
+        col3.write(sent_fr_orig)
+    # if i > 5: break
 
 
 if __name__ == "__main__":
