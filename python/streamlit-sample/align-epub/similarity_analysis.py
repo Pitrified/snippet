@@ -31,8 +31,10 @@ UNHASHABLE_TYPES = [
     torch.nn.parameter.Parameter,
     transformers.pipelines.text2text_generation.TranslationPipeline,
     TranslationPipelineCache,
+    IO,
 ]
-UNHASH_FUNC = {t: lambda x: 0 for t in UNHASHABLE_TYPES}
+# UNHASH_FUNC = {t: lambda x: 0 for t in UNHASHABLE_TYPES}
+UNHASH_FUNC = {t: lambda x: id(x) for t in UNHASHABLE_TYPES}
 
 
 @st.cache(hash_funcs=UNHASH_FUNC, allow_output_mutation=True)
@@ -68,7 +70,9 @@ def load_nlp_spacy():
 def load_sent_transformer():
     """Load the sentence transformer."""
     st = {
-        "en": SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2"),
+        "en": SentenceTransformer(
+            "sentence-transformers/all-MiniLM-L6-v2", device="cpu"
+        ),
     }
     return st
 
