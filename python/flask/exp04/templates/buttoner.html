@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block container_content %}
+
+<div>
+    <h4>Buttons!</h4>
+    <p>Move in the app.</p>
+    {% for b in buttons %}
+    <div>
+        <a class="btn btn-info" href="{{ url_for('button_gen', btn=b) }}">
+            {{ b }} linked to {{ url_for('button_gen', btn=b) }}
+        </a>
+    </div>
+    {% endfor %}
+    <a class="btn btn-info" href="{{ url_for('index') }}">
+        Back home.
+    </a>
+</div>
+
+<div style="padding: 20px 0 20px 0;">
+    <h4>Table with beautiful buttons.</h4>
+    <p>Highlighed the right cell to match.</p>
+    <table class="table table-borderless">
+        <thead>
+            <tr>
+                <th scope="col">English</th>
+                <th scope="col">French</th>
+                <th scope="col" style="text-align: center;">Id</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for info in info_zip %}
+            <tr>
+                <td {% if info[2]==highlight_id %} class="table-primary" {% else %} {% endif %}>{{ info[0] }}
+                </td>
+                <td>{{ info[1] }}</td>
+                <td style="width: 50px;">
+                    <a class="btn btn-info" href="{{ url_for('button_gen', btn=info[2]) }}">
+                        {{ info[2] }}
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div>
+    <h4>Table with fancy bootstrap styling.</h4>
+    <p>Wrap text inside a cell.</p>
+    <table class="table table-borderless">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">First</th>
+                <th scope="col">Last</th>
+                <th scope="col">Handle</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th scope="row">1</th>
+                <td class="table-primary">Mark</td>
+                <td>Otto
+                    <a href="https://getbootstrap.com/docs/4.1/content/tables/">Style!</a>
+                </td>
+                <td>@mdo</td>
+            </tr>
+            <tr>
+                <th scope="row">2</th>
+                <td>Jacob</td>
+                <td style="width: 410px; word-wrap: break-word; text-align: justify;">
+                    Use the border-collapse property set to "collapse" and table-layout property set to "fixed" on the
+                    table element. Also, specify the width of the table. Then, set the word-wrap property to its
+                    "break-word" value for td elements and add border and width to them.
+                    <a href="https://www.w3docs.com/snippets/css/how-to-wrap-the-content-of-a-table-cell.html">More
+                        info.</a>
+                </td>
+                <td>@fat</td>
+            </tr>
+            <tr>
+                <th scope="row">3</th>
+                <td colspan="2">Larry the Bird</td>
+                <td>@twitter</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div>
+    <h4>Table with two large column, that can grow.</h4>
+    <p>Nicely aligned.</p>
+    <table class="table table-borderless" style="word-wrap: break-word; text-align: justify; table-layout: fixed;">
+        <thead>
+            <tr>
+                <th scope="col">First</th>
+                <th scope="col">Last</th>
+                <th scope="col" style="width: 80px;">Handle</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="table-primary">Mark</td>
+                <td>Otto
+                    <a href="https://getbootstrap.com/docs/4.1/content/tables/">Style!</a>
+                </td>
+                <td>@mdo</td>
+            </tr>
+            <tr>
+                <td>Jacob</td>
+                <td>
+                    Use the border-collapse property set to "collapse" and table-layout property set to "fixed" on the
+                    table element. Also, specify the width of the table. Then, set the word-wrap property to its
+                    "break-word" value for td elements and add border and width to them.
+                    <a href="https://www.w3docs.com/snippets/css/how-to-wrap-the-content-of-a-table-cell.html">More
+                        info.</a>
+                </td>
+                <td>@fat</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

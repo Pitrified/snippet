@@ -12,15 +12,7 @@
 
 <body>
     <div class="container">
-        <h3>Our Flask Buttons</h3>
-        <div style="height:50px"></div>
-        <form method="post" action="/">
-            <input type="submit" value="VALUE1" name="action1" />
-            <input type="submit" value="VALUE2" name="action2" />
-        </form>
-        <div>
-            <a class="btn btn-info">Text</a>
-        </div>
+        {% block container_content %}{% endblock %}
     </div>
 </body>
 
