@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content_form %}
+            <!-- I'm extending -->
+            <div style="height:50px"></div>
+            <h4 style="color:#030d9b">Your text:</h4>
+            <p id="demo">{{ text }}</p>
+            <div style="height:50px"></div>
+            <h4 style="color:#030d9b">Result:</h4>
+            <p id="demo">{{ prediction }}</p>
+{% endblock %}
