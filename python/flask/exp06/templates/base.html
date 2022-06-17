@@ -7,20 +7,12 @@
     <!-- https://getbootstrap.com/ CSS only -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
-    <title>Sample app with buttons!</title>
+    <title>Sample app with plots!</title>
 </head>
 
 <body>
     <div class="container">
-        <h3>Our Flask Buttons</h3>
-        <div style="height:50px"></div>
-        <form method="post" action="/">
-            <input type="submit" value="VALUE1" name="action1" class="btn btn-info" />
-            <input type="submit" value="VALUE2" name="action2" />
-        </form>
-        <div>
-            <a class="btn btn-info">Text</a>
-        </div>
+        {% block container_content %}{% endblock %}
     </div>
 </body>
 

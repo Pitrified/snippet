@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block container_content %}
+
+<div>
+    <h2>Drop files!</h2>
+    <p>{{ filename }}</p>
+ 
+    <h2>With form and input</h2>
+    <form method="POST" action="/" enctype="multipart/form-data">
+      <p><input type="file" name="my-epub-file" accept=".epub"></p>
+      <p><input type="submit" value="Submit"></p>
+    </form>
+</div>
+
+{% endblock %}
