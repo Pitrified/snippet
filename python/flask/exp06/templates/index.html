@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block container_content %}
+
+<div>
+    <h2>Choose how to load files</h2>
+
+    <h3>With form and input</h3>
+    <p>
+        <a href="{{ url_for('file_form') }}" class="btn btn-info">Form</a>
+    </p>
+    <p>
+        <a href="{{ url_for('file_drop') }}" class="btn btn-info">Drop</a>
+    </p>
+</div>
+
+{% endblock %}
