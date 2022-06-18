@@ -7,7 +7,7 @@ https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world
 
 ```bash
 poetry install
-poetry run serve
+python src/microblog_poetry/app/livereload_app.py
 ```
 
 #### Env var
@@ -26,7 +26,7 @@ Directly:
 python src/microblog_poetry/app/livereload_app.py
 ```
 
-With magic poetry command registered in `pyproject.toml`:
+~~With magic poetry command registered in `pyproject.toml`:~~
 
 ```bash
 poetry run serve
