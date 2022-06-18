@@ -25,7 +25,11 @@ def button_gen(btn):
 def index():
     """Generate buttons!."""
     buttons = [0, 1, 2, 3, 4]
-    return render_template("buttoner.html", buttons=buttons)
+    info_zip = [(f"Sent {i}", f"Phrase {i}", i) for i in range(8)]
+    highlight_id = 4
+    return render_template(
+        "buttoner.html", buttons=buttons, info_zip=info_zip, highlight_id=highlight_id
+    )
 
 
 if __name__ == "__main__":

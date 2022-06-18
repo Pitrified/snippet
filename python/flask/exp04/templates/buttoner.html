@@ -20,6 +20,7 @@
 <div style="padding: 20px 0 20px 0;">
     <h4>Table with beautiful buttons.</h4>
     <p>Highlighed the right cell to match.</p>
+    <p>Click a button to show content.</p>
     <table class="table table-borderless">
         <thead>
             <tr>
@@ -31,7 +32,11 @@
         <tbody>
             {% for info in info_zip %}
             <tr>
-                <td {% if info[2]==highlight_id %} class="table-primary" {% else %} {% endif %}>{{ info[0] }}
+                {% set is_highlighted = info[2]==highlight_id %}
+                <td {% if is_highlighted %} class="table-primary" {% else %} {% endif %}>
+                    <p {% if is_highlighted %} class="lead" {% else %} {% endif %}>
+                        {{ info[0] }}
+                    </p>
                 </td>
                 <td>{{ info[1] }}</td>
                 <td style="width: 50px;">
