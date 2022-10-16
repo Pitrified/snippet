@@ -103,8 +103,10 @@ def main():
         "fr": False,
     }
     pipe = load_translator(lts_pair, load_pipeline)
+    TRANSLATION_CACHE_DIR = Path("~/.cache/my_translations").expanduser()
     cache_file_path = {
-        f"{lt}_{lt_other}": Path(f"translated_{lt}_{lt_other}.json")
+        # f"{lt}_{lt_other}": Path(f"translated_{lt}_{lt_other}.json")
+        f"{lt}_{lt_other}": TRANSLATION_CACHE_DIR / Path(f"{lt}-{lt_other}.json")
         for lt, lt_other in lts_pair
     }
     pipe_cache = {
