@@ -80,6 +80,11 @@ type ProductWithoutModel struct {
 	Price uint
 }
 
+type UserWithoutModel struct {
+	Name string `gorm:"primarykey"`
+	Age  uint
+}
+
 // Without model in the struct.
 //
 // https://gorm.io/docs/index.html#Quick-Start
@@ -111,11 +116,17 @@ func minimal_without_model() {
 
 	// Migrate the schema
 	db.AutoMigrate(&ProductWithoutModel{})
+	db.AutoMigrate(&UserWithoutModel{})
 
 	// Create
 	newProd := &ProductWithoutModel{Code: "D42", Price: 100}
 	db.Create(newProd)
 	fmt.Printf("Created %+v\n", newProd)
+
+	// Create on another table
+	newUser := &UserWithoutModel{Name: "Pippo", Age: 51}
+	db.Create(newUser)
+	fmt.Printf("Created %+v\n", newUser)
 
 	// Read
 	var product ProductWithoutModel
@@ -156,6 +167,10 @@ func minimal_without_model() {
 	// returns found records count, equals `len(allProducts)`
 	fmt.Printf("RowsAffected %+v\n", result.RowsAffected)
 	// result.Error // returns error
+
+	// SELECT * WHERE equal
+	result = db.Find(&allProducts, &ProductWithoutModel{Code: "New45"})
+	fmt.Printf("RowsAffected %+v\n", result.RowsAffected)
 
 	// SELECT * FROM blah WHERE code = 'New45' AND price >= 50;
 	result = db.Where("code = ? AND price >= ?", "New45", "50").Find(&allProducts)
