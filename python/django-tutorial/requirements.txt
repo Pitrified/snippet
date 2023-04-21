@@ -7,6 +7,6 @@ Django==3.1.14
 pathspec==0.7.0
 pytz==2019.3
 regex==2020.1.8
-sqlparse==0.3.0
+sqlparse==0.4.4
 toml==0.10.0
 typed-ast==1.4.1
