@@ -6,7 +6,7 @@ authors = ["Pitrified <nobilipietro@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-Flask = "^2.1.2"
+Flask = "^2.3.2"
 black = "^22.3.0"
 python-dotenv = "^0.20.0"
 livereload = "<=2.5.1"
